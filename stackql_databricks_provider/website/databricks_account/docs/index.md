@@ -71,7 +71,11 @@ $Auth = "{ 'databricks_account': { 'type': 'bearer', 'credentialsenvvar': 'DATAB
 stackql.exe shell --auth=$Auth
 ```
 
-## Workspace inventory
+## Example Queries
+
+Try the following queries using `stackql shell`, or run them from a script or CI pipeline with `stackql exec`.
+
+### Workspace inventory
 
 Every workspace in the account, with status, region and when it was created:
 
@@ -103,7 +107,7 @@ ON w.workspace_id = wa.workspace_id
 WHERE account_id = '<account_id>';
 ```
 
-## Identity at a glance
+### Identity at a glance
 
 Account users flattened to one row per role assignment, using a built-in view:
 
@@ -125,7 +129,7 @@ WHERE account_id = '<account_id>'
 AND role = 'account_admin';
 ```
 
-## FinOps queries
+### FinOps queries
 
 Budget policies and budget configurations:
 
@@ -148,7 +152,7 @@ stackql exec -o text --hideheaders -f billable_usage.csv \
    AND account_id = '<account_id>'"
 ```
 
-## Network and storage configuration
+### Network and storage configuration
 
 Audit the account's registered infrastructure - credentials, storage configurations, networks and encryption keys - using the built-in views:
 

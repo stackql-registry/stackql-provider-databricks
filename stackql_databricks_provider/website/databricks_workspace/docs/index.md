@@ -72,7 +72,11 @@ $Auth = "{ 'databricks_workspace': { 'type': 'bearer', 'credentialsenvvar': 'DAT
 stackql.exe shell --auth=$Auth
 ```
 
-## Unity Catalog inventory
+## Example Queries
+
+Try the following queries using `stackql shell`, or run them from a script or CI pipeline with `stackql exec`.
+
+### Unity Catalog inventory
 
 Catalogs in a workspace, with ownership and audit fields:
 
@@ -98,7 +102,7 @@ AND schema_name = 'default'
 AND deployment_name = '<deployment_name>';
 ```
 
-## SQL statement execution - the full lifecycle
+### SQL statement execution - the full lifecycle
 
 The Databricks SQL Statement Execution API maps naturally to SQL verbs - `INSERT` submits a statement, `SELECT` polls it, `DELETE` cancels it:
 
@@ -136,7 +140,7 @@ FROM databricks_workspace.sql.query_history
 WHERE deployment_name = '<deployment_name>';
 ```
 
-## Workspace identity
+### Workspace identity
 
 Users, their groups and entitlements, flattened with built-in views:
 
@@ -147,7 +151,7 @@ SELECT * FROM databricks_workspace.iam.vw_user_entitlements WHERE deployment_nam
 SELECT * FROM databricks_workspace.iam.vw_group_members WHERE deployment_name = '<deployment_name>';
 ```
 
-## Compute estate
+### Compute estate
 
 Clusters with their state, node types and autotermination settings:
 
@@ -171,7 +175,7 @@ FROM databricks_workspace.sql.warehouses
 WHERE deployment_name = '<deployment_name>';
 ```
 
-## Workspace settings
+### Workspace settings
 
 All workspace admin settings as key/value pairs, using a built-in view:
 
