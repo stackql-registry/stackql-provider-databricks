@@ -29,6 +29,7 @@ For Databricks account operations use the [__`databricks_account`__](https://dat
 
 total services: __29__
 total resources: __342__
+source project: __[stackql-provider-databricks](https://github.com/stackql-registry/stackql-provider-databricks)__
 
 :::
 

@@ -29,6 +29,7 @@ For Databricks workspace operations use the [__`databricks_workspace`__](https:/
 
 total services: __9__
 total resources: __88__
+source project: __[stackql-provider-databricks](https://github.com/stackql-registry/stackql-provider-databricks)__
 
 :::
 
