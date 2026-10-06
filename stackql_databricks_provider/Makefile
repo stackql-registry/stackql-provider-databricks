@@ -10,6 +10,7 @@
 SHELL := /bin/bash
 ROOT_DIR := $(abspath $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/..)
 PROVIDER_DIR := $(ROOT_DIR)/stackql_databricks_provider
+SOURCE_PROJECT ?= https://github.com/stackql-registry/stackql-provider-databricks
 
 # Prefer the repo venv when present, otherwise fall back to python3 on PATH.
 PYTHON ?= $(shell test -x $(ROOT_DIR)/.venv/bin/python && echo $(ROOT_DIR)/.venv/bin/python || echo python3)
@@ -128,12 +129,14 @@ docs:
 	  --provider-name databricks_account \
 	  --provider-dir ./stackql-provider/src/databricks_account/v00.00.00000 \
 	  --output-dir ./website/databricks_account \
-	  --provider-data-dir ./docgen/provider-data/databricks_account
+	  --provider-data-dir ./docgen/provider-data/databricks_account \
+	  --source-project $(SOURCE_PROJECT)
 	cd $(PROVIDER_DIR) && npm run generate-docs -- \
 	  --provider-name databricks_workspace \
 	  --provider-dir ./stackql-provider/src/databricks_workspace/v00.00.00000 \
 	  --output-dir ./website/databricks_workspace \
-	  --provider-data-dir ./docgen/provider-data/databricks_workspace
+	  --provider-data-dir ./docgen/provider-data/databricks_workspace \
+	  --source-project $(SOURCE_PROJECT)
 	cd $(PROVIDER_DIR) && $(PYTHON) add_doc_examples.py --doc-dir website
 
 docs-build:
