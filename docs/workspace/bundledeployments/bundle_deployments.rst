@@ -20,11 +20,9 @@
         :param name: str
           The name of the version to complete. Format: deployments/{deployment_id}/versions/{version_id}
         :param completion_reason: :class:`VersionComplete`
-          The reason for completing the version. Must be a terminal reason: VERSION_COMPLETE_SUCCESS,
-          VERSION_COMPLETE_FAILURE, or VERSION_COMPLETE_FORCE_ABORT.
+          The reason for completing the version. Must be VERSION_COMPLETE_SUCCESS or VERSION_COMPLETE_FAILURE.
         :param force: bool (optional)
-          If true, force-completes the version even if the caller is not the original creator. The
-          completion_reason must be VERSION_COMPLETE_FORCE_ABORT when force is true.
+          If true, force-completes the version even if the caller is not the original creator.
 
         :returns: :class:`Version`
         
@@ -34,33 +32,11 @@
         Creates a new deployment in the workspace.
 
         :param deployment: :class:`Deployment`
-          The deployment to create. The caller must set ``initial_parent_path``. Other fields are ignored on
-          input and populated by the service.
+          The deployment to create. ``initial_parent_path`` is required. ``display_name``, ``target_name``,
+          ``deployment_mode``, and ``workspace_info`` may be set; every other field is assigned by the service
+          and ignored on input.
 
         :returns: :class:`Deployment`
-        
-
-    .. py:method:: create_operation(parent: str, operation: Operation, resource_key: str) -> Operation
-
-        Creates a resource operation under a version.
-
-        The caller must provide a ``resource_key`` which becomes the final component of the operation's name.
-        If an operation with the same key already exists under the version, the server returns
-        ``ALREADY_EXISTS``.
-
-        On success the server also updates the corresponding deployment-level Resource (creating it if this is
-        the first operation for that resource_key, or removing it if action_type is DELETE).
-
-        :param parent: str
-          The parent version where this operation will be recorded. Format:
-          deployments/{deployment_id}/versions/{version_id}
-        :param operation: :class:`Operation`
-          The resource operation to create.
-        :param resource_key: str
-          The key identifying the resource this operation applies to. Becomes the final component of the
-          operation's name.
-
-        :returns: :class:`Operation`
         
 
     .. py:method:: create_version(parent: str, version: Version, version_id: str) -> Version
@@ -72,6 +48,12 @@
         deployment's most recent version, and sets the version's ``previous_version_id`` to the deployment's
         most recent version (leaving it unset for the first version), which the server validates to detect
         concurrent deploys.
+
+        The caller also provides the full set of ``operations`` planned for this version, each identified by a
+        ``resource_key`` and an ``action_type``. The server records one operation per resource in
+        ``OPERATION_STATUS_PENDING`` in the same transaction as the version, so the plan is captured
+        atomically. The outcome of each operation is recorded later via UpdateOperation as the resource is
+        applied; the set of operations cannot be changed after the version is created.
 
         :param parent: str
           The parent deployment where this version will be created. Format: deployments/{deployment_id}
@@ -152,37 +134,21 @@
         :returns: :class:`HeartbeatResponse`
         
 
-    .. py:method:: list_deployments( [, filter: Optional[str], page_size: Optional[int], page_token: Optional[str]]) -> Iterator[Deployment]
+    .. py:method:: list_deployments( [, page_size: Optional[int], page_token: Optional[str], show_deleted: Optional[bool]]) -> Iterator[Deployment]
 
         Lists deployments in the workspace.
 
-        :param filter: str (optional)
-          A filter expression restricting which deployments are returned, in the style of AIP-160
-          (https://google.aip.dev/160). The expression is a conjunction of one or more ``field operator
-          value`` terms joined by ``AND`` (case-insensitive); a deployment is returned only when it matches
-          every term. Whitespace around terms is ignored, and a value containing spaces must be wrapped in
-          double quotes. An unset or empty filter returns all deployments. Filtering applies only to live
-          deployments; deleted deployments are never returned regardless of the filter.
-
-          Supported terms:
-
-          - ``status = <STATUS>``: exact match on the deployment status. The value is a ``DeploymentStatus``
-            enum value, with or without the ``DEPLOYMENT_STATUS_`` prefix and case-insensitive (e.g. ``status
-            = ACTIVE``).
-          - ``deployment_mode = <MODE>``: exact match on the deployment mode. The value is a
-            ``DeploymentMode`` enum value, with or without the ``DEPLOYMENT_MODE_`` prefix and
-            case-insensitive (e.g. ``deployment_mode = DEVELOPMENT``).
-          - ``display_name = "<name>"``: exact match on the display name.
-          - ``display_name : "<substring>"``: case-insensitive substring match on the display name.
-
-          For example: ``status = ACTIVE AND display_name : "etl"``.
         :param page_size: int (optional)
           The maximum number of deployments to return. The service may return fewer than this value. If
-          unspecified, at most 20 deployments will be returned. The maximum value is 100; values above 100
-          will be coerced to 100.
+          unspecified, at most 20 deployments will be returned. The maximum value is 1000; values above 1000
+          will be coerced to 1000.
         :param page_token: str (optional)
           A page token, received from a previous ``ListDeployments`` call. Provide this to retrieve the
           subsequent page.
+        :param show_deleted: bool (optional)
+          Whether to include soft-deleted deployments in the response. Defaults to false. When true, returns
+          both live and soft-deleted deployments visible to the caller, subject to the filter. Soft-deleted
+          deployments have status ``DEPLOYMENT_STATUS_DELETED``.
 
         :returns: Iterator over :class:`Deployment`
         
@@ -238,18 +204,36 @@
         :returns: Iterator over :class:`Version`
         
 
+    .. py:method:: update_deployment(name: str, deployment: Deployment, update_mask: FieldMask) -> Deployment
+
+        Updates a deployment.
+
+        :param name: str
+          Resource name of the deployment. Format: deployments/{deployment_id}
+        :param deployment: :class:`Deployment`
+          The deployment to update. Its ``name`` selects the deployment; the fields named in ``update_mask``
+          carry the new values. All other fields are ignored.
+        :param update_mask: FieldMask
+          The fields to update; supported paths are ``display_name``, ``deployment_mode``, ``target_name``,
+          and ``workspace_info``. An empty mask or any other path returns INVALID_PARAMETER_VALUE.
+
+        :returns: :class:`Deployment`
+        
+
     .. py:method:: update_operation(name: str, operation: Operation, update_mask: FieldMask) -> Operation
 
         Updates a resource operation's mutable fields.
 
-        ``state``, ``error_message``, ``resource_id``, and ``status`` may be updated, independently;
-        ``update_mask`` must contain only those paths. All other fields are immutable. The update is guarded
-        by an optimistic-concurrency check: the caller sets ``operation.sequence_id`` to the value it last
-        observed, and the server rejects the update with ``ABORTED`` if the operation has been modified since.
-        On success the server increments ``sequence_id``; updates to ``state`` and ``resource_id`` are
-        mirrored onto the corresponding deployment-level Resource projection. The parent version must be in
-        progress, delete operations cannot be updated, and after the update is applied a succeeded operation
-        cannot carry an ``error_message``.
+        ``state``, ``error_message``, ``resource_id``, ``status``, and ``dashboard_metadata`` may be updated,
+        independently; ``update_mask`` must contain only those paths. All other fields are immutable. The
+        update is guarded by an optimistic-concurrency check: the caller sets ``operation.sequence_id`` to the
+        value it last observed, and the server rejects the update with ``ABORTED`` if the operation has been
+        modified since. On success the server increments ``sequence_id``; updates to ``state``,
+        ``resource_id``, and ``dashboard_metadata`` are mirrored onto the corresponding deployment-level
+        resource. Listing ``state`` in ``update_mask`` with no value clears it, which removes the tracked
+        resource, so a delete or unbind that succeeds must clear ``state``. The parent version must be in
+        progress, and after the update is applied a succeeded operation cannot carry an ``error_message``. See
+        the ``state`` and ``resource_id`` fields for the rest.
 
         :param name: str
           Resource name of the operation. Format:
@@ -260,8 +244,8 @@
           field docs on Operation). All other fields are ignored.
         :param update_mask: FieldMask
           The set of fields to update. Required; supported paths are ``state``, ``error_message``,
-          ``resource_id``, and ``status``. An empty mask or any other path is rejected with
-          INVALID_PARAMETER_VALUE.
+          ``resource_id``, ``status``, and ``dashboard_metadata``. An empty mask or any other path is rejected
+          with INVALID_PARAMETER_VALUE.
 
         :returns: :class:`Operation`
         

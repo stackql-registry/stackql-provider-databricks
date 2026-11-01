@@ -4,22 +4,25 @@
 # to strip the fat-import header below; ignoring F401 would defeat that.
 
 from __future__ import annotations
-
-import logging
-import random
-import time
-import uuid
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import Dict, List, Any, Iterator, Callable, Optional
+
+
+import time
+import random
+import logging
+import uuid
 
 from databricks.sdk.service._internal import (
-    Wait,
     _enum,
     _from_dict,
+    _int64,
     _repeated_dict,
+    Wait,
 )
+
 
 _LOG = logging.getLogger("databricks.sdk")
 
@@ -72,12 +75,6 @@ class DatabaseCatalog:
 
     create_database_if_not_exists: Optional[bool] = None
 
-    database_branch_id: Optional[str] = None
-    """The branch_id of the database branch associated with the catalog."""
-
-    database_project_id: Optional[str] = None
-    """The project_id of the database project associated with the catalog."""
-
     uid: Optional[str] = None
 
     def as_dict(self) -> dict:
@@ -85,14 +82,10 @@ class DatabaseCatalog:
         body = {}
         if self.create_database_if_not_exists is not None:
             body["create_database_if_not_exists"] = self.create_database_if_not_exists
-        if self.database_branch_id is not None:
-            body["database_branch_id"] = self.database_branch_id
         if self.database_instance_name is not None:
             body["database_instance_name"] = self.database_instance_name
         if self.database_name is not None:
             body["database_name"] = self.database_name
-        if self.database_project_id is not None:
-            body["database_project_id"] = self.database_project_id
         if self.name is not None:
             body["name"] = self.name
         if self.uid is not None:
@@ -104,14 +97,10 @@ class DatabaseCatalog:
         body = {}
         if self.create_database_if_not_exists is not None:
             body["create_database_if_not_exists"] = self.create_database_if_not_exists
-        if self.database_branch_id is not None:
-            body["database_branch_id"] = self.database_branch_id
         if self.database_instance_name is not None:
             body["database_instance_name"] = self.database_instance_name
         if self.database_name is not None:
             body["database_name"] = self.database_name
-        if self.database_project_id is not None:
-            body["database_project_id"] = self.database_project_id
         if self.name is not None:
             body["name"] = self.name
         if self.uid is not None:
@@ -123,10 +112,8 @@ class DatabaseCatalog:
         """Deserializes the DatabaseCatalog from a dictionary."""
         return cls(
             create_database_if_not_exists=d.get("create_database_if_not_exists", None),
-            database_branch_id=d.get("database_branch_id", None),
             database_instance_name=d.get("database_instance_name", None),
             database_name=d.get("database_name", None),
-            database_project_id=d.get("database_project_id", None),
             name=d.get("name", None),
             uid=d.get("uid", None),
         )
@@ -628,7 +615,6 @@ class DatabaseInstanceState(Enum):
     STARTING = "STARTING"
     STOPPED = "STOPPED"
     UPDATING = "UPDATING"
-    UPGRADING = "UPGRADING"
 
 
 @dataclass
@@ -651,9 +637,6 @@ class DatabaseTable:
     Registration of database tables via /database/tables is currently only supported in standard
     catalogs."""
 
-    table_serving_url: Optional[str] = None
-    """Data serving REST API URL for this table"""
-
     def as_dict(self) -> dict:
         """Serializes the DatabaseTable into a dictionary suitable for use as a JSON request body."""
         body = {}
@@ -663,8 +646,6 @@ class DatabaseTable:
             body["logical_database_name"] = self.logical_database_name
         if self.name is not None:
             body["name"] = self.name
-        if self.table_serving_url is not None:
-            body["table_serving_url"] = self.table_serving_url
         return body
 
     def as_shallow_dict(self) -> dict:
@@ -676,8 +657,6 @@ class DatabaseTable:
             body["logical_database_name"] = self.logical_database_name
         if self.name is not None:
             body["name"] = self.name
-        if self.table_serving_url is not None:
-            body["table_serving_url"] = self.table_serving_url
         return body
 
     @classmethod
@@ -687,7 +666,6 @@ class DatabaseTable:
             database_instance_name=d.get("database_instance_name", None),
             logical_database_name=d.get("logical_database_name", None),
             name=d.get("name", None),
-            table_serving_url=d.get("table_serving_url", None),
         )
 
 
@@ -723,7 +701,7 @@ class DeltaTableSyncInfo:
         """Deserializes the DeltaTableSyncInfo from a dictionary."""
         return cls(
             delta_commit_timestamp=d.get("delta_commit_timestamp", None),
-            delta_commit_version=d.get("delta_commit_version", None),
+            delta_commit_version=_int64(d, "delta_commit_version"),
         )
 
 
@@ -873,10 +851,6 @@ class NewPipelineSpec:
     budget_policy_id: Optional[str] = None
     """Budget policy to set on the newly created pipeline."""
 
-    pipeline_channel: Optional[PipelineChannel] = None
-    """Release channel of the underlying pipeline's runtime. Some source table configurations (e.g.,
-    read-time CDF) require PREVIEW. Defaults to CURRENT if not specified."""
-
     storage_catalog: Optional[str] = None
     """This field needs to be specified if the destination catalog is a managed postgres catalog.
     
@@ -894,8 +868,6 @@ class NewPipelineSpec:
         body = {}
         if self.budget_policy_id is not None:
             body["budget_policy_id"] = self.budget_policy_id
-        if self.pipeline_channel is not None:
-            body["pipeline_channel"] = self.pipeline_channel.value
         if self.storage_catalog is not None:
             body["storage_catalog"] = self.storage_catalog
         if self.storage_schema is not None:
@@ -907,8 +879,6 @@ class NewPipelineSpec:
         body = {}
         if self.budget_policy_id is not None:
             body["budget_policy_id"] = self.budget_policy_id
-        if self.pipeline_channel is not None:
-            body["pipeline_channel"] = self.pipeline_channel
         if self.storage_catalog is not None:
             body["storage_catalog"] = self.storage_catalog
         if self.storage_schema is not None:
@@ -920,19 +890,9 @@ class NewPipelineSpec:
         """Deserializes the NewPipelineSpec from a dictionary."""
         return cls(
             budget_policy_id=d.get("budget_policy_id", None),
-            pipeline_channel=_enum(d, "pipeline_channel", PipelineChannel),
             storage_catalog=d.get("storage_catalog", None),
             storage_schema=d.get("storage_schema", None),
         )
-
-
-class PipelineChannel(Enum):
-    """Release channel of the underlying pipeline's runtime. PREVIEW provides early access to the
-    latest features but may be less stable. Some source table configurations (e.g., read-time CDF)
-    require PREVIEW. Defaults to CURRENT if not specified."""
-
-    CURRENT = "CURRENT"
-    PREVIEW = "PREVIEW"
 
 
 class ProvisioningInfoState(Enum):
@@ -1029,9 +989,6 @@ class SyncedDatabaseTable:
     data_synchronization_status: Optional[SyncedTableStatus] = None
     """Synced Table data synchronization status"""
 
-    database_branch_id: Optional[str] = None
-    """The branch_id of the database branch associated with the table."""
-
     database_instance_name: Optional[str] = None
     """Name of the target database instance. This is required when creating synced database tables in
     standard catalogs. This is optional when creating synced database tables in registered catalogs.
@@ -1039,25 +996,12 @@ class SyncedDatabaseTable:
     database instance name MUST match that of the registered catalog (or the request will be
     rejected)."""
 
-    database_project_id: Optional[str] = None
-    """The project_id of the database project associated with the table."""
-
-    effective_database_branch_id: Optional[str] = None
-    """The branch_id of the database branch associated with the table. This is an output only field
-    that contains the value computed from the input field combined with server side defaults. Use
-    the field without the effective_ prefix to set the value."""
-
     effective_database_instance_name: Optional[str] = None
     """The name of the database instance that this table is registered to. This field is always
     returned, and for tables inside database catalogs is inferred database instance associated with
     the catalog. This is an output only field that contains the value computed from the input field
     combined with server side defaults. Use the field without the effective_ prefix to set the
     value."""
-
-    effective_database_project_id: Optional[str] = None
-    """The project_id of the database project associated with the table. This is an output only field
-    that contains the value computed from the input field combined with server side defaults. Use
-    the field without the effective_ prefix to set the value."""
 
     effective_logical_database_name: Optional[str] = None
     """The name of the logical database that this table is registered to. This is an output only field
@@ -1078,9 +1022,6 @@ class SyncedDatabaseTable:
 
     spec: Optional[SyncedTableSpec] = None
 
-    table_serving_url: Optional[str] = None
-    """Data serving REST API URL for this table"""
-
     unity_catalog_provisioning_state: Optional[ProvisioningInfoState] = None
     """The provisioning state of the synced table entity in Unity Catalog. This is distinct from the
     state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline
@@ -1091,18 +1032,10 @@ class SyncedDatabaseTable:
         body = {}
         if self.data_synchronization_status:
             body["data_synchronization_status"] = self.data_synchronization_status.as_dict()
-        if self.database_branch_id is not None:
-            body["database_branch_id"] = self.database_branch_id
         if self.database_instance_name is not None:
             body["database_instance_name"] = self.database_instance_name
-        if self.database_project_id is not None:
-            body["database_project_id"] = self.database_project_id
-        if self.effective_database_branch_id is not None:
-            body["effective_database_branch_id"] = self.effective_database_branch_id
         if self.effective_database_instance_name is not None:
             body["effective_database_instance_name"] = self.effective_database_instance_name
-        if self.effective_database_project_id is not None:
-            body["effective_database_project_id"] = self.effective_database_project_id
         if self.effective_logical_database_name is not None:
             body["effective_logical_database_name"] = self.effective_logical_database_name
         if self.logical_database_name is not None:
@@ -1111,8 +1044,6 @@ class SyncedDatabaseTable:
             body["name"] = self.name
         if self.spec:
             body["spec"] = self.spec.as_dict()
-        if self.table_serving_url is not None:
-            body["table_serving_url"] = self.table_serving_url
         if self.unity_catalog_provisioning_state is not None:
             body["unity_catalog_provisioning_state"] = self.unity_catalog_provisioning_state.value
         return body
@@ -1122,18 +1053,10 @@ class SyncedDatabaseTable:
         body = {}
         if self.data_synchronization_status:
             body["data_synchronization_status"] = self.data_synchronization_status
-        if self.database_branch_id is not None:
-            body["database_branch_id"] = self.database_branch_id
         if self.database_instance_name is not None:
             body["database_instance_name"] = self.database_instance_name
-        if self.database_project_id is not None:
-            body["database_project_id"] = self.database_project_id
-        if self.effective_database_branch_id is not None:
-            body["effective_database_branch_id"] = self.effective_database_branch_id
         if self.effective_database_instance_name is not None:
             body["effective_database_instance_name"] = self.effective_database_instance_name
-        if self.effective_database_project_id is not None:
-            body["effective_database_project_id"] = self.effective_database_project_id
         if self.effective_logical_database_name is not None:
             body["effective_logical_database_name"] = self.effective_logical_database_name
         if self.logical_database_name is not None:
@@ -1142,8 +1065,6 @@ class SyncedDatabaseTable:
             body["name"] = self.name
         if self.spec:
             body["spec"] = self.spec
-        if self.table_serving_url is not None:
-            body["table_serving_url"] = self.table_serving_url
         if self.unity_catalog_provisioning_state is not None:
             body["unity_catalog_provisioning_state"] = self.unity_catalog_provisioning_state
         return body
@@ -1153,17 +1074,12 @@ class SyncedDatabaseTable:
         """Deserializes the SyncedDatabaseTable from a dictionary."""
         return cls(
             data_synchronization_status=_from_dict(d, "data_synchronization_status", SyncedTableStatus),
-            database_branch_id=d.get("database_branch_id", None),
             database_instance_name=d.get("database_instance_name", None),
-            database_project_id=d.get("database_project_id", None),
-            effective_database_branch_id=d.get("effective_database_branch_id", None),
             effective_database_instance_name=d.get("effective_database_instance_name", None),
-            effective_database_project_id=d.get("effective_database_project_id", None),
             effective_logical_database_name=d.get("effective_logical_database_name", None),
             logical_database_name=d.get("logical_database_name", None),
             name=d.get("name", None),
             spec=_from_dict(d, "spec", SyncedTableSpec),
-            table_serving_url=d.get("table_serving_url", None),
             unity_catalog_provisioning_state=_enum(d, "unity_catalog_provisioning_state", ProvisioningInfoState),
         )
 
@@ -1210,7 +1126,7 @@ class SyncedTableContinuousUpdateStatus:
         """Deserializes the SyncedTableContinuousUpdateStatus from a dictionary."""
         return cls(
             initial_pipeline_sync_progress=_from_dict(d, "initial_pipeline_sync_progress", SyncedTablePipelineProgress),
-            last_processed_commit_version=d.get("last_processed_commit_version", None),
+            last_processed_commit_version=_int64(d, "last_processed_commit_version"),
             timestamp=d.get("timestamp", None),
         )
 
@@ -1251,8 +1167,7 @@ class SyncedTableFailedStatus:
     def from_dict(cls, d: Dict[str, Any]) -> SyncedTableFailedStatus:
         """Deserializes the SyncedTableFailedStatus from a dictionary."""
         return cls(
-            last_processed_commit_version=d.get("last_processed_commit_version", None),
-            timestamp=d.get("timestamp", None),
+            last_processed_commit_version=_int64(d, "last_processed_commit_version"), timestamp=d.get("timestamp", None)
         )
 
 
@@ -1318,11 +1233,11 @@ class SyncedTablePipelineProgress:
         """Deserializes the SyncedTablePipelineProgress from a dictionary."""
         return cls(
             estimated_completion_time_seconds=d.get("estimated_completion_time_seconds", None),
-            latest_version_currently_processing=d.get("latest_version_currently_processing", None),
+            latest_version_currently_processing=_int64(d, "latest_version_currently_processing"),
             provisioning_phase=_enum(d, "provisioning_phase", ProvisioningPhase),
             sync_progress_completion=d.get("sync_progress_completion", None),
-            synced_row_count=d.get("synced_row_count", None),
-            total_row_count=d.get("total_row_count", None),
+            synced_row_count=_int64(d, "synced_row_count"),
+            total_row_count=_int64(d, "total_row_count"),
         )
 
 
@@ -1428,12 +1343,6 @@ class SyncedTableSpec:
     this case, the scheduling_policy of this synced table must match the scheduling policy of the
     existing pipeline."""
 
-    extra_columns: Optional[List[SyncedTableSpecExtraColumn]] = None
-    """Extra PostgreSQL-only columns to add to the synced table."""
-
-    extra_index_definitions: Optional[List[SyncedTableSpecSecondaryIndex]] = None
-    """Secondary indexes to create on the synced table."""
-
     new_pipeline_spec: Optional[NewPipelineSpec] = None
     """At most one of existing_pipeline_id and new_pipeline_spec should be defined.
     
@@ -1467,10 +1376,6 @@ class SyncedTableSpec:
             body["create_database_objects_if_missing"] = self.create_database_objects_if_missing
         if self.existing_pipeline_id is not None:
             body["existing_pipeline_id"] = self.existing_pipeline_id
-        if self.extra_columns:
-            body["extra_columns"] = [v.as_dict() for v in self.extra_columns]
-        if self.extra_index_definitions:
-            body["extra_index_definitions"] = [v.as_dict() for v in self.extra_index_definitions]
         if self.new_pipeline_spec:
             body["new_pipeline_spec"] = self.new_pipeline_spec.as_dict()
         if self.primary_key_columns:
@@ -1494,10 +1399,6 @@ class SyncedTableSpec:
             body["create_database_objects_if_missing"] = self.create_database_objects_if_missing
         if self.existing_pipeline_id is not None:
             body["existing_pipeline_id"] = self.existing_pipeline_id
-        if self.extra_columns:
-            body["extra_columns"] = self.extra_columns
-        if self.extra_index_definitions:
-            body["extra_index_definitions"] = self.extra_index_definitions
         if self.new_pipeline_spec:
             body["new_pipeline_spec"] = self.new_pipeline_spec
         if self.primary_key_columns:
@@ -1519,8 +1420,6 @@ class SyncedTableSpec:
             accelerated_sync=d.get("accelerated_sync", None),
             create_database_objects_if_missing=d.get("create_database_objects_if_missing", None),
             existing_pipeline_id=d.get("existing_pipeline_id", None),
-            extra_columns=_repeated_dict(d, "extra_columns", SyncedTableSpecExtraColumn),
-            extra_index_definitions=_repeated_dict(d, "extra_index_definitions", SyncedTableSpecSecondaryIndex),
             new_pipeline_spec=_from_dict(d, "new_pipeline_spec", NewPipelineSpec),
             primary_key_columns=d.get("primary_key_columns", None),
             scheduling_policy=_enum(d, "scheduling_policy", SyncedTableSchedulingPolicy),
@@ -1530,124 +1429,12 @@ class SyncedTableSpec:
         )
 
 
-@dataclass
-class SyncedTableSpecExtraColumn:
-    """An extra PostgreSQL column to add to the synced table."""
-
-    column_name: str
-    """Name of the column."""
-
-    column_type: str
-    """PostgreSQL type of the column, for example "tsvector" or "vector(1024)"."""
-
-    compute: Optional[str] = None
-    """SQL expression used to compute the column's value, for example "to_tsvector('english',
-    content)"."""
-
-    maintenance: Optional[SyncedTableSpecExtraColumnMaintenance] = None
-
-    def as_dict(self) -> dict:
-        """Serializes the SyncedTableSpecExtraColumn into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.column_name is not None:
-            body["column_name"] = self.column_name
-        if self.column_type is not None:
-            body["column_type"] = self.column_type
-        if self.compute is not None:
-            body["compute"] = self.compute
-        if self.maintenance is not None:
-            body["maintenance"] = self.maintenance.value
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the SyncedTableSpecExtraColumn into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.column_name is not None:
-            body["column_name"] = self.column_name
-        if self.column_type is not None:
-            body["column_type"] = self.column_type
-        if self.compute is not None:
-            body["compute"] = self.compute
-        if self.maintenance is not None:
-            body["maintenance"] = self.maintenance
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> SyncedTableSpecExtraColumn:
-        """Deserializes the SyncedTableSpecExtraColumn from a dictionary."""
-        return cls(
-            column_name=d.get("column_name", None),
-            column_type=d.get("column_type", None),
-            compute=d.get("compute", None),
-            maintenance=_enum(d, "maintenance", SyncedTableSpecExtraColumnMaintenance),
-        )
-
-
-class SyncedTableSpecExtraColumnMaintenance(Enum):
-    """How the column's value is populated and kept up to date."""
-
-    DEFAULT_VALUE = "DEFAULT_VALUE"
-    STORED_GENERATED = "STORED_GENERATED"
-
-
 class SyncedTableSpecPgSpecificType(Enum):
     """PostgreSQL-specific target types that can override the default Delta-to-PG mapping."""
 
     PG_SPECIFIC_TYPE_HALFVEC = "PG_SPECIFIC_TYPE_HALFVEC"
     PG_SPECIFIC_TYPE_VARCHAR = "PG_SPECIFIC_TYPE_VARCHAR"
     PG_SPECIFIC_TYPE_VECTOR = "PG_SPECIFIC_TYPE_VECTOR"
-
-
-@dataclass
-class SyncedTableSpecSecondaryIndex:
-    """Definition of a secondary index to create on the synced table."""
-
-    name: str
-    """Name of the index as it will appear in PostgreSQL."""
-
-    definition: str
-    """The definition portion of a CREATE INDEX statement, placed after ON table_name. For example:
-    USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)."""
-
-    creation_point: Optional[SyncedTableSpecSecondaryIndexCreationPoint] = None
-    """When the index should be created relative to the initial data load."""
-
-    def as_dict(self) -> dict:
-        """Serializes the SyncedTableSpecSecondaryIndex into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.creation_point is not None:
-            body["creation_point"] = self.creation_point.value
-        if self.definition is not None:
-            body["definition"] = self.definition
-        if self.name is not None:
-            body["name"] = self.name
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the SyncedTableSpecSecondaryIndex into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.creation_point is not None:
-            body["creation_point"] = self.creation_point
-        if self.definition is not None:
-            body["definition"] = self.definition
-        if self.name is not None:
-            body["name"] = self.name
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> SyncedTableSpecSecondaryIndex:
-        """Deserializes the SyncedTableSpecSecondaryIndex from a dictionary."""
-        return cls(
-            creation_point=_enum(d, "creation_point", SyncedTableSpecSecondaryIndexCreationPoint),
-            definition=d.get("definition", None),
-            name=d.get("name", None),
-        )
-
-
-class SyncedTableSpecSecondaryIndexCreationPoint(Enum):
-    """Controls when the index is created relative to the initial data load."""
-
-    CREATION_POINT_AFTER_DATA_LOAD = "CREATION_POINT_AFTER_DATA_LOAD"
 
 
 @dataclass
@@ -1845,14 +1632,17 @@ class SyncedTableTriggeredUpdateStatus:
     def from_dict(cls, d: Dict[str, Any]) -> SyncedTableTriggeredUpdateStatus:
         """Deserializes the SyncedTableTriggeredUpdateStatus from a dictionary."""
         return cls(
-            last_processed_commit_version=d.get("last_processed_commit_version", None),
+            last_processed_commit_version=_int64(d, "last_processed_commit_version"),
             timestamp=d.get("timestamp", None),
             triggered_update_progress=_from_dict(d, "triggered_update_progress", SyncedTablePipelineProgress),
         )
 
 
 class DatabaseAPI:
-    """Database Instances provide access to a database via REST API or direct SQL."""
+    """Database Instances provide access to a database via REST API or direct SQL.
+
+    For new workloads, Databricks recommends the `Postgres API
+    <https://docs.databricks.com/api/postgres/v1/postgres>`__, which supports the latest Lakebase features."""
 
     def __init__(self, api_client):
         self._api = api_client
@@ -1885,6 +1675,9 @@ class DatabaseAPI:
     def create_database_catalog(self, catalog: DatabaseCatalog) -> DatabaseCatalog:
         """Create a Database Catalog.
 
+        For new workloads, Databricks recommends the Postgres API equivalent: `Create a catalog
+        <https://docs.databricks.com/api/postgres/v1/create-catalog>`__.
+
         :param catalog: :class:`DatabaseCatalog`
 
         :returns: :class:`DatabaseCatalog`
@@ -1906,6 +1699,9 @@ class DatabaseAPI:
 
     def create_database_instance(self, database_instance: DatabaseInstance) -> Wait[DatabaseInstance]:
         """Create a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Create a project
+        <https://docs.databricks.com/api/postgres/v1/create-project>`__.
 
         :param database_instance: :class:`DatabaseInstance`
           Instance to create.
@@ -1946,6 +1742,9 @@ class DatabaseAPI:
         database_instance_name: Optional[str] = None,
     ) -> DatabaseInstanceRole:
         """Create a role for a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Create a role
+        <https://docs.databricks.com/api/postgres/v1/create-role>`__.
 
         :param instance_name: str
         :param database_instance_role: :class:`DatabaseInstanceRole`
@@ -1998,6 +1797,9 @@ class DatabaseAPI:
     def create_synced_database_table(self, synced_table: SyncedDatabaseTable) -> SyncedDatabaseTable:
         """Create a Synced Database Table.
 
+        For new workloads, Databricks recommends the Postgres API equivalent: `Create a synced table
+        <https://docs.databricks.com/api/postgres/v1/create-synced-table>`__.
+
         :param synced_table: :class:`SyncedDatabaseTable`
 
         :returns: :class:`SyncedDatabaseTable`
@@ -2020,6 +1822,9 @@ class DatabaseAPI:
     def delete_database_catalog(self, name: str):
         """Delete a Database Catalog.
 
+        For new workloads, Databricks recommends the Postgres API equivalent: `Delete a catalog
+        <https://docs.databricks.com/api/postgres/v1/delete-catalog>`__.
+
         :param name: str
 
 
@@ -2037,6 +1842,9 @@ class DatabaseAPI:
 
     def delete_database_instance(self, name: str, *, force: Optional[bool] = None, purge: Optional[bool] = None):
         """Delete a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Delete a project
+        <https://docs.databricks.com/api/postgres/v1/delete-project>`__.
 
         :param name: str
           Name of the instance to delete.
@@ -2074,6 +1882,9 @@ class DatabaseAPI:
         reassign_owned_to: Optional[str] = None,
     ):
         """Deletes a role for a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Delete a role
+        <https://docs.databricks.com/api/postgres/v1/delete-role>`__.
 
         :param instance_name: str
         :param name: str
@@ -2122,6 +1933,9 @@ class DatabaseAPI:
     def delete_synced_database_table(self, name: str, *, purge_data: Optional[bool] = None):
         """Delete a Synced Database Table.
 
+        For new workloads, Databricks recommends the Postgres API equivalent: `Delete a synced table
+        <https://docs.databricks.com/api/postgres/v1/delete-synced-table>`__.
+
         :param name: str
         :param purge_data: bool (optional)
           Optional. When set to true, the actual PostgreSQL table will be dropped from the database.
@@ -2141,33 +1955,6 @@ class DatabaseAPI:
             headers["X-Databricks-Workspace-Id"] = cfg.workspace_id
 
         self._api.do("DELETE", f"/api/2.0/database/synced_tables/{name}", query=query, headers=headers)
-
-    def failover_database_instance(
-        self, name: str, *, failover_target_database_instance_name: Optional[str] = None
-    ) -> DatabaseInstance:
-        """Failover the primary node of a Database Instance to a secondary.
-
-        :param name: str
-          Name of the instance to failover.
-        :param failover_target_database_instance_name: str (optional)
-
-        :returns: :class:`DatabaseInstance`
-        """
-
-        body = {}
-        if failover_target_database_instance_name is not None:
-            body["failover_target_database_instance_name"] = failover_target_database_instance_name
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
-        cfg = self._api._cfg
-        if cfg.workspace_id:
-            headers["X-Databricks-Workspace-Id"] = cfg.workspace_id
-
-        res = self._api.do("POST", f"/api/2.0/database/instances/{name}/failover", body=body, headers=headers)
-        return DatabaseInstance.from_dict(res)
 
     def find_database_instance_by_uid(self, *, uid: Optional[str] = None) -> DatabaseInstance:
         """Find a Database Instance by uid.
@@ -2200,6 +1987,9 @@ class DatabaseAPI:
         request_id: Optional[str] = None,
     ) -> DatabaseCredential:
         """Generates a credential that can be used to access database instances.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Generate a database credential
+        <https://docs.databricks.com/api/postgres/v1/generate-database-credential>`__.
 
         :param claims: List[:class:`RequestedClaims`] (optional)
           A set of UC permissions to add to the credential. We verify that the caller has the necessary
@@ -2238,6 +2028,9 @@ class DatabaseAPI:
     def get_database_catalog(self, name: str) -> DatabaseCatalog:
         """Get a Database Catalog.
 
+        For new workloads, Databricks recommends the Postgres API equivalent: `Get a catalog
+        <https://docs.databricks.com/api/postgres/v1/get-catalog>`__.
+
         :param name: str
 
         :returns: :class:`DatabaseCatalog`
@@ -2256,6 +2049,9 @@ class DatabaseAPI:
 
     def get_database_instance(self, name: str) -> DatabaseInstance:
         """Get a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Get a project
+        <https://docs.databricks.com/api/postgres/v1/get-project>`__.
 
         :param name: str
           Name of the cluster to get.
@@ -2276,6 +2072,9 @@ class DatabaseAPI:
 
     def get_database_instance_role(self, instance_name: str, name: str) -> DatabaseInstanceRole:
         """Gets a role for a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Get a role
+        <https://docs.databricks.com/api/postgres/v1/get-role>`__.
 
         :param instance_name: str
         :param name: str
@@ -2315,6 +2114,9 @@ class DatabaseAPI:
 
     def get_synced_database_table(self, name: str) -> SyncedDatabaseTable:
         """Get a Synced Database Table.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `Get a synced table
+        <https://docs.databricks.com/api/postgres/v1/get-synced-table>`__.
 
         :param name: str
 
@@ -2374,9 +2176,10 @@ class DatabaseAPI:
     def list_database_instance_roles(
         self, instance_name: str, *, page_size: Optional[int] = None, page_token: Optional[str] = None
     ) -> Iterator[DatabaseInstanceRole]:
-        """START OF PG ROLE APIs Section These APIs are marked a PUBLIC with stage < PUBLIC_PREVIEW. With more
-        recent Lakebase V2 plans, we don't plan to ever advance these to PUBLIC_PREVIEW. These APIs will
-        remain effectively undocumented/UI-only and we'll aim for a new public roles API as part of V2 PuPr.
+        """List roles for a Database Instance.
+
+        For new workloads, Databricks recommends the Postgres API equivalent: `List roles
+        <https://docs.databricks.com/api/postgres/v1/list-roles>`__.
 
         :param instance_name: str
         :param page_size: int (optional)
@@ -2416,6 +2219,9 @@ class DatabaseAPI:
     ) -> Iterator[DatabaseInstance]:
         """List Database Instances.
 
+        For new workloads, Databricks recommends the Postgres API equivalent: `List projects
+        <https://docs.databricks.com/api/postgres/v1/list-projects>`__.
+
         :param page_size: int (optional)
           Upper bound for items returned. The maximum value is 100.
         :param page_token: str (optional)
@@ -2449,7 +2255,7 @@ class DatabaseAPI:
     def list_synced_database_tables(
         self, instance_name: str, *, page_size: Optional[int] = None, page_token: Optional[str] = None
     ) -> Iterator[SyncedDatabaseTable]:
-        """This API is currently unimplemented, but exposed for Terraform support.
+        """List synced database tables in a Database Instance.
 
         :param instance_name: str
           Name of the instance to get synced tables for.
@@ -2521,6 +2327,10 @@ class DatabaseAPI:
     ) -> DatabaseInstance:
         """Update a Database Instance.
 
+        For new workloads, Databricks recommends the Postgres API equivalents: `Update a project
+        <https://docs.databricks.com/api/postgres/v1/update-project>`__ and `Update an endpoint
+        <https://docs.databricks.com/api/postgres/v1/update-endpoint>`__.
+
         :param name: str
           The name of the instance. This is the unique identifier for the instance.
         :param database_instance: :class:`DatabaseInstance`
@@ -2546,47 +2356,6 @@ class DatabaseAPI:
 
         res = self._api.do("PATCH", f"/api/2.0/database/instances/{name}", query=query, body=body, headers=headers)
         return DatabaseInstance.from_dict(res)
-
-    def update_database_instance_role(
-        self,
-        instance_name: str,
-        name: str,
-        database_instance_role: DatabaseInstanceRole,
-        *,
-        database_instance_name: Optional[str] = None,
-    ) -> DatabaseInstanceRole:
-        """Update a role for a Database Instance.
-
-        :param instance_name: str
-        :param name: str
-          The name of the role. This is the unique identifier for the role in an instance.
-        :param database_instance_role: :class:`DatabaseInstanceRole`
-        :param database_instance_name: str (optional)
-
-        :returns: :class:`DatabaseInstanceRole`
-        """
-
-        body = database_instance_role.as_dict()
-        query = {}
-        if database_instance_name is not None:
-            query["database_instance_name"] = database_instance_name
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
-        cfg = self._api._cfg
-        if cfg.workspace_id:
-            headers["X-Databricks-Workspace-Id"] = cfg.workspace_id
-
-        res = self._api.do(
-            "PATCH",
-            f"/api/2.0/database/instances/{instance_name}/roles/{name}",
-            query=query,
-            body=body,
-            headers=headers,
-        )
-        return DatabaseInstanceRole.from_dict(res)
 
     def update_synced_database_table(
         self, name: str, synced_table: SyncedDatabaseTable, update_mask: str
@@ -2618,22 +2387,3 @@ class DatabaseAPI:
 
         res = self._api.do("PATCH", f"/api/2.0/database/synced_tables/{name}", query=query, body=body, headers=headers)
         return SyncedDatabaseTable.from_dict(res)
-
-    def upgrade_instance_to_autoscaling(self, name: str):
-        """Upgrade a Database Instance to Autoscaling.
-
-        :param name: str
-          Name of the instance to upgrade.
-
-
-        """
-
-        headers = {
-            "Accept": "application/json",
-        }
-
-        cfg = self._api._cfg
-        if cfg.workspace_id:
-            headers["X-Databricks-Workspace-Id"] = cfg.workspace_id
-
-        self._api.do("PATCH", f"/api/2.0/database/instances/{name}/upgrade", headers=headers)

@@ -16,6 +16,7 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
 from io import BytesIO
 from queue import Empty, Full, Queue
 from tempfile import mkstemp
@@ -28,16 +29,15 @@ import requests
 import requests.adapters
 from requests import RequestException
 
-from databricks.sdk.service import files
-from databricks.sdk.service._internal import _escape_multi_segment_path_parameter
-from databricks.sdk.service.files import DownloadResponse
-
 from .._base_client import _BaseClient, _RawResponse, _StreamingResponse
 from .._property import _cached_property
 from ..config import Config
 from ..errors import AlreadyExists, InternalError, NotFound, PermissionDenied
 from ..errors.mapper import _error_mapper
 from ..retries import retried
+from databricks.sdk.service import files
+from databricks.sdk.service._internal import _escape_multi_segment_path_parameter
+from databricks.sdk.service.files import DownloadResponse
 from .files_utils import CreateDownloadUrlResponse, _ConcatenatedInputStream, _PresignedUrlDistributor
 
 if TYPE_CHECKING:
@@ -747,6 +747,35 @@ class _PresignedUrl:
     part_number: int | None = None
 
 
+class _ResolvedEndpoint(Enum):
+    """A file transfer protocol this SDK can speak, identified by the (api, api_version) pair the
+    endpoints API returns."""
+
+    IO_OFFLOAD = "IO_OFFLOAD"
+    FILES_API_V2 = "FILES_API_V2"
+
+
+# Maps the server's (api, api_version) to a protocol compiled into this SDK. Pairs not listed here are
+# skipped, which lets the server advertise newer protocols without breaking older SDKs. IO_OFFLOAD is
+# unversioned during the preview, so a versioned IO_OFFLOAD is newer than this SDK.
+_RECOGNIZED_ENDPOINTS: dict[tuple[str, Optional[str]], _ResolvedEndpoint] = {
+    ("IO_OFFLOAD", None): _ResolvedEndpoint.IO_OFFLOAD,
+    ("FILES_API", "2.0"): _ResolvedEndpoint.FILES_API_V2,
+}
+
+_ENDPOINT_SCHEMES = ("http", "https")
+
+
+@dataclass(frozen=True)
+class _Endpoint:
+    """One entry of the ordered endpoint list a file transfer walks, best first."""
+
+    kind: _ResolvedEndpoint
+    base_url: str
+    """Scheme and hostname as returned by the server, e.g. https://example.cloud.databricks.com."""
+    multipart_upload_supported: bool
+
+
 class _PresignedUrlRequestBuilder:
     """Builds presigned URL requests for file upload operations.
 
@@ -821,25 +850,6 @@ class _PresignedUrlRequestBuilder:
         )
         return CreateDownloadUrlResponse.from_dict(response)
 
-    def build_abort_url(self, path: str, session_token: str, expire_time: str) -> _PresignedUrl:
-        """Fetches a presigned URL for aborting a multipart upload."""
-        body = {
-            "path": path,
-            "session_token": session_token,
-            "expire_time": expire_time,
-        }
-        response = self._api.do(
-            "POST",
-            url=f"{self._hostname}/api/2.0/fs/create-abort-upload-url",
-            headers={"Content-Type": "application/json"},
-            body=body,
-        )
-        abort_node = response["abort_upload_url"]
-        headers: dict[str, str] = {"Content-Type": "application/octet-stream"}
-        for h in abort_node.get("headers", []):
-            headers[h["name"]] = h["value"]
-        return _PresignedUrl(url=abort_node["url"], headers=headers)
-
 
 class _StorageProxyRequestBuilder:
     """Builds direct upload requests to the storage proxy.
@@ -901,21 +911,6 @@ class _StorageProxyRequestBuilder:
             headers={},
         )
 
-    def build_abort_url(self, path: str, session_token: str, expire_time: str) -> _PresignedUrl:
-        """Builds a URL for aborting an upload directly on the storage proxy."""
-        escaped = _escape_multi_segment_path_parameter(path)
-        base = f"{self._hostname}/api/2.0/fs/files{escaped}"
-        query = parse.urlencode(
-            {
-                "action": "abort-upload",
-                "session_token": session_token,
-            }
-        )
-        return _PresignedUrl(
-            url=f"{base}?{query}",
-            headers={"Content-Type": "application/json"},
-        )
-
 
 class FilesExt(files.FilesAPI):
     __doc__ = files.FilesAPI.__doc__
@@ -928,6 +923,12 @@ class FilesExt(files.FilesAPI):
 
     # Timeout in seconds for the storage-proxy health check probe.
     _STORAGE_PROXY_PROBE_TIMEOUT: float = 3.0
+
+    _ENDPOINTS_API_PATH: str = "/api/2.0/fs/endpoints"
+
+    # Endpoint discovery is a single attempt bounded by this timeout: it precedes a transfer, so it
+    # must fail fast to the default order rather than retry and stall the upload or download.
+    _ENDPOINTS_RESOLVE_TIMEOUT_SECONDS: float = 10.0
 
     @dataclass(frozen=True)
     class _UploadContext:
@@ -955,15 +956,131 @@ class FilesExt(files.FilesAPI):
         self._cached_cloud_provider_session: Optional[requests.Session] = None
         self._cloud_provider_session_lock = Lock()
         self._dp_hostname_available: Optional[bool] = None
-        self._cached_storage_proxy_session: Optional[requests.Session] = None
-        self._storage_proxy_session_lock = Lock()
+        self._cached_authenticated_session: Optional[requests.Session] = None
+        self._authenticated_session_lock = Lock()
+        self._cached_endpoints: Optional[list[_Endpoint]] = None
+        self._endpoints_lock = Lock()
 
-    def _get_hostname(self) -> str:
-        """Returns the hostname for file operations.
+    def _resolve_endpoints(self) -> list[_Endpoint]:
+        """Returns the ordered endpoints to try for a file transfer, best first.
 
-        When storage proxy is enabled, probes it on first call and caches the
-        result. Returns the proxy hostname if available, otherwise the workspace
-        hostname.
+        The server is asked once per client and its answer, including a failure, is cached. Anything
+        short of a usable list falls back to the built-in order, so endpoint discovery never fails a
+        transfer.
+        """
+        if not self._config.experimental_files_ext_enable_endpoints_api:
+            return self._default_endpoints()
+        with self._endpoints_lock:
+            if self._cached_endpoints is None:
+                self._cached_endpoints = self._fetch_endpoints() or self._default_endpoints()
+            return list(self._cached_endpoints)
+
+    def _default_endpoints(self) -> list[_Endpoint]:
+        host = self._config.host
+        return [
+            _Endpoint(_ResolvedEndpoint.IO_OFFLOAD, host, multipart_upload_supported=True),
+            _Endpoint(_ResolvedEndpoint.FILES_API_V2, host, multipart_upload_supported=False),
+        ]
+
+    def _fetch_endpoints(self) -> list[_Endpoint]:
+        """Fetches the endpoint list from the server, keeping only entries this SDK can speak.
+
+        Discovery runs before a transfer, so it is a single short-timeout attempt with no retries: a
+        slow or failing endpoint must fall back to the default order quickly rather than hold up the
+        upload or download.
+        """
+        url = f"{self._config.host}{self._ENDPOINTS_API_PATH}"
+        try:
+            response = self._cloud_provider_session().request(
+                "GET",
+                url,
+                headers={**self._config.authenticate(), "Accept": "application/json"},
+                timeout=self._ENDPOINTS_RESOLVE_TIMEOUT_SECONDS,
+            )
+        except Exception as e:
+            # Broad on purpose: network and auth failures must all fail safe to the default order.
+            _LOG.warning(f"Failed to resolve file endpoints, using the default endpoints: {e}")
+            return []
+
+        # Lets a failure below be traced to the server's request log.
+        request_id = response.headers.get("x-request-id")
+        if response.status_code == 404:
+            # Not a warning: until the server-side rollout completes, some workspaces do not serve the API.
+            _LOG.info(
+                f"Endpoints API is not served for this workspace (request ID {request_id}), using the default endpoints."
+            )
+            return []
+        if response.status_code != 200:
+            _LOG.warning(
+                f"Unexpected status resolving file endpoints ({response.status_code}, request ID {request_id}), "
+                "using the default endpoints."
+            )
+            return []
+        try:
+            body = response.json()
+        except Exception as e:
+            _LOG.warning(
+                f"Failed to parse endpoints response (request ID {request_id}), using the default endpoints: {e}"
+            )
+            return []
+
+        # Proto3 JSON leaves out an empty repeated field.
+        entries = body.get("endpoints", []) if isinstance(body, dict) else None
+        if not isinstance(entries, list):
+            _LOG.warning(
+                f"Unexpected endpoints response (request ID {request_id}), using the default endpoints: {body}"
+            )
+            return []
+        endpoints = []
+        for entry in entries:
+            kind = self._endpoint_kind(entry)
+            if kind is None:
+                # Not a warning: an older SDK is expected to skip entries for APIs added after it shipped.
+                _LOG.info(f"Skipping endpoint this SDK cannot use (request ID {request_id}): {entry}")
+                continue
+            endpoint = self._parse_endpoint(entry, kind)
+            if endpoint is None:
+                _LOG.warning(
+                    f"Skipping {kind.value} endpoint with an unusable address (request ID {request_id}): {entry}"
+                )
+                continue
+            endpoints.append(endpoint)
+        if not endpoints:
+            _LOG.warning(f"No usable endpoints in the response (request ID {request_id}), using the default endpoints.")
+        return endpoints
+
+    @staticmethod
+    def _endpoint_kind(entry) -> Optional[_ResolvedEndpoint]:
+        """Returns the protocol of a listed endpoint, or None if this SDK does not speak it."""
+        if not isinstance(entry, dict):
+            return None
+        api = entry.get("api")
+        api_version = entry.get("api_version")
+        # The entry is unvalidated JSON: an unhashable value such as a list would make the lookup below raise
+        # instead of skipping the entry. IO_OFFLOAD entries have no api_version, so None is allowed.
+        if not isinstance(api, str) or not (api_version is None or isinstance(api_version, str)):
+            return None
+        return _RECOGNIZED_ENDPOINTS.get((api, api_version))
+
+    @staticmethod
+    def _parse_endpoint(entry: dict, kind: _ResolvedEndpoint) -> Optional[_Endpoint]:
+        scheme = entry.get("scheme")
+        hostname = entry.get("hostname")
+        if scheme not in _ENDPOINT_SCHEMES or not isinstance(hostname, str) or not hostname:
+            return None
+        # Mirrors the proto getter: an unset optional bool reads as false.
+        multipart_upload_supported = entry.get("multipart_upload_supported") is True
+        return _Endpoint(kind, f"{scheme}://{hostname}", multipart_upload_supported)
+
+    def _active_endpoint(self) -> _Endpoint:
+        """The endpoint used for bulk file transfer.
+
+        Selected by the storage-proxy probe: the storage proxy (a direct Files API path) when the probe
+        finds it available, otherwise the offload (presigned) path on the workspace host. The probe runs
+        once and its result is cached.
+
+        This is the single-endpoint selection; PR wiring the endpoints API replaces it with a walk over
+        the server-resolved list.
         """
         if self._config.experimental_files_ext_enable_storage_proxy:
             if self._dp_hostname_available is None:
@@ -973,19 +1090,28 @@ class FilesExt(files.FilesAPI):
                 else:
                     _LOG.info("Storage proxy is not available, will use presigned URLs.")
             if self._dp_hostname_available:
-                return self._STORAGE_PROXY_HOSTNAME
-        return self._config.host
+                return _Endpoint(
+                    _ResolvedEndpoint.FILES_API_V2, self._STORAGE_PROXY_HOSTNAME, multipart_upload_supported=True
+                )
+        return _Endpoint(_ResolvedEndpoint.IO_OFFLOAD, self._config.host, multipart_upload_supported=True)
+
+    def _get_hostname(self) -> str:
+        """Returns the scheme+hostname for file operations, e.g. https://example.cloud.databricks.com."""
+        return self._active_endpoint().base_url
 
     def _create_request_builder(self):
-        """Creates the appropriate request builder for file operations.
+        """Creates the request builder for the active endpoint."""
+        return self._request_builder_for(self._active_endpoint())
 
-        Returns a storage proxy builder when the proxy is available,
-        otherwise a presigned URL builder.
+    def _request_builder_for(self, endpoint: _Endpoint):
+        """Maps an endpoint to the builder that speaks its protocol.
+
+        The offload path coordinates presigned URLs through the workspace API; the direct Files API path
+        builds URLs straight at the endpoint host.
         """
-        hostname = self._get_hostname()
-        if self._config.experimental_files_ext_enable_storage_proxy and self._dp_hostname_available:
-            return _StorageProxyRequestBuilder(hostname)
-        return _PresignedUrlRequestBuilder(self._api, hostname)
+        if endpoint.kind == _ResolvedEndpoint.IO_OFFLOAD:
+            return _PresignedUrlRequestBuilder(self._api, endpoint.base_url)
+        return _StorageProxyRequestBuilder(endpoint.base_url)
 
     def _resolve_workspace_id(self) -> Optional[str]:
         """Resolves the workspace ID by querying the SCIM Me endpoint."""
@@ -1025,17 +1151,16 @@ class FilesExt(files.FilesAPI):
         except Exception:
             return False
 
-    def _create_storage_proxy_session(self) -> requests.Session:
-        """Returns an HTTP session with SDK auth for storage-proxy requests.
+    def _authenticated_session(self) -> requests.Session:
+        """Returns an HTTP session with SDK auth for direct Files API data requests.
 
-        Unlike _cloud_provider_session (which has no auth), this session
-        includes the SDK authentication callback so that every request to the
-        storage proxy carries valid credentials. The session is created on
-        first call and cached for reuse.
+        Unlike _cloud_provider_session (which has no auth), this session includes the SDK authentication
+        callback so that every request carries valid credentials. The session is created on first call and
+        cached for reuse.
         """
-        with self._storage_proxy_session_lock:
-            if self._cached_storage_proxy_session is not None:
-                return self._cached_storage_proxy_session
+        with self._authenticated_session_lock:
+            if self._cached_authenticated_session is not None:
+                return self._cached_authenticated_session
             session = requests.Session()
             config = self._config
 
@@ -1052,7 +1177,7 @@ class FilesExt(files.FilesAPI):
             )
             session.mount("https://", http_adapter)
             session.mount("http://", http_adapter)
-            self._cached_storage_proxy_session = session
+            self._cached_authenticated_session = session
             return session
 
     def download(
@@ -1179,8 +1304,12 @@ class FilesExt(files.FilesAPI):
         file_info = self.get_metadata(remote_path)
         file_size = file_info.content_length
         last_modified = file_info.last_modified
-        # If the file is smaller than the threshold, do not use parallel download.
-        if file_size <= self._config.files_ext_parallel_download_min_file_size:
+        # If the file is smaller than the threshold, or fits in one range, do not use parallel download. A range
+        # covering the whole file may also be answered with 200 instead of 206.
+        if file_size <= max(
+            self._config.files_ext_parallel_download_min_file_size,
+            self._config.files_ext_parallel_download_default_part_size,
+        ):
             self._sequential_download_to_file(destination, remote_path, last_modified)
             return
         part_size = self._config.files_ext_parallel_download_default_part_size
@@ -1262,13 +1391,16 @@ class FilesExt(files.FilesAPI):
                     url_distributor.invalidate_url(version)
                     retry_count += 1
                     continue
-                elif raw_resp.status_code == 403 and not any_success.is_set():
-                    raise FallbackToDownloadUsingFilesApi("Received 403 Forbidden from presigned URL")
-                elif not any_success.is_set():
-                    # For other errors, we raise a retryable exception to trigger retry logic.
-                    raise FallbackToDownloadUsingFilesApi(f"Received {raw_resp.status_code} from presigned URL")
+                # Only a 206 carries the requested range; a 200 carries the whole file, which must not be written
+                # at this range's offset.
+                if raw_resp.status_code != 206:
+                    message = f"Received {raw_resp.status_code} from presigned URL for {additional_headers['Range']}"
+                    if not any_success.is_set():
+                        raise FallbackToDownloadUsingFilesApi(message)
+                    if raw_resp.ok:
+                        raise ValueError(message)
+                    raise _error_mapper(raw_resp, {"message": message})
 
-                raw_resp.raise_for_status()
                 any_success.set()
                 return BytesIO(raw_resp.content)
             raise ValueError("Exceeded maximum retries for downloading with presigned URL: URL expired too many times")
@@ -1291,11 +1423,17 @@ class FilesExt(files.FilesAPI):
         def download_chunk(additional_headers: dict[str, str]) -> BinaryIO:
             raw_response: dict = self._api.do(
                 method="GET",
-                path=f"/api/2.0/fs/files{remote_path}",
+                path=f"/api/2.0/fs/files{_escape_multi_segment_path_parameter(remote_path)}",
                 headers=additional_headers,
                 raw=True,
             )
-            return raw_response["contents"]
+            contents = raw_response["contents"]
+            status = contents._response.status_code
+            if status != 206:
+                # Only a 206 carries the requested range; anything else must not be written at its offset.
+                contents.close()
+                raise ValueError(f"Received {status} from the Files API for {additional_headers['Range']}")
+            return contents
 
         self._do_parallel_download(remote_path, destination, parallelism, download_chunk)
 
@@ -2154,7 +2292,7 @@ class FilesExt(files.FilesAPI):
         """
         Checks if response matches one of the known "URL expired" responses from the cloud storage providers.
         """
-        if response.status_code != 403:
+        if response.status_code not in (400, 403):
             return False
 
         try:
@@ -2165,6 +2303,10 @@ class FilesExt(files.FilesAPI):
             code = xml_root.find("Code")
             if code is None:
                 return False
+
+            if code.text == "ExpiredToken":
+                # GCP, and AWS when the URL was signed with temporary credentials that have since expired.
+                return True
 
             if code.text == "AuthenticationFailed":
                 # Azure
@@ -2427,37 +2569,30 @@ class FilesExt(files.FilesAPI):
         )
 
     def _abort_multipart_upload(self, ctx: _UploadContext, session_token: str) -> None:
-        """Aborts ongoing multipart upload session to clean up incomplete file."""
-        builder = self._create_request_builder()
-        abort_info = builder.build_abort_url(ctx.target_path, session_token, self._get_upload_url_expire_time())
+        """Aborts ongoing multipart upload session to clean up incomplete file.
 
-        def perform() -> requests.Response:
-            return self._cloud_provider_session().request(
-                "DELETE",
-                abort_info.url,
-                headers=abort_info.headers,
-                data=b"",
-                timeout=self._config.files_ext_network_transfer_inactivity_timeout_seconds,
-            )
+        Best-effort, so sent once, without the API client's retries.
+        """
+        escaped = _escape_multi_segment_path_parameter(ctx.target_path)
+        abort_response = self._authenticated_session().request(
+            "POST",
+            f"{self._get_hostname()}/api/2.0/fs/files{escaped}",
+            params={"action": "abort-upload", "upload_type": "multipart", "session_token": session_token},
+            timeout=self._config.files_ext_network_transfer_inactivity_timeout_seconds,
+        )
 
-        abort_response = self._retry_cloud_idempotent_operation(perform)
-
-        if abort_response.status_code not in (200, 201):
+        if not abort_response.ok:
             raise ValueError(abort_response)
 
     def _abort_resumable_upload(self, resumable_upload_url: str, headers: dict[str, str]) -> None:
-        """Aborts ongoing resumable upload session to clean up incomplete file."""
-
-        def perform() -> requests.Response:
-            return self._cloud_provider_session().request(
-                "DELETE",
-                resumable_upload_url,
-                headers=headers,
-                data=b"",
-                timeout=self._config.files_ext_network_transfer_inactivity_timeout_seconds,
-            )
-
-        abort_response = self._retry_cloud_idempotent_operation(perform)
+        """Aborts ongoing resumable upload session to clean up incomplete file. Best-effort, so sent once."""
+        abort_response = self._cloud_provider_session().request(
+            "DELETE",
+            resumable_upload_url,
+            headers=headers,
+            data=b"",
+            timeout=self._config.files_ext_network_transfer_inactivity_timeout_seconds,
+        )
 
         if abort_response.status_code not in (200, 201):
             raise ValueError(abort_response)
@@ -2471,7 +2606,7 @@ class FilesExt(files.FilesAPI):
         The session is created on first call and cached for reuse.
         """
         if self._config.experimental_files_ext_enable_storage_proxy and self._dp_hostname_available:
-            return self._create_storage_proxy_session()
+            return self._authenticated_session()
         with self._cloud_provider_session_lock:
             if self._cached_cloud_provider_session is None:
                 session = requests.Session()
