@@ -81,7 +81,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "clusters",
             "type": "array",
-            "description": "Cluster settings for this pipeline deployment.",
+            "description": "Cluster settings for this pipeline deployment. Applies to classic (non-serverless) pipelines. Omit this field when ``serverless`` is ``true``.",
             "children": [
               {
                 "name": "apply_policy_default_values",
@@ -146,7 +146,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "label",
                 "type": "string",
-                "description": "A label for the cluster specification, either ``default`` to configure the default cluster, or ``maintenance`` to configure the maintenance cluster. This field is optional. The default value is ``default``."
+                "description": "A label for the cluster specification, either ``default`` to configure the default cluster settings applied to both the update and maintenance clusters, ``updates`` to configure the update cluster, or ``maintenance`` to configure the maintenance cluster. This field is optional. The default value is ``default``."
               },
               {
                 "name": "node_type_id",
@@ -188,7 +188,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "continuous",
             "type": "boolean",
-            "description": "Whether the pipeline is continuous or triggered. This replaces ``trigger``."
+            "description": "Whether the pipeline is continuous or triggered. This replaces ``trigger``. Deprecated: wrap the pipeline in a continuous job instead, which also lets you take advantage of job-level settings such as performance mode. When the pipeline is started by a continuous job, the job's setting takes precedence and this field is ignored."
           },
           {
             "name": "deployment",
@@ -220,7 +220,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "development",
             "type": "boolean",
-            "description": "Whether the pipeline is in Development mode. Defaults to false."
+            "description": "Whether the pipeline is in Development mode. Defaults to false. Deprecated: set development mode for each update instead."
           },
           {
             "name": "edition",
@@ -378,7 +378,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "source_type",
                 "type": "string",
-                "description": "The type of the foreign source. The source type will be inferred from the source connection or ingestion gateway. This field is output only and will be ignored if provided. (ADOBE_CAMPAIGNS, ADOBE_COMMERCE, ADP_WORKFORCE_NOW, AHA, AIRTABLE, AKAMAI_WAF, AMPLITUDE, API_SOURCE, APPFIGURES, APPLE_APP_STORE, APPLE_SEARCH_ADS, ATLASSIAN_ORGANIZATION, AWIN, AZURE_MONITOR_LOGS, BIGQUERY, BING_ADS, CERIDIAN_DAYFORCE, COMMUNITY, CONFLUENCE, CROWDSTRIKE_EVENT_STREAM, DELIGHTED, DYNAMICS365, EPIC_CLARITY, FOREIGN_CATALOG, FRESHSERVICE, FRONT, GA4_RAW_DATA, GENESYS, GITHUB, GITLAB, GMAIL, GONG, GOOGLE_ADS, GOOGLE_ANALYTICS, GOOGLE_CALENDAR, GOOGLE_DRIVE, GOOGLE_SEARCH_CONSOLE, GOOGLE_WORKSPACE, GUIDEWIRE, GURU, HIBOB, HUBSPOT, IRONCLAD, JIRA, KAFKA, LINEAR, LINKEDIN_ADS, M365_AUDIT_LOGS, MANAGED_POSTGRESQL, MARKETO, META_MARKETING, MICROSOFT_ENTRA_ID, MICROSOFT_TEAMS, MONDAY_COM, MYSQL, NETSKOPE_LOGS, NETSUITE, NOTION, OKTA_SYSTEM_LOGS, ONE_PASSWORD_EVENT_LOGS, ORACLE, ORACLE_ELOQUA, ORACLE_FUSION_CLOUD, OUTLOOK, PAGERDUTY, PARTNERSTACK, PENDO, PINTEREST_ADS, POSTGRESQL, PROOFPOINT_SIEM, QUICKBOOKS, RABBITMQ, REDDIT_ADS, REDSHIFT, SALESFORCE, SALESFORCE_MARKETING_CLOUD, SALESLOFT, SAP_SUCCESSFACTORS, SAS, SENDGRID, SERVICENOW, SHAREPOINT, SHOPIFY, SLACK_ACCESS_AND_INTEGRATION_LOGS, SLACK_AUDIT_LOGS, SMARTSHEET, SNAPCHAT_ADS, SPLUNK, SQLDW, SQLSERVER, SQUARE, TERADATA, TIKTOK_ADS, VEEVA, VEEVA_VAULT, VERKADA, WIZ_AUDIT_LOGS, WORKDAY_ACTIVITY_LOGGING, WORKDAY_HCM, WORKDAY_RAAS, X_ADS, YOUTUBE_ANALYTICS, ZENDESK, ZIP, ZOHO_BOOKS, ZOOM, ZOOM_LOGS)"
+                "description": "The type of the foreign source. The source type will be inferred from the source connection or ingestion gateway. This field is output only and will be ignored if provided. (BIGQUERY, CONFLUENCE, DYNAMICS365, FOREIGN_CATALOG, GA4_RAW_DATA, GOOGLE_DRIVE, JIRA, MANAGED_POSTGRESQL, META_MARKETING, MYSQL, NETSUITE, ONEDRIVE, ORACLE, POSTGRESQL, RABBITMQ, SALESFORCE, SERVICENOW, SHAREPOINT, SMARTSHEET, SQLSERVER, TERADATA, TIKTOK_ADS, WORKDAY_RAAS, ZENDESK)"
               },
               {
                 "name": "table_configuration",
@@ -447,6 +447,11 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
+            "name": "parent_path",
+            "type": "string",
+            "description": "Path of the pipeline parent folder in workspace file tree. If absent, the pipeline doesn't have a workspace object."
+          },
+          {
             "name": "photon",
             "type": "boolean",
             "description": "Whether Photon is enabled for this pipeline."
@@ -474,23 +479,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "rewind_generation_interval",
-            "type": "object",
-            "description": "Interval at which rewind points are generated during pipeline execution.",
-            "children": [
-              {
-                "name": "interval",
-                "type": "integer",
-                "description": "An integer value representing the interval quantity for the schedule."
-              },
-              {
-                "name": "unit",
-                "type": "string",
-                "description": "A time unit for the schedule. (DAYS, HOURS, WEEKS)"
-              }
-            ]
-          },
-          {
             "name": "root_path",
             "type": "string",
             "description": "Root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during pipeline execution."
@@ -503,7 +491,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "serverless",
             "type": "boolean",
-            "description": "Whether serverless compute is enabled for this pipeline."
+            "description": "Whether serverless compute is enabled for this pipeline. Serverless is the recommended compute for new pipelines; set this to ``true`` to run the pipeline on serverless. For notebook/file pipelines, omitting this field uses classic compute configured through the ``clusters`` field. When ``true``, omit ``clusters``; Photon is always enabled."
           },
           {
             "name": "serverless_compute_id",
@@ -565,6 +553,11 @@ The following fields are returned by `SELECT` queries:
         "description": "A list of tables to update with fullRefresh. If both refresh_selection and full_refresh_selection are empty, this is a full graph update. Full Refresh on a table means that the states of the table will be reset before the refresh."
       },
       {
+        "name": "full_refresh_selection_by_path",
+        "type": "array",
+        "description": "A list of file paths that identify the tables to update with a full refresh."
+      },
+      {
         "name": "mode",
         "type": "string",
         "description": "Indicates whether the update is either part of a continuous job run, or running in legacy continuous pipeline mode. Returned only for GetUpdate; not populated in ListUpdates responses. (CONTINUOUS, DEFAULT)"
@@ -580,58 +573,14 @@ The following fields are returned by `SELECT` queries:
         "description": "The ID of the pipeline."
       },
       {
-        "name": "refresh_flow_selection",
-        "type": "array",
-        "description": "Flow names to selectively refresh. These are unioned with other selective refresh options (refresh_selection, full_refresh_selection, etc.) to determine the final set of flows to refresh."
-      },
-      {
         "name": "refresh_selection",
         "type": "array",
         "description": "A list of tables to update without fullRefresh. If both refresh_selection and full_refresh_selection are empty, this is a full graph update. Full Refresh on a table means that the states of the table will be reset before the refresh."
       },
       {
-        "name": "rewind_spec",
-        "type": "object",
-        "description": "The rewind specification for this update. If set, this update is a rewind execution (the update will rewind the targeted datasets to the requested timestamp instead of running a normal refresh).",
-        "children": [
-          {
-            "name": "datasets",
-            "type": "array",
-            "description": "List of datasets to rewind with specific configuration for each. When not specified, all datasets will be rewound with cascade = true and reset_checkpoints = true.",
-            "children": [
-              {
-                "name": "cascade",
-                "type": "boolean",
-                "description": "Whether to cascade the rewind to dependent datasets. Must be specified."
-              },
-              {
-                "name": "identifier",
-                "type": "string",
-                "description": "The identifier of the dataset (e.g., \"main.foo.tbl1\")."
-              },
-              {
-                "name": "reset_checkpoints",
-                "type": "boolean",
-                "description": "Whether to reset checkpoints for this dataset."
-              }
-            ]
-          },
-          {
-            "name": "dry_run",
-            "type": "boolean",
-            "description": "If true, this is a dry run and we should emit the RewindSummary but not perform the rewind."
-          },
-          {
-            "name": "rewind_point_id",
-            "type": "string",
-            "description": "The ID of a previously generated rewind point to rewind to (same as the originating event log ID). Exactly one of rewind_timestamp or rewind_point_id must be specified."
-          },
-          {
-            "name": "rewind_timestamp",
-            "type": "string",
-            "description": "The base timestamp to rewind to. Exactly one of rewind_timestamp or rewind_point_id must be specified."
-          }
-        ]
+        "name": "refresh_selection_by_path",
+        "type": "array",
+        "description": "A list of file paths that identify the tables to update."
       },
       {
         "name": "state",
@@ -703,7 +652,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "clusters",
             "type": "array",
-            "description": "Cluster settings for this pipeline deployment.",
+            "description": "Cluster settings for this pipeline deployment. Applies to classic (non-serverless) pipelines. Omit this field when ``serverless`` is ``true``.",
             "children": [
               {
                 "name": "apply_policy_default_values",
@@ -768,7 +717,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "label",
                 "type": "string",
-                "description": "A label for the cluster specification, either ``default`` to configure the default cluster, or ``maintenance`` to configure the maintenance cluster. This field is optional. The default value is ``default``."
+                "description": "A label for the cluster specification, either ``default`` to configure the default cluster settings applied to both the update and maintenance clusters, ``updates`` to configure the update cluster, or ``maintenance`` to configure the maintenance cluster. This field is optional. The default value is ``default``."
               },
               {
                 "name": "node_type_id",
@@ -810,7 +759,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "continuous",
             "type": "boolean",
-            "description": "Whether the pipeline is continuous or triggered. This replaces ``trigger``."
+            "description": "Whether the pipeline is continuous or triggered. This replaces ``trigger``. Deprecated: wrap the pipeline in a continuous job instead, which also lets you take advantage of job-level settings such as performance mode. When the pipeline is started by a continuous job, the job's setting takes precedence and this field is ignored."
           },
           {
             "name": "deployment",
@@ -842,7 +791,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "development",
             "type": "boolean",
-            "description": "Whether the pipeline is in Development mode. Defaults to false."
+            "description": "Whether the pipeline is in Development mode. Defaults to false. Deprecated: set development mode for each update instead."
           },
           {
             "name": "edition",
@@ -1000,7 +949,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "source_type",
                 "type": "string",
-                "description": "The type of the foreign source. The source type will be inferred from the source connection or ingestion gateway. This field is output only and will be ignored if provided. (ADOBE_CAMPAIGNS, ADOBE_COMMERCE, ADP_WORKFORCE_NOW, AHA, AIRTABLE, AKAMAI_WAF, AMPLITUDE, API_SOURCE, APPFIGURES, APPLE_APP_STORE, APPLE_SEARCH_ADS, ATLASSIAN_ORGANIZATION, AWIN, AZURE_MONITOR_LOGS, BIGQUERY, BING_ADS, CERIDIAN_DAYFORCE, COMMUNITY, CONFLUENCE, CROWDSTRIKE_EVENT_STREAM, DELIGHTED, DYNAMICS365, EPIC_CLARITY, FOREIGN_CATALOG, FRESHSERVICE, FRONT, GA4_RAW_DATA, GENESYS, GITHUB, GITLAB, GMAIL, GONG, GOOGLE_ADS, GOOGLE_ANALYTICS, GOOGLE_CALENDAR, GOOGLE_DRIVE, GOOGLE_SEARCH_CONSOLE, GOOGLE_WORKSPACE, GUIDEWIRE, GURU, HIBOB, HUBSPOT, IRONCLAD, JIRA, KAFKA, LINEAR, LINKEDIN_ADS, M365_AUDIT_LOGS, MANAGED_POSTGRESQL, MARKETO, META_MARKETING, MICROSOFT_ENTRA_ID, MICROSOFT_TEAMS, MONDAY_COM, MYSQL, NETSKOPE_LOGS, NETSUITE, NOTION, OKTA_SYSTEM_LOGS, ONE_PASSWORD_EVENT_LOGS, ORACLE, ORACLE_ELOQUA, ORACLE_FUSION_CLOUD, OUTLOOK, PAGERDUTY, PARTNERSTACK, PENDO, PINTEREST_ADS, POSTGRESQL, PROOFPOINT_SIEM, QUICKBOOKS, RABBITMQ, REDDIT_ADS, REDSHIFT, SALESFORCE, SALESFORCE_MARKETING_CLOUD, SALESLOFT, SAP_SUCCESSFACTORS, SAS, SENDGRID, SERVICENOW, SHAREPOINT, SHOPIFY, SLACK_ACCESS_AND_INTEGRATION_LOGS, SLACK_AUDIT_LOGS, SMARTSHEET, SNAPCHAT_ADS, SPLUNK, SQLDW, SQLSERVER, SQUARE, TERADATA, TIKTOK_ADS, VEEVA, VEEVA_VAULT, VERKADA, WIZ_AUDIT_LOGS, WORKDAY_ACTIVITY_LOGGING, WORKDAY_HCM, WORKDAY_RAAS, X_ADS, YOUTUBE_ANALYTICS, ZENDESK, ZIP, ZOHO_BOOKS, ZOOM, ZOOM_LOGS)"
+                "description": "The type of the foreign source. The source type will be inferred from the source connection or ingestion gateway. This field is output only and will be ignored if provided. (BIGQUERY, CONFLUENCE, DYNAMICS365, FOREIGN_CATALOG, GA4_RAW_DATA, GOOGLE_DRIVE, JIRA, MANAGED_POSTGRESQL, META_MARKETING, MYSQL, NETSUITE, ONEDRIVE, ORACLE, POSTGRESQL, RABBITMQ, SALESFORCE, SERVICENOW, SHAREPOINT, SMARTSHEET, SQLSERVER, TERADATA, TIKTOK_ADS, WORKDAY_RAAS, ZENDESK)"
               },
               {
                 "name": "table_configuration",
@@ -1069,6 +1018,11 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
+            "name": "parent_path",
+            "type": "string",
+            "description": "Path of the pipeline parent folder in workspace file tree. If absent, the pipeline doesn't have a workspace object."
+          },
+          {
             "name": "photon",
             "type": "boolean",
             "description": "Whether Photon is enabled for this pipeline."
@@ -1096,23 +1050,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "rewind_generation_interval",
-            "type": "object",
-            "description": "Interval at which rewind points are generated during pipeline execution.",
-            "children": [
-              {
-                "name": "interval",
-                "type": "integer",
-                "description": "An integer value representing the interval quantity for the schedule."
-              },
-              {
-                "name": "unit",
-                "type": "string",
-                "description": "A time unit for the schedule. (DAYS, HOURS, WEEKS)"
-              }
-            ]
-          },
-          {
             "name": "root_path",
             "type": "string",
             "description": "Root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during pipeline execution."
@@ -1125,7 +1062,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "serverless",
             "type": "boolean",
-            "description": "Whether serverless compute is enabled for this pipeline."
+            "description": "Whether serverless compute is enabled for this pipeline. Serverless is the recommended compute for new pipelines; set this to ``true`` to run the pipeline on serverless. For notebook/file pipelines, omitting this field uses classic compute configured through the ``clusters`` field. When ``true``, omit ``clusters``; Photon is always enabled."
           },
           {
             "name": "serverless_compute_id",
@@ -1187,6 +1124,11 @@ The following fields are returned by `SELECT` queries:
         "description": "A list of tables to update with fullRefresh. If both refresh_selection and full_refresh_selection are empty, this is a full graph update. Full Refresh on a table means that the states of the table will be reset before the refresh."
       },
       {
+        "name": "full_refresh_selection_by_path",
+        "type": "array",
+        "description": "A list of file paths that identify the tables to update with a full refresh."
+      },
+      {
         "name": "mode",
         "type": "string",
         "description": "Indicates whether the update is either part of a continuous job run, or running in legacy continuous pipeline mode. Returned only for GetUpdate; not populated in ListUpdates responses. (CONTINUOUS, DEFAULT)"
@@ -1202,58 +1144,14 @@ The following fields are returned by `SELECT` queries:
         "description": "The ID of the pipeline."
       },
       {
-        "name": "refresh_flow_selection",
-        "type": "array",
-        "description": "Flow names to selectively refresh. These are unioned with other selective refresh options (refresh_selection, full_refresh_selection, etc.) to determine the final set of flows to refresh."
-      },
-      {
         "name": "refresh_selection",
         "type": "array",
         "description": "A list of tables to update without fullRefresh. If both refresh_selection and full_refresh_selection are empty, this is a full graph update. Full Refresh on a table means that the states of the table will be reset before the refresh."
       },
       {
-        "name": "rewind_spec",
-        "type": "object",
-        "description": "The rewind specification for this update. If set, this update is a rewind execution (the update will rewind the targeted datasets to the requested timestamp instead of running a normal refresh).",
-        "children": [
-          {
-            "name": "datasets",
-            "type": "array",
-            "description": "List of datasets to rewind with specific configuration for each. When not specified, all datasets will be rewound with cascade = true and reset_checkpoints = true.",
-            "children": [
-              {
-                "name": "cascade",
-                "type": "boolean",
-                "description": "Whether to cascade the rewind to dependent datasets. Must be specified."
-              },
-              {
-                "name": "identifier",
-                "type": "string",
-                "description": "The identifier of the dataset (e.g., \"main.foo.tbl1\")."
-              },
-              {
-                "name": "reset_checkpoints",
-                "type": "boolean",
-                "description": "Whether to reset checkpoints for this dataset."
-              }
-            ]
-          },
-          {
-            "name": "dry_run",
-            "type": "boolean",
-            "description": "If true, this is a dry run and we should emit the RewindSummary but not perform the rewind."
-          },
-          {
-            "name": "rewind_point_id",
-            "type": "string",
-            "description": "The ID of a previously generated rewind point to rewind to (same as the originating event log ID). Exactly one of rewind_timestamp or rewind_point_id must be specified."
-          },
-          {
-            "name": "rewind_timestamp",
-            "type": "string",
-            "description": "The base timestamp to rewind to. Exactly one of rewind_timestamp or rewind_point_id must be specified."
-          }
-        ]
+        "name": "refresh_selection_by_path",
+        "type": "array",
+        "description": "A list of file paths that identify the tables to update."
       },
       {
         "name": "state",
@@ -1294,21 +1192,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-update_id"><code>update_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-update_id"><code>update_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets an update from an active pipeline.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-until_update_id"><code>until_update_id</code></a></td>
     <td>List updates for an active pipeline.</td>
 </tr>
 <tr>
     <td><a href="#start"><CopyableCode code="start" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Starts a new update for the pipeline. If there is already an active update for the pipeline, the</td>
 </tr>
@@ -1331,7 +1229,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-pipeline_id">
     <td><CopyableCode code="pipeline_id" /></td>
@@ -1342,6 +1240,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_id" /></td>
     <td><code>string</code></td>
     <td>The ID of the update.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-max_results">
     <td><CopyableCode code="max_results" /></td>
@@ -1381,6 +1284,7 @@ FROM databricks_workspace.pipelines.pipeline_updates
 WHERE pipeline_id = '{{ pipeline_id }}' -- required
 AND update_id = '{{ update_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -1396,6 +1300,7 @@ updates
 FROM databricks_workspace.pipelines.pipeline_updates
 WHERE pipeline_id = '{{ pipeline_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
 AND until_update_id = '{{ until_update_id }}'
@@ -1420,15 +1325,18 @@ Starts a new update for the pipeline. If there is already an active update for t
 ```sql
 EXEC databricks_workspace.pipelines.pipeline_updates.start 
 @pipeline_id='{{ pipeline_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "cause": "{{ cause }}", 
+"development": {{ development }}, 
 "full_refresh": {{ full_refresh }}, 
 "full_refresh_selection": "{{ full_refresh_selection }}", 
+"full_refresh_selection_by_path": "{{ full_refresh_selection_by_path }}", 
 "parameters": "{{ parameters }}", 
-"refresh_flow_selection": "{{ refresh_flow_selection }}", 
 "refresh_selection": "{{ refresh_selection }}", 
+"refresh_selection_by_path": "{{ refresh_selection_by_path }}", 
 "replace_where_overrides": "{{ replace_where_overrides }}", 
 "reset_checkpoint_selection": "{{ reset_checkpoint_selection }}", 
 "rewind_spec": "{{ rewind_spec }}", 

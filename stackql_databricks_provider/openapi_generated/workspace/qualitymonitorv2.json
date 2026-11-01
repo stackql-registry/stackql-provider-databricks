@@ -5,17 +5,30 @@
     "description": "OpenAPI specification for the Databricks qualitymonitorv2 service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.qualitymonitorv2"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
@@ -36,290 +49,103 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "quality_monitor": {
+                  "object_type": {
+                    "type": "string"
+                  },
+                  "object_id": {
+                    "type": "string",
+                    "description": "The uuid of the request object. For example, schema id."
+                  },
+                  "anomaly_detection_config": {
                     "type": "object",
                     "properties": {
-                      "object_type": {
-                        "type": "string"
+                      "excluded_table_full_names": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
-                      "object_id": {
+                      "last_run_id": {
                         "type": "string",
-                        "description": "The uuid of the request object. For example, schema id."
+                        "description": "Run id of the last run of the workflow"
                       },
-                      "anomaly_detection_config": {
-                        "type": "object",
-                        "properties": {
-                          "custom_check_configurations": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "scalar_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "check_name": {
-                                      "type": "string"
-                                    },
-                                    "column_matchers": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "object",
-                                        "properties": {
-                                          "column_names": {
-                                            "type": "array",
-                                            "items": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "variable_name": {
-                                            "type": "string",
-                                            "description": "Variable name within a custom sql query that this matcher applies to."
-                                          }
-                                        }
-                                      },
-                                      "description": "Column matchers to determine which tables to apply this check to"
-                                    },
-                                    "sql_query": {
-                                      "type": "string",
-                                      "description": "Templated SQL query for this check"
-                                    },
-                                    "thresholds": {
-                                      "type": "object",
-                                      "properties": {
-                                        "lower_bound": {
-                                          "type": "object",
-                                          "properties": {
-                                            "bound_value": {
-                                              "type": "integer"
-                                            },
-                                            "threshold_type": {
-                                              "type": "string",
-                                              "x-enum": [
-                                                "THRESHOLD_TYPE_AUTO",
-                                                "THRESHOLD_TYPE_MANUAL",
-                                                "THRESHOLD_TYPE_UNBOUNDED"
-                                              ],
-                                              "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
-                                            }
-                                          }
-                                        },
-                                        "upper_bound": {
-                                          "type": "object",
-                                          "properties": {
-                                            "bound_value": {
-                                              "type": "integer"
-                                            },
-                                            "threshold_type": {
-                                              "type": "string",
-                                              "x-enum": [
-                                                "THRESHOLD_TYPE_AUTO",
-                                                "THRESHOLD_TYPE_MANUAL",
-                                                "THRESHOLD_TYPE_UNBOUNDED"
-                                              ],
-                                              "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
-                                            }
-                                          },
-                                          "description": "Upper bound threshold"
-                                        }
-                                      },
-                                      "description": "Upper/lower thresholds for the output of the query"
-                                    }
-                                  }
-                                }
+                      "latest_run_status": {
+                        "type": "string",
+                        "x-enum": [
+                          "ANOMALY_DETECTION_RUN_STATUS_CANCELED",
+                          "ANOMALY_DETECTION_RUN_STATUS_FAILED",
+                          "ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED",
+                          "ANOMALY_DETECTION_RUN_STATUS_PENDING",
+                          "ANOMALY_DETECTION_RUN_STATUS_RUNNING",
+                          "ANOMALY_DETECTION_RUN_STATUS_SUCCESS",
+                          "ANOMALY_DETECTION_RUN_STATUS_UNKNOWN",
+                          "ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR"
+                        ],
+                        "description": "The status of the last run of the workflow."
+                      }
+                    }
+                  },
+                  "validity_check_configurations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "percent_null_validity_check": {
+                          "type": "object",
+                          "properties": {
+                            "column_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
                               }
+                            },
+                            "upper_bound": {
+                              "type": "number",
+                              "description": "Optional upper bound; we should use auto determined bounds for now"
                             }
-                          },
-                          "excluded_table_full_names": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "List of fully qualified table names to exclude from anomaly detection."
-                          },
-                          "job_type": {
-                            "type": "string",
-                            "x-enum": [
-                              "ANOMALY_DETECTION_JOB_TYPE_BACKGROUND_COMPUTE_WORKER",
-                              "ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN",
-                              "ANOMALY_DETECTION_JOB_TYPE_NORMAL"
-                            ],
-                            "description": "The type of the last run of the workflow."
-                          },
-                          "last_run_id": {
-                            "type": "string",
-                            "description": "Run id of the last run of the workflow"
-                          },
-                          "latest_run_status": {
-                            "type": "string",
-                            "x-enum": [
-                              "ANOMALY_DETECTION_RUN_STATUS_CANCELED",
-                              "ANOMALY_DETECTION_RUN_STATUS_FAILED",
-                              "ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED",
-                              "ANOMALY_DETECTION_RUN_STATUS_PENDING",
-                              "ANOMALY_DETECTION_RUN_STATUS_RUNNING",
-                              "ANOMALY_DETECTION_RUN_STATUS_SUCCESS",
-                              "ANOMALY_DETECTION_RUN_STATUS_UNKNOWN",
-                              "ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR"
-                            ],
-                            "description": "The status of the last run of the workflow."
-                          },
-                          "slicing_config": {
-                            "type": "object",
-                            "properties": {
-                              "slice_specs": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_group": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "object",
-                                        "properties": {
-                                          "name": {
-                                            "type": "string",
-                                            "description": "The name of the column to slice on. The top-K column values are auto-discovered."
-                                          }
-                                        },
-                                        "required": [
-                                          "name"
-                                        ],
-                                        "description": "A column to slice completeness monitoring on."
-                                      },
-                                      "description": "The columns to group by for slicing."
-                                    }
-                                  },
-                                  "description": "A single slice dimension for per-slice completeness monitoring."
-                                },
-                                "description": "The set of slice dimensions to monitor."
+                          }
+                        },
+                        "range_validity_check": {
+                          "type": "object",
+                          "properties": {
+                            "column_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
                               }
                             },
-                            "description": "Per-schema completeness slicing configuration."
-                          },
-                          "validity_check_configurations": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "name": {
-                                  "type": "string"
-                                },
-                                "percent_null_validity_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_names": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "upper_bound": {
-                                      "type": "number",
-                                      "description": "Optional upper bound; we should use auto determined bounds for now"
-                                    }
-                                  }
-                                },
-                                "range_validity_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_names": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "lower_bound": {
-                                      "type": "number",
-                                      "description": "Lower bound for the range"
-                                    },
-                                    "upper_bound": {
-                                      "type": "number",
-                                      "description": "Upper bound for the range"
-                                    }
-                                  }
-                                },
-                                "uniqueness_validity_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_names": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    }
-                                  }
-                                }
+                            "lower_bound": {
+                              "type": "number",
+                              "description": "Lower bound for the range"
+                            },
+                            "upper_bound": {
+                              "type": "number",
+                              "description": "Upper bound for the range"
+                            }
+                          }
+                        },
+                        "uniqueness_validity_check": {
+                          "type": "object",
+                          "properties": {
+                            "column_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
                               }
                             }
                           }
                         }
-                      },
-                      "validity_check_configurations": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string"
-                            },
-                            "percent_null_validity_check": {
-                              "type": "object",
-                              "properties": {
-                                "column_names": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                },
-                                "upper_bound": {
-                                  "type": "number",
-                                  "description": "Optional upper bound; we should use auto determined bounds for now"
-                                }
-                              }
-                            },
-                            "range_validity_check": {
-                              "type": "object",
-                              "properties": {
-                                "column_names": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                },
-                                "lower_bound": {
-                                  "type": "number",
-                                  "description": "Lower bound for the range"
-                                },
-                                "upper_bound": {
-                                  "type": "number",
-                                  "description": "Upper bound for the range"
-                                }
-                              }
-                            },
-                            "uniqueness_validity_check": {
-                              "type": "object",
-                              "properties": {
-                                "column_names": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "description": "Validity check configurations for anomaly detection."
                       }
                     },
-                    "required": [
-                      "object_type",
-                      "object_id"
-                    ]
+                    "description": "Validity check configurations for anomaly detection."
                   }
                 },
                 "required": [
-                  "quality_monitor"
+                  "object_type",
+                  "object_id"
                 ]
               }
             }
@@ -564,290 +390,103 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "quality_monitor": {
+                  "object_type": {
+                    "type": "string"
+                  },
+                  "object_id": {
+                    "type": "string",
+                    "description": "The uuid of the request object. For example, schema id."
+                  },
+                  "anomaly_detection_config": {
                     "type": "object",
                     "properties": {
-                      "object_type": {
-                        "type": "string"
+                      "excluded_table_full_names": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       },
-                      "object_id": {
+                      "last_run_id": {
                         "type": "string",
-                        "description": "The uuid of the request object. For example, schema id."
+                        "description": "Run id of the last run of the workflow"
                       },
-                      "anomaly_detection_config": {
-                        "type": "object",
-                        "properties": {
-                          "custom_check_configurations": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "scalar_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "check_name": {
-                                      "type": "string"
-                                    },
-                                    "column_matchers": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "object",
-                                        "properties": {
-                                          "column_names": {
-                                            "type": "array",
-                                            "items": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "variable_name": {
-                                            "type": "string",
-                                            "description": "Variable name within a custom sql query that this matcher applies to."
-                                          }
-                                        }
-                                      },
-                                      "description": "Column matchers to determine which tables to apply this check to"
-                                    },
-                                    "sql_query": {
-                                      "type": "string",
-                                      "description": "Templated SQL query for this check"
-                                    },
-                                    "thresholds": {
-                                      "type": "object",
-                                      "properties": {
-                                        "lower_bound": {
-                                          "type": "object",
-                                          "properties": {
-                                            "bound_value": {
-                                              "type": "integer"
-                                            },
-                                            "threshold_type": {
-                                              "type": "string",
-                                              "x-enum": [
-                                                "THRESHOLD_TYPE_AUTO",
-                                                "THRESHOLD_TYPE_MANUAL",
-                                                "THRESHOLD_TYPE_UNBOUNDED"
-                                              ],
-                                              "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
-                                            }
-                                          }
-                                        },
-                                        "upper_bound": {
-                                          "type": "object",
-                                          "properties": {
-                                            "bound_value": {
-                                              "type": "integer"
-                                            },
-                                            "threshold_type": {
-                                              "type": "string",
-                                              "x-enum": [
-                                                "THRESHOLD_TYPE_AUTO",
-                                                "THRESHOLD_TYPE_MANUAL",
-                                                "THRESHOLD_TYPE_UNBOUNDED"
-                                              ],
-                                              "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
-                                            }
-                                          },
-                                          "description": "Upper bound threshold"
-                                        }
-                                      },
-                                      "description": "Upper/lower thresholds for the output of the query"
-                                    }
-                                  }
-                                }
+                      "latest_run_status": {
+                        "type": "string",
+                        "x-enum": [
+                          "ANOMALY_DETECTION_RUN_STATUS_CANCELED",
+                          "ANOMALY_DETECTION_RUN_STATUS_FAILED",
+                          "ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED",
+                          "ANOMALY_DETECTION_RUN_STATUS_PENDING",
+                          "ANOMALY_DETECTION_RUN_STATUS_RUNNING",
+                          "ANOMALY_DETECTION_RUN_STATUS_SUCCESS",
+                          "ANOMALY_DETECTION_RUN_STATUS_UNKNOWN",
+                          "ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR"
+                        ],
+                        "description": "The status of the last run of the workflow."
+                      }
+                    }
+                  },
+                  "validity_check_configurations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "percent_null_validity_check": {
+                          "type": "object",
+                          "properties": {
+                            "column_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
                               }
+                            },
+                            "upper_bound": {
+                              "type": "number",
+                              "description": "Optional upper bound; we should use auto determined bounds for now"
                             }
-                          },
-                          "excluded_table_full_names": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "List of fully qualified table names to exclude from anomaly detection."
-                          },
-                          "job_type": {
-                            "type": "string",
-                            "x-enum": [
-                              "ANOMALY_DETECTION_JOB_TYPE_BACKGROUND_COMPUTE_WORKER",
-                              "ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN",
-                              "ANOMALY_DETECTION_JOB_TYPE_NORMAL"
-                            ],
-                            "description": "The type of the last run of the workflow."
-                          },
-                          "last_run_id": {
-                            "type": "string",
-                            "description": "Run id of the last run of the workflow"
-                          },
-                          "latest_run_status": {
-                            "type": "string",
-                            "x-enum": [
-                              "ANOMALY_DETECTION_RUN_STATUS_CANCELED",
-                              "ANOMALY_DETECTION_RUN_STATUS_FAILED",
-                              "ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED",
-                              "ANOMALY_DETECTION_RUN_STATUS_PENDING",
-                              "ANOMALY_DETECTION_RUN_STATUS_RUNNING",
-                              "ANOMALY_DETECTION_RUN_STATUS_SUCCESS",
-                              "ANOMALY_DETECTION_RUN_STATUS_UNKNOWN",
-                              "ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR"
-                            ],
-                            "description": "The status of the last run of the workflow."
-                          },
-                          "slicing_config": {
-                            "type": "object",
-                            "properties": {
-                              "slice_specs": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_group": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "object",
-                                        "properties": {
-                                          "name": {
-                                            "type": "string",
-                                            "description": "The name of the column to slice on. The top-K column values are auto-discovered."
-                                          }
-                                        },
-                                        "required": [
-                                          "name"
-                                        ],
-                                        "description": "A column to slice completeness monitoring on."
-                                      },
-                                      "description": "The columns to group by for slicing."
-                                    }
-                                  },
-                                  "description": "A single slice dimension for per-slice completeness monitoring."
-                                },
-                                "description": "The set of slice dimensions to monitor."
+                          }
+                        },
+                        "range_validity_check": {
+                          "type": "object",
+                          "properties": {
+                            "column_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
                               }
                             },
-                            "description": "Per-schema completeness slicing configuration."
-                          },
-                          "validity_check_configurations": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "name": {
-                                  "type": "string"
-                                },
-                                "percent_null_validity_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_names": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "upper_bound": {
-                                      "type": "number",
-                                      "description": "Optional upper bound; we should use auto determined bounds for now"
-                                    }
-                                  }
-                                },
-                                "range_validity_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_names": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "lower_bound": {
-                                      "type": "number",
-                                      "description": "Lower bound for the range"
-                                    },
-                                    "upper_bound": {
-                                      "type": "number",
-                                      "description": "Upper bound for the range"
-                                    }
-                                  }
-                                },
-                                "uniqueness_validity_check": {
-                                  "type": "object",
-                                  "properties": {
-                                    "column_names": {
-                                      "type": "array",
-                                      "items": {
-                                        "type": "string"
-                                      }
-                                    }
-                                  }
-                                }
+                            "lower_bound": {
+                              "type": "number",
+                              "description": "Lower bound for the range"
+                            },
+                            "upper_bound": {
+                              "type": "number",
+                              "description": "Upper bound for the range"
+                            }
+                          }
+                        },
+                        "uniqueness_validity_check": {
+                          "type": "object",
+                          "properties": {
+                            "column_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
                               }
                             }
                           }
                         }
-                      },
-                      "validity_check_configurations": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string"
-                            },
-                            "percent_null_validity_check": {
-                              "type": "object",
-                              "properties": {
-                                "column_names": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                },
-                                "upper_bound": {
-                                  "type": "number",
-                                  "description": "Optional upper bound; we should use auto determined bounds for now"
-                                }
-                              }
-                            },
-                            "range_validity_check": {
-                              "type": "object",
-                              "properties": {
-                                "column_names": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                },
-                                "lower_bound": {
-                                  "type": "number",
-                                  "description": "Lower bound for the range"
-                                },
-                                "upper_bound": {
-                                  "type": "number",
-                                  "description": "Upper bound for the range"
-                                }
-                              }
-                            },
-                            "uniqueness_validity_check": {
-                              "type": "object",
-                              "properties": {
-                                "column_names": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "description": "Validity check configurations for anomaly detection."
                       }
                     },
-                    "required": [
-                      "object_type",
-                      "object_id"
-                    ]
+                    "description": "Validity check configurations for anomaly detection."
                   }
                 },
                 "required": [
-                  "quality_monitor"
+                  "object_type",
+                  "object_id"
                 ]
               }
             }
@@ -892,22 +531,11 @@
       "AnomalyDetectionConfig": {
         "type": "object",
         "properties": {
-          "custom_check_configurations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CustomCheckConfiguration"
-            }
-          },
           "excluded_table_full_names": {
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "description": "List of fully qualified table names to exclude from anomaly detection."
-          },
-          "job_type": {
-            "$ref": "#/components/schemas/AnomalyDetectionJobType",
-            "description": "The type of the last run of the workflow."
+            }
           },
           "last_run_id": {
             "type": "string",
@@ -916,87 +544,6 @@
           "latest_run_status": {
             "$ref": "#/components/schemas/AnomalyDetectionRunStatus",
             "description": "The status of the last run of the workflow."
-          },
-          "slicing_config": {
-            "$ref": "#/components/schemas/SlicingConfig",
-            "description": "Per-schema completeness slicing configuration."
-          },
-          "validity_check_configurations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ValidityCheckConfiguration"
-            }
-          }
-        }
-      },
-      "ColumnMatcher": {
-        "type": "object",
-        "properties": {
-          "column_names": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "variable_name": {
-            "type": "string",
-            "description": "Variable name within a custom sql query that this matcher applies to."
-          }
-        }
-      },
-      "ColumnSpec": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The name of the column to slice on. The top-K column values are auto-discovered."
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "description": "A column to slice completeness monitoring on."
-      },
-      "CustomCheckConfiguration": {
-        "type": "object",
-        "properties": {
-          "scalar_check": {
-            "$ref": "#/components/schemas/CustomScalarCheck"
-          }
-        }
-      },
-      "CustomCheckThresholds": {
-        "type": "object",
-        "properties": {
-          "lower_bound": {
-            "$ref": "#/components/schemas/Threshold"
-          },
-          "upper_bound": {
-            "$ref": "#/components/schemas/Threshold",
-            "description": "Upper bound threshold"
-          }
-        }
-      },
-      "CustomScalarCheck": {
-        "type": "object",
-        "properties": {
-          "check_name": {
-            "type": "string"
-          },
-          "column_matchers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ColumnMatcher"
-            },
-            "description": "Column matchers to determine which tables to apply this check to"
-          },
-          "sql_query": {
-            "type": "string",
-            "description": "Templated SQL query for this check"
-          },
-          "thresholds": {
-            "$ref": "#/components/schemas/CustomCheckThresholds",
-            "description": "Upper/lower thresholds for the output of the query"
           }
         }
       },
@@ -1074,43 +621,6 @@
           }
         }
       },
-      "SliceSpec": {
-        "type": "object",
-        "properties": {
-          "column_group": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ColumnSpec"
-            },
-            "description": "The columns to group by for slicing."
-          }
-        },
-        "description": "A single slice dimension for per-slice completeness monitoring."
-      },
-      "SlicingConfig": {
-        "type": "object",
-        "properties": {
-          "slice_specs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SliceSpec"
-            },
-            "description": "The set of slice dimensions to monitor."
-          }
-        },
-        "description": "Per-schema completeness slicing configuration."
-      },
-      "Threshold": {
-        "type": "object",
-        "properties": {
-          "bound_value": {
-            "type": "integer"
-          },
-          "threshold_type": {
-            "$ref": "#/components/schemas/ThresholdType"
-          }
-        }
-      },
       "UniquenessValidityCheck": {
         "type": "object",
         "properties": {
@@ -1139,15 +649,6 @@
           }
         }
       },
-      "AnomalyDetectionJobType": {
-        "type": "string",
-        "x-enum": [
-          "ANOMALY_DETECTION_JOB_TYPE_BACKGROUND_COMPUTE_WORKER",
-          "ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN",
-          "ANOMALY_DETECTION_JOB_TYPE_NORMAL"
-        ],
-        "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
-      },
       "AnomalyDetectionRunStatus": {
         "type": "string",
         "x-enum": [
@@ -1161,15 +662,6 @@
           "ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR"
         ],
         "description": "Status of Anomaly Detection Job Run"
-      },
-      "ThresholdType": {
-        "type": "string",
-        "x-enum": [
-          "THRESHOLD_TYPE_AUTO",
-          "THRESHOLD_TYPE_MANUAL",
-          "THRESHOLD_TYPE_UNBOUNDED"
-        ],
-        "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
       }
     }
   }

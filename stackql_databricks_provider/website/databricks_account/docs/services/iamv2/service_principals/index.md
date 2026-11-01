@@ -51,7 +51,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "application_id",
     "type": "string",
-    "description": "Application ID of the service principal."
+    "description": "Application ID of the service principal. Set at creation time and cannot be changed afterwards; when omitted, the server generates one."
   },
   {
     "name": "external_id",
@@ -59,7 +59,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the service principal in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "service_principal_id",
     "type": "string",
     "description": "Internal service principal ID of the service principal in Databricks."
   },
@@ -86,7 +86,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "application_id",
     "type": "string",
-    "description": "Application ID of the service principal."
+    "description": "Application ID of the service principal. Set at creation time and cannot be changed afterwards; when omitted, the server generates one."
   },
   {
     "name": "external_id",
@@ -94,7 +94,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the service principal in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "service_principal_id",
     "type": "string",
     "description": "Internal service principal ID of the service principal in Databricks."
   },
@@ -130,44 +130,44 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Fetches a service principal from the Databricks account by its internal ID.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists the service principals in the Databricks account, returning one page per call. Supports</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal"><code>service_principal</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-service_principal"><code>service_principal</code></a></td>
     <td></td>
-    <td>Creates a service principal in the Databricks account and returns the resulting ServicePrincipal</td>
+    <td>Creates a local service principal in the Databricks account and returns the created service principal.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-service_principal"><code>service_principal</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-service_principal"><code>service_principal</code></a></td>
     <td></td>
     <td>Updates an existing service principal in the Databricks account. Only the fields named in the update</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a service principal from the Databricks account by its internal ID.</td>
 </tr>
 <tr>
     <td><a href="#resolve"><CopyableCode code="resolve" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
     <td></td>
-    <td>Resolves an SP with the given external ID from the customer's IdP. If the SP does not exist, it will</td>
+    <td>Resolves a service principal with the given external ID from the customer's IdP. If the service</td>
 </tr>
 </tbody>
 </table>
@@ -185,20 +185,25 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
     <td></td>
 </tr>
-<tr id="parameter-internal_id">
-    <td><CopyableCode code="internal_id" /></td>
+<tr id="parameter-service_principal_id">
+    <td><CopyableCode code="service_principal_id" /></td>
     <td><code>string</code></td>
     <td>Required. Internal ID of the service principal in Databricks.</td>
 </tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
-    <td>Optional. The list of fields to update.</td>
+    <td>Required. The list of fields to update.</td>
 </tr>
 <tr id="parameter-filter">
     <td><CopyableCode code="filter" /></td>
@@ -208,7 +213,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of service principals to return. The service may return fewer than this value.</td>
+    <td>The maximum number of service principals to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -236,12 +241,13 @@ SELECT
 account_id,
 application_id,
 external_id,
-internal_id,
+service_principal_id,
 display_name,
 account_sp_status
 FROM databricks_account.iamv2.service_principals
 WHERE account_id = '{{ account_id }}' -- required
-AND internal_id = '{{ internal_id }}' -- required
+AND service_principal_id = '{{ service_principal_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -254,11 +260,12 @@ SELECT
 account_id,
 application_id,
 external_id,
-internal_id,
+service_principal_id,
 display_name,
 account_sp_status
 FROM databricks_account.iamv2.service_principals
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND filter = '{{ filter }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -279,21 +286,23 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Creates a service principal in the Databricks account and returns the resulting ServicePrincipal
+Creates a local service principal in the Databricks account and returns the created service principal.
 
 ```sql
 INSERT INTO databricks_account.iamv2.service_principals (
 service_principal,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ service_principal }}' /* required */,
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 application_id,
 external_id,
-internal_id,
+service_principal_id,
 display_name,
 account_sp_status
 ;
@@ -307,16 +316,19 @@ account_sp_status
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the service_principals resource.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the service_principals resource.
     - name: service_principal
       description: |
-        Required. Service principal to be created in <Databricks>
+        Required. Service principal to be created in Databricks
       value:
-        account_id: "{{ account_id }}"
-        account_sp_status: "{{ account_sp_status }}"
-        application_id: "{{ application_id }}"
         display_name: "{{ display_name }}"
+        account_sp_status: "{{ account_sp_status }}"
+        account_id: "{{ account_id }}"
+        application_id: "{{ application_id }}"
         external_id: "{{ external_id }}"
-        internal_id: "{{ internal_id }}"
+        service_principal_id: "{{ service_principal_id }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -341,14 +353,15 @@ SET
 service_principal = '{{ service_principal }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND internal_id = '{{ internal_id }}' --required
+AND service_principal_id = '{{ service_principal_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
+AND account_host = '{{ account_host }}' --required
 AND service_principal = '{{ service_principal }}' --required
 RETURNING
 account_id,
 application_id,
 external_id,
-internal_id,
+service_principal_id,
 display_name,
 account_sp_status;
 ```
@@ -371,7 +384,8 @@ Deletes a service principal from the Databricks account by its internal ID.
 ```sql
 DELETE FROM databricks_account.iamv2.service_principals
 WHERE account_id = '{{ account_id }}' --required
-AND internal_id = '{{ internal_id }}' --required
+AND service_principal_id = '{{ service_principal_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>
@@ -388,11 +402,12 @@ AND internal_id = '{{ internal_id }}' --required
 >
 <TabItem value="resolve">
 
-Resolves an SP with the given external ID from the customer's IdP. If the SP does not exist, it will
+Resolves a service principal with the given external ID from the customer's IdP. If the service
 
 ```sql
 EXEC databricks_account.iamv2.service_principals.resolve 
-@account_id='{{ account_id }}' --required 
+@account_id='{{ account_id }}' --required, 
+@account_host='{{ account_host }}' --required 
 @@json=
 '{
 "external_id": "{{ external_id }}"

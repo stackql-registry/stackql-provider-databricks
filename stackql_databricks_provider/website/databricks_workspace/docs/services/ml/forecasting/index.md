@@ -79,14 +79,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-experiment_id"><code>experiment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-experiment_id"><code>experiment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Public RPC to get forecasting experiment</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-train_data_path"><code>train_data_path</code></a>, <a href="#parameter-target_column"><code>target_column</code></a>, <a href="#parameter-time_column"><code>time_column</code></a>, <a href="#parameter-forecast_granularity"><code>forecast_granularity</code></a>, <a href="#parameter-forecast_horizon"><code>forecast_horizon</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-train_data_path"><code>train_data_path</code></a>, <a href="#parameter-target_column"><code>target_column</code></a>, <a href="#parameter-time_column"><code>time_column</code></a>, <a href="#parameter-forecast_granularity"><code>forecast_granularity</code></a>, <a href="#parameter-forecast_horizon"><code>forecast_horizon</code></a></td>
     <td></td>
     <td>Creates a serverless forecasting experiment. Returns the experiment ID.</td>
 </tr>
@@ -109,12 +109,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-experiment_id">
     <td><CopyableCode code="experiment_id" /></td>
     <td><code>string</code></td>
     <td>The unique ID of a forecasting experiment</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -139,6 +144,7 @@ state
 FROM databricks_workspace.ml.forecasting
 WHERE experiment_id = '{{ experiment_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -177,7 +183,8 @@ register_to,
 split_column,
 timeseries_identifier_columns,
 training_frameworks,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ train_data_path }}' /* required */,
@@ -197,7 +204,8 @@ SELECT
 '{{ split_column }}',
 '{{ timeseries_identifier_columns }}',
 '{{ training_frameworks }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 experiment_id,
 experiment_page_url,
@@ -212,6 +220,9 @@ state
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the forecasting resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the forecasting resource.
     - name: train_data_path
       value: "{{ train_data_path }}"

@@ -292,42 +292,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_users_v2_get"><CopyableCode code="account_users_v2_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-attributes"><code>attributes</code></a>, <a href="#parameter-count"><code>count</code></a>, <a href="#parameter-excluded_attributes"><code>excluded_attributes</code></a>, <a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-sort_by"><code>sort_by</code></a>, <a href="#parameter-sort_order"><code>sort_order</code></a>, <a href="#parameter-start_index"><code>start_index</code></a></td>
     <td>Gets information for a specific user in Databricks account.</td>
 </tr>
 <tr>
     <td><a href="#account_users_v2_list"><CopyableCode code="account_users_v2_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-attributes"><code>attributes</code></a>, <a href="#parameter-count"><code>count</code></a>, <a href="#parameter-excluded_attributes"><code>excluded_attributes</code></a>, <a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-sort_by"><code>sort_by</code></a>, <a href="#parameter-sort_order"><code>sort_order</code></a>, <a href="#parameter-start_index"><code>start_index</code></a></td>
     <td>Gets details for all the users associated with a Databricks account.</td>
 </tr>
 <tr>
     <td><a href="#account_users_v2_create"><CopyableCode code="account_users_v2_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a new user in the Databricks account. This new user will also be added to the Databricks</td>
 </tr>
 <tr>
     <td><a href="#account_users_v2_patch"><CopyableCode code="account_users_v2_patch" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Partially updates a user resource by applying the supplied operations on specific user attributes. The</td>
 </tr>
 <tr>
     <td><a href="#account_users_v2_update"><CopyableCode code="account_users_v2_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
-    <td>Replaces a user's information with the data supplied in request.</td>
+    <td>Replaces a user's information with the data supplied in request. The ``userName`` and ``emails``</td>
 </tr>
 <tr>
     <td><a href="#account_users_v2_delete"><CopyableCode code="account_users_v2_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a user. Deleting a user from a Databricks account also removes objects associated with the</td>
 </tr>
@@ -347,6 +347,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -422,6 +427,7 @@ userName
 FROM databricks_account.iam.account_users
 WHERE account_id = '{{ account_id }}' -- required
 AND id = '{{ id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND attributes = '{{ attributes }}'
 AND count = '{{ count }}'
 AND excluded_attributes = '{{ excluded_attributes }}'
@@ -449,6 +455,7 @@ roles,
 userName
 FROM databricks_account.iam.account_users
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND attributes = '{{ attributes }}'
 AND count = '{{ count }}'
 AND excluded_attributes = '{{ excluded_attributes }}'
@@ -485,7 +492,8 @@ id,
 name,
 roles,
 userName,
-account_id
+account_id,
+account_host
 )
 SELECT 
 {{ active }},
@@ -496,7 +504,8 @@ SELECT
 '{{ name }}',
 '{{ roles }}',
 '{{ userName }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 id,
 name,
@@ -517,6 +526,9 @@ userName
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the account_users resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_users resource.
     - name: active
       value: {{ active }}
@@ -585,7 +597,8 @@ Operations = '{{ Operations }}',
 schemas = '{{ schemas }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND id = '{{ id }}' --required;
+AND id = '{{ id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -601,7 +614,7 @@ AND id = '{{ id }}' --required;
 >
 <TabItem value="account_users_v2_update">
 
-Replaces a user's information with the data supplied in request.
+Replaces a user's information with the data supplied in request. The ``userName`` and ``emails``
 
 ```sql
 REPLACE databricks_account.iam.account_users
@@ -615,7 +628,8 @@ roles = '{{ roles }}',
 userName = '{{ userName }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND id = '{{ id }}' --required;
+AND id = '{{ id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -637,6 +651,7 @@ Deletes a user. Deleting a user from a Databricks account also removes objects a
 DELETE FROM databricks_account.iam.account_users
 WHERE account_id = '{{ account_id }}' --required
 AND id = '{{ id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

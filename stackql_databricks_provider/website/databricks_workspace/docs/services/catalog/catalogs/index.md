@@ -79,18 +79,6 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "catalog_federation_config",
-    "type": "object",
-    "description": "Federation-only configuration, present only for FOREIGN catalogs.",
-    "children": [
-      {
-        "name": "schema_filter_type",
-        "type": "string",
-        "description": "Controls how the catalog's schema filter items are treated. (SCHEMA_FILTER_TYPE_EXCLUDE, SCHEMA_FILTER_TYPE_INCLUDE, SCHEMA_FILTER_TYPE_INCLUDE_ALL)"
-      }
-    ]
-  },
-  {
     "name": "catalog_type",
     "type": "string",
     "description": "The type of the catalog. (DELTASHARING_CATALOG, FOREIGN_CATALOG, INTERNAL_CATALOG, MANAGED_CATALOG, MANAGED_ONLINE_CATALOG, SYSTEM_CATALOG)"
@@ -99,18 +87,6 @@ The following fields are returned by `SELECT` queries:
     "name": "comment",
     "type": "string",
     "description": "User-provided free-form text description."
-  },
-  {
-    "name": "conversion_info",
-    "type": "object",
-    "description": "Status of conversion of FOREIGN catalog to UC Native catalog.",
-    "children": [
-      {
-        "name": "state",
-        "type": "string",
-        "description": "The conversion state of the resource. (COMPLETED, IN_PROGRESS)"
-      }
-    ]
   },
   {
     "name": "created_at",
@@ -126,28 +102,6 @@ The following fields are returned by `SELECT` queries:
     "name": "custom_max_retention_hours",
     "type": "integer",
     "description": "Custom maximum retention period in hours for the catalog"
-  },
-  {
-    "name": "dr_replication_info",
-    "type": "object",
-    "description": "Disaster Recovery replication state snapshot.",
-    "children": [
-      {
-        "name": "last_failover_time_ms",
-        "type": "integer",
-        "description": "Wall-clock epoch milliseconds when this catalog was last promoted to primary via failover or failback. Set by DR Manager. Used by Predictive Optimization to suppress operations until sufficient workload history accumulates."
-      },
-      {
-        "name": "replicated_entities",
-        "type": "string",
-        "description": "See https://docs.google.com/document/d/1X0A_3hMhzuS2V1E3zB0x5wxPsFx70bVYK5rHep2AjW8."
-      },
-      {
-        "name": "status",
-        "type": "string",
-        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (DR_REPLICATION_STATUS_PRIMARY, DR_REPLICATION_STATUS_SECONDARY)"
-      }
-    ]
   },
   {
     "name": "effective_predictive_optimization_flag",
@@ -179,7 +133,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATED, OPEN, OPEN_IN_ACCOUNT)"
+    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATED, OPEN)"
   },
   {
     "name": "managed_encryption_settings",
@@ -250,7 +204,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "storage_location",
@@ -313,18 +267,6 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "catalog_federation_config",
-    "type": "object",
-    "description": "Federation-only configuration, present only for FOREIGN catalogs.",
-    "children": [
-      {
-        "name": "schema_filter_type",
-        "type": "string",
-        "description": "Controls how the catalog's schema filter items are treated. (SCHEMA_FILTER_TYPE_EXCLUDE, SCHEMA_FILTER_TYPE_INCLUDE, SCHEMA_FILTER_TYPE_INCLUDE_ALL)"
-      }
-    ]
-  },
-  {
     "name": "catalog_type",
     "type": "string",
     "description": "The type of the catalog. (DELTASHARING_CATALOG, FOREIGN_CATALOG, INTERNAL_CATALOG, MANAGED_CATALOG, MANAGED_ONLINE_CATALOG, SYSTEM_CATALOG)"
@@ -333,18 +275,6 @@ The following fields are returned by `SELECT` queries:
     "name": "comment",
     "type": "string",
     "description": "User-provided free-form text description."
-  },
-  {
-    "name": "conversion_info",
-    "type": "object",
-    "description": "Status of conversion of FOREIGN catalog to UC Native catalog.",
-    "children": [
-      {
-        "name": "state",
-        "type": "string",
-        "description": "The conversion state of the resource. (COMPLETED, IN_PROGRESS)"
-      }
-    ]
   },
   {
     "name": "created_at",
@@ -360,28 +290,6 @@ The following fields are returned by `SELECT` queries:
     "name": "custom_max_retention_hours",
     "type": "integer",
     "description": "Custom maximum retention period in hours for the catalog"
-  },
-  {
-    "name": "dr_replication_info",
-    "type": "object",
-    "description": "Disaster Recovery replication state snapshot.",
-    "children": [
-      {
-        "name": "last_failover_time_ms",
-        "type": "integer",
-        "description": "Wall-clock epoch milliseconds when this catalog was last promoted to primary via failover or failback. Set by DR Manager. Used by Predictive Optimization to suppress operations until sufficient workload history accumulates."
-      },
-      {
-        "name": "replicated_entities",
-        "type": "string",
-        "description": "See https://docs.google.com/document/d/1X0A_3hMhzuS2V1E3zB0x5wxPsFx70bVYK5rHep2AjW8."
-      },
-      {
-        "name": "status",
-        "type": "string",
-        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (DR_REPLICATION_STATUS_PRIMARY, DR_REPLICATION_STATUS_SECONDARY)"
-      }
-    ]
   },
   {
     "name": "effective_predictive_optimization_flag",
@@ -413,7 +321,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATED, OPEN, OPEN_IN_ACCOUNT)"
+    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATED, OPEN)"
   },
   {
     "name": "managed_encryption_settings",
@@ -484,7 +392,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "storage_location",
@@ -528,35 +436,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a></td>
     <td>Gets the specified catalog in a metastore. The caller must be a metastore admin, the owner of the</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-include_unbound"><code>include_unbound</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of catalogs in the metastore. If the caller is the metastore admin, all catalogs will be</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Creates a new catalog instance in the parent metastore if the caller is a metastore admin or has the</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the catalog that matches the supplied name. The caller must be either the owner of the</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes the catalog that matches the supplied name. The caller must be a metastore admin or the owner</td>
 </tr>
@@ -579,12 +487,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>The name of the catalog.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-force">
     <td><CopyableCode code="force" /></td>
@@ -636,14 +549,11 @@ full_name,
 provider_name,
 share_name,
 browse_only,
-catalog_federation_config,
 catalog_type,
 comment,
-conversion_info,
 created_at,
 created_by,
 custom_max_retention_hours,
-dr_replication_info,
 effective_predictive_optimization_flag,
 enable_predictive_optimization,
 isolation_mode,
@@ -660,6 +570,7 @@ updated_by
 FROM databricks_workspace.catalog.catalogs
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 ;
 ```
@@ -677,14 +588,11 @@ full_name,
 provider_name,
 share_name,
 browse_only,
-catalog_federation_config,
 catalog_type,
 comment,
-conversion_info,
 created_at,
 created_by,
 custom_max_retention_hours,
-dr_replication_info,
 effective_predictive_optimization_flag,
 enable_predictive_optimization,
 isolation_mode,
@@ -700,6 +608,7 @@ updated_at,
 updated_by
 FROM databricks_workspace.catalog.catalogs
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 AND include_unbound = '{{ include_unbound }}'
 AND max_results = '{{ max_results }}'
@@ -726,35 +635,31 @@ Creates a new catalog instance in the parent metastore if the caller is a metast
 ```sql
 INSERT INTO databricks_workspace.catalog.catalogs (
 name,
-catalog_federation_config,
 comment,
 connection_name,
-conversion_info,
 custom_max_retention_hours,
-dr_replication_info,
 managed_encryption_settings,
 options,
 properties,
 provider_name,
 share_name,
 storage_root,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
-'{{ catalog_federation_config }}',
 '{{ comment }}',
 '{{ connection_name }}',
-'{{ conversion_info }}',
 {{ custom_max_retention_hours }},
-'{{ dr_replication_info }}',
 '{{ managed_encryption_settings }}',
 '{{ options }}',
 '{{ properties }}',
 '{{ provider_name }}',
 '{{ share_name }}',
 '{{ storage_root }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 metastore_id,
@@ -763,14 +668,11 @@ full_name,
 provider_name,
 share_name,
 browse_only,
-catalog_federation_config,
 catalog_type,
 comment,
-conversion_info,
 created_at,
 created_by,
 custom_max_retention_hours,
-dr_replication_info,
 effective_predictive_optimization_flag,
 enable_predictive_optimization,
 isolation_mode,
@@ -795,15 +697,13 @@ updated_by
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the catalogs resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the catalogs resource.
     - name: name
       value: "{{ name }}"
       description: |
         Name of catalog.
-    - name: catalog_federation_config
-      description: |
-        Federation-only configuration, present only for FOREIGN catalogs.
-      value:
-        schema_filter_type: "{{ schema_filter_type }}"
     - name: comment
       value: "{{ comment }}"
       description: |
@@ -812,22 +712,10 @@ updated_by
       value: "{{ connection_name }}"
       description: |
         The name of the connection to an external data source.
-    - name: conversion_info
-      description: |
-        Status of conversion of FOREIGN catalog to UC Native catalog.
-      value:
-        state: "{{ state }}"
     - name: custom_max_retention_hours
       value: {{ custom_max_retention_hours }}
       description: |
         Custom maximum retention period in hours for the catalog
-    - name: dr_replication_info
-      description: |
-        Disaster Recovery replication state snapshot.
-      value:
-        last_failover_time_ms: {{ last_failover_time_ms }}
-        replicated_entities: "{{ replicated_entities }}"
-        status: "{{ status }}"
     - name: managed_encryption_settings
       description: |
         Control CMK encryption for managed catalog data
@@ -879,11 +767,8 @@ Updates the catalog that matches the supplied name. The caller must be either th
 ```sql
 UPDATE databricks_workspace.catalog.catalogs
 SET 
-catalog_federation_config = '{{ catalog_federation_config }}',
 comment = '{{ comment }}',
-conversion_info = '{{ conversion_info }}',
 custom_max_retention_hours = {{ custom_max_retention_hours }},
-dr_replication_info = '{{ dr_replication_info }}',
 enable_predictive_optimization = '{{ enable_predictive_optimization }}',
 isolation_mode = '{{ isolation_mode }}',
 managed_encryption_settings = '{{ managed_encryption_settings }}',
@@ -894,6 +779,7 @@ properties = '{{ properties }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 name,
 metastore_id,
@@ -902,14 +788,11 @@ full_name,
 provider_name,
 share_name,
 browse_only,
-catalog_federation_config,
 catalog_type,
 comment,
-conversion_info,
 created_at,
 created_by,
 custom_max_retention_hours,
-dr_replication_info,
 effective_predictive_optimization_flag,
 enable_predictive_optimization,
 isolation_mode,
@@ -944,6 +827,7 @@ Deletes the catalog that matches the supplied name. The caller must be a metasto
 DELETE FROM databricks_workspace.catalog.catalogs
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND force = '{{ force }}'
 ;
 ```

@@ -81,7 +81,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#workspace_assignment_get"><CopyableCode code="workspace_assignment_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Get an array of workspace permissions for the specified account and workspace.</td>
 </tr>
@@ -101,6 +101,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -132,6 +137,7 @@ permissions
 FROM databricks_account.iam.workspace_permissions
 WHERE account_id = '{{ account_id }}' -- required
 AND workspace_id = '{{ workspace_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>

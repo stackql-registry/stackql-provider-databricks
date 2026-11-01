@@ -99,7 +99,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#oauth_published_apps_list"><CopyableCode code="oauth_published_apps_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Get all the available published OAuth apps in Databricks.</td>
 </tr>
@@ -119,6 +119,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -160,6 +165,7 @@ redirect_urls,
 scopes
 FROM databricks_account.oauth2.oauth_published_apps
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;

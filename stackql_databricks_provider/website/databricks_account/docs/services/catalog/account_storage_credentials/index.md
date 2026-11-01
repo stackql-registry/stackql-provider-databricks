@@ -186,7 +186,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN, ISOLATION_MODE_OPEN_IN_ACCOUNT)"
+    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN)"
   },
   {
     "name": "owner",
@@ -361,7 +361,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN, ISOLATION_MODE_OPEN_IN_ACCOUNT)"
+    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN)"
   },
   {
     "name": "owner",
@@ -410,35 +410,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_storage_credentials_get"><CopyableCode code="account_storage_credentials_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-storage_credential_name"><code>storage_credential_name</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-storage_credential_name"><code>storage_credential_name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a storage credential from the metastore. The caller must be a metastore admin, the owner of the</td>
 </tr>
 <tr>
     <td><a href="#account_storage_credentials_list"><CopyableCode code="account_storage_credentials_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a list of all storage credentials that have been assigned to given metastore.</td>
 </tr>
 <tr>
     <td><a href="#account_storage_credentials_create"><CopyableCode code="account_storage_credentials_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a new storage credential. The request object is specific to the cloud:</td>
 </tr>
 <tr>
     <td><a href="#account_storage_credentials_update"><CopyableCode code="account_storage_credentials_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-storage_credential_name"><code>storage_credential_name</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-storage_credential_name"><code>storage_credential_name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates a storage credential on the metastore. The caller must be the owner of the storage credential.</td>
 </tr>
 <tr>
     <td><a href="#account_storage_credentials_delete"><CopyableCode code="account_storage_credentials_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-storage_credential_name"><code>storage_credential_name</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-storage_credential_name"><code>storage_credential_name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes a storage credential from the metastore. The caller must be an owner of the storage</td>
 </tr>
@@ -458,6 +458,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -518,6 +523,7 @@ FROM databricks_account.catalog.account_storage_credentials
 WHERE account_id = '{{ account_id }}' -- required
 AND metastore_id = '{{ metastore_id }}' -- required
 AND storage_credential_name = '{{ storage_credential_name }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -548,6 +554,7 @@ used_for_managed_storage
 FROM databricks_account.catalog.account_storage_credentials
 WHERE account_id = '{{ account_id }}' -- required
 AND metastore_id = '{{ metastore_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -572,13 +579,15 @@ INSERT INTO databricks_account.catalog.account_storage_credentials (
 credential_info,
 skip_validation,
 account_id,
-metastore_id
+metastore_id,
+account_host
 )
 SELECT 
 '{{ credential_info }}',
 {{ skip_validation }},
 '{{ account_id }}',
-'{{ metastore_id }}'
+'{{ metastore_id }}',
+'{{ account_host }}'
 RETURNING
 credential_info
 ;
@@ -594,6 +603,9 @@ credential_info
       description: Required parameter for the account_storage_credentials resource.
     - name: metastore_id
       value: "{{ metastore_id }}"
+      description: Required parameter for the account_storage_credentials resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_storage_credentials resource.
     - name: credential_info
       value:
@@ -645,6 +657,7 @@ WHERE
 account_id = '{{ account_id }}' --required
 AND metastore_id = '{{ metastore_id }}' --required
 AND storage_credential_name = '{{ storage_credential_name }}' --required
+AND account_host = '{{ account_host }}' --required
 RETURNING
 credential_info;
 ```
@@ -669,6 +682,7 @@ DELETE FROM databricks_account.catalog.account_storage_credentials
 WHERE account_id = '{{ account_id }}' --required
 AND metastore_id = '{{ metastore_id }}' --required
 AND storage_credential_name = '{{ storage_credential_name }}' --required
+AND account_host = '{{ account_host }}' --required
 AND force = '{{ force }}'
 ;
 ```

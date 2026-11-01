@@ -91,14 +91,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_rule_set"><CopyableCode code="get_rule_set" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-etag"><code>etag</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-etag"><code>etag</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Get a rule set by its name. A rule set is always attached to a resource and contains a list of access</td>
 </tr>
 <tr>
     <td><a href="#update_rule_set"><CopyableCode code="update_rule_set" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-rule_set"><code>rule_set</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-rule_set"><code>rule_set</code></a></td>
     <td></td>
     <td>Replace the rules of a rule set. First, use get to read the current version of the rule set before</td>
 </tr>
@@ -118,6 +118,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -157,6 +162,7 @@ FROM databricks_account.iam.account_rule_sets
 WHERE account_id = '{{ account_id }}' -- required
 AND name = '{{ name }}' -- required
 AND etag = '{{ etag }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -182,6 +188,7 @@ name = '{{ name }}',
 rule_set = '{{ rule_set }}'
 WHERE 
 account_id = '{{ account_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND name = '{{ name }}' --required
 AND rule_set = '{{ rule_set }}' --required
 RETURNING

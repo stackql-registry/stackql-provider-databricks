@@ -252,112 +252,112 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-run_uuid"><code>run_uuid</code></a></td>
     <td>Gets the metadata, metrics, params, and tags for a run. In the case where multiple metrics with the</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new run within an experiment. A run is usually a single execution of a machine learning or</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
     <td></td>
     <td>Marks a run for deletion.</td>
 </tr>
 <tr>
     <td><a href="#delete_bulk"><CopyableCode code="delete_bulk" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-experiment_id"><code>experiment_id</code></a>, <a href="#parameter-max_timestamp_millis"><code>max_timestamp_millis</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-experiment_id"><code>experiment_id</code></a>, <a href="#parameter-max_timestamp_millis"><code>max_timestamp_millis</code></a></td>
     <td></td>
     <td>Bulk delete runs in an experiment that were created prior to or at the specified timestamp. Deletes at</td>
 </tr>
 <tr>
     <td><a href="#delete_tag"><CopyableCode code="delete_tag" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-key"><code>key</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-key"><code>key</code></a></td>
     <td></td>
     <td>Deletes a tag on a run. Tags are run metadata that can be updated during a run and after a run</td>
 </tr>
 <tr>
     <td><a href="#log_batch"><CopyableCode code="log_batch" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Logs a batch of metrics, params, and tags for a run. If any data failed to be persisted, the server</td>
 </tr>
 <tr>
     <td><a href="#log_inputs"><CopyableCode code="log_inputs" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
     <td></td>
     <td>Logs inputs, such as datasets and models, to an MLflow Run.</td>
 </tr>
 <tr>
     <td><a href="#log_metric"><CopyableCode code="log_metric" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-value"><code>value</code></a>, <a href="#parameter-timestamp"><code>timestamp</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-value"><code>value</code></a>, <a href="#parameter-timestamp"><code>timestamp</code></a></td>
     <td></td>
     <td>Log a metric for a run. A metric is a key-value pair (string key, float value) with an associated</td>
 </tr>
 <tr>
     <td><a href="#log_model"><CopyableCode code="log_model" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>**Note:** the [Create a logged model](/api/workspace/experiments/createloggedmodel) API replaces this</td>
 </tr>
 <tr>
     <td><a href="#log_outputs"><CopyableCode code="log_outputs" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
     <td></td>
     <td>Logs outputs, such as models, from an MLflow Run.</td>
 </tr>
 <tr>
     <td><a href="#log_param"><CopyableCode code="log_param" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-value"><code>value</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-value"><code>value</code></a></td>
     <td></td>
     <td>Logs a param used for a run. A param is a key-value pair (string key, string value). Examples include</td>
 </tr>
 <tr>
     <td><a href="#restore"><CopyableCode code="restore" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
     <td></td>
     <td>Restores a deleted run. This also restores associated metadata, runs, metrics, params, and tags.</td>
 </tr>
 <tr>
     <td><a href="#restore_bulk"><CopyableCode code="restore_bulk" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-experiment_id"><code>experiment_id</code></a>, <a href="#parameter-min_timestamp_millis"><code>min_timestamp_millis</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-experiment_id"><code>experiment_id</code></a>, <a href="#parameter-min_timestamp_millis"><code>min_timestamp_millis</code></a></td>
     <td></td>
     <td>Bulk restore runs in an experiment that were deleted no earlier than the specified timestamp. Restores</td>
 </tr>
 <tr>
     <td><a href="#search"><CopyableCode code="search" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Searches for runs that satisfy expressions.</td>
 </tr>
 <tr>
     <td><a href="#set_tag"><CopyableCode code="set_tag" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-value"><code>value</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-value"><code>value</code></a></td>
     <td></td>
     <td>Sets a tag on a run. Tags are run metadata that can be updated during a run and after a run completes.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates run metadata.</td>
 </tr>
@@ -380,12 +380,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-run_id">
     <td><CopyableCode code="run_id" /></td>
     <td><code>string</code></td>
     <td>ID of the run to fetch. Must be provided.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-run_uuid">
     <td><CopyableCode code="run_uuid" /></td>
@@ -413,6 +418,7 @@ run
 FROM databricks_workspace.ml.experiment_runs
 WHERE run_id = '{{ run_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND run_uuid = '{{ run_uuid }}'
 ;
 ```
@@ -440,7 +446,8 @@ run_name,
 start_time,
 tags,
 user_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ experiment_id }}',
@@ -448,7 +455,8 @@ SELECT
 {{ start_time }},
 '{{ tags }}',
 '{{ user_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 run
 ;
@@ -461,6 +469,9 @@ run
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the experiment_runs resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the experiment_runs resource.
     - name: experiment_id
       value: "{{ experiment_id }}"
@@ -517,7 +528,8 @@ Marks a run for deletion.
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.delete 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": "{{ run_id }}"
@@ -531,7 +543,8 @@ Bulk delete runs in an experiment that were created prior to or at the specified
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.delete_bulk 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "experiment_id": "{{ experiment_id }}", 
@@ -547,7 +560,8 @@ Deletes a tag on a run. Tags are run metadata that can be updated during a run a
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.delete_tag 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": "{{ run_id }}", 
@@ -562,7 +576,8 @@ Logs a batch of metrics, params, and tags for a run. If any data failed to be pe
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.log_batch 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "metrics": "{{ metrics }}", 
@@ -579,7 +594,8 @@ Logs inputs, such as datasets and models, to an MLflow Run.
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.log_inputs 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": "{{ run_id }}", 
@@ -595,7 +611,8 @@ Log a metric for a run. A metric is a key-value pair (string key, float value) w
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.log_metric 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "key": "{{ key }}", 
@@ -617,7 +634,8 @@ EXEC databricks_workspace.ml.experiment_runs.log_metric
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.log_model 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "model_json": "{{ model_json }}", 
@@ -632,7 +650,8 @@ Logs outputs, such as models, from an MLflow Run.
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.log_outputs 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": "{{ run_id }}", 
@@ -647,7 +666,8 @@ Logs a param used for a run. A param is a key-value pair (string key, string val
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.log_param 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "key": "{{ key }}", 
@@ -664,7 +684,8 @@ Restores a deleted run. This also restores associated metadata, runs, metrics, p
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.restore 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": "{{ run_id }}"
@@ -678,7 +699,8 @@ Bulk restore runs in an experiment that were deleted no earlier than the specifi
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.restore_bulk 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "experiment_id": "{{ experiment_id }}", 
@@ -694,7 +716,8 @@ Searches for runs that satisfy expressions.
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.search 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "experiment_ids": "{{ experiment_ids }}", 
@@ -713,7 +736,8 @@ Sets a tag on a run. Tags are run metadata that can be updated during a run and 
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.set_tag 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "key": "{{ key }}", 
@@ -730,7 +754,8 @@ Updates run metadata.
 
 ```sql
 EXEC databricks_workspace.ml.experiment_runs.update 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "end_time": {{ end_time }}, 

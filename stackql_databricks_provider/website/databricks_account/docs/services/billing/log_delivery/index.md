@@ -254,28 +254,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#log_delivery_get"><CopyableCode code="log_delivery_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-log_delivery_configuration_id"><code>log_delivery_configuration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-log_delivery_configuration_id"><code>log_delivery_configuration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a Databricks log delivery configuration object for an account, both specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#log_delivery_list"><CopyableCode code="log_delivery_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-credentials_id"><code>credentials_id</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-status"><code>status</code></a>, <a href="#parameter-storage_configuration_id"><code>storage_configuration_id</code></a></td>
     <td>Gets all Databricks log delivery configurations associated with an account specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#log_delivery_create"><CopyableCode code="log_delivery_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-log_delivery_configuration"><code>log_delivery_configuration</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-log_delivery_configuration"><code>log_delivery_configuration</code></a></td>
     <td></td>
     <td>Creates a new Databricks log delivery configuration to enable delivery of the specified type of logs</td>
 </tr>
 <tr>
     <td><a href="#log_delivery_patch_status"><CopyableCode code="log_delivery_patch_status" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-log_delivery_configuration_id"><code>log_delivery_configuration_id</code></a>, <a href="#parameter-status"><code>status</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-log_delivery_configuration_id"><code>log_delivery_configuration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-status"><code>status</code></a></td>
     <td></td>
     <td>Enables or disables a log delivery configuration. Deletion of delivery configurations is not</td>
 </tr>
@@ -295,6 +295,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -360,6 +365,7 @@ workspace_ids_filter
 FROM databricks_account.billing.log_delivery
 WHERE account_id = '{{ account_id }}' -- required
 AND log_delivery_configuration_id = '{{ log_delivery_configuration_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -385,6 +391,7 @@ update_time,
 workspace_ids_filter
 FROM databricks_account.billing.log_delivery
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND credentials_id = '{{ credentials_id }}'
 AND page_token = '{{ page_token }}'
 AND status = '{{ status }}'
@@ -411,11 +418,13 @@ Creates a new Databricks log delivery configuration to enable delivery of the sp
 ```sql
 INSERT INTO databricks_account.billing.log_delivery (
 log_delivery_configuration,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ log_delivery_configuration }}' /* required */,
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 log_delivery_configuration
 ;
@@ -428,6 +437,9 @@ log_delivery_configuration
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the log_delivery resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the log_delivery resource.
     - name: log_delivery_configuration
       description: |
@@ -468,6 +480,7 @@ status = '{{ status }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND log_delivery_configuration_id = '{{ log_delivery_configuration_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND status = '{{ status }}' --required;
 ```
 </TabItem>

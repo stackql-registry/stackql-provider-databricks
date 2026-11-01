@@ -542,35 +542,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#workspaces_get"><CopyableCode code="workspaces_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets information including status for a Databricks workspace, specified by ID. In the response, the</td>
 </tr>
 <tr>
     <td><a href="#workspaces_list"><CopyableCode code="workspaces_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Lists Databricks workspaces for an account.</td>
 </tr>
 <tr>
     <td><a href="#workspaces_create"><CopyableCode code="workspaces_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a new workspace using a credential configuration and a storage configuration, an optional</td>
 </tr>
 <tr>
     <td><a href="#workspaces_update"><CopyableCode code="workspaces_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-customer_facing_workspace"><code>customer_facing_workspace</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-customer_facing_workspace"><code>customer_facing_workspace</code></a></td>
     <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td>Updates a workspace.</td>
 </tr>
 <tr>
     <td><a href="#workspaces_delete"><CopyableCode code="workspaces_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a Databricks workspace, both specified by ID.</td>
 </tr>
@@ -590,6 +590,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -653,6 +658,7 @@ workspace_status_message
 FROM databricks_account.provisioning.workspaces
 WHERE account_id = '{{ account_id }}' -- required
 AND workspace_id = '{{ workspace_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -691,6 +697,7 @@ workspace_status,
 workspace_status_message
 FROM databricks_account.provisioning.workspaces
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -713,7 +720,6 @@ Creates a new workspace using a credential configuration and a storage configura
 ```sql
 INSERT INTO databricks_account.provisioning.workspaces (
 aws_region,
-azure_workspace_info,
 cloud,
 cloud_resource_container,
 compute_mode,
@@ -731,11 +737,11 @@ private_access_settings_id,
 storage_configuration_id,
 storage_customer_managed_key_id,
 workspace_name,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ aws_region }}',
-'{{ azure_workspace_info }}',
 '{{ cloud }}',
 '{{ cloud_resource_container }}',
 '{{ compute_mode }}',
@@ -753,7 +759,8 @@ SELECT
 '{{ storage_configuration_id }}',
 '{{ storage_customer_managed_key_id }}',
 '{{ workspace_name }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 credentials_id,
@@ -793,12 +800,11 @@ workspace_status_message
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the workspaces resource.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the workspaces resource.
     - name: aws_region
       value: "{{ aws_region }}"
-    - name: azure_workspace_info
-      value:
-        resource_group: "{{ resource_group }}"
-        subscription_id: "{{ subscription_id }}"
     - name: cloud
       value: "{{ cloud }}"
       description: |
@@ -919,6 +925,7 @@ customer_facing_workspace = '{{ customer_facing_workspace }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND customer_facing_workspace = '{{ customer_facing_workspace }}' --required
 AND update_mask = '{{ update_mask}}'
 RETURNING
@@ -970,6 +977,7 @@ Deletes a Databricks workspace, both specified by ID.
 DELETE FROM databricks_account.provisioning.workspaces
 WHERE account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

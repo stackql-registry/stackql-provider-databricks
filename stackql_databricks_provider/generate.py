@@ -95,6 +95,21 @@ def generate_spec_for_service(
                         method_detail["x-stackql-sdk-source"] = class_name
                     if path not in paths:
                         paths[path] = {}
+                    for verb, method_detail in methods.items():
+                        existing = paths[path].get(verb)
+                        if existing is not None:
+                            # Two SDK methods resolve to the same path and verb;
+                            # the later one overwrites the earlier, so the first
+                            # operation is silently lost from the provider.
+                            logger.error(
+                                "%s/%s: path collision %s %s: %s overwritten by %s",
+                                scope, service_name, verb.upper(), path,
+                                existing.get("operationId"), method_detail.get("operationId"),
+                            )
+                            errors.append(
+                                f"collision {verb.upper()} {path}: "
+                                f"{existing.get('operationId')} vs {method_detail.get('operationId')}"
+                            )
                     paths[path].update(methods)
                     operation_count += 1
             except Exception as e:
@@ -116,13 +131,6 @@ def generate_spec_for_service(
         except Exception as e:
             logger.debug("Skipped enum %s: %s", enum_cls.__name__, e)
 
-    if scope == "account":
-        server_url = "https://accounts.cloud.databricks.com"
-        server_desc = "Databricks account"
-    else:
-        server_url = "https://{workspace}.cloud.databricks.com"
-        server_desc = "Databricks workspace"
-
     # Sanitize: replace any $ref pointing to undefined schemas with inline object
     _sanitize_orphaned_refs(paths, schemas)
 
@@ -141,18 +149,10 @@ def generate_spec_for_service(
             "x-stackql-date-generated": date.today().isoformat(),
             "x-stackql-sdk-namespace": sdk_namespace,
         },
-        "servers": [{"url": server_url, "description": server_desc}],
+        "servers": _load_servers(scope),
         "paths": paths,
         "components": {"schemas": schemas},
     }
-
-    if server_url.startswith("https://{"):
-        spec["servers"][0]["variables"] = {
-            "workspace": {
-                "default": "your-workspace",
-                "description": "Your Databricks workspace name",
-            }
-        }
 
     # Apply post-extraction overrides from spec_overrides.json
     overrides = _load_overrides()
@@ -299,6 +299,22 @@ def _resolve_json_path(obj: Any, segments: List[str]) -> Tuple[Any, str]:
         raise KeyError(f"No element with {match_field}={match_val} in {key}")
 
     return current, last
+
+
+def _load_servers(scope: str) -> List[Dict[str, Any]]:
+    """Return the OpenAPI ``servers`` block for a scope.
+
+    The hosts are mastered once, in ``provider-config/{scope}_servers.json``,
+    the same files the Makefile passes to ``@stackql/provider-utils`` as
+    ``--servers`` (which rewrites each service's block with them at provider
+    generation time). Reading them here keeps the intermediate specs under
+    ``openapi_generated/`` consistent with the published provider: the
+    cloud-selected ``account_host`` / ``workspace_domain`` variables with
+    their ``x-stackQL-envVar`` and ``x-stackQL-envVarSelector`` annotations.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "provider-config", f"{scope}_servers.json")
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def _apply_overrides(spec: Dict[str, Any], scope: str, service_name: str,

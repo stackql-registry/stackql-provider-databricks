@@ -184,14 +184,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_details"><CopyableCode code="get_details" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-eval_run_id"><code>eval_run_id</code></a>, <a href="#parameter-result_id"><code>result_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-eval_run_id"><code>eval_run_id</code></a>, <a href="#parameter-result_id"><code>result_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get details for evaluation results.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-eval_run_id"><code>eval_run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-eval_run_id"><code>eval_run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List evaluation results for a specific evaluation run.</td>
 </tr>
@@ -214,7 +214,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-eval_run_id">
     <td><CopyableCode code="eval_run_id" /></td>
@@ -230,6 +230,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="space_id" /></td>
     <td><code>string</code></td>
     <td>The ID associated with the Genie space where the evaluation run is located.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -273,6 +278,7 @@ WHERE space_id = '{{ space_id }}' -- required
 AND eval_run_id = '{{ eval_run_id }}' -- required
 AND result_id = '{{ result_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -293,6 +299,7 @@ FROM databricks_workspace.dashboards.genie_eval_results
 WHERE space_id = '{{ space_id }}' -- required
 AND eval_run_id = '{{ eval_run_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;

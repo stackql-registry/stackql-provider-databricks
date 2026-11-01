@@ -103,7 +103,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "state",
         "type": "string",
-        "description": "Current state of the endpoint (DELETED, OFFLINE, ONLINE, PROVISIONING, RED_STATE, YELLOW_STATE)"
+        "description": "Current state of the endpoint (DELETED, OFFLINE, ONLINE, PROVISIONING, RED_STATE, STARTING, STOPPED, STOPPING, YELLOW_STATE)"
       }
     ]
   },
@@ -135,64 +135,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "requested_target_qps",
         "type": "integer",
-        "description": ""
+        "description": "The requested QPS target for the endpoint. Best-effort; the system does not guarantee this QPS will be achieved."
       },
       {
         "name": "state",
         "type": "string",
         "description": "The current state of the scaling change request. (SCALING_CHANGE_APPLIED, SCALING_CHANGE_IN_PROGRESS, SCALING_CHANGE_UNSPECIFIED)"
-      }
-    ]
-  },
-  {
-    "name": "throughput_info",
-    "type": "object",
-    "description": "Throughput information for the endpoint",
-    "children": [
-      {
-        "name": "change_request_message",
-        "type": "string",
-        "description": "Additional information about the throughput change request"
-      },
-      {
-        "name": "change_request_state",
-        "type": "string",
-        "description": "The state of the most recent throughput change request (CHANGE_ADJUSTED, CHANGE_FAILED, CHANGE_IN_PROGRESS, CHANGE_REACHED_MAXIMUM, CHANGE_REACHED_MINIMUM, CHANGE_SUCCESS)"
-      },
-      {
-        "name": "current_concurrency",
-        "type": "number",
-        "description": "The current concurrency (total CPU) allocated to the endpoint"
-      },
-      {
-        "name": "current_concurrency_utilization_percentage",
-        "type": "number",
-        "description": "The current utilization of concurrency as a percentage (0-100)"
-      },
-      {
-        "name": "current_num_replicas",
-        "type": "integer",
-        "description": "The current number of replicas allocated to the endpoint"
-      },
-      {
-        "name": "maximum_concurrency_allowed",
-        "type": "number",
-        "description": "The maximum concurrency allowed for this endpoint"
-      },
-      {
-        "name": "minimal_concurrency_allowed",
-        "type": "number",
-        "description": "The minimum concurrency allowed for this endpoint"
-      },
-      {
-        "name": "requested_concurrency",
-        "type": "number",
-        "description": "The requested concurrency (total CPU) for the endpoint"
-      },
-      {
-        "name": "requested_num_replicas",
-        "type": "integer",
-        "description": "The requested number of replicas for the endpoint"
       }
     ]
   }
@@ -261,7 +209,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "state",
         "type": "string",
-        "description": "Current state of the endpoint (DELETED, OFFLINE, ONLINE, PROVISIONING, RED_STATE, YELLOW_STATE)"
+        "description": "Current state of the endpoint (DELETED, OFFLINE, ONLINE, PROVISIONING, RED_STATE, STARTING, STOPPED, STOPPING, YELLOW_STATE)"
       }
     ]
   },
@@ -293,64 +241,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "requested_target_qps",
         "type": "integer",
-        "description": ""
+        "description": "The requested QPS target for the endpoint. Best-effort; the system does not guarantee this QPS will be achieved."
       },
       {
         "name": "state",
         "type": "string",
         "description": "The current state of the scaling change request. (SCALING_CHANGE_APPLIED, SCALING_CHANGE_IN_PROGRESS, SCALING_CHANGE_UNSPECIFIED)"
-      }
-    ]
-  },
-  {
-    "name": "throughput_info",
-    "type": "object",
-    "description": "Throughput information for the endpoint",
-    "children": [
-      {
-        "name": "change_request_message",
-        "type": "string",
-        "description": "Additional information about the throughput change request"
-      },
-      {
-        "name": "change_request_state",
-        "type": "string",
-        "description": "The state of the most recent throughput change request (CHANGE_ADJUSTED, CHANGE_FAILED, CHANGE_IN_PROGRESS, CHANGE_REACHED_MAXIMUM, CHANGE_REACHED_MINIMUM, CHANGE_SUCCESS)"
-      },
-      {
-        "name": "current_concurrency",
-        "type": "number",
-        "description": "The current concurrency (total CPU) allocated to the endpoint"
-      },
-      {
-        "name": "current_concurrency_utilization_percentage",
-        "type": "number",
-        "description": "The current utilization of concurrency as a percentage (0-100)"
-      },
-      {
-        "name": "current_num_replicas",
-        "type": "integer",
-        "description": "The current number of replicas allocated to the endpoint"
-      },
-      {
-        "name": "maximum_concurrency_allowed",
-        "type": "number",
-        "description": "The maximum concurrency allowed for this endpoint"
-      },
-      {
-        "name": "minimal_concurrency_allowed",
-        "type": "number",
-        "description": "The minimum concurrency allowed for this endpoint"
-      },
-      {
-        "name": "requested_concurrency",
-        "type": "number",
-        "description": "The requested concurrency (total CPU) for the endpoint"
-      },
-      {
-        "name": "requested_num_replicas",
-        "type": "integer",
-        "description": "The requested number of replicas for the endpoint"
       }
     ]
   }
@@ -376,49 +272,63 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get details for a single AI Search endpoint.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all AI Search endpoints in the workspace.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-endpoint_type"><code>endpoint_type</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-endpoint_type"><code>endpoint_type</code></a></td>
     <td></td>
     <td>Create a new endpoint.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete an AI Search endpoint.</td>
 </tr>
 <tr>
     <td><a href="#retrieve_user_visible_metrics"><CopyableCode code="retrieve_user_visible_metrics" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Retrieve user-visible metrics for an endpoint</td>
 </tr>
 <tr>
+    <td><a href="#start"><CopyableCode code="start" /></a></td>
+    <td><CopyableCode code="exec" /></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Start a stopped endpoint. The endpoint serves the same indexes it had when it stopped.</td>
+</tr>
+<tr>
+    <td><a href="#stop"><CopyableCode code="stop" /></a></td>
+    <td><CopyableCode code="exec" /></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Stop an endpoint. Stopping removes the endpoint's serving compute and retains its indexes. A stopped</td>
+</tr>
+<tr>
     <td><a href="#update_endpoint_budget_policy"><CopyableCode code="update_endpoint_budget_policy" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-budget_policy_id"><code>budget_policy_id</code></a></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-budget_policy_id"><code>budget_policy_id</code></a></td>
     <td></td>
     <td>Update the budget policy of an endpoint</td>
 </tr>
 <tr>
     <td><a href="#update_endpoint_custom_tags"><CopyableCode code="update_endpoint_custom_tags" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-custom_tags"><code>custom_tags</code></a></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-custom_tags"><code>custom_tags</code></a></td>
     <td></td>
     <td>Update the custom tags of an endpoint.</td>
 </tr>
@@ -441,7 +351,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-endpoint_name">
     <td><CopyableCode code="endpoint_name" /></td>
@@ -452,6 +362,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>AI Search endpoint name</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -488,11 +403,11 @@ endpoint_type,
 last_updated_timestamp,
 last_updated_user,
 num_indexes,
-scaling_info,
-throughput_info
+scaling_info
 FROM databricks_workspace.vectorsearch.endpoints
 WHERE endpoint_name = '{{ endpoint_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -514,10 +429,10 @@ endpoint_type,
 last_updated_timestamp,
 last_updated_user,
 num_indexes,
-scaling_info,
-throughput_info
+scaling_info
 FROM databricks_workspace.vectorsearch.endpoints
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_token = '{{ page_token }}'
 ;
 ```
@@ -543,19 +458,19 @@ INSERT INTO databricks_workspace.vectorsearch.endpoints (
 name,
 endpoint_type,
 budget_policy_id,
-num_replicas,
 target_qps,
 usage_policy_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
 '{{ endpoint_type }}' /* required */,
 '{{ budget_policy_id }}',
-{{ num_replicas }},
 {{ target_qps }},
 '{{ usage_policy_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -569,8 +484,7 @@ endpoint_type,
 last_updated_timestamp,
 last_updated_user,
 num_indexes,
-scaling_info,
-throughput_info
+scaling_info
 ;
 ```
 </TabItem>
@@ -581,6 +495,9 @@ throughput_info
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the endpoints resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the endpoints resource.
     - name: name
       value: "{{ name }}"
@@ -594,10 +511,6 @@ throughput_info
       value: "{{ budget_policy_id }}"
       description: |
         The budget policy id to be applied
-    - name: num_replicas
-      value: {{ num_replicas }}
-      description: |
-        Initial number of replicas for the endpoint. If not specified, defaults to 1.
     - name: target_qps
       value: {{ target_qps }}
       description: |
@@ -628,6 +541,7 @@ Delete an AI Search endpoint.
 DELETE FROM databricks_workspace.vectorsearch.endpoints
 WHERE endpoint_name = '{{ endpoint_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -640,6 +554,8 @@ AND deployment_name = '{{ deployment_name }}' --required
     defaultValue="retrieve_user_visible_metrics"
     values={[
         { label: 'retrieve_user_visible_metrics', value: 'retrieve_user_visible_metrics' },
+        { label: 'start', value: 'start' },
+        { label: 'stop', value: 'stop' },
         { label: 'update_endpoint_budget_policy', value: 'update_endpoint_budget_policy' },
         { label: 'update_endpoint_custom_tags', value: 'update_endpoint_custom_tags' }
     ]}
@@ -651,7 +567,8 @@ Retrieve user-visible metrics for an endpoint
 ```sql
 EXEC databricks_workspace.vectorsearch.endpoints.retrieve_user_visible_metrics 
 @name='{{ name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "end_time": "{{ end_time }}", 
@@ -663,6 +580,30 @@ EXEC databricks_workspace.vectorsearch.endpoints.retrieve_user_visible_metrics
 ;
 ```
 </TabItem>
+<TabItem value="start">
+
+Start a stopped endpoint. The endpoint serves the same indexes it had when it stopped.
+
+```sql
+EXEC databricks_workspace.vectorsearch.endpoints.start 
+@endpoint_name='{{ endpoint_name }}' --required, 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
+;
+```
+</TabItem>
+<TabItem value="stop">
+
+Stop an endpoint. Stopping removes the endpoint's serving compute and retains its indexes. A stopped
+
+```sql
+EXEC databricks_workspace.vectorsearch.endpoints.stop 
+@endpoint_name='{{ endpoint_name }}' --required, 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
+;
+```
+</TabItem>
 <TabItem value="update_endpoint_budget_policy">
 
 Update the budget policy of an endpoint
@@ -670,7 +611,8 @@ Update the budget policy of an endpoint
 ```sql
 EXEC databricks_workspace.vectorsearch.endpoints.update_endpoint_budget_policy 
 @endpoint_name='{{ endpoint_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "budget_policy_id": "{{ budget_policy_id }}"
@@ -685,7 +627,8 @@ Update the custom tags of an endpoint.
 ```sql
 EXEC databricks_workspace.vectorsearch.endpoints.update_endpoint_custom_tags 
 @endpoint_name='{{ endpoint_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "custom_tags": "{{ custom_tags }}"

@@ -84,11 +84,6 @@ The following fields are returned by `SELECT` queries:
     "description": "A token that can be used to list the next page of array properties."
   },
   {
-    "name": "path",
-    "type": "string",
-    "description": "Path of the job object in workspace file tree, including file extension. If absent, the job doesn't have a workspace object. Example: /Workspace/user@example.com/my_project/my_job.job.json"
-  },
-  {
     "name": "settings",
     "type": "object",
     "description": "Settings for this job and all of its runs. These settings can be updated using the ``resetJob`` method.",
@@ -101,7 +96,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "continuous",
         "type": "object",
-        "description": "An optional continuous property for this job. The continuous property will ensure that there is always one run executing. Only one of ``schedule`` and ``continuous`` can be used.",
+        "description": "An optional continuous property for this job. The continuous property will ensure that there is always one run executing. Only one of ``schedule`` and ``continuous`` can be used. Pipelines started by a continuous job also run continuously, regardless of their own pipeline mode setting.",
         "children": [
           {
             "name": "maintenance_window",
@@ -170,6 +165,11 @@ The following fields are returned by `SELECT` queries:
         "description": "An optional description for the job. The maximum length is 27700 characters in UTF-8 encoding."
       },
       {
+        "name": "duration_target",
+        "type": "string",
+        "description": "The window the run aims to finish within, in hours, for a Cost-optimized serverless run. Required only when ``performance_target`` is ``COST_OPTIMIZED``. Must be one of the supported values: ``NO_FLEXIBILITY``, ``4h``, ``12h``, ``24h``, ``72h``. ``NO_FLEXIBILITY`` means the run uses the default cost-optimized performance level without additional cost-saving optimizations."
+      },
+      {
         "name": "edit_mode",
         "type": "string",
         "description": "Edit mode of the job. - ``UI_LOCKED``: The job is in a locked UI state and cannot be modified. - ``EDITABLE``: The job is in an editable state and can be modified. (EDITABLE, UI_LOCKED)"
@@ -224,7 +224,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "environment_variables",
         "type": "array",
-        "description": "Named environment-variable entries that tasks can reference by key from ``TaskSettings.environment_variables_key``. Each entry holds inline ``variables`` plus optional ``.env`` ``files``. Maximum 10 entries per job. Entries are independent of one another — there is no cross-entry merging.",
+        "description": "Named environment-variable entries that tasks can reference by key from ``TaskSettings.environment_variables_key``. Each entry's ``spec`` holds inline ``variables`` and optional ``.env`` ``files``. Maximum 10 entries per job. A task can reference at most one entry from this list.",
         "children": [
           {
             "name": "environment_variables_key",
@@ -232,21 +232,28 @@ The following fields are returned by `SELECT` queries:
             "description": "Identifier for this entry. Must be unique within ``JobSettings.environment_variables``. Tasks reference it from ``TaskSettings.environment_variables_key``."
           },
           {
-            "name": "files",
-            "type": "array",
-            "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line must be exactly ``KEY=VALUE``. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no comments, no quoted values, no escape sequences, no variable interpolation. Any line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 1,048,576 bytes (1 MiB) per file on disk; maximum 131,072 bytes (128 KiB) per ``KEY=VALUE`` line combined. Caps are enforced at read time in jobs-runner — files exceeding the per-file cap, or lines exceeding the per-line cap, fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use these files to store raw secret values; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
-          },
-          {
-            "name": "variables",
+            "name": "spec",
             "type": "object",
-            "description": "Environment variables specified directly as key/value pairs (as opposed to ``files``, which are read from ``.env`` file paths). Maximum 100 entries. Each key must match ``^[A-Za-z_][A-Za-z0-9_]*$`` and be 1 to 256 characters long. Each value is up to 512 characters; larger values should be moved into a ``.env`` file referenced from ``files``. On a duplicate key, ``variables`` override values from any file in ``files``. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use this field to store a raw secret value; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
+            "description": "The environment variable specification.",
+            "children": [
+              {
+                "name": "files",
+                "type": "array",
+                "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line containing a variable must be exactly ``KEY=VALUE``. Empty and whitespace-only lines, and lines beginning with ``#``, are ignored. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no inline comments, no quoted values, no escape sequences, no variable interpolation. Any other line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 32,768 bytes (32 KiB) per file on disk; maximum 1,024 bytes (1 KiB) per ``KEY=VALUE`` line combined. Files or lines exceeding these limits fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file."
+              },
+              {
+                "name": "variables",
+                "type": "object",
+                "description": "Environment variables specified directly as key/value pairs. Maximum 20 entries. Each key must be 1 to 256 characters and match ``^[A-Za-z_][A-Za-z0-9_]*$``: it must start with an ASCII letter or underscore and contain only ASCII letters, digits, and underscores. Each value can be any Unicode string of up to 512 characters, including an empty string."
+              }
+            ]
           }
         ]
       },
       {
         "name": "environments",
         "type": "array",
-        "description": "A list of task execution environment specifications that can be referenced by serverless tasks of this job. For serverless notebook tasks, if the environment_key is not specified, the notebook environment will be used if present. If a jobs environment is specified, it will override the notebook environment. For other serverless tasks, the task environment is required to be specified using environment_key in the task settings.",
+        "description": "A list of task execution environment specifications that can be referenced by tasks that use serverless compute or a compute resource that uses Environments mode. For notebook tasks that use serverless compute or a compute resource that uses Environments mode, if the environment_key is not specified, the notebook environment will be used if present. If a jobs environment is specified, it will override the notebook environment. For other tasks that use serverless compute or a compute resource that uses Environments mode, the task environment is required to be specified using environment_key in the task settings.",
         "children": [
           {
             "name": "environment_key",
@@ -468,7 +475,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "group_name",
             "type": "string",
-            "description": "Group name of an account group assigned to the workspace. Setting this field requires being a member of the group."
+            "description": "Group name of an account group assigned to the workspace. When set, all tasks run as the group and the group's permissions are used for data access. Setting this field requires being a member of the group, or having the ``Assume`` permission on the group."
           },
           {
             "name": "service_principal_name",
@@ -542,58 +549,6 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "agentic_task",
-            "type": "object",
-            "description": "Agentic Task for job-based multi-agent execution",
-            "children": [
-              {
-                "name": "context",
-                "type": "object",
-                "description": "Optional. Context input providing conversation history and instructions."
-              },
-              {
-                "name": "genie_code_api",
-                "type": "object",
-                "description": "Inline Genie Code conversation driven by a single prompt. Mutually exclusive with the supervisor variants."
-              },
-              {
-                "name": "goal",
-                "type": "string",
-                "description": "Deprecated. Use ``input`` (field 7) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-              },
-              {
-                "name": "input",
-                "type": "string",
-                "description": "Optional. The user query / task input the agent must accomplish. Mirrors the OpenAI Responses API ``input`` field. Replaces the deprecated ``goal`` field; new callers should populate ``input`` going forward."
-              },
-              {
-                "name": "output_schema",
-                "type": "object",
-                "description": "Optional. JSON-Schema-style declaration of the structured output the agent should produce. Replaces the deprecated ``task_output_schema`` map; new callers should populate ``output_schema`` going forward."
-              },
-              {
-                "name": "supervisor_agent",
-                "type": "object",
-                "description": "A Supervisor Agent that orchestrates sub-agents and tools, referenced by tile_id."
-              },
-              {
-                "name": "supervisor_api",
-                "type": "object",
-                "description": "Inlined Responses-API supervisor configuration (model + instructions + tools). Mutually exclusive with ``supervisor_agent``."
-              },
-              {
-                "name": "task_output_schema",
-                "type": "object",
-                "description": "Deprecated. Use ``output_schema`` (field 8) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-              },
-              {
-                "name": "trace_destination",
-                "type": "object",
-                "description": "Optional. Where MLflow traces produced by this task run should be persisted. When unset, traces follow the workspace default destination."
-              }
-            ]
-          },
-          {
             "name": "ai_runtime_task",
             "type": "object",
             "description": "The task runs a multi-gpu compute workload on Databricks AI Runtime. Specify the accelerator type and count, the command to run, and where the workload's code and MLflow output are stored.",
@@ -619,6 +574,11 @@ The following fields are returned by `SELECT` queries:
                 "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
               },
               {
+                "name": "mlflow_artifact_location",
+                "type": "string",
+                "description": "Optional root location for MLflow artifacts logged by the run. If this field isn't specified the default artifact location will be in dbfs i.e. ``dbfs:/databricks/mlflow-tracking/&lt;experiment_id&gt;/...`` If dbfs access is restricted or UC is preferred this can be a custom location in UC: ``dbfs:/Volumes/&lt;catalog&gt;/&lt;schema&gt;/&lt;volume&gt;/...`` The location should be unique for each experiment."
+              },
+              {
                 "name": "mlflow_experiment_directory",
                 "type": "string",
                 "description": "Optional workspace directory under which the MLflow experiment named in ``experiment`` is created. Must start with ``/Workspace``. Set this when running as a service principal that has no default user directory; for regular users the experiment defaults to the user's home directory."
@@ -629,9 +589,14 @@ The following fields are returned by `SELECT` queries:
                 "description": "Optional display name for the MLflow run created under ``experiment``. If omitted, MLflow generates a default name."
               },
               {
-                "name": "parameters",
-                "type": "object",
-                "description": "Optional named parameters passed to each deployment's command. Keys are parameter names, values the corresponding arguments (for example, ``&#123;\"epochs\": \"3\", \"dataset\": \"s3://bucket/train\"&#125;``). Values may contain dynamic references such as ``&#123;&#123;job.trigger.time.iso_date&#125;&#125;`` or ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;``, which Jobs substitutes before execution (see ``AiRuntimeTaskResolvedValues.parameters`` in runs.proto)."
+                "name": "priority_class",
+                "type": "string",
+                "description": "Scheduling priority class for the workload. May only be set together with a pre-provisioned capacity reservation (a deployment's ``compute.provisioned_capacity_id``); it is rejected on a workload that runs on on-demand capacity. (BEST_EFFORT, CRITICAL, NORMAL)"
+              },
+              {
+                "name": "unity_catalog_image_path",
+                "type": "string",
+                "description": "Optional Unity Catalog path for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;catalog&#125;.&#123;schema&#125;.&#123;image_name&#125;:&#123;tag&#125;``"
               }
             ]
           },
@@ -913,12 +878,12 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "environment_key",
             "type": "string",
-            "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+            "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
           },
           {
             "name": "environment_variables_key",
             "type": "string",
-            "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+            "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
           },
           {
             "name": "existing_cluster_id",
@@ -958,16 +923,6 @@ The following fields are returned by `SELECT` queries:
                 "description": "Runtime image"
               },
               {
-                "name": "client_version",
-                "type": "string",
-                "description": "Version of the client (e.g., sgcli wheel) that submitted this task. Used by handlers to gate behavior or reject incompatible versions."
-              },
-              {
-                "name": "code_source_tar_path",
-                "type": "string",
-                "description": "Optional path to a tarball containing the user's workspace contents. When set, the entry script extracts the tarball into the working directory before running the training script, so the training script can import sibling modules and read packaged data files. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
-              },
-              {
                 "name": "command",
                 "type": "string",
                 "description": "Command launcher to run the actual script, e.g. bash, python etc."
@@ -978,24 +933,9 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               },
               {
-                "name": "docker_image_url",
-                "type": "string",
-                "description": "Optional custom Docker container image URL for running the training script. Format: organization/repository:tag (e.g., \"pytorch/pytorch:2.0.1\")"
-              },
-              {
                 "name": "mlflow_experiment_name",
                 "type": "string",
                 "description": "Optional string containing the name of the MLflow experiment to log the run to. If name is not found, backend will create the mlflow experiment using the name."
-              },
-              {
-                "name": "mlflow_run_name",
-                "type": "string",
-                "description": "Optional name to assign to the MLflow run created for this task. If unset, MLflow auto-generates a name. Used alongside ``mlflow_experiment_name`` to identify the run in the MLflow UI."
-              },
-              {
-                "name": "requirements_yaml_path",
-                "type": "string",
-                "description": "Optional path to a requirements.yaml file describing pip dependencies to install before running the training script. Consumed by the entry script; format matches the runtime requirements.yaml convention used by sgcli. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
               },
               {
                 "name": "source",
@@ -1016,18 +956,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "yaml_parameters_file_path",
                 "type": "string",
                 "description": "Optional path to a YAML file containing model parameters passed to the training script."
-              }
-            ]
-          },
-          {
-            "name": "genie_task",
-            "type": "object",
-            "description": "Runs a Genie or Genie Code agent task.",
-            "children": [
-              {
-                "name": "configuration_id",
-                "type": "string",
-                "description": "Required. Resource name of the agent task configuration to run."
               }
             ]
           },
@@ -1168,11 +1096,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "connection_resource_name",
                 "type": "string",
                 "description": ""
-              },
-              {
-                "name": "incremental_refresh_config",
-                "type": "object",
-                "description": "Incremental refresh policy applied to all IMPORT mode tables in the model. Windows and mode are shared; partition columns are set per-table on PowerBiTable."
               },
               {
                 "name": "power_bi_model",
@@ -1592,6 +1515,172 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
+        "name": "triggers",
+        "type": "array",
+        "description": "List of triggers attached to this job. A run starts when any active trigger evaluates to true. Cannot be set in the same request as the legacy ``schedule``, ``trigger``, or ``continuous`` fields. Gated behind the \"Multiple Triggers\" feature preview.",
+        "children": [
+          {
+            "name": "continuous",
+            "type": "object",
+            "description": "Continuous trigger configuration.",
+            "children": [
+              {
+                "name": "maintenance_window",
+                "type": "object",
+                "description": "A recurring weekly time window during which platform-initiated maintenance is allowed to run for<br />    a continuous job."
+              },
+              {
+                "name": "task_retry_mode",
+                "type": "string",
+                "description": "Whether the continuous job applies task-level retries. Defaults to NEVER. (NEVER, ON_FAILURE)"
+              }
+            ]
+          },
+          {
+            "name": "file_arrival",
+            "type": "object",
+            "description": "File arrival trigger configuration.",
+            "children": [
+              {
+                "name": "url",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "min_time_between_triggers_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds"
+              },
+              {
+                "name": "wait_after_last_change_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds."
+              }
+            ]
+          },
+          {
+            "name": "model",
+            "type": "object",
+            "description": "Model trigger configuration.",
+            "children": [
+              {
+                "name": "condition",
+                "type": "string",
+                "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (MODEL_ALIAS_SET, MODEL_CREATED, MODEL_VERSION_READY)"
+              },
+              {
+                "name": "aliases",
+                "type": "array",
+                "description": "Aliases of the model versions to monitor. Can only be used in conjunction with condition MODEL_ALIAS_SET."
+              },
+              {
+                "name": "min_time_between_triggers_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after the specified amount of time has passed since the last time the trigger fired. The minimum allowed value is 60 seconds."
+              },
+              {
+                "name": "securable_name",
+                "type": "string",
+                "description": "Name of the securable to monitor (\"mycatalog.myschema.mymodel\" in the case of model-level triggers, \"mycatalog.myschema\" in the case of schema-level triggers) or empty in the case of metastore-level triggers."
+              },
+              {
+                "name": "wait_after_last_change_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after no model updates have occurred for the specified time and can be used to wait for a series of model updates before triggering a run. The minimum allowed value is 60 seconds."
+              }
+            ]
+          },
+          {
+            "name": "pause_status",
+            "type": "string",
+            "description": "Whether this trigger is paused. Defaults to UNPAUSED when unset; the server always returns an explicit value on read. (PAUSED, UNPAUSED)"
+          },
+          {
+            "name": "periodic",
+            "type": "object",
+            "description": "Trigger type: exactly one must be set; mutual exclusivity is enforced in the API handler Periodic trigger configuration.",
+            "children": [
+              {
+                "name": "interval",
+                "type": "integer",
+                "description": ""
+              },
+              {
+                "name": "unit",
+                "type": "string",
+                "description": "The unit of time for the interval. (DAYS, HOURS, MINUTES, WEEKS)"
+              }
+            ]
+          },
+          {
+            "name": "schedule",
+            "type": "object",
+            "description": "Cron schedule trigger configuration.",
+            "children": [
+              {
+                "name": "quartz_cron_expression",
+                "type": "string",
+                "description": "A Cron expression using Quartz syntax that describes the schedule for this trigger. See `Cron Trigger <http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html>`__ for details."
+              },
+              {
+                "name": "timezone_id",
+                "type": "string",
+                "description": "A Java timezone ID. The schedule is resolved with respect to this timezone. See `Java TimeZone <https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html>`__ for details."
+              }
+            ]
+          },
+          {
+            "name": "sql_condition",
+            "type": "object",
+            "description": "Optional SQL condition that gates whether this trigger fires.",
+            "children": [
+              {
+                "name": "sql_query_id",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "warehouse_id",
+                "type": "string",
+                "description": "The canonical identifier of the SQL warehouse to run the condition query against."
+              },
+              {
+                "name": "trigger_mode",
+                "type": "string",
+                "description": "Determines how the SQL query result is interpreted to decide whether the condition fires. Must be set to a recognized value when provided. When unset on an existing serialized configuration, the server preserves the original semantics by interpreting it as ``QUERY_RETURNS_ROWS``. New configurations should set this explicitly — explicit ``SQL_CONDITION_TRIGGER_MODE_UNSPECIFIED`` is rejected at validation. (QUERY_RETURNS_ROWS, RESULT_VALUE_CHANGES)"
+              }
+            ]
+          },
+          {
+            "name": "table_update",
+            "type": "object",
+            "description": "Table update trigger configuration.",
+            "children": [
+              {
+                "name": "table_names",
+                "type": "array",
+                "description": ""
+              },
+              {
+                "name": "condition",
+                "type": "string",
+                "description": "The table(s) condition based on which to trigger a job run. (ALL_UPDATED, ANY_UPDATED)"
+              },
+              {
+                "name": "min_time_between_triggers_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after the specified amount of time has passed since the last time the trigger fired. The minimum allowed value is 60 seconds."
+              },
+              {
+                "name": "wait_after_last_change_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after no table updates have occurred for the specified time and can be used to wait for a series of table updates before triggering a run. The minimum allowed value is 60 seconds."
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "usage_policy_id",
         "type": "string",
         "description": "The id of the user specified usage policy to use for this job. If not specified, a default usage policy may be applied when creating or modifying the job. See ``effective_usage_policy_id`` for the usage policy used by this workload."
@@ -1682,6 +1771,193 @@ The following fields are returned by `SELECT` queries:
                 "name": "id",
                 "type": "string",
                 "description": ""
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "trigger_details",
+    "type": "array",
+    "description": "Per-trigger runtime information for the multi-trigger surface. Same length and order as ``JobSettings.triggers``; ``trigger_details[i]`` corresponds to ``triggers[i]``. Sub-fields (``state``, ``history``) are populated independently based on the ``GetJob.include_trigger_state`` / ``include_trigger_history`` flags.",
+    "children": [
+      {
+        "name": "history",
+        "type": "object",
+        "description": "Recent evaluation history. Populated when ``GetJob.include_trigger_history`` is set.",
+        "children": [
+          {
+            "name": "last_failed",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "description",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "run_id",
+                "type": "integer",
+                "description": "The ID of the run that was triggered by the trigger evaluation. Only returned if a run was triggered."
+              },
+              {
+                "name": "timestamp",
+                "type": "integer",
+                "description": "Timestamp at which the trigger was evaluated."
+              }
+            ]
+          },
+          {
+            "name": "last_not_triggered",
+            "type": "object",
+            "description": "The last time the trigger was evaluated but did not trigger a run.",
+            "children": [
+              {
+                "name": "description",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "run_id",
+                "type": "integer",
+                "description": "The ID of the run that was triggered by the trigger evaluation. Only returned if a run was triggered."
+              },
+              {
+                "name": "timestamp",
+                "type": "integer",
+                "description": "Timestamp at which the trigger was evaluated."
+              }
+            ]
+          },
+          {
+            "name": "last_triggered",
+            "type": "object",
+            "description": "The last time the run was triggered due to a file arrival.",
+            "children": [
+              {
+                "name": "description",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "run_id",
+                "type": "integer",
+                "description": "The ID of the run that was triggered by the trigger evaluation. Only returned if a run was triggered."
+              },
+              {
+                "name": "timestamp",
+                "type": "integer",
+                "description": "Timestamp at which the trigger was evaluated."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "state",
+        "type": "object",
+        "description": "Current runtime state. Populated when ``GetJob.include_trigger_state`` is set.",
+        "children": [
+          {
+            "name": "continuous",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "consecutive_failures",
+                "type": "integer",
+                "description": ""
+              },
+              {
+                "name": "is_backing_off",
+                "type": "boolean",
+                "description": ""
+              },
+              {
+                "name": "next_attempt_ms",
+                "type": "integer",
+                "description": ""
+              }
+            ]
+          },
+          {
+            "name": "file_arrival",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "using_file_events",
+                "type": "boolean",
+                "description": ""
+              }
+            ]
+          },
+          {
+            "name": "model",
+            "type": "object",
+            "description": "Runtime state for a model trigger. Currently empty because model triggers do not expose any<br />    trigger-specific runtime state."
+          },
+          {
+            "name": "pause_status",
+            "type": "string",
+            "description": "Whether this trigger is paused or not. Mirrors the configured pause_status. (PAUSED, UNPAUSED)"
+          },
+          {
+            "name": "periodic",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "next_run_time",
+                "type": "integer",
+                "description": ""
+              }
+            ]
+          },
+          {
+            "name": "schedule",
+            "type": "object",
+            "description": "Runtime state for a schedule trigger. Currently empty because schedule triggers do not expose<br />    any trigger-specific runtime state."
+          },
+          {
+            "name": "sql_condition",
+            "type": "object",
+            "description": "State for SQL condition evaluation, can coexist with other trigger states.",
+            "children": [
+              {
+                "name": "latest_condition_evaluation_satisfied",
+                "type": "boolean",
+                "description": ""
+              },
+              {
+                "name": "latest_condition_evaluation_sql_session_id",
+                "type": "string",
+                "description": "The ID of the SQL session, used by UI to track session context. Populated for QUERY_RETURNS_ROWS, which executes the query through Redash."
+              },
+              {
+                "name": "latest_condition_evaluation_sql_statement_id",
+                "type": "string",
+                "description": "The SEA statement ID of the SQL statement executed for the latest condition evaluation. Populated for RESULT_VALUE_CHANGES, which executes the query through the SQL execution API."
+              }
+            ]
+          },
+          {
+            "name": "table_update",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "last_seen_table_states",
+                "type": "array",
+                "description": ""
+              },
+              {
+                "name": "using_scalable_monitoring",
+                "type": "boolean",
+                "description": "Indicates whether the trigger is using scalable monitoring."
               }
             ]
           }
@@ -1800,11 +2076,6 @@ The following fields are returned by `SELECT` queries:
     "description": "Indicates if the job has more array properties (``tasks``, ``job_clusters``) that are not shown. They can be accessed via :method:jobs/get endpoint. It is only relevant for API 2.2 :method:jobs/list requests with ``expand_tasks=true``."
   },
   {
-    "name": "path",
-    "type": "string",
-    "description": "Path of the job object in workspace file tree, including file extension. If absent, the job doesn't have a workspace object. Example: /Workspace/user@example.com/my_project/my_job.job.json"
-  },
-  {
     "name": "settings",
     "type": "object",
     "description": "Settings for this job and all of its runs. These settings can be updated using the ``resetJob`` method.",
@@ -1817,7 +2088,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "continuous",
         "type": "object",
-        "description": "An optional continuous property for this job. The continuous property will ensure that there is always one run executing. Only one of ``schedule`` and ``continuous`` can be used.",
+        "description": "An optional continuous property for this job. The continuous property will ensure that there is always one run executing. Only one of ``schedule`` and ``continuous`` can be used. Pipelines started by a continuous job also run continuously, regardless of their own pipeline mode setting.",
         "children": [
           {
             "name": "maintenance_window",
@@ -1886,6 +2157,11 @@ The following fields are returned by `SELECT` queries:
         "description": "An optional description for the job. The maximum length is 27700 characters in UTF-8 encoding."
       },
       {
+        "name": "duration_target",
+        "type": "string",
+        "description": "The window the run aims to finish within, in hours, for a Cost-optimized serverless run. Required only when ``performance_target`` is ``COST_OPTIMIZED``. Must be one of the supported values: ``NO_FLEXIBILITY``, ``4h``, ``12h``, ``24h``, ``72h``. ``NO_FLEXIBILITY`` means the run uses the default cost-optimized performance level without additional cost-saving optimizations."
+      },
+      {
         "name": "edit_mode",
         "type": "string",
         "description": "Edit mode of the job. - ``UI_LOCKED``: The job is in a locked UI state and cannot be modified. - ``EDITABLE``: The job is in an editable state and can be modified. (EDITABLE, UI_LOCKED)"
@@ -1940,7 +2216,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "environment_variables",
         "type": "array",
-        "description": "Named environment-variable entries that tasks can reference by key from ``TaskSettings.environment_variables_key``. Each entry holds inline ``variables`` plus optional ``.env`` ``files``. Maximum 10 entries per job. Entries are independent of one another — there is no cross-entry merging.",
+        "description": "Named environment-variable entries that tasks can reference by key from ``TaskSettings.environment_variables_key``. Each entry's ``spec`` holds inline ``variables`` and optional ``.env`` ``files``. Maximum 10 entries per job. A task can reference at most one entry from this list.",
         "children": [
           {
             "name": "environment_variables_key",
@@ -1948,21 +2224,28 @@ The following fields are returned by `SELECT` queries:
             "description": "Identifier for this entry. Must be unique within ``JobSettings.environment_variables``. Tasks reference it from ``TaskSettings.environment_variables_key``."
           },
           {
-            "name": "files",
-            "type": "array",
-            "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line must be exactly ``KEY=VALUE``. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no comments, no quoted values, no escape sequences, no variable interpolation. Any line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 1,048,576 bytes (1 MiB) per file on disk; maximum 131,072 bytes (128 KiB) per ``KEY=VALUE`` line combined. Caps are enforced at read time in jobs-runner — files exceeding the per-file cap, or lines exceeding the per-line cap, fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use these files to store raw secret values; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
-          },
-          {
-            "name": "variables",
+            "name": "spec",
             "type": "object",
-            "description": "Environment variables specified directly as key/value pairs (as opposed to ``files``, which are read from ``.env`` file paths). Maximum 100 entries. Each key must match ``^[A-Za-z_][A-Za-z0-9_]*$`` and be 1 to 256 characters long. Each value is up to 512 characters; larger values should be moved into a ``.env`` file referenced from ``files``. On a duplicate key, ``variables`` override values from any file in ``files``. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use this field to store a raw secret value; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
+            "description": "The environment variable specification.",
+            "children": [
+              {
+                "name": "files",
+                "type": "array",
+                "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line containing a variable must be exactly ``KEY=VALUE``. Empty and whitespace-only lines, and lines beginning with ``#``, are ignored. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no inline comments, no quoted values, no escape sequences, no variable interpolation. Any other line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 32,768 bytes (32 KiB) per file on disk; maximum 1,024 bytes (1 KiB) per ``KEY=VALUE`` line combined. Files or lines exceeding these limits fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file."
+              },
+              {
+                "name": "variables",
+                "type": "object",
+                "description": "Environment variables specified directly as key/value pairs. Maximum 20 entries. Each key must be 1 to 256 characters and match ``^[A-Za-z_][A-Za-z0-9_]*$``: it must start with an ASCII letter or underscore and contain only ASCII letters, digits, and underscores. Each value can be any Unicode string of up to 512 characters, including an empty string."
+              }
+            ]
           }
         ]
       },
       {
         "name": "environments",
         "type": "array",
-        "description": "A list of task execution environment specifications that can be referenced by serverless tasks of this job. For serverless notebook tasks, if the environment_key is not specified, the notebook environment will be used if present. If a jobs environment is specified, it will override the notebook environment. For other serverless tasks, the task environment is required to be specified using environment_key in the task settings.",
+        "description": "A list of task execution environment specifications that can be referenced by tasks that use serverless compute or a compute resource that uses Environments mode. For notebook tasks that use serverless compute or a compute resource that uses Environments mode, if the environment_key is not specified, the notebook environment will be used if present. If a jobs environment is specified, it will override the notebook environment. For other tasks that use serverless compute or a compute resource that uses Environments mode, the task environment is required to be specified using environment_key in the task settings.",
         "children": [
           {
             "name": "environment_key",
@@ -2184,7 +2467,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "group_name",
             "type": "string",
-            "description": "Group name of an account group assigned to the workspace. Setting this field requires being a member of the group."
+            "description": "Group name of an account group assigned to the workspace. When set, all tasks run as the group and the group's permissions are used for data access. Setting this field requires being a member of the group, or having the ``Assume`` permission on the group."
           },
           {
             "name": "service_principal_name",
@@ -2258,58 +2541,6 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "agentic_task",
-            "type": "object",
-            "description": "Agentic Task for job-based multi-agent execution",
-            "children": [
-              {
-                "name": "context",
-                "type": "object",
-                "description": "Optional. Context input providing conversation history and instructions."
-              },
-              {
-                "name": "genie_code_api",
-                "type": "object",
-                "description": "Inline Genie Code conversation driven by a single prompt. Mutually exclusive with the supervisor variants."
-              },
-              {
-                "name": "goal",
-                "type": "string",
-                "description": "Deprecated. Use ``input`` (field 7) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-              },
-              {
-                "name": "input",
-                "type": "string",
-                "description": "Optional. The user query / task input the agent must accomplish. Mirrors the OpenAI Responses API ``input`` field. Replaces the deprecated ``goal`` field; new callers should populate ``input`` going forward."
-              },
-              {
-                "name": "output_schema",
-                "type": "object",
-                "description": "Optional. JSON-Schema-style declaration of the structured output the agent should produce. Replaces the deprecated ``task_output_schema`` map; new callers should populate ``output_schema`` going forward."
-              },
-              {
-                "name": "supervisor_agent",
-                "type": "object",
-                "description": "A Supervisor Agent that orchestrates sub-agents and tools, referenced by tile_id."
-              },
-              {
-                "name": "supervisor_api",
-                "type": "object",
-                "description": "Inlined Responses-API supervisor configuration (model + instructions + tools). Mutually exclusive with ``supervisor_agent``."
-              },
-              {
-                "name": "task_output_schema",
-                "type": "object",
-                "description": "Deprecated. Use ``output_schema`` (field 8) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-              },
-              {
-                "name": "trace_destination",
-                "type": "object",
-                "description": "Optional. Where MLflow traces produced by this task run should be persisted. When unset, traces follow the workspace default destination."
-              }
-            ]
-          },
-          {
             "name": "ai_runtime_task",
             "type": "object",
             "description": "The task runs a multi-gpu compute workload on Databricks AI Runtime. Specify the accelerator type and count, the command to run, and where the workload's code and MLflow output are stored.",
@@ -2335,6 +2566,11 @@ The following fields are returned by `SELECT` queries:
                 "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
               },
               {
+                "name": "mlflow_artifact_location",
+                "type": "string",
+                "description": "Optional root location for MLflow artifacts logged by the run. If this field isn't specified the default artifact location will be in dbfs i.e. ``dbfs:/databricks/mlflow-tracking/&lt;experiment_id&gt;/...`` If dbfs access is restricted or UC is preferred this can be a custom location in UC: ``dbfs:/Volumes/&lt;catalog&gt;/&lt;schema&gt;/&lt;volume&gt;/...`` The location should be unique for each experiment."
+              },
+              {
                 "name": "mlflow_experiment_directory",
                 "type": "string",
                 "description": "Optional workspace directory under which the MLflow experiment named in ``experiment`` is created. Must start with ``/Workspace``. Set this when running as a service principal that has no default user directory; for regular users the experiment defaults to the user's home directory."
@@ -2345,9 +2581,14 @@ The following fields are returned by `SELECT` queries:
                 "description": "Optional display name for the MLflow run created under ``experiment``. If omitted, MLflow generates a default name."
               },
               {
-                "name": "parameters",
-                "type": "object",
-                "description": "Optional named parameters passed to each deployment's command. Keys are parameter names, values the corresponding arguments (for example, ``&#123;\"epochs\": \"3\", \"dataset\": \"s3://bucket/train\"&#125;``). Values may contain dynamic references such as ``&#123;&#123;job.trigger.time.iso_date&#125;&#125;`` or ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;``, which Jobs substitutes before execution (see ``AiRuntimeTaskResolvedValues.parameters`` in runs.proto)."
+                "name": "priority_class",
+                "type": "string",
+                "description": "Scheduling priority class for the workload. May only be set together with a pre-provisioned capacity reservation (a deployment's ``compute.provisioned_capacity_id``); it is rejected on a workload that runs on on-demand capacity. (BEST_EFFORT, CRITICAL, NORMAL)"
+              },
+              {
+                "name": "unity_catalog_image_path",
+                "type": "string",
+                "description": "Optional Unity Catalog path for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;catalog&#125;.&#123;schema&#125;.&#123;image_name&#125;:&#123;tag&#125;``"
               }
             ]
           },
@@ -2629,12 +2870,12 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "environment_key",
             "type": "string",
-            "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+            "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
           },
           {
             "name": "environment_variables_key",
             "type": "string",
-            "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+            "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
           },
           {
             "name": "existing_cluster_id",
@@ -2674,16 +2915,6 @@ The following fields are returned by `SELECT` queries:
                 "description": "Runtime image"
               },
               {
-                "name": "client_version",
-                "type": "string",
-                "description": "Version of the client (e.g., sgcli wheel) that submitted this task. Used by handlers to gate behavior or reject incompatible versions."
-              },
-              {
-                "name": "code_source_tar_path",
-                "type": "string",
-                "description": "Optional path to a tarball containing the user's workspace contents. When set, the entry script extracts the tarball into the working directory before running the training script, so the training script can import sibling modules and read packaged data files. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
-              },
-              {
                 "name": "command",
                 "type": "string",
                 "description": "Command launcher to run the actual script, e.g. bash, python etc."
@@ -2694,24 +2925,9 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               },
               {
-                "name": "docker_image_url",
-                "type": "string",
-                "description": "Optional custom Docker container image URL for running the training script. Format: organization/repository:tag (e.g., \"pytorch/pytorch:2.0.1\")"
-              },
-              {
                 "name": "mlflow_experiment_name",
                 "type": "string",
                 "description": "Optional string containing the name of the MLflow experiment to log the run to. If name is not found, backend will create the mlflow experiment using the name."
-              },
-              {
-                "name": "mlflow_run_name",
-                "type": "string",
-                "description": "Optional name to assign to the MLflow run created for this task. If unset, MLflow auto-generates a name. Used alongside ``mlflow_experiment_name`` to identify the run in the MLflow UI."
-              },
-              {
-                "name": "requirements_yaml_path",
-                "type": "string",
-                "description": "Optional path to a requirements.yaml file describing pip dependencies to install before running the training script. Consumed by the entry script; format matches the runtime requirements.yaml convention used by sgcli. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
               },
               {
                 "name": "source",
@@ -2732,18 +2948,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "yaml_parameters_file_path",
                 "type": "string",
                 "description": "Optional path to a YAML file containing model parameters passed to the training script."
-              }
-            ]
-          },
-          {
-            "name": "genie_task",
-            "type": "object",
-            "description": "Runs a Genie or Genie Code agent task.",
-            "children": [
-              {
-                "name": "configuration_id",
-                "type": "string",
-                "description": "Required. Resource name of the agent task configuration to run."
               }
             ]
           },
@@ -2884,11 +3088,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "connection_resource_name",
                 "type": "string",
                 "description": ""
-              },
-              {
-                "name": "incremental_refresh_config",
-                "type": "object",
-                "description": "Incremental refresh policy applied to all IMPORT mode tables in the model. Windows and mode are shared; partition columns are set per-table on PowerBiTable."
               },
               {
                 "name": "power_bi_model",
@@ -3308,6 +3507,172 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
+        "name": "triggers",
+        "type": "array",
+        "description": "List of triggers attached to this job. A run starts when any active trigger evaluates to true. Cannot be set in the same request as the legacy ``schedule``, ``trigger``, or ``continuous`` fields. Gated behind the \"Multiple Triggers\" feature preview.",
+        "children": [
+          {
+            "name": "continuous",
+            "type": "object",
+            "description": "Continuous trigger configuration.",
+            "children": [
+              {
+                "name": "maintenance_window",
+                "type": "object",
+                "description": "A recurring weekly time window during which platform-initiated maintenance is allowed to run for<br />    a continuous job."
+              },
+              {
+                "name": "task_retry_mode",
+                "type": "string",
+                "description": "Whether the continuous job applies task-level retries. Defaults to NEVER. (NEVER, ON_FAILURE)"
+              }
+            ]
+          },
+          {
+            "name": "file_arrival",
+            "type": "object",
+            "description": "File arrival trigger configuration.",
+            "children": [
+              {
+                "name": "url",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "min_time_between_triggers_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds"
+              },
+              {
+                "name": "wait_after_last_change_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds."
+              }
+            ]
+          },
+          {
+            "name": "model",
+            "type": "object",
+            "description": "Model trigger configuration.",
+            "children": [
+              {
+                "name": "condition",
+                "type": "string",
+                "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (MODEL_ALIAS_SET, MODEL_CREATED, MODEL_VERSION_READY)"
+              },
+              {
+                "name": "aliases",
+                "type": "array",
+                "description": "Aliases of the model versions to monitor. Can only be used in conjunction with condition MODEL_ALIAS_SET."
+              },
+              {
+                "name": "min_time_between_triggers_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after the specified amount of time has passed since the last time the trigger fired. The minimum allowed value is 60 seconds."
+              },
+              {
+                "name": "securable_name",
+                "type": "string",
+                "description": "Name of the securable to monitor (\"mycatalog.myschema.mymodel\" in the case of model-level triggers, \"mycatalog.myschema\" in the case of schema-level triggers) or empty in the case of metastore-level triggers."
+              },
+              {
+                "name": "wait_after_last_change_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after no model updates have occurred for the specified time and can be used to wait for a series of model updates before triggering a run. The minimum allowed value is 60 seconds."
+              }
+            ]
+          },
+          {
+            "name": "pause_status",
+            "type": "string",
+            "description": "Whether this trigger is paused. Defaults to UNPAUSED when unset; the server always returns an explicit value on read. (PAUSED, UNPAUSED)"
+          },
+          {
+            "name": "periodic",
+            "type": "object",
+            "description": "Trigger type: exactly one must be set; mutual exclusivity is enforced in the API handler Periodic trigger configuration.",
+            "children": [
+              {
+                "name": "interval",
+                "type": "integer",
+                "description": ""
+              },
+              {
+                "name": "unit",
+                "type": "string",
+                "description": "The unit of time for the interval. (DAYS, HOURS, MINUTES, WEEKS)"
+              }
+            ]
+          },
+          {
+            "name": "schedule",
+            "type": "object",
+            "description": "Cron schedule trigger configuration.",
+            "children": [
+              {
+                "name": "quartz_cron_expression",
+                "type": "string",
+                "description": "A Cron expression using Quartz syntax that describes the schedule for this trigger. See `Cron Trigger <http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html>`__ for details."
+              },
+              {
+                "name": "timezone_id",
+                "type": "string",
+                "description": "A Java timezone ID. The schedule is resolved with respect to this timezone. See `Java TimeZone <https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html>`__ for details."
+              }
+            ]
+          },
+          {
+            "name": "sql_condition",
+            "type": "object",
+            "description": "Optional SQL condition that gates whether this trigger fires.",
+            "children": [
+              {
+                "name": "sql_query_id",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "warehouse_id",
+                "type": "string",
+                "description": "The canonical identifier of the SQL warehouse to run the condition query against."
+              },
+              {
+                "name": "trigger_mode",
+                "type": "string",
+                "description": "Determines how the SQL query result is interpreted to decide whether the condition fires. Must be set to a recognized value when provided. When unset on an existing serialized configuration, the server preserves the original semantics by interpreting it as ``QUERY_RETURNS_ROWS``. New configurations should set this explicitly — explicit ``SQL_CONDITION_TRIGGER_MODE_UNSPECIFIED`` is rejected at validation. (QUERY_RETURNS_ROWS, RESULT_VALUE_CHANGES)"
+              }
+            ]
+          },
+          {
+            "name": "table_update",
+            "type": "object",
+            "description": "Table update trigger configuration.",
+            "children": [
+              {
+                "name": "table_names",
+                "type": "array",
+                "description": ""
+              },
+              {
+                "name": "condition",
+                "type": "string",
+                "description": "The table(s) condition based on which to trigger a job run. (ALL_UPDATED, ANY_UPDATED)"
+              },
+              {
+                "name": "min_time_between_triggers_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after the specified amount of time has passed since the last time the trigger fired. The minimum allowed value is 60 seconds."
+              },
+              {
+                "name": "wait_after_last_change_seconds",
+                "type": "integer",
+                "description": "If set, the trigger starts a run only after no table updates have occurred for the specified time and can be used to wait for a series of table updates before triggering a run. The minimum allowed value is 60 seconds."
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "usage_policy_id",
         "type": "string",
         "description": "The id of the user specified usage policy to use for this job. If not specified, a default usage policy may be applied when creating or modifying the job. See ``effective_usage_policy_id`` for the usage policy used by this workload."
@@ -3398,6 +3763,193 @@ The following fields are returned by `SELECT` queries:
                 "name": "id",
                 "type": "string",
                 "description": ""
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "trigger_details",
+    "type": "array",
+    "description": "Per-trigger runtime information for the multi-trigger surface. Same length and order as ``JobSettings.triggers``; ``trigger_details[i]`` corresponds to ``triggers[i]``. Sub-fields (``state``, ``history``) are populated independently based on the ``GetJob.include_trigger_state`` / ``include_trigger_history`` flags.",
+    "children": [
+      {
+        "name": "history",
+        "type": "object",
+        "description": "Recent evaluation history. Populated when ``GetJob.include_trigger_history`` is set.",
+        "children": [
+          {
+            "name": "last_failed",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "description",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "run_id",
+                "type": "integer",
+                "description": "The ID of the run that was triggered by the trigger evaluation. Only returned if a run was triggered."
+              },
+              {
+                "name": "timestamp",
+                "type": "integer",
+                "description": "Timestamp at which the trigger was evaluated."
+              }
+            ]
+          },
+          {
+            "name": "last_not_triggered",
+            "type": "object",
+            "description": "The last time the trigger was evaluated but did not trigger a run.",
+            "children": [
+              {
+                "name": "description",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "run_id",
+                "type": "integer",
+                "description": "The ID of the run that was triggered by the trigger evaluation. Only returned if a run was triggered."
+              },
+              {
+                "name": "timestamp",
+                "type": "integer",
+                "description": "Timestamp at which the trigger was evaluated."
+              }
+            ]
+          },
+          {
+            "name": "last_triggered",
+            "type": "object",
+            "description": "The last time the run was triggered due to a file arrival.",
+            "children": [
+              {
+                "name": "description",
+                "type": "string",
+                "description": ""
+              },
+              {
+                "name": "run_id",
+                "type": "integer",
+                "description": "The ID of the run that was triggered by the trigger evaluation. Only returned if a run was triggered."
+              },
+              {
+                "name": "timestamp",
+                "type": "integer",
+                "description": "Timestamp at which the trigger was evaluated."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "state",
+        "type": "object",
+        "description": "Current runtime state. Populated when ``GetJob.include_trigger_state`` is set.",
+        "children": [
+          {
+            "name": "continuous",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "consecutive_failures",
+                "type": "integer",
+                "description": ""
+              },
+              {
+                "name": "is_backing_off",
+                "type": "boolean",
+                "description": ""
+              },
+              {
+                "name": "next_attempt_ms",
+                "type": "integer",
+                "description": ""
+              }
+            ]
+          },
+          {
+            "name": "file_arrival",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "using_file_events",
+                "type": "boolean",
+                "description": ""
+              }
+            ]
+          },
+          {
+            "name": "model",
+            "type": "object",
+            "description": "Runtime state for a model trigger. Currently empty because model triggers do not expose any<br />    trigger-specific runtime state."
+          },
+          {
+            "name": "pause_status",
+            "type": "string",
+            "description": "Whether this trigger is paused or not. Mirrors the configured pause_status. (PAUSED, UNPAUSED)"
+          },
+          {
+            "name": "periodic",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "next_run_time",
+                "type": "integer",
+                "description": ""
+              }
+            ]
+          },
+          {
+            "name": "schedule",
+            "type": "object",
+            "description": "Runtime state for a schedule trigger. Currently empty because schedule triggers do not expose<br />    any trigger-specific runtime state."
+          },
+          {
+            "name": "sql_condition",
+            "type": "object",
+            "description": "State for SQL condition evaluation, can coexist with other trigger states.",
+            "children": [
+              {
+                "name": "latest_condition_evaluation_satisfied",
+                "type": "boolean",
+                "description": ""
+              },
+              {
+                "name": "latest_condition_evaluation_sql_session_id",
+                "type": "string",
+                "description": "The ID of the SQL session, used by UI to track session context. Populated for QUERY_RETURNS_ROWS, which executes the query through Redash."
+              },
+              {
+                "name": "latest_condition_evaluation_sql_statement_id",
+                "type": "string",
+                "description": "The SEA statement ID of the SQL statement executed for the latest condition evaluation. Populated for RESULT_VALUE_CHANGES, which executes the query through the SQL execution API."
+              }
+            ]
+          },
+          {
+            "name": "table_update",
+            "type": "object",
+            "description": "",
+            "children": [
+              {
+                "name": "last_seen_table_states",
+                "type": "array",
+                "description": ""
+              },
+              {
+                "name": "using_scalable_monitoring",
+                "type": "boolean",
+                "description": "Indicates whether the trigger is using scalable monitoring."
               }
             ]
           }
@@ -3502,49 +4054,49 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-job_id"><code>job_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-job_id"><code>job_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_trigger_state"><code>include_trigger_state</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Retrieves the details for a single job.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-expand_tasks"><code>expand_tasks</code></a>, <a href="#parameter-limit"><code>limit</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-offset"><code>offset</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Retrieves a list of jobs.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a new job.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-job_id"><code>job_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-job_id"><code>job_id</code></a></td>
     <td></td>
     <td>Add, update, or remove specific settings of an existing job. Use the [*Reset*</td>
 </tr>
 <tr>
     <td><a href="#reset"><CopyableCode code="reset" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-job_id"><code>job_id</code></a>, <a href="#parameter-new_settings"><code>new_settings</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-job_id"><code>job_id</code></a>, <a href="#parameter-new_settings"><code>new_settings</code></a></td>
     <td></td>
     <td>Overwrite all settings for the given job. Use the [*Update* endpoint](:method:jobs/update) to update</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a job.</td>
 </tr>
 <tr>
     <td><a href="#run_now"><CopyableCode code="run_now" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-job_id"><code>job_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-job_id"><code>job_id</code></a></td>
     <td></td>
     <td>Run a job and return the ``run_id`` of the triggered run.</td>
 </tr>
@@ -3567,12 +4119,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-job_id">
     <td><CopyableCode code="job_id" /></td>
     <td><code>integer</code></td>
     <td>The canonical identifier of the job to retrieve information about. This field is required.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-expand_tasks">
     <td><CopyableCode code="expand_tasks" /></td>
@@ -3630,12 +4187,13 @@ run_as_user_name,
 created_time,
 has_more,
 next_page_token,
-path,
 settings,
+trigger_details,
 trigger_state
 FROM databricks_workspace.jobs.jobs
 WHERE job_id = '{{ job_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_trigger_state = '{{ include_trigger_state }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -3653,11 +4211,12 @@ job_id,
 creator_user_name,
 created_time,
 has_more,
-path,
 settings,
+trigger_details,
 trigger_state
 FROM databricks_workspace.jobs.jobs
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND expand_tasks = '{{ expand_tasks }}'
 AND limit = '{{ limit }}'
 AND name = '{{ name }}'
@@ -3689,6 +4248,7 @@ budget_policy_id,
 continuous,
 deployment,
 description,
+duration_target,
 edit_mode,
 email_notifications,
 environment_variables,
@@ -3710,9 +4270,11 @@ tags,
 tasks,
 timeout_seconds,
 trigger,
+triggers,
 usage_policy_id,
 webhook_notifications,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ access_control_list }}',
@@ -3720,6 +4282,7 @@ SELECT
 '{{ continuous }}',
 '{{ deployment }}',
 '{{ description }}',
+'{{ duration_target }}',
 '{{ edit_mode }}',
 '{{ email_notifications }}',
 '{{ environment_variables }}',
@@ -3741,9 +4304,11 @@ SELECT
 '{{ tasks }}',
 {{ timeout_seconds }},
 '{{ trigger }}',
+'{{ triggers }}',
 '{{ usage_policy_id }}',
 '{{ webhook_notifications }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 job_id
 ;
@@ -3756,6 +4321,9 @@ job_id
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the jobs resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the jobs resource.
     - name: access_control_list
       description: |
@@ -3771,7 +4339,7 @@ job_id
         The id of the user specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job. See \`\`effective_budget_policy_id\`\` for the budget policy used by this workload.
     - name: continuous
       description: |
-        An optional continuous property for this job. The continuous property will ensure that there is always one run executing. Only one of \`\`schedule\`\` and \`\`continuous\`\` can be used.
+        An optional continuous property for this job. The continuous property will ensure that there is always one run executing. Only one of \`\`schedule\`\` and \`\`continuous\`\` can be used. Pipelines started by a continuous job also run continuously, regardless of their own pipeline mode setting.
       value:
         maintenance_window:
           start_hour: {{ start_hour }}
@@ -3791,6 +4359,10 @@ job_id
       value: "{{ description }}"
       description: |
         An optional description for the job. The maximum length is 27700 characters in UTF-8 encoding.
+    - name: duration_target
+      value: "{{ duration_target }}"
+      description: |
+        The window the run aims to finish within, in hours, for a Cost-optimized serverless run. Required only when \`\`performance_target\`\` is \`\`COST_OPTIMIZED\`\`. Must be one of the supported values: \`\`NO_FLEXIBILITY\`\`, \`\`4h\`\`, \`\`12h\`\`, \`\`24h\`\`, \`\`72h\`\`. \`\`NO_FLEXIBILITY\`\` means the run uses the default cost-optimized performance level without additional cost-saving optimizations.
     - name: edit_mode
       value: "{{ edit_mode }}"
       description: |
@@ -3816,14 +4388,16 @@ job_id
           - "{{ on_success }}"
     - name: environment_variables
       description: |
-        Named environment-variable entries that tasks can reference by key from \`\`TaskSettings.environment_variables_key\`\`. Each entry holds inline \`\`variables\`\` plus optional \`\`.env\`\` \`\`files\`\`. Maximum 10 entries per job. Entries are independent of one another — there is no cross-entry merging.
+        Named environment-variable entries that tasks can reference by key from \`\`TaskSettings.environment_variables_key\`\`. Each entry's \`\`spec\`\` holds inline \`\`variables\`\` and optional \`\`.env\`\` \`\`files\`\`. Maximum 10 entries per job. A task can reference at most one entry from this list.
       value:
         - environment_variables_key: "{{ environment_variables_key }}"
-          files: "{{ files }}"
-          variables: "{{ variables }}"
+          spec:
+            files:
+              - "{{ files }}"
+            variables: "{{ variables }}"
     - name: environments
       description: |
-        A list of task execution environment specifications that can be referenced by serverless tasks of this job. For serverless notebook tasks, if the environment_key is not specified, the notebook environment will be used if present. If a jobs environment is specified, it will override the notebook environment. For other serverless tasks, the task environment is required to be specified using environment_key in the task settings.
+        A list of task execution environment specifications that can be referenced by tasks that use serverless compute or a compute resource that uses Environments mode. For notebook tasks that use serverless compute or a compute resource that uses Environments mode, if the environment_key is not specified, the notebook environment will be used if present. If a jobs environment is specified, it will override the notebook environment. For other tasks that use serverless compute or a compute resource that uses Environments mode, the task environment is required to be specified using environment_key in the task settings.
       value:
         - environment_key: "{{ environment_key }}"
           spec: "{{ spec }}"
@@ -3891,7 +4465,7 @@ job_id
     - name: performance_target
       value: "{{ performance_target }}"
       description: |
-        The performance mode on a serverless job. This field determines the level of compute performance or cost-efficiency for the run. The performance target does not apply to tasks that run on Serverless GPU compute. - \`\`STANDARD\`\`: Enables cost-efficient execution of serverless workloads. - \`\`PERFORMANCE_OPTIMIZED\`\`: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
+        The performance mode on a serverless job. This field determines the level of compute performance or cost-efficiency for the run. The performance target does not apply to tasks that run on Serverless GPU compute. - \`\`PERFORMANCE_OPTIMIZED\`\`: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. - \`\`STANDARD\`\`: Enables cost-efficient execution of serverless workloads. - \`\`COST_OPTIMIZED\`\`: Enables lower job costs by optimizing compute for your selected target duration time. Must provide a duration target.
     - name: queue
       description: |
         The queue settings of the job.
@@ -3924,74 +4498,22 @@ job_id
         A list of task specifications to be executed by this job. It supports up to 1000 elements in write endpoints (:method:jobs/create, :method:jobs/reset, :method:jobs/update, :method:jobs/submit). Read endpoints return only 100 tasks. If more than 100 tasks are available, you can paginate through them using :method:jobs/get. Use the \`\`next_page_token\`\` field at the object root to determine if more results are available.
       value:
         - task_key: "{{ task_key }}"
-          agentic_task:
-            context:
-              conversation_ids:
-                - "{{ conversation_ids }}"
-              instructions:
-                - "{{ instructions }}"
-            genie_code_api: "{{ genie_code_api }}"
-            goal: "{{ goal }}"
-            input: "{{ input }}"
-            output_schema:
-              properties: "{{ properties }}"
-            supervisor_agent:
-              agent_id: "{{ agent_id }}"
-            supervisor_api:
-              instructions: "{{ instructions }}"
-              model: "{{ model }}"
-              tools:
-                - app:
-                    name: "{{ name }}"
-                  catalog:
-                    name: "{{ name }}"
-                  dashboard:
-                    dashboard_id: "{{ dashboard_id }}"
-                  description: "{{ description }}"
-                  genie_space:
-                    space_id: "{{ space_id }}"
-                  knowledge_assistant:
-                    knowledge_assistant_id: "{{ knowledge_assistant_id }}"
-                  schema:
-                    name: "{{ name }}"
-                  serving_endpoint:
-                    name: "{{ name }}"
-                  supervisor_agent:
-                    supervisor_agent_id: "{{ supervisor_agent_id }}"
-                  table:
-                    name: "{{ name }}"
-                  tool_type: "{{ tool_type }}"
-                  uc_connection:
-                    name: "{{ name }}"
-                  uc_function:
-                    name: "{{ name }}"
-                  uc_mcp:
-                    name: "{{ name }}"
-                  vector_search_index:
-                    name: "{{ name }}"
-                  volume:
-                    name: "{{ name }}"
-                  web_search: "{{ web_search }}"
-            task_output_schema: "{{ task_output_schema }}"
-            trace_destination:
-              catalog_name: "{{ catalog_name }}"
-              experiment_id: "{{ experiment_id }}"
-              schema_name: "{{ schema_name }}"
-              table_prefix: "{{ table_prefix }}"
           ai_runtime_task:
             experiment: "{{ experiment }}"
             deployments:
-              - command_path: "{{ command_path }}"
-                compute:
+              - compute:
                   accelerator_type: "{{ accelerator_type }}"
                   accelerator_count: {{ accelerator_count }}
-                docker_image_url: "{{ docker_image_url }}"
+                  provisioned_capacity_id: "{{ provisioned_capacity_id }}"
+                command_path: "{{ command_path }}"
                 name: "{{ name }}"
             code_source_path: "{{ code_source_path }}"
             docker_image_url: "{{ docker_image_url }}"
+            mlflow_artifact_location: "{{ mlflow_artifact_location }}"
             mlflow_experiment_directory: "{{ mlflow_experiment_directory }}"
             mlflow_run: "{{ mlflow_run }}"
-            parameters: "{{ parameters }}"
+            priority_class: "{{ priority_class }}"
+            unity_catalog_image_path: "{{ unity_catalog_image_path }}"
           alert_task:
             alert_id: "{{ alert_id }}"
             parameters: "{{ parameters }}"
@@ -4015,6 +4537,14 @@ job_id
             dashboard_id: "{{ dashboard_id }}"
             filters: "{{ filters }}"
             subscription:
+              attachment:
+                data_attachment:
+                  widgets: "{{ widgets }}"
+                  file_format: "{{ file_format }}"
+                  include_applied_filters: {{ include_applied_filters }}
+                page_attachment:
+                  page_ids: "{{ page_ids }}"
+                  page_selection: "{{ page_selection }}"
               custom_subject: "{{ custom_subject }}"
               paused: {{ paused }}
               subscribers:
@@ -4063,41 +4593,22 @@ job_id
             inputs: "{{ inputs }}"
             task:
               task_key: "{{ task_key }}"
-              agentic_task:
-                context:
-                  conversation_ids: "{{ conversation_ids }}"
-                  instructions: "{{ instructions }}"
-                genie_code_api: "{{ genie_code_api }}"
-                goal: "{{ goal }}"
-                input: "{{ input }}"
-                output_schema:
-                  properties: "{{ properties }}"
-                supervisor_agent:
-                  agent_id: "{{ agent_id }}"
-                supervisor_api:
-                  instructions: "{{ instructions }}"
-                  model: "{{ model }}"
-                  tools: "{{ tools }}"
-                task_output_schema: "{{ task_output_schema }}"
-                trace_destination:
-                  catalog_name: "{{ catalog_name }}"
-                  experiment_id: "{{ experiment_id }}"
-                  schema_name: "{{ schema_name }}"
-                  table_prefix: "{{ table_prefix }}"
               ai_runtime_task:
                 experiment: "{{ experiment }}"
                 deployments:
-                  - command_path: "{{ command_path }}"
-                    compute:
+                  - compute:
                       accelerator_type: "{{ accelerator_type }}"
                       accelerator_count: {{ accelerator_count }}
-                    docker_image_url: "{{ docker_image_url }}"
+                      provisioned_capacity_id: "{{ provisioned_capacity_id }}"
+                    command_path: "{{ command_path }}"
                     name: "{{ name }}"
                 code_source_path: "{{ code_source_path }}"
                 docker_image_url: "{{ docker_image_url }}"
+                mlflow_artifact_location: "{{ mlflow_artifact_location }}"
                 mlflow_experiment_directory: "{{ mlflow_experiment_directory }}"
                 mlflow_run: "{{ mlflow_run }}"
-                parameters: "{{ parameters }}"
+                priority_class: "{{ priority_class }}"
+                unity_catalog_image_path: "{{ unity_catalog_image_path }}"
               alert_task:
                 alert_id: "{{ alert_id }}"
                 parameters: "{{ parameters }}"
@@ -4121,6 +4632,7 @@ job_id
                 dashboard_id: "{{ dashboard_id }}"
                 filters: "{{ filters }}"
                 subscription:
+                  attachment: "{{ attachment }}"
                   custom_subject: "{{ custom_subject }}"
                   paused: {{ paused }}
                   subscribers: "{{ subscribers }}"
@@ -4169,7 +4681,6 @@ job_id
                 inputs: "{{ inputs }}"
                 task:
                   task_key: "{{ task_key }}"
-                  agentic_task: "{{ agentic_task }}"
                   ai_runtime_task: "{{ ai_runtime_task }}"
                   alert_task: "{{ alert_task }}"
                   clean_rooms_notebook_task: "{{ clean_rooms_notebook_task }}"
@@ -4189,7 +4700,6 @@ job_id
                   existing_cluster_id: "{{ existing_cluster_id }}"
                   for_each_task: "{{ for_each_task }}"
                   gen_ai_compute_task: "{{ gen_ai_compute_task }}"
-                  genie_task: "{{ genie_task }}"
                   health: "{{ health }}"
                   job_cluster_key: "{{ job_cluster_key }}"
                   libraries: "{{ libraries }}"
@@ -4214,23 +4724,16 @@ job_id
                 concurrency: {{ concurrency }}
               gen_ai_compute_task:
                 dl_runtime_image: "{{ dl_runtime_image }}"
-                client_version: "{{ client_version }}"
-                code_source_tar_path: "{{ code_source_tar_path }}"
                 command: "{{ command }}"
                 compute:
                   num_gpus: {{ num_gpus }}
                   gpu_node_pool_id: "{{ gpu_node_pool_id }}"
                   gpu_type: "{{ gpu_type }}"
-                docker_image_url: "{{ docker_image_url }}"
                 mlflow_experiment_name: "{{ mlflow_experiment_name }}"
-                mlflow_run_name: "{{ mlflow_run_name }}"
-                requirements_yaml_path: "{{ requirements_yaml_path }}"
                 source: "{{ source }}"
                 training_script_path: "{{ training_script_path }}"
                 yaml_parameters: "{{ yaml_parameters }}"
                 yaml_parameters_file_path: "{{ yaml_parameters_file_path }}"
-              genie_task:
-                configuration_id: "{{ configuration_id }}"
               health:
                 rules:
                   - metric: "{{ metric }}"
@@ -4264,14 +4767,6 @@ job_id
                   - "{{ reset_checkpoint_selection }}"
               power_bi_task:
                 connection_resource_name: "{{ connection_resource_name }}"
-                incremental_refresh_config:
-                  archive_window_granularity: "{{ archive_window_granularity }}"
-                  archive_window_periods: {{ archive_window_periods }}
-                  detect_data_changes: {{ detect_data_changes }}
-                  mode: "{{ mode }}"
-                  only_refresh_complete_periods: {{ only_refresh_complete_periods }}
-                  refresh_window_granularity: "{{ refresh_window_granularity }}"
-                  refresh_window_periods: {{ refresh_window_periods }}
                 power_bi_model:
                   authentication_method: "{{ authentication_method }}"
                   model_name: "{{ model_name }}"
@@ -4281,11 +4776,9 @@ job_id
                 refresh_after_update: {{ refresh_after_update }}
                 tables:
                   - catalog: "{{ catalog }}"
-                    incremental_refresh_datetime_column: "{{ incremental_refresh_datetime_column }}"
                     name: "{{ name }}"
                     schema: "{{ schema }}"
                     storage_mode: "{{ storage_mode }}"
-                    table_type: "{{ table_type }}"
                 warehouse_id: "{{ warehouse_id }}"
               python_operator_task:
                 main: "{{ main }}"
@@ -4370,23 +4863,16 @@ job_id
             concurrency: {{ concurrency }}
           gen_ai_compute_task:
             dl_runtime_image: "{{ dl_runtime_image }}"
-            client_version: "{{ client_version }}"
-            code_source_tar_path: "{{ code_source_tar_path }}"
             command: "{{ command }}"
             compute:
               num_gpus: {{ num_gpus }}
               gpu_node_pool_id: "{{ gpu_node_pool_id }}"
               gpu_type: "{{ gpu_type }}"
-            docker_image_url: "{{ docker_image_url }}"
             mlflow_experiment_name: "{{ mlflow_experiment_name }}"
-            mlflow_run_name: "{{ mlflow_run_name }}"
-            requirements_yaml_path: "{{ requirements_yaml_path }}"
             source: "{{ source }}"
             training_script_path: "{{ training_script_path }}"
             yaml_parameters: "{{ yaml_parameters }}"
             yaml_parameters_file_path: "{{ yaml_parameters_file_path }}"
-          genie_task:
-            configuration_id: "{{ configuration_id }}"
           health:
             rules:
               - metric: "{{ metric }}"
@@ -4420,14 +4906,6 @@ job_id
               - "{{ reset_checkpoint_selection }}"
           power_bi_task:
             connection_resource_name: "{{ connection_resource_name }}"
-            incremental_refresh_config:
-              archive_window_granularity: "{{ archive_window_granularity }}"
-              archive_window_periods: {{ archive_window_periods }}
-              detect_data_changes: {{ detect_data_changes }}
-              mode: "{{ mode }}"
-              only_refresh_complete_periods: {{ only_refresh_complete_periods }}
-              refresh_window_granularity: "{{ refresh_window_granularity }}"
-              refresh_window_periods: {{ refresh_window_periods }}
             power_bi_model:
               authentication_method: "{{ authentication_method }}"
               model_name: "{{ model_name }}"
@@ -4437,11 +4915,9 @@ job_id
             refresh_after_update: {{ refresh_after_update }}
             tables:
               - catalog: "{{ catalog }}"
-                incremental_refresh_datetime_column: "{{ incremental_refresh_datetime_column }}"
                 name: "{{ name }}"
                 schema: "{{ schema }}"
                 storage_mode: "{{ storage_mode }}"
-                table_type: "{{ table_type }}"
             warehouse_id: "{{ warehouse_id }}"
           python_operator_task:
             main: "{{ main }}"
@@ -4564,6 +5040,44 @@ job_id
           condition: "{{ condition }}"
           min_time_between_triggers_seconds: {{ min_time_between_triggers_seconds }}
           wait_after_last_change_seconds: {{ wait_after_last_change_seconds }}
+    - name: triggers
+      description: |
+        List of triggers attached to this job. A run starts when any active trigger evaluates to true. Cannot be set in the same request as the legacy \`\`schedule\`\`, \`\`trigger\`\`, or \`\`continuous\`\` fields. Gated behind the "Multiple Triggers" feature preview.
+      value:
+        - continuous:
+            maintenance_window:
+              start_hour: {{ start_hour }}
+              day_of_week: "{{ day_of_week }}"
+              timezone_id: "{{ timezone_id }}"
+            task_retry_mode: "{{ task_retry_mode }}"
+          file_arrival:
+            url: "{{ url }}"
+            min_time_between_triggers_seconds: {{ min_time_between_triggers_seconds }}
+            wait_after_last_change_seconds: {{ wait_after_last_change_seconds }}
+          model:
+            condition: "{{ condition }}"
+            aliases:
+              - "{{ aliases }}"
+            min_time_between_triggers_seconds: {{ min_time_between_triggers_seconds }}
+            securable_name: "{{ securable_name }}"
+            wait_after_last_change_seconds: {{ wait_after_last_change_seconds }}
+          pause_status: "{{ pause_status }}"
+          periodic:
+            interval: {{ interval }}
+            unit: "{{ unit }}"
+          schedule:
+            quartz_cron_expression: "{{ quartz_cron_expression }}"
+            timezone_id: "{{ timezone_id }}"
+          sql_condition:
+            sql_query_id: "{{ sql_query_id }}"
+            warehouse_id: "{{ warehouse_id }}"
+            trigger_mode: "{{ trigger_mode }}"
+          table_update:
+            table_names:
+              - "{{ table_names }}"
+            condition: "{{ condition }}"
+            min_time_between_triggers_seconds: {{ min_time_between_triggers_seconds }}
+            wait_after_last_change_seconds: {{ wait_after_last_change_seconds }}
     - name: usage_policy_id
       value: "{{ usage_policy_id }}"
       description: |
@@ -4612,6 +5126,7 @@ fields_to_remove = '{{ fields_to_remove }}',
 new_settings = '{{ new_settings }}'
 WHERE 
 deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND job_id = '{{ job_id }}' --required;
 ```
 </TabItem>
@@ -4637,6 +5152,7 @@ job_id = {{ job_id }},
 new_settings = '{{ new_settings }}'
 WHERE 
 deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND job_id = '{{ job_id }}' --required
 AND new_settings = '{{ new_settings }}' --required;
 ```
@@ -4659,6 +5175,7 @@ Deletes a job.
 ```sql
 DELETE FROM databricks_workspace.jobs.jobs
 WHERE deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -4679,11 +5196,13 @@ Run a job and return the ``run_id`` of the triggered run.
 
 ```sql
 EXEC databricks_workspace.jobs.jobs.run_now 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "job_id": {{ job_id }}, 
 "dbt_commands": "{{ dbt_commands }}", 
+"duration_target": "{{ duration_target }}", 
 "idempotency_token": "{{ idempotency_token }}", 
 "jar_params": "{{ jar_params }}", 
 "job_parameters": "{{ job_parameters }}", 

@@ -27,8 +27,8 @@ For Databricks account operations use the [__`databricks_account`__](https://dat
 
 :::info[Provider Summary]
 
-total services: __29__  
-total resources: __342__  
+total services: __36__  
+total resources: __372__  
 source project: __[stackql-provider-databricks](https://github.com/stackql-registry/stackql-provider-databricks)__  
 
 :::
@@ -55,7 +55,33 @@ Set the following environment variables:
 - <CopyableCode code="DATABRICKS_CLIENT_ID" /> - obtained after creating a service principal through the Databricks UI (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 - <CopyableCode code="DATABRICKS_CLIENT_SECRET" /> - obtained after creating a service principal secret through the Databricks UI, using the "Generate Secret" function (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 
-These are the same variables that Terraform, the Databricks SDKs, and CLI use.  
+These are the same variables that Terraform, the Databricks SDKs, and CLI use.
+
+### Cloud selection (AWS, Azure, GCP)
+
+The provider defaults to Databricks on AWS. The same service principal flow works on Azure Databricks and Databricks on Google Cloud; select the cloud with one variable and both the OAuth token endpoint and the workspace host follow:
+
+- <CopyableCode code="DATABRICKS_CLOUD" /> - `aws` (default), `azure` or `gcp`
+- <CopyableCode code="DATABRICKS_ACCOUNT_HOST" /> - optional, overrides the account console host that issues tokens (a bare host such as `accounts.azuredatabricks.net`, no scheme)
+- <CopyableCode code="DATABRICKS_DEPLOYMENT_NAME" /> - optional, defaults the `deployment_name` predicate for the session
+
+The `deployment_name` predicate is the host prefix of the workspace URL on every cloud:
+
+| Cloud | Workspace URL | `deployment_name` |
+|-------|---------------|-------------------|
+| AWS | `https://dbc-abcd0123-a1bc.cloud.databricks.com` | `dbc-abcd0123-a1bc` |
+| Azure | `https://adb-1234567890123456.7.azuredatabricks.net` | `adb-1234567890123456.7` |
+| GCP | `https://1234567890123456.gcp.databricks.com` | `1234567890123456` |
+
+```bash
+export DATABRICKS_CLOUD=azure
+export DATABRICKS_ACCOUNT_ID=...
+export DATABRICKS_CLIENT_ID=...
+export DATABRICKS_CLIENT_SECRET=...
+stackql exec "SELECT * FROM databricks_workspace.iam.current_user WHERE deployment_name = 'adb-1234567890123456.7'"
+```
+
+With no cloud variables set, queries behave exactly as before: AWS hosts and the AWS token endpoint. Account API authentication on Azure and GCP uses a Databricks-managed service principal (OAuth M2M); Entra ID and Google service-account tokens are not used.
 
 ### Personal Access Token (Bearer)
 
@@ -191,6 +217,8 @@ WHERE deployment_name = '<deployment_name>';
 <div class="row">
 <div class="providerDocColumn">
 <a href="/services/agentbricks/">agentbricks</a><br />
+<a href="/services/agentkit/">agentkit</a><br />
+<a href="/services/aifunctions/">aifunctions</a><br />
 <a href="/services/aisearch/">aisearch</a><br />
 <a href="/services/apps/">apps</a><br />
 <a href="/services/bundledeployments/">bundledeployments</a><br />
@@ -199,19 +227,24 @@ WHERE deployment_name = '<deployment_name>';
 <a href="/services/compute/">compute</a><br />
 <a href="/services/dashboards/">dashboards</a><br />
 <a href="/services/database/">database</a><br />
+<a href="/services/dataclassification/">dataclassification</a><br />
 <a href="/services/dataquality/">dataquality</a><br />
+<a href="/services/domains/">domains</a><br />
+<a href="/services/environments/">environments</a><br />
 <a href="/services/files/">files</a><br />
 <a href="/services/iam/">iam</a><br />
 <a href="/services/iamv2/">iamv2</a><br />
-<a href="/services/jobs/">jobs</a><br />
-<a href="/services/marketplace/">marketplace</a><br />
 </div>
 <div class="providerDocColumn">
+<a href="/services/jobs/">jobs</a><br />
+<a href="/services/knowledgeassistants/">knowledgeassistants</a><br />
+<a href="/services/marketplace/">marketplace</a><br />
 <a href="/services/ml/">ml</a><br />
 <a href="/services/oauth2/">oauth2</a><br />
 <a href="/services/pipelines/">pipelines</a><br />
 <a href="/services/postgres/">postgres</a><br />
 <a href="/services/qualitymonitorv2/">qualitymonitorv2</a><br />
+<a href="/services/sandbox/">sandbox</a><br />
 <a href="/services/serving/">serving</a><br />
 <a href="/services/settings/">settings</a><br />
 <a href="/services/settingsv2/">settingsv2</a><br />

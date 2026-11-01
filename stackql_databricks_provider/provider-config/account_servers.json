@@ -1,0 +1,21 @@
+[
+  {
+    "url": "https://{account_host}",
+    "variables": {
+      "account_host": {
+        "description": "The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme).",
+        "default": "accounts.cloud.databricks.com",
+        "x-stackQL-envVar": "DATABRICKS_ACCOUNT_HOST",
+        "x-stackQL-envVarSelector": {
+          "envVar": "DATABRICKS_CLOUD",
+          "default": "aws",
+          "values": {
+            "aws": "accounts.cloud.databricks.com",
+            "azure": "accounts.azuredatabricks.net",
+            "gcp": "accounts.gcp.databricks.com"
+          }
+        }
+      }
+    }
+  }
+]

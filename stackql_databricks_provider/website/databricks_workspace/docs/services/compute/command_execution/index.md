@@ -131,35 +131,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#command_status"><CopyableCode code="command_status" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-context_id"><code>context_id</code></a>, <a href="#parameter-command_id"><code>command_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-context_id"><code>context_id</code></a>, <a href="#parameter-command_id"><code>command_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets the status of and, if available, the results from a currently executing command.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates an execution context for running cluster commands.</td>
 </tr>
 <tr>
     <td><a href="#cancel"><CopyableCode code="cancel" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Cancels a currently running command within an execution context.</td>
 </tr>
 <tr>
     <td><a href="#destroy"><CopyableCode code="destroy" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-clusterId"><code>clusterId</code></a>, <a href="#parameter-contextId"><code>contextId</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-clusterId"><code>clusterId</code></a>, <a href="#parameter-contextId"><code>contextId</code></a></td>
     <td></td>
     <td>Deletes an execution context.</td>
 </tr>
 <tr>
     <td><a href="#execute"><CopyableCode code="execute" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Runs a cluster command in the given execution context, using the provided language.</td>
 </tr>
@@ -197,7 +197,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -224,6 +229,7 @@ WHERE cluster_id = '{{ cluster_id }}' -- required
 AND context_id = '{{ context_id }}' -- required
 AND command_id = '{{ command_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -247,12 +253,14 @@ Creates an execution context for running cluster commands.
 INSERT INTO databricks_workspace.compute.command_execution (
 clusterId,
 language,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ clusterId }}',
 '{{ language }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 status
@@ -266,6 +274,9 @@ status
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the command_execution resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the command_execution resource.
     - name: clusterId
       value: "{{ clusterId }}"
@@ -319,7 +330,8 @@ Cancels a currently running command within an execution context.
 
 ```sql
 EXEC databricks_workspace.compute.command_execution.cancel 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "clusterId": "{{ clusterId }}", 
@@ -335,7 +347,8 @@ Deletes an execution context.
 
 ```sql
 EXEC databricks_workspace.compute.command_execution.destroy 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "clusterId": "{{ clusterId }}", 
@@ -350,7 +363,8 @@ Runs a cluster command in the given execution context, using the provided langua
 
 ```sql
 EXEC databricks_workspace.compute.command_execution.execute 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "clusterId": "{{ clusterId }}", 

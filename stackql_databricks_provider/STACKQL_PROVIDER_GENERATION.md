@@ -339,6 +339,26 @@ export DATABRICKS_CLIENT_SECRET="your-client-secret"
 
 These are the same variables used by Terraform, the Databricks SDKs, and the Databricks CLI.
 
+The providers default to Databricks on AWS. The same service principal flow works on Azure Databricks
+and Databricks on Google Cloud; one variable selects the cloud for both the OAuth token endpoint and the
+API hosts, and an explicit host override is accepted:
+
+```bash
+export DATABRICKS_CLOUD=azure                           # aws (default) | azure | gcp
+export DATABRICKS_ACCOUNT_HOST=accounts.azuredatabricks.net   # optional override, bare host, no scheme
+export DATABRICKS_DEPLOYMENT_NAME=adb-1234567890123456.7     # optional default for the deployment_name predicate
+```
+
+| Cloud | Account host (token endpoint and account API) | Workspace host |
+|-------|-----------------------------------------------|----------------|
+| aws   | accounts.cloud.databricks.com                 | `<deployment_name>.cloud.databricks.com` |
+| azure | accounts.azuredatabricks.net                  | `<deployment_name>.azuredatabricks.net` (deployment_name `adb-<id>.<n>`) |
+| gcp   | accounts.gcp.databricks.com                   | `<deployment_name>.gcp.databricks.com` (deployment_name is the workspace id) |
+
+With none of these set the providers behave exactly as before (AWS hosts, AWS token endpoint, the same
+required predicates). The hosts are declared once in `provider-config/*.json`; see "Multi-cloud hosts"
+in the repository `AGENTS.md`.
+
 ## Quick Reference
 
 ```bash

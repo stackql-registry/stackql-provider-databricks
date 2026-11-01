@@ -1,0 +1,133 @@
+---
+title: genie_message_attachment_visualizations
+hide_title: false
+hide_table_of_contents: false
+keywords:
+  - genie_message_attachment_visualizations
+  - dashboards
+  - databricks_workspace
+  - infrastructure-as-code
+  - configuration-as-data
+  - cloud inventory
+description: Query, deploy and manage databricks_workspace resources using SQL
+custom_edit_url: null
+image: /img/stackql-databricks_workspace-provider-featured-image.png
+---
+
+import CopyableCode from '@site/src/components/CopyableCode/CopyableCode';
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import SchemaTable from '@site/src/components/SchemaTable/SchemaTable';
+
+Creates, updates, deletes, gets or lists a <code>genie_message_attachment_visualizations</code> resource.
+
+## Overview
+<table><tbody>
+<tr><td><b>Name</b></td><td><CopyableCode code="genie_message_attachment_visualizations" /></td></tr>
+<tr><td><b>Type</b></td><td>Resource</td></tr>
+<tr><td><b>Id</b></td><td><CopyableCode code="databricks_workspace.dashboards.genie_message_attachment_visualizations" /></td></tr>
+</tbody></table>
+
+## Fields
+
+The following fields are returned by `SELECT` queries:
+
+`SELECT` not supported for this resource, use `SHOW METHODS` to view available operations for the resource.
+
+
+## Methods
+
+The following methods are available for this resource:
+
+<table>
+<thead>
+    <tr>
+    <th>Name</th>
+    <th>Accessible by</th>
+    <th>Required Params</th>
+    <th>Optional Params</th>
+    <th>Description</th>
+    </tr>
+</thead>
+<tbody>
+<tr>
+    <td><a href="#download"><CopyableCode code="download" /></a></td>
+    <td><CopyableCode code="exec" /></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-attachment_id"><code>attachment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Download a rendered image of a message visualization attachment. The response body is the raw PNG</td>
+</tr>
+</tbody>
+</table>
+
+## Parameters
+
+Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#methods) section to see which parameters are required or optional for each operation.
+
+<table>
+<thead>
+    <tr>
+    <th>Name</th>
+    <th>Datatype</th>
+    <th>Description</th>
+    </tr>
+</thead>
+<tbody>
+<tr id="parameter-attachment_id">
+    <td><CopyableCode code="attachment_id" /></td>
+    <td><code>string</code></td>
+    <td>The `attachment_id` segment of the `name` resource name (`spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;`). The resource name of the attachment to render, in the format ``spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;``.</td>
+</tr>
+<tr id="parameter-conversation_id">
+    <td><CopyableCode code="conversation_id" /></td>
+    <td><code>string</code></td>
+    <td>The `conversation_id` segment of the `name` resource name (`spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;`). The resource name of the attachment to render, in the format ``spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;``.</td>
+</tr>
+<tr id="parameter-deployment_name">
+    <td><CopyableCode code="deployment_name" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-message_id">
+    <td><CopyableCode code="message_id" /></td>
+    <td><code>string</code></td>
+    <td>The `message_id` segment of the `name` resource name (`spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;`). The resource name of the attachment to render, in the format ``spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;``.</td>
+</tr>
+<tr id="parameter-space_id">
+    <td><CopyableCode code="space_id" /></td>
+    <td><code>string</code></td>
+    <td>The `space_id` segment of the `name` resource name (`spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;`). The resource name of the attachment to render, in the format ``spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;``.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
+</tbody>
+</table>
+
+## Lifecycle Methods
+
+<Tabs
+    defaultValue="download"
+    values={[
+        { label: 'download', value: 'download' }
+    ]}
+>
+<TabItem value="download">
+
+Download a rendered image of a message visualization attachment. The response body is the raw PNG
+
+```sql
+EXEC databricks_workspace.dashboards.genie_message_attachment_visualizations.download 
+@space_id='{{ space_id }}' --required, 
+@conversation_id='{{ conversation_id }}' --required, 
+@message_id='{{ message_id }}' --required, 
+@attachment_id='{{ attachment_id }}' --required, 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
+;
+```
+</TabItem>
+</Tabs>

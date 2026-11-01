@@ -18,24 +18,26 @@ iamv2 service documentation.
 
 :::info[Service Summary]
 
-total resources: __10__  
+total resources: __12__  
 
 :::
 
 ## Resources
 <div class="row">
 <div class="providerDocColumn">
-<a href="/services/iamv2/account_access_identity_rules/">account_access_identity_rules</a><br />
-<a href="/services/iamv2/attribute_control_entries/">attribute_control_entries</a><br />
 <a href="/services/iamv2/direct_group_members/">direct_group_members</a><br />
+<a href="/services/iamv2/external_groups/">external_groups</a><br />
+<a href="/services/iamv2/external_service_principals/">external_service_principals</a><br />
 <a href="/services/iamv2/external_users/">external_users</a><br />
-<a href="/services/iamv2/groups/">groups</a>
+<a href="/services/iamv2/groups/">groups</a><br />
+<a href="/services/iamv2/identity_visibility_filters/">identity_visibility_filters</a>
 </div>
 <div class="providerDocColumn">
 <a href="/services/iamv2/service_principals/">service_principals</a><br />
 <a href="/services/iamv2/transitive_parent_groups/">transitive_parent_groups</a><br />
 <a href="/services/iamv2/users/">users</a><br />
 <a href="/services/iamv2/workspace_access_details/">workspace_access_details</a><br />
-<a href="/services/iamv2/workspace_assignment_details/">workspace_assignment_details</a>
+<a href="/services/iamv2/workspace_assignment_details/">workspace_assignment_details</a><br />
+<a href="/services/iamv2/workspace_assignments/">workspace_assignments</a>
 </div>
 </div>

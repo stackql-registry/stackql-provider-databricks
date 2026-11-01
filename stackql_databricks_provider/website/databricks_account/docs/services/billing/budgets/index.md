@@ -61,7 +61,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "alert_configurations",
     "type": "array",
-    "description": "Alerts to configure when this budget is in a triggered state. Budgets must have exactly one alert configuration.",
+    "description": "Alerts to configure when this budget is in a triggered state. Budgets must have at least one alert configuration. A budget can have up to four shared alerts per time period, each with a unique ``quantity_threshold``. Budgets with ``resource_type`` set to ``BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`` can also use per-user alerts, with optional ``principal_overrides``. These budgets can have at most one per-user alert per time period, and can use shared alerts, a per-user alert, or both. The ``BLOCK_USAGE`` action is only supported on budgets with ``resource_type`` set to ``BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY``. At most one shared alert per time period can have a ``BLOCK_USAGE`` action, and it must be the shared alert with the highest threshold in that period.",
     "children": [
       {
         "name": "action_configurations",
@@ -76,7 +76,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "action_type",
             "type": "string",
-            "description": "The type of the action. (EMAIL_NOTIFICATION)"
+            "description": "The type of the action. (BLOCK_USAGE, EMAIL_NOTIFICATION)"
           },
           {
             "name": "target",
@@ -91,6 +91,23 @@ The following fields are returned by `SELECT` queries:
         "description": "Databricks alert configuration ID."
       },
       {
+        "name": "principal_overrides",
+        "type": "array",
+        "description": "Per-principal threshold overrides for this alert. Only applies to per-user alerts (``scope_type`` = ``ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER``); ignored for shared alerts.",
+        "children": [
+          {
+            "name": "override_threshold",
+            "type": "string",
+            "description": "Dollar amount that overrides the parent alert's quantity_threshold for this principal."
+          },
+          {
+            "name": "principal_id",
+            "type": "integer",
+            "description": "Account-level principal id (user, group, or service principal)."
+          }
+        ]
+      },
+      {
         "name": "quantity_threshold",
         "type": "string",
         "description": "The threshold for the budget alert to determine if it is in a triggered state. The number is evaluated based on ``quantity_type``."
@@ -99,6 +116,11 @@ The following fields are returned by `SELECT` queries:
         "name": "quantity_type",
         "type": "string",
         "description": "The way to calculate cost for this budget alert. This is what ``quantity_threshold`` is measured in. (LIST_PRICE_DOLLARS_USD)"
+      },
+      {
+        "name": "scope_type",
+        "type": "string",
+        "description": "How the alert threshold is evaluated. Determines whether spend is tracked in aggregate or per individual user. (ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER, ALERT_CONFIGURATION_SCOPE_TYPE_SHARED)"
       },
       {
         "name": "time_period",
@@ -169,6 +191,16 @@ The following fields are returned by `SELECT` queries:
         ]
       }
     ]
+  },
+  {
+    "name": "include_external_spend",
+    "type": "boolean",
+    "description": "Whether this budget tracks external pass-through spend (third-party costs billed through a Databricks product) in addition to internal Databricks spend. Only applicable to Unity Gateway budgets, i.e. when ``resource_type`` is ``BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY``. This field is immutable after create."
+  },
+  {
+    "name": "resource_type",
+    "type": "string",
+    "description": "The resource scope for this budget. Determines whether the budget tracks all resources or a specific resource. (BUDGET_RESOURCE_TYPE_ALL_RESOURCES, BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY)"
   },
   {
     "name": "update_time",
@@ -198,7 +230,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "alert_configurations",
     "type": "array",
-    "description": "Alerts to configure when this budget is in a triggered state. Budgets must have exactly one alert configuration.",
+    "description": "Alerts to configure when this budget is in a triggered state. Budgets must have at least one alert configuration. A budget can have up to four shared alerts per time period, each with a unique ``quantity_threshold``. Budgets with ``resource_type`` set to ``BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`` can also use per-user alerts, with optional ``principal_overrides``. These budgets can have at most one per-user alert per time period, and can use shared alerts, a per-user alert, or both. The ``BLOCK_USAGE`` action is only supported on budgets with ``resource_type`` set to ``BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY``. At most one shared alert per time period can have a ``BLOCK_USAGE`` action, and it must be the shared alert with the highest threshold in that period.",
     "children": [
       {
         "name": "action_configurations",
@@ -213,7 +245,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "action_type",
             "type": "string",
-            "description": "The type of the action. (EMAIL_NOTIFICATION)"
+            "description": "The type of the action. (BLOCK_USAGE, EMAIL_NOTIFICATION)"
           },
           {
             "name": "target",
@@ -228,6 +260,23 @@ The following fields are returned by `SELECT` queries:
         "description": "Databricks alert configuration ID."
       },
       {
+        "name": "principal_overrides",
+        "type": "array",
+        "description": "Per-principal threshold overrides for this alert. Only applies to per-user alerts (``scope_type`` = ``ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER``); ignored for shared alerts.",
+        "children": [
+          {
+            "name": "override_threshold",
+            "type": "string",
+            "description": "Dollar amount that overrides the parent alert's quantity_threshold for this principal."
+          },
+          {
+            "name": "principal_id",
+            "type": "integer",
+            "description": "Account-level principal id (user, group, or service principal)."
+          }
+        ]
+      },
+      {
         "name": "quantity_threshold",
         "type": "string",
         "description": "The threshold for the budget alert to determine if it is in a triggered state. The number is evaluated based on ``quantity_type``."
@@ -236,6 +285,11 @@ The following fields are returned by `SELECT` queries:
         "name": "quantity_type",
         "type": "string",
         "description": "The way to calculate cost for this budget alert. This is what ``quantity_threshold`` is measured in. (LIST_PRICE_DOLLARS_USD)"
+      },
+      {
+        "name": "scope_type",
+        "type": "string",
+        "description": "How the alert threshold is evaluated. Determines whether spend is tracked in aggregate or per individual user. (ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER, ALERT_CONFIGURATION_SCOPE_TYPE_SHARED)"
       },
       {
         "name": "time_period",
@@ -308,6 +362,16 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
+    "name": "include_external_spend",
+    "type": "boolean",
+    "description": "Whether this budget tracks external pass-through spend (third-party costs billed through a Databricks product) in addition to internal Databricks spend. Only applicable to Unity Gateway budgets, i.e. when ``resource_type`` is ``BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY``. This field is immutable after create."
+  },
+  {
+    "name": "resource_type",
+    "type": "string",
+    "description": "The resource scope for this budget. Determines whether the budget tracks all resources or a specific resource. (BUDGET_RESOURCE_TYPE_ALL_RESOURCES, BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY)"
+  },
+  {
     "name": "update_time",
     "type": "integer",
     "description": "Update time of this budget configuration."
@@ -334,35 +398,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#budgets_get"><CopyableCode code="budgets_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget_id"><code>budget_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget_id"><code>budget_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a budget configuration for an account. Both account and budget configuration are specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#budgets_list"><CopyableCode code="budgets_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets all budgets associated with this account.</td>
 </tr>
 <tr>
     <td><a href="#budgets_create"><CopyableCode code="budgets_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget"><code>budget</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-budget"><code>budget</code></a></td>
     <td></td>
     <td>Create a new budget configuration for an account. For full details, see</td>
 </tr>
 <tr>
     <td><a href="#budgets_update"><CopyableCode code="budgets_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget_id"><code>budget_id</code></a>, <a href="#parameter-budget"><code>budget</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget_id"><code>budget_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-budget"><code>budget</code></a></td>
     <td></td>
     <td>Updates a budget configuration for an account. Both account and budget configuration are specified by</td>
 </tr>
 <tr>
     <td><a href="#budgets_delete"><CopyableCode code="budgets_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget_id"><code>budget_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-budget_id"><code>budget_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a budget configuration for an account. Both account and budget configuration are specified by</td>
 </tr>
@@ -382,6 +446,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -421,10 +490,13 @@ display_name,
 alert_configurations,
 create_time,
 filter,
+include_external_spend,
+resource_type,
 update_time
 FROM databricks_account.billing.budgets
 WHERE account_id = '{{ account_id }}' -- required
 AND budget_id = '{{ budget_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -440,9 +512,12 @@ display_name,
 alert_configurations,
 create_time,
 filter,
+include_external_spend,
+resource_type,
 update_time
 FROM databricks_account.billing.budgets
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_token = '{{ page_token }}'
 ;
 ```
@@ -466,11 +541,13 @@ Create a new budget configuration for an account. For full details, see
 ```sql
 INSERT INTO databricks_account.billing.budgets (
 budget,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ budget }}' /* required */,
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 budget
 ;
@@ -484,6 +561,9 @@ budget
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the budgets resource.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the budgets resource.
     - name: budget
       description: |
         Properties of the new budget configuration.
@@ -491,8 +571,10 @@ budget
         account_id: "{{ account_id }}"
         alert_configurations:
           - action_configurations: "{{ action_configurations }}"
+            principal_overrides: "{{ principal_overrides }}"
             quantity_threshold: "{{ quantity_threshold }}"
             quantity_type: "{{ quantity_type }}"
+            scope_type: "{{ scope_type }}"
             time_period: "{{ time_period }}"
             trigger_type: "{{ trigger_type }}"
         display_name: "{{ display_name }}"
@@ -507,6 +589,8 @@ budget
             operator: "{{ operator }}"
             values:
               - {{ values }}
+        include_external_spend: {{ include_external_spend }}
+        resource_type: "{{ resource_type }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -532,6 +616,7 @@ budget = '{{ budget }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND budget_id = '{{ budget_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND budget = '{{ budget }}' --required
 RETURNING
 budget;
@@ -556,6 +641,7 @@ Deletes a budget configuration for an account. Both account and budget configura
 DELETE FROM databricks_account.billing.budgets
 WHERE account_id = '{{ account_id }}' --required
 AND budget_id = '{{ budget_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

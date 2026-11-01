@@ -79,16 +79,6 @@ The following fields are returned by `SELECT` queries:
         "description": "[Optional] Select the columns to sync with the vector index. If you leave this field blank, all columns from the source table are synced with the index. The primary key column and embedding source column or embedding vector column are always synced."
       },
       {
-        "name": "effective_budget_policy_id",
-        "type": "string",
-        "description": "The budget policy id applied to the AI Search index"
-      },
-      {
-        "name": "effective_usage_policy_id",
-        "type": "string",
-        "description": ""
-      },
-      {
         "name": "embedding_source_columns",
         "type": "array",
         "description": "The columns that contain the embedding source.",
@@ -192,11 +182,6 @@ The following fields are returned by `SELECT` queries:
             "description": "Name of the column"
           }
         ]
-      },
-      {
-        "name": "requested_schema_json",
-        "type": "string",
-        "description": "The index schema exactly as the user supplied it on create, preserving the original type spellings (e.g. ``integer``) rather than Unity Catalog's canonical names (e.g. ``int``) that ``schema_json`` returns."
       },
       {
         "name": "schema_json",
@@ -309,70 +294,70 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-ensure_reranker_compatible"><code>ensure_reranker_compatible</code></a></td>
     <td>Get an index.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all indexes in the given endpoint.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-primary_key"><code>primary_key</code></a>, <a href="#parameter-index_type"><code>index_type</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-primary_key"><code>primary_key</code></a>, <a href="#parameter-index_type"><code>index_type</code></a></td>
     <td></td>
     <td>Create a new index.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete an index.</td>
 </tr>
 <tr>
     <td><a href="#delete_data_vector_index"><CopyableCode code="delete_data_vector_index" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-primary_keys"><code>primary_keys</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-primary_keys"><code>primary_keys</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Handles the deletion of data from a specified vector index.</td>
 </tr>
 <tr>
     <td><a href="#query_index"><CopyableCode code="query_index" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-columns"><code>columns</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-columns"><code>columns</code></a></td>
     <td></td>
     <td>Query the specified vector index.</td>
 </tr>
 <tr>
     <td><a href="#query_next_page"><CopyableCode code="query_next_page" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Use ``next_page_token`` returned from previous ``QueryVectorIndex`` or ``QueryVectorIndexNextPage``</td>
 </tr>
 <tr>
     <td><a href="#scan_index"><CopyableCode code="scan_index" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Scan the specified vector index and return the first ``num_results`` entries after the exclusive</td>
 </tr>
 <tr>
     <td><a href="#sync_index"><CopyableCode code="sync_index" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Triggers a synchronization process for a specified vector index.</td>
 </tr>
 <tr>
     <td><a href="#upsert_data_vector_index"><CopyableCode code="upsert_data_vector_index" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-inputs_json"><code>inputs_json</code></a></td>
+    <td><a href="#parameter-index_name"><code>index_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-inputs_json"><code>inputs_json</code></a></td>
     <td></td>
     <td>Handles the upserting of data into a specified vector index.</td>
 </tr>
@@ -395,7 +380,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-endpoint_name">
     <td><CopyableCode code="endpoint_name" /></td>
@@ -411,6 +396,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="primary_keys" /></td>
     <td><code>array</code></td>
     <td>List of primary keys for the data to be deleted.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-ensure_reranker_compatible">
     <td><CopyableCode code="ensure_reranker_compatible" /></td>
@@ -453,6 +443,7 @@ status
 FROM databricks_workspace.vectorsearch.indexes
 WHERE index_name = '{{ index_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND ensure_reranker_compatible = '{{ ensure_reranker_compatible }}'
 ;
 ```
@@ -473,6 +464,7 @@ primary_key
 FROM databricks_workspace.vectorsearch.indexes
 WHERE endpoint_name = '{{ endpoint_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_token = '{{ page_token }}'
 ;
 ```
@@ -502,7 +494,8 @@ index_type,
 delta_sync_index_spec,
 direct_access_index_spec,
 index_subtype,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -512,7 +505,8 @@ SELECT
 '{{ delta_sync_index_spec }}',
 '{{ direct_access_index_spec }}',
 '{{ index_subtype }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 endpoint_id,
@@ -534,6 +528,9 @@ status
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the indexes resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the indexes resource.
     - name: name
       value: "{{ name }}"
@@ -563,8 +560,6 @@ status
           - "{{ columns_to_index }}"
         columns_to_sync:
           - "{{ columns_to_sync }}"
-        effective_budget_policy_id: "{{ effective_budget_policy_id }}"
-        effective_usage_policy_id: "{{ effective_usage_policy_id }}"
         embedding_source_columns:
           - embedding_model_endpoint_name: "{{ embedding_model_endpoint_name }}"
             model_endpoint_name_for_query: "{{ model_endpoint_name_for_query }}"
@@ -586,7 +581,6 @@ status
         embedding_vector_columns:
           - embedding_dimension: {{ embedding_dimension }}
             name: "{{ name }}"
-        requested_schema_json: "{{ requested_schema_json }}"
         schema_json: "{{ schema_json }}"
     - name: index_subtype
       value: "{{ index_subtype }}"
@@ -614,6 +608,7 @@ Delete an index.
 DELETE FROM databricks_workspace.vectorsearch.indexes
 WHERE index_name = '{{ index_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -641,7 +636,8 @@ Handles the deletion of data from a specified vector index.
 EXEC databricks_workspace.vectorsearch.indexes.delete_data_vector_index 
 @index_name='{{ index_name }}' --required, 
 @primary_keys='{{ primary_keys }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -652,7 +648,8 @@ Query the specified vector index.
 ```sql
 EXEC databricks_workspace.vectorsearch.indexes.query_index 
 @index_name='{{ index_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "columns": "{{ columns }}", 
@@ -678,7 +675,8 @@ Use ``next_page_token`` returned from previous ``QueryVectorIndex`` or ``QueryVe
 ```sql
 EXEC databricks_workspace.vectorsearch.indexes.query_next_page 
 @index_name='{{ index_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "endpoint_name": "{{ endpoint_name }}", 
@@ -694,7 +692,8 @@ Scan the specified vector index and return the first ``num_results`` entries aft
 ```sql
 EXEC databricks_workspace.vectorsearch.indexes.scan_index 
 @index_name='{{ index_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "last_primary_key": "{{ last_primary_key }}", 
@@ -710,7 +709,8 @@ Triggers a synchronization process for a specified vector index.
 ```sql
 EXEC databricks_workspace.vectorsearch.indexes.sync_index 
 @index_name='{{ index_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -721,7 +721,8 @@ Handles the upserting of data into a specified vector index.
 ```sql
 EXEC databricks_workspace.vectorsearch.indexes.upsert_data_vector_index 
 @index_name='{{ index_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "inputs_json": "{{ inputs_json }}"

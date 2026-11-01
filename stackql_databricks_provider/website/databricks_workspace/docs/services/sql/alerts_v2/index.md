@@ -46,7 +46,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "id",
     "type": "string",
-    "description": "UUID identifying the alert."
+    "description": "The canonical identifier of the alert to retrieve information about."
   },
   {
     "name": "warehouse_id",
@@ -76,17 +76,17 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "custom_description",
     "type": "string",
-    "description": "Custom description for the alert. support mustache template."
+    "description": "Custom description for the alert. Interpreted according to ``custom_template_format``."
   },
   {
     "name": "custom_summary",
     "type": "string",
-    "description": "Custom summary for the alert. support mustache template."
+    "description": "Custom summary for the alert. Interpreted according to ``custom_template_format``."
   },
   {
-    "name": "effective_parent_path",
+    "name": "custom_template_format",
     "type": "string",
-    "description": "The actual workspace path of the folder containing the alert. This is an output-only field."
+    "description": "The format used to interpret the ``custom_summary`` and ``custom_description`` templates. ``HTML`` treats both templates as HTML with Mustache ``&#123;&#123;VARIABLE_NAME&#125;&#125;`` placeholders. ``MARKDOWN`` treats them as Markdown with allowlisted ``@VARIABLE_NAME`` placeholders and converts them to the format each notification destination expects, so a single template renders correctly in email, Slack, and Microsoft Teams. When unset, the API applies no default. Responses omit the field unless a format is stored, and a template with no format is rendered as HTML. (HTML, MARKDOWN)"
   },
   {
     "name": "effective_run_as",
@@ -247,22 +247,22 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "parameters",
     "type": "array",
-    "description": "Query parameters bound when executing the alert query, referenced in the query text with ``:name`` syntax. Static values only.",
+    "description": "A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only. Reference a parameter in the query text as ``:name``. Each parameter must have a unique, non-empty name. Each parameter consists of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as a string. If the type is given, parameters will be checked for type correctness according to the given type. A value is correct if the provided string can be converted to the requested type using the ``cast`` function. The exact semantics are described in the section `cast function <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language reference.",
     "children": [
       {
         "name": "name",
         "type": "string",
-        "description": "The name of the parameter, referenced in the query as ``:name``."
+        "description": "The name of the parameter. Reference it in the query text as ``:name``. Required, must be non-empty, and must be unique across the alert's parameters."
       },
       {
         "name": "type",
         "type": "string",
-        "description": "The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY, MAP, and STRUCT are not supported."
+        "description": "The SQL data type of the parameter, for example ``STRING``, ``INT``, or ``DECIMAL(10, 2)``. If no type is given the type is assumed to be ``STRING``. Complex types such as ``ARRAY``, ``MAP``, and ``STRUCT`` are not supported."
       },
       {
         "name": "value",
         "type": "string",
-        "description": "The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL."
+        "description": "The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL."
       }
     ]
   },
@@ -307,11 +307,6 @@ The following fields are returned by `SELECT` queries:
         "name": "timezone_id",
         "type": "string",
         "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
-      },
-      {
-        "name": "effective_pause_status",
-        "type": "string",
-        "description": "The actual pause status of the schedule. This is an output-only field. (PAUSED, UNPAUSED)"
       },
       {
         "name": "pause_status",
@@ -333,7 +328,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "id",
     "type": "string",
-    "description": "UUID identifying the alert."
+    "description": "The canonical identifier of the alert to retrieve information about."
   },
   {
     "name": "warehouse_id",
@@ -363,17 +358,17 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "custom_description",
     "type": "string",
-    "description": "Custom description for the alert. support mustache template."
+    "description": "Custom description for the alert. Interpreted according to ``custom_template_format``."
   },
   {
     "name": "custom_summary",
     "type": "string",
-    "description": "Custom summary for the alert. support mustache template."
+    "description": "Custom summary for the alert. Interpreted according to ``custom_template_format``."
   },
   {
-    "name": "effective_parent_path",
+    "name": "custom_template_format",
     "type": "string",
-    "description": "The actual workspace path of the folder containing the alert. This is an output-only field."
+    "description": "The format used to interpret the ``custom_summary`` and ``custom_description`` templates. ``HTML`` treats both templates as HTML with Mustache ``&#123;&#123;VARIABLE_NAME&#125;&#125;`` placeholders. ``MARKDOWN`` treats them as Markdown with allowlisted ``@VARIABLE_NAME`` placeholders and converts them to the format each notification destination expects, so a single template renders correctly in email, Slack, and Microsoft Teams. When unset, the API applies no default. Responses omit the field unless a format is stored, and a template with no format is rendered as HTML. (HTML, MARKDOWN)"
   },
   {
     "name": "effective_run_as",
@@ -534,22 +529,22 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "parameters",
     "type": "array",
-    "description": "Query parameters bound when executing the alert query, referenced in the query text with ``:name`` syntax. Static values only.",
+    "description": "A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only. Reference a parameter in the query text as ``:name``. Each parameter must have a unique, non-empty name. Each parameter consists of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as a string. If the type is given, parameters will be checked for type correctness according to the given type. A value is correct if the provided string can be converted to the requested type using the ``cast`` function. The exact semantics are described in the section `cast function <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language reference.",
     "children": [
       {
         "name": "name",
         "type": "string",
-        "description": "The name of the parameter, referenced in the query as ``:name``."
+        "description": "The name of the parameter. Reference it in the query text as ``:name``. Required, must be non-empty, and must be unique across the alert's parameters."
       },
       {
         "name": "type",
         "type": "string",
-        "description": "The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY, MAP, and STRUCT are not supported."
+        "description": "The SQL data type of the parameter, for example ``STRING``, ``INT``, or ``DECIMAL(10, 2)``. If no type is given the type is assumed to be ``STRING``. Complex types such as ``ARRAY``, ``MAP``, and ``STRUCT`` are not supported."
       },
       {
         "name": "value",
         "type": "string",
-        "description": "The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL."
+        "description": "The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL."
       }
     ]
   },
@@ -594,11 +589,6 @@ The following fields are returned by `SELECT` queries:
         "name": "timezone_id",
         "type": "string",
         "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
-      },
-      {
-        "name": "effective_pause_status",
-        "type": "string",
-        "description": "The actual pause status of the schedule. This is an output-only field. (PAUSED, UNPAUSED)"
       },
       {
         "name": "pause_status",
@@ -634,35 +624,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets an alert.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets a list of alerts accessible to the user, ordered by creation time.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-alert"><code>alert</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-alert"><code>alert</code></a></td>
     <td></td>
     <td>Create Alert</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-alert"><code>alert</code></a></td>
+    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-alert"><code>alert</code></a></td>
     <td></td>
     <td>Update alert</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-purge"><code>purge</code></a></td>
     <td>Moves an alert to the trash. Trashed alerts immediately disappear from list views, and can no longer</td>
 </tr>
@@ -685,7 +675,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-id">
     <td><CopyableCode code="id" /></td>
@@ -696,6 +686,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask must be a single string, with multiple fields separated by commas (no spaces). The field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g., ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only the entire collection field can be specified. Field names must exactly match the resource field names. A field mask of ``*`` indicates full replacement. It’s recommended to always explicitly list the fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the API changes in the future.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -738,7 +733,7 @@ run_as_user_name,
 create_time,
 custom_description,
 custom_summary,
-effective_parent_path,
+custom_template_format,
 effective_run_as,
 evaluation,
 lifecycle_state,
@@ -751,6 +746,7 @@ update_time
 FROM databricks_workspace.sql.alerts_v2
 WHERE id = '{{ id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -768,7 +764,7 @@ run_as_user_name,
 create_time,
 custom_description,
 custom_summary,
-effective_parent_path,
+custom_template_format,
 effective_run_as,
 evaluation,
 lifecycle_state,
@@ -780,6 +776,7 @@ schedule,
 update_time
 FROM databricks_workspace.sql.alerts_v2
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -804,11 +801,13 @@ Create Alert
 ```sql
 INSERT INTO databricks_workspace.sql.alerts_v2 (
 alert,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ alert }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 warehouse_id,
@@ -818,7 +817,7 @@ run_as_user_name,
 create_time,
 custom_description,
 custom_summary,
-effective_parent_path,
+custom_template_format,
 effective_run_as,
 evaluation,
 lifecycle_state,
@@ -838,6 +837,9 @@ update_time
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the alerts_v2 resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the alerts_v2 resource.
     - name: alert
       value:
@@ -871,12 +873,11 @@ update_time
         schedule:
           quartz_cron_schedule: "{{ quartz_cron_schedule }}"
           timezone_id: "{{ timezone_id }}"
-          effective_pause_status: "{{ effective_pause_status }}"
           pause_status: "{{ pause_status }}"
         create_time: "{{ create_time }}"
         custom_description: "{{ custom_description }}"
         custom_summary: "{{ custom_summary }}"
-        effective_parent_path: "{{ effective_parent_path }}"
+        custom_template_format: "{{ custom_template_format }}"
         effective_run_as:
           service_principal_name: "{{ service_principal_name }}"
           user_name: "{{ user_name }}"
@@ -919,6 +920,7 @@ WHERE
 id = '{{ id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND alert = '{{ alert }}' --required
 RETURNING
 id,
@@ -929,7 +931,7 @@ run_as_user_name,
 create_time,
 custom_description,
 custom_summary,
-effective_parent_path,
+custom_template_format,
 effective_run_as,
 evaluation,
 lifecycle_state,
@@ -960,6 +962,7 @@ Moves an alert to the trash. Trashed alerts immediately disappear from list view
 DELETE FROM databricks_workspace.sql.alerts_v2
 WHERE id = '{{ id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND purge = '{{ purge }}'
 ;
 ```

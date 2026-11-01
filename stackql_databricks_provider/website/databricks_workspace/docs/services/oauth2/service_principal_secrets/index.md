@@ -99,21 +99,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all secrets associated with the given service principal. This operation only returns information</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a secret for the given service principal.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-secret_id"><code>secret_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-secret_id"><code>secret_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a secret from the given service principal.</td>
 </tr>
@@ -136,7 +136,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-secret_id">
     <td><CopyableCode code="secret_id" /></td>
@@ -147,6 +147,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="service_principal_id" /></td>
     <td><code>string</code></td>
     <td>The service principal ID.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -185,6 +190,7 @@ update_time
 FROM databricks_workspace.oauth2.service_principal_secrets
 WHERE service_principal_id = '{{ service_principal_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -211,13 +217,15 @@ INSERT INTO databricks_workspace.oauth2.service_principal_secrets (
 lifetime,
 scopes,
 service_principal_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ lifetime }}',
 '{{ scopes }}',
 '{{ service_principal_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 create_time,
@@ -240,6 +248,9 @@ update_time
       description: Required parameter for the service_principal_secrets resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the service_principal_secrets resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the service_principal_secrets resource.
     - name: lifetime
       value: "{{ lifetime }}"
@@ -273,6 +284,7 @@ DELETE FROM databricks_workspace.oauth2.service_principal_secrets
 WHERE service_principal_id = '{{ service_principal_id }}' --required
 AND secret_id = '{{ secret_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

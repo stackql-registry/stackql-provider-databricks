@@ -113,11 +113,6 @@ The following fields are returned by `SELECT` queries:
         "description": "The base URI of the KeyVault."
       },
       {
-        "name": "subscription_id",
-        "type": "string",
-        "description": "The Azure subscription ID to use for Key Vault access validation during CMK creation."
-      },
-      {
         "name": "tenant_id",
         "type": "string",
         "description": "The tenant id where the KeyVault lives."
@@ -243,11 +238,6 @@ The following fields are returned by `SELECT` queries:
         "description": "The base URI of the KeyVault."
       },
       {
-        "name": "subscription_id",
-        "type": "string",
-        "description": "The Azure subscription ID to use for Key Vault access validation during CMK creation."
-      },
-      {
         "name": "tenant_id",
         "type": "string",
         "description": "The tenant id where the KeyVault lives."
@@ -320,28 +310,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#encryption_keys_get"><CopyableCode code="encryption_keys_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-customer_managed_key_id"><code>customer_managed_key_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-customer_managed_key_id"><code>customer_managed_key_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a customer-managed key configuration object for an account, specified by ID. This operation</td>
 </tr>
 <tr>
     <td><a href="#encryption_keys_list"><CopyableCode code="encryption_keys_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Lists Databricks customer-managed key configurations for an account.</td>
 </tr>
 <tr>
     <td><a href="#encryption_keys_create"><CopyableCode code="encryption_keys_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-use_cases"><code>use_cases</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-use_cases"><code>use_cases</code></a></td>
     <td></td>
     <td>Creates a customer-managed key configuration object for an account, specified by ID. This operation</td>
 </tr>
 <tr>
     <td><a href="#encryption_keys_delete"><CopyableCode code="encryption_keys_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-customer_managed_key_id"><code>customer_managed_key_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-customer_managed_key_id"><code>customer_managed_key_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a customer-managed key configuration object for an account. You cannot delete a configuration</td>
 </tr>
@@ -361,6 +351,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -399,6 +394,7 @@ use_cases
 FROM databricks_account.provisioning.encryption_keys
 WHERE account_id = '{{ account_id }}' -- required
 AND customer_managed_key_id = '{{ customer_managed_key_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -417,6 +413,7 @@ gcp_key_info,
 use_cases
 FROM databricks_account.provisioning.encryption_keys
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -442,14 +439,16 @@ use_cases,
 aws_key_info,
 azure_key_info,
 gcp_key_info,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ use_cases }}' /* required */,
 '{{ aws_key_info }}',
 '{{ azure_key_info }}',
 '{{ gcp_key_info }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 customer_managed_key_id,
@@ -469,6 +468,9 @@ use_cases
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the encryption_keys resource.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the encryption_keys resource.
     - name: use_cases
       value:
         - "{{ use_cases }}"
@@ -487,7 +489,6 @@ use_cases
           credential_id: "{{ credential_id }}"
         key_name: "{{ key_name }}"
         key_vault_uri: "{{ key_vault_uri }}"
-        subscription_id: "{{ subscription_id }}"
         tenant_id: "{{ tenant_id }}"
         version: "{{ version }}"
     - name: gcp_key_info
@@ -518,6 +519,7 @@ Deletes a customer-managed key configuration object for an account. You cannot d
 DELETE FROM databricks_account.provisioning.encryption_keys
 WHERE account_id = '{{ account_id }}' --required
 AND customer_managed_key_id = '{{ customer_managed_key_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

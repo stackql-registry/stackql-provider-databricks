@@ -279,13 +279,18 @@ The following fields are returned by `SELECT` queries:
                 "name": "alternate_node_type_ids",
                 "type": "array",
                 "description": "A list of node type IDs to use as fallbacks when the primary node type is unavailable."
+              },
+              {
+                "name": "aws_context_id",
+                "type": "string",
+                "description": "The AWS Context ID for EC2 Fleet. When set (non-empty), the value is passed to AWS CreateFleet API to create the EC2 Fleet."
               }
             ]
           },
           {
             "name": "driver_node_type_id",
             "type": "string",
-            "description": "The node type of the Spark driver. Note that this field is optional; if unset, the driver node type will be set as the same value as ``node_type_id`` defined above. This field, along with node_type_id, should not be set if virtual_cluster_size is set. If both driver_node_type_id, node_type_id, and virtual_cluster_size are specified, driver_node_type_id and node_type_id take precedence."
+            "description": "The node type of the Spark driver. Note that this field is optional; if unset, the driver node type will be set as the same value as ``node_type_id`` defined above."
           },
           {
             "name": "enable_elastic_disk",
@@ -454,7 +459,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "total_initial_remote_disk_size",
             "type": "integer",
-            "description": "If set, what the total initial volume size (in GB) of the remote disks should be. Currently only supported for GCP HYPERDISK_BALANCED disks."
+            "description": "If set, what the total initial volume size (in GB) of the remote disks should be. Supported for GCP."
           },
           {
             "name": "use_ml_runtime",
@@ -470,6 +475,11 @@ The following fields are returned by `SELECT` queries:
                 "name": "alternate_node_type_ids",
                 "type": "array",
                 "description": "A list of node type IDs to use as fallbacks when the primary node type is unavailable."
+              },
+              {
+                "name": "aws_context_id",
+                "type": "string",
+                "description": "The AWS Context ID for EC2 Fleet. When set (non-empty), the value is passed to AWS CreateFleet API to create the EC2 Fleet."
               }
             ]
           },
@@ -740,13 +750,18 @@ The following fields are returned by `SELECT` queries:
                 "name": "alternate_node_type_ids",
                 "type": "array",
                 "description": "A list of node type IDs to use as fallbacks when the primary node type is unavailable."
+              },
+              {
+                "name": "aws_context_id",
+                "type": "string",
+                "description": "The AWS Context ID for EC2 Fleet. When set (non-empty), the value is passed to AWS CreateFleet API to create the EC2 Fleet."
               }
             ]
           },
           {
             "name": "driver_node_type_id",
             "type": "string",
-            "description": "The node type of the Spark driver. Note that this field is optional; if unset, the driver node type will be set as the same value as ``node_type_id`` defined above. This field, along with node_type_id, should not be set if virtual_cluster_size is set. If both driver_node_type_id, node_type_id, and virtual_cluster_size are specified, driver_node_type_id and node_type_id take precedence."
+            "description": "The node type of the Spark driver. Note that this field is optional; if unset, the driver node type will be set as the same value as ``node_type_id`` defined above."
           },
           {
             "name": "enable_elastic_disk",
@@ -915,7 +930,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "total_initial_remote_disk_size",
             "type": "integer",
-            "description": "If set, what the total initial volume size (in GB) of the remote disks should be. Currently only supported for GCP HYPERDISK_BALANCED disks."
+            "description": "If set, what the total initial volume size (in GB) of the remote disks should be. Supported for GCP."
           },
           {
             "name": "use_ml_runtime",
@@ -931,6 +946,11 @@ The following fields are returned by `SELECT` queries:
                 "name": "alternate_node_type_ids",
                 "type": "array",
                 "description": "A list of node type IDs to use as fallbacks when the primary node type is unavailable."
+              },
+              {
+                "name": "aws_context_id",
+                "type": "string",
+                "description": "The AWS Context ID for EC2 Fleet. When set (non-empty), the value is passed to AWS CreateFleet API to create the EC2 Fleet."
               }
             ]
           },
@@ -977,28 +997,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Returns the policy compliance status of a cluster. Clusters could be out of compliance if their policy</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Returns the policy compliance status of all clusters that use a given policy. Clusters could be out of</td>
 </tr>
 <tr>
     <td><a href="#enforce"><CopyableCode code="enforce" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a></td>
     <td></td>
     <td>Updates a cluster to be compliant with the current version of its policy.</td>
 </tr>
 <tr>
     <td><a href="#cancel_pending_enforcement"><CopyableCode code="cancel_pending_enforcement" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a></td>
     <td></td>
     <td>Cancels a pending enforcement on a cluster. After canceling the pending enforcement, the cluster will</td>
 </tr>
@@ -1026,12 +1046,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-policy_id">
     <td><CopyableCode code="policy_id" /></td>
     <td><code>string</code></td>
     <td>Canonical unique identifier for the cluster policy.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -1067,6 +1092,7 @@ violations
 FROM databricks_workspace.compute.policy_compliance_for_clusters
 WHERE cluster_id = '{{ cluster_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -1083,6 +1109,7 @@ violations
 FROM databricks_workspace.compute.policy_compliance_for_clusters
 WHERE policy_id = '{{ policy_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -1109,13 +1136,15 @@ INSERT INTO databricks_workspace.compute.policy_compliance_for_clusters (
 cluster_id,
 enforce_mode,
 validate_only,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ cluster_id }}' /* required */,
 '{{ enforce_mode }}',
 {{ validate_only }},
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 changes,
 enforce_result,
@@ -1130,6 +1159,9 @@ has_changes
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the policy_compliance_for_clusters resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the policy_compliance_for_clusters resource.
     - name: cluster_id
       value: "{{ cluster_id }}"
@@ -1163,7 +1195,8 @@ Cancels a pending enforcement on a cluster. After canceling the pending enforcem
 
 ```sql
 EXEC databricks_workspace.compute.policy_compliance_for_clusters.cancel_pending_enforcement 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "cluster_id": "{{ cluster_id }}", 

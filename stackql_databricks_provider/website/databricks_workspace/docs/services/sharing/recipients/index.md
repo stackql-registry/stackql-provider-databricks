@@ -74,19 +74,9 @@ The following fields are returned by `SELECT` queries:
     "description": "Full activation url to retrieve the access token. It will be empty if the token is already retrieved."
   },
   {
-    "name": "allowed_acceptance_types",
-    "type": "array",
-    "description": "Authentication types the invitee may choose from when activating. Each value must be TOKEN or DATABRICKS. Empty means all supported types are allowed. This field is only present when the **authentication_type** is **EMAIL**."
-  },
-  {
-    "name": "allowed_data_recipient_global_metastore_ids",
-    "type": "array",
-    "description": "Optional allowlist of the data recipient's global metastore IDs permitted to accept the invite with the DATABRICKS acceptance type. Each ID is of the form **cloud**:**region**:**metastore-uuid**. Empty means any metastore is allowed. If non-empty, **allowed_acceptance_types** must include **DATABRICKS**. This field is only present when the **authentication_type** is **EMAIL**."
-  },
-  {
     "name": "authentication_type",
     "type": "string",
-    "description": "The delta sharing authentication type. (DATABRICKS, EMAIL, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
+    "description": "The delta sharing authentication type. (DATABRICKS, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
   },
   {
     "name": "cloud",
@@ -107,11 +97,6 @@ The following fields are returned by `SELECT` queries:
     "name": "created_by",
     "type": "string",
     "description": "Username of recipient creator."
-  },
-  {
-    "name": "email",
-    "type": "string",
-    "description": "The invited email address. This field is only present when the **authentication_type** is **EMAIL**. The 320-character cap follows RFC 5321 (64-octet local-part + ``@`` + 255-octet domain)."
   },
   {
     "name": "expiration_time",
@@ -245,19 +230,9 @@ The following fields are returned by `SELECT` queries:
     "description": "Full activation url to retrieve the access token. It will be empty if the token is already retrieved."
   },
   {
-    "name": "allowed_acceptance_types",
-    "type": "array",
-    "description": "Authentication types the invitee may choose from when activating. Each value must be TOKEN or DATABRICKS. Empty means all supported types are allowed. This field is only present when the **authentication_type** is **EMAIL**."
-  },
-  {
-    "name": "allowed_data_recipient_global_metastore_ids",
-    "type": "array",
-    "description": "Optional allowlist of the data recipient's global metastore IDs permitted to accept the invite with the DATABRICKS acceptance type. Each ID is of the form **cloud**:**region**:**metastore-uuid**. Empty means any metastore is allowed. If non-empty, **allowed_acceptance_types** must include **DATABRICKS**. This field is only present when the **authentication_type** is **EMAIL**."
-  },
-  {
     "name": "authentication_type",
     "type": "string",
-    "description": "The delta sharing authentication type. (DATABRICKS, EMAIL, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
+    "description": "The delta sharing authentication type. (DATABRICKS, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
   },
   {
     "name": "cloud",
@@ -278,11 +253,6 @@ The following fields are returned by `SELECT` queries:
     "name": "created_by",
     "type": "string",
     "description": "Username of recipient creator."
-  },
-  {
-    "name": "email",
-    "type": "string",
-    "description": "The invited email address. This field is only present when the **authentication_type** is **EMAIL**. The 320-character cap follows RFC 5321 (64-octet local-part + ``@`` + 255-octet domain)."
   },
   {
     "name": "expiration_time",
@@ -402,42 +372,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a share recipient from the metastore. The caller must be one of:</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-data_recipient_global_metastore_id"><code>data_recipient_global_metastore_id</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-parent_recipient_name"><code>parent_recipient_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-data_recipient_global_metastore_id"><code>data_recipient_global_metastore_id</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of all share recipients within the current metastore where:</td>
 </tr>
 <tr>
     <td><a href="#rotate_token"><CopyableCode code="rotate_token" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-existing_token_expire_in_seconds"><code>existing_token_expire_in_seconds</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-existing_token_expire_in_seconds"><code>existing_token_expire_in_seconds</code></a></td>
     <td></td>
     <td>Refreshes the specified recipient's delta sharing authentication token with the provided token info.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-authentication_type"><code>authentication_type</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-authentication_type"><code>authentication_type</code></a></td>
     <td></td>
     <td>Creates a new recipient with the delta sharing authentication type in the metastore. The caller must</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates an existing recipient in the metastore. The caller must be a metastore admin or the owner of</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes the specified recipient from the metastore. The caller must be the owner of the recipient.</td>
 </tr>
@@ -460,12 +430,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Name of the recipient.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-data_recipient_global_metastore_id">
     <td><CopyableCode code="data_recipient_global_metastore_id" /></td>
@@ -481,11 +456,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="page_token" /></td>
     <td><code>string</code></td>
     <td>Opaque pagination token to go to next page based on previous query.</td>
-</tr>
-<tr id="parameter-parent_recipient_name">
-    <td><CopyableCode code="parent_recipient_name" /></td>
-    <td><code>string</code></td>
-    <td>If set, the response is scoped to the child recipients of the named parent recipient. Child recipients are otherwise hidden from the default list response. Only applicable to email recipient parents — non-email recipients have no children to scope to.</td>
 </tr>
 </tbody>
 </table>
@@ -511,14 +481,11 @@ data_recipient_global_metastore_id,
 metastore_id,
 activated,
 activation_url,
-allowed_acceptance_types,
-allowed_data_recipient_global_metastore_ids,
 authentication_type,
 cloud,
 comment,
 created_at,
 created_by,
-email,
 expiration_time,
 ip_access_list,
 owner,
@@ -531,6 +498,7 @@ updated_by
 FROM databricks_workspace.sharing.recipients
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -546,14 +514,11 @@ data_recipient_global_metastore_id,
 metastore_id,
 activated,
 activation_url,
-allowed_acceptance_types,
-allowed_data_recipient_global_metastore_ids,
 authentication_type,
 cloud,
 comment,
 created_at,
 created_by,
-email,
 expiration_time,
 ip_access_list,
 owner,
@@ -565,10 +530,10 @@ updated_at,
 updated_by
 FROM databricks_workspace.sharing.recipients
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND data_recipient_global_metastore_id = '{{ data_recipient_global_metastore_id }}'
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
-AND parent_recipient_name = '{{ parent_recipient_name }}'
 ;
 ```
 </TabItem>
@@ -593,12 +558,14 @@ Refreshes the specified recipient's delta sharing authentication token with the 
 INSERT INTO databricks_workspace.sharing.recipients (
 existing_token_expire_in_seconds,
 name,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 {{ existing_token_expire_in_seconds }} /* required */,
 '{{ name }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -606,14 +573,11 @@ data_recipient_global_metastore_id,
 metastore_id,
 activated,
 activation_url,
-allowed_acceptance_types,
-allowed_data_recipient_global_metastore_ids,
 authentication_type,
 cloud,
 comment,
 created_at,
 created_by,
-email,
 expiration_time,
 ip_access_list,
 owner,
@@ -634,34 +598,30 @@ Creates a new recipient with the delta sharing authentication type in the metast
 INSERT INTO databricks_workspace.sharing.recipients (
 name,
 authentication_type,
-allowed_acceptance_types,
-allowed_data_recipient_global_metastore_ids,
 comment,
 data_recipient_global_metastore_id,
-email,
 expiration_time,
 id,
 ip_access_list,
 owner,
 properties_kvpairs,
 sharing_code,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
 '{{ authentication_type }}' /* required */,
-'{{ allowed_acceptance_types }}',
-'{{ allowed_data_recipient_global_metastore_ids }}',
 '{{ comment }}',
 '{{ data_recipient_global_metastore_id }}',
-'{{ email }}',
 {{ expiration_time }},
 '{{ id }}',
 '{{ ip_access_list }}',
 '{{ owner }}',
 '{{ properties_kvpairs }}',
 '{{ sharing_code }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -669,14 +629,11 @@ data_recipient_global_metastore_id,
 metastore_id,
 activated,
 activation_url,
-allowed_acceptance_types,
-allowed_data_recipient_global_metastore_ids,
 authentication_type,
 cloud,
 comment,
 created_at,
 created_by,
-email,
 expiration_time,
 ip_access_list,
 owner,
@@ -700,6 +657,9 @@ updated_by
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the recipients resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the recipients resource.
     - name: existing_token_expire_in_seconds
       value: {{ existing_token_expire_in_seconds }}
       description: |
@@ -712,16 +672,6 @@ updated_by
       value: "{{ authentication_type }}"
       description: |
         The delta sharing authentication type.
-    - name: allowed_acceptance_types
-      value:
-        - "{{ allowed_acceptance_types }}"
-      description: |
-        Authentication types the invitee may choose from when activating. Each value must be TOKEN or DATABRICKS. Empty means all supported types are allowed. This field is only present when the **authentication_type** is **EMAIL**.
-    - name: allowed_data_recipient_global_metastore_ids
-      value:
-        - "{{ allowed_data_recipient_global_metastore_ids }}"
-      description: |
-        Optional allowlist of the data recipient's global metastore IDs permitted to accept the invite with the DATABRICKS acceptance type. Each ID is of the form **cloud**:**region**:**metastore-uuid**. Empty means any metastore is allowed. If non-empty, **allowed_acceptance_types** must include **DATABRICKS**. This field is only present when the **authentication_type** is **EMAIL**.
     - name: comment
       value: "{{ comment }}"
       description: |
@@ -730,10 +680,6 @@ updated_by
       value: "{{ data_recipient_global_metastore_id }}"
       description: |
         The global Unity Catalog metastore id provided by the data recipient. This field is only present when the **authentication_type** is **DATABRICKS**. The identifier is of format **cloud**:**region**:**metastore-uuid**.
-    - name: email
-      value: "{{ email }}"
-      description: |
-        The invited email address. This field is only present when the **authentication_type** is **EMAIL**. The 320-character cap follows RFC 5321 (64-octet local-part + \`\`@\`\` + 255-octet domain).
     - name: expiration_time
       value: {{ expiration_time }}
       description: |
@@ -782,10 +728,7 @@ Updates an existing recipient in the metastore. The caller must be a metastore a
 ```sql
 UPDATE databricks_workspace.sharing.recipients
 SET 
-allowed_acceptance_types = '{{ allowed_acceptance_types }}',
-allowed_data_recipient_global_metastore_ids = '{{ allowed_data_recipient_global_metastore_ids }}',
 comment = '{{ comment }}',
-email = '{{ email }}',
 expiration_time = {{ expiration_time }},
 id = '{{ id }}',
 ip_access_list = '{{ ip_access_list }}',
@@ -795,6 +738,7 @@ properties_kvpairs = '{{ properties_kvpairs }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 id,
 name,
@@ -802,14 +746,11 @@ data_recipient_global_metastore_id,
 metastore_id,
 activated,
 activation_url,
-allowed_acceptance_types,
-allowed_data_recipient_global_metastore_ids,
 authentication_type,
 cloud,
 comment,
 created_at,
 created_by,
-email,
 expiration_time,
 ip_access_list,
 owner,
@@ -840,6 +781,7 @@ Deletes the specified recipient from the metastore. The caller must be the owner
 DELETE FROM databricks_workspace.sharing.recipients
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

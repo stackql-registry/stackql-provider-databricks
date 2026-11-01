@@ -34,11 +34,37 @@ Creates, updates, deletes, gets or lists an <code>examples</code> resource.
 The following fields are returned by `SELECT` queries:
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+<SchemaTable fields={[
+  {
+    "name": "name",
+    "type": "string",
+    "description": "Full resource name: supervisor-agents/&#123;supervisor_agent_id&#125;/examples/&#123;example_id&#125;"
+  },
+  {
+    "name": "example_id",
+    "type": "string",
+    "description": "The universally unique identifier (UUID) of the example."
+  },
+  {
+    "name": "guidelines",
+    "type": "array",
+    "description": "Guidelines for answering the question."
+  },
+  {
+    "name": "question",
+    "type": "string",
+    "description": "The example question."
+  }
+]} />
+</TabItem>
 <TabItem value="list">
 
 <SchemaTable fields={[
@@ -82,18 +108,39 @@ The following methods are available for this resource:
 </thead>
 <tbody>
 <tr>
+    <td><a href="#get"><CopyableCode code="get" /></a></td>
+    <td><CopyableCode code="select" /></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Gets an example from a Supervisor Agent.</td>
+</tr>
+<tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists examples under a Supervisor Agent.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-example"><code>example</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-example"><code>example</code></a></td>
     <td></td>
     <td>Creates an example for a Supervisor Agent.</td>
+</tr>
+<tr>
+    <td><a href="#update"><CopyableCode code="update" /></a></td>
+    <td><CopyableCode code="update" /></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-example"><code>example</code></a></td>
+    <td></td>
+    <td>Updates an example in a Supervisor Agent.</td>
+</tr>
+<tr>
+    <td><a href="#delete"><CopyableCode code="delete" /></a></td>
+    <td><CopyableCode code="delete" /></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Deletes an example from a Supervisor Agent.</td>
 </tr>
 </tbody>
 </table>
@@ -114,12 +161,27 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
-<tr id="parameter-parent">
-    <td><CopyableCode code="parent" /></td>
+<tr id="parameter-example_id">
+    <td><CopyableCode code="example_id" /></td>
     <td><code>string</code></td>
-    <td>Parent resource where this example will be created. Format: supervisor-agents/&#123;supervisor_agent_id&#125;</td>
+    <td>The `example_id` segment of the `name` resource name (`supervisor-agents/&#123;supervisor_agent_id&#125;/examples/&#123;example_id&#125;`). The resource name of the example to delete. Format: supervisor-agents/&#123;supervisor_agent_id&#125;/examples/&#123;example_id&#125;</td>
+</tr>
+<tr id="parameter-supervisor_agent_id">
+    <td><CopyableCode code="supervisor_agent_id" /></td>
+    <td><code>string</code></td>
+    <td>The `supervisor_agent_id` segment of the `name` resource name (`supervisor-agents/&#123;supervisor_agent_id&#125;/examples/&#123;example_id&#125;`). The resource name of the example to delete. Format: supervisor-agents/&#123;supervisor_agent_id&#125;/examples/&#123;example_id&#125;</td>
+</tr>
+<tr id="parameter-update_mask">
+    <td><CopyableCode code="update_mask" /></td>
+    <td><code>object</code></td>
+    <td>Comma-delimited list of fields to update on the example. Allowed values: ``question``, ``guidelines``. Examples: - ``question`` - ``question,guidelines``</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -137,11 +199,30 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 ## `SELECT` examples
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+Gets an example from a Supervisor Agent.
+
+```sql
+SELECT
+name,
+example_id,
+guidelines,
+question
+FROM databricks_workspace.supervisoragents.examples
+WHERE supervisor_agent_id = '{{ supervisor_agent_id }}' -- required
+AND example_id = '{{ example_id }}' -- required
+AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
+;
+```
+</TabItem>
 <TabItem value="list">
 
 Lists examples under a Supervisor Agent.
@@ -153,8 +234,9 @@ example_id,
 guidelines,
 question
 FROM databricks_workspace.supervisoragents.examples
-WHERE parent = '{{ parent }}' -- required
+WHERE supervisor_agent_id = '{{ supervisor_agent_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -179,13 +261,15 @@ Creates an example for a Supervisor Agent.
 ```sql
 INSERT INTO databricks_workspace.supervisoragents.examples (
 example,
-parent,
-deployment_name
+supervisor_agent_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ example }}' /* required */,
-'{{ parent }}',
-'{{ deployment_name }}'
+'{{ supervisor_agent_id }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 example_id,
@@ -199,11 +283,14 @@ question
 <CodeBlock language="yaml">{`# Description fields are for documentation purposes
 - name: examples
   props:
-    - name: parent
-      value: "{{ parent }}"
+    - name: supervisor_agent_id
+      value: "{{ supervisor_agent_id }}"
       description: Required parameter for the examples resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the examples resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the examples resource.
     - name: example
       description: |
@@ -216,5 +303,62 @@ question
         name: "{{ name }}"
 `}</CodeBlock>
 
+</TabItem>
+</Tabs>
+
+
+## `UPDATE` examples
+
+<Tabs
+    defaultValue="update"
+    values={[
+        { label: 'update', value: 'update' }
+    ]}
+>
+<TabItem value="update">
+
+Updates an example in a Supervisor Agent.
+
+```sql
+UPDATE databricks_workspace.supervisoragents.examples
+SET 
+example = '{{ example }}'
+WHERE 
+supervisor_agent_id = '{{ supervisor_agent_id }}' --required
+AND example_id = '{{ example_id }}' --required
+AND update_mask = '{{ update_mask }}' --required
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND example = '{{ example }}' --required
+RETURNING
+name,
+example_id,
+guidelines,
+question;
+```
+</TabItem>
+</Tabs>
+
+
+## `DELETE` examples
+
+<Tabs
+    defaultValue="delete"
+    values={[
+        { label: 'delete', value: 'delete' }
+    ]}
+>
+<TabItem value="delete">
+
+Deletes an example from a Supervisor Agent.
+
+```sql
+DELETE FROM databricks_workspace.supervisoragents.examples
+WHERE supervisor_agent_id = '{{ supervisor_agent_id }}' --required
+AND example_id = '{{ example_id }}' --required
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+;
+```
 </TabItem>
 </Tabs>

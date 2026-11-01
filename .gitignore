@@ -27,3 +27,5 @@ stackql-zip
 .venv-win
 billable_usage.csv
 pyrefly.toml
+.env.*
+!.env.*.example

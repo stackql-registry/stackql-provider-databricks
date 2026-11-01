@@ -54,15 +54,15 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_url"><CopyableCode code="get_url" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-activation_url"><code>activation_url</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-activation_url"><code>activation_url</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
     <td>Gets an activation URL for a share.</td>
 </tr>
 <tr>
     <td><a href="#retrieve_token"><CopyableCode code="retrieve_token" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-activation_url"><code>activation_url</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-activation_url"><code>activation_url</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
     <td>Retrieve access token with an activation url. This is a public API without any authentication.</td>
 </tr>
 </tbody>
@@ -89,12 +89,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
-<tr id="parameter-metastore_id">
-    <td><CopyableCode code="metastore_id" /></td>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
     <td><code>string</code></td>
-    <td>The provider metastore ID. Optional for now; used as a routing hint when present and principal context</td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -116,7 +116,7 @@ Gets an activation URL for a share.
 EXEC databricks_workspace.sharing.recipient_activation.get_url 
 @activation_url='{{ activation_url }}' --required, 
 @deployment_name='{{ deployment_name }}' --required, 
-@metastore_id='{{ metastore_id }}'
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -128,7 +128,7 @@ Retrieve access token with an activation url. This is a public API without any a
 EXEC databricks_workspace.sharing.recipient_activation.retrieve_token 
 @activation_url='{{ activation_url }}' --required, 
 @deployment_name='{{ deployment_name }}' --required, 
-@metastore_id='{{ metastore_id }}'
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

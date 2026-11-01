@@ -84,70 +84,70 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>List the contents of a directory, or details of the file. If the file or directory does not exist,</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-path"><code>path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Opens a stream to write to a file and returns a handle to this stream. There is a 10 minute idle</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete the file or directory (optionally recursively delete all files in the directory). This call</td>
 </tr>
 <tr>
     <td><a href="#add_block"><CopyableCode code="add_block" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-handle"><code>handle</code></a>, <a href="#parameter-data"><code>data</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-handle"><code>handle</code></a>, <a href="#parameter-data"><code>data</code></a></td>
     <td></td>
     <td>Appends a block of data to the stream specified by the input handle. If the handle does not exist,</td>
 </tr>
 <tr>
     <td><a href="#close"><CopyableCode code="close" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-handle"><code>handle</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-handle"><code>handle</code></a></td>
     <td></td>
     <td>Closes the stream specified by the input handle. If the handle does not exist, this call throws an</td>
 </tr>
 <tr>
     <td><a href="#get_status"><CopyableCode code="get_status" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets the file information for a file or directory. If the file or directory does not exist, this call</td>
 </tr>
 <tr>
     <td><a href="#mkdirs"><CopyableCode code="mkdirs" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-path"><code>path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Creates the given directory and necessary parent directories if they do not exist. If a file (not a</td>
 </tr>
 <tr>
     <td><a href="#move"><CopyableCode code="move" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-source_path"><code>source_path</code></a>, <a href="#parameter-destination_path"><code>destination_path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-source_path"><code>source_path</code></a>, <a href="#parameter-destination_path"><code>destination_path</code></a></td>
     <td></td>
     <td>Moves a file from one location to another location within DBFS. If the source file does not exist,</td>
 </tr>
 <tr>
     <td><a href="#put"><CopyableCode code="put" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-path"><code>path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Uploads a file through the use of multipart form post. It is mainly used for streaming uploads, but</td>
 </tr>
 <tr>
     <td><a href="#read"><CopyableCode code="read" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-length"><code>length</code></a>, <a href="#parameter-offset"><code>offset</code></a></td>
     <td>Returns the contents of a file. If the file does not exist, this call throws an exception with</td>
 </tr>
@@ -170,12 +170,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-path">
     <td><CopyableCode code="path" /></td>
     <td><code>string</code></td>
     <td>The path of the file to read. The path should be the absolute DBFS path.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-length">
     <td><CopyableCode code="length" /></td>
@@ -211,6 +216,7 @@ path
 FROM databricks_workspace.files.dbfs
 WHERE path = '{{ path }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -234,12 +240,14 @@ Opens a stream to write to a file and returns a handle to this stream. There is 
 INSERT INTO databricks_workspace.files.dbfs (
 path,
 overwrite,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ path }}' /* required */,
 {{ overwrite }},
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 handle
 ;
@@ -252,6 +260,9 @@ handle
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the dbfs resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the dbfs resource.
     - name: path
       value: "{{ path }}"
@@ -282,6 +293,7 @@ Delete the file or directory (optionally recursively delete all files in the dir
 ```sql
 DELETE FROM databricks_workspace.files.dbfs
 WHERE deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -308,7 +320,8 @@ Appends a block of data to the stream specified by the input handle. If the hand
 
 ```sql
 EXEC databricks_workspace.files.dbfs.add_block 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "handle": {{ handle }}, 
@@ -323,7 +336,8 @@ Closes the stream specified by the input handle. If the handle does not exist, t
 
 ```sql
 EXEC databricks_workspace.files.dbfs.close 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "handle": {{ handle }}
@@ -338,7 +352,8 @@ Gets the file information for a file or directory. If the file or directory does
 ```sql
 EXEC databricks_workspace.files.dbfs.get_status 
 @path='{{ path }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -348,7 +363,8 @@ Creates the given directory and necessary parent directories if they do not exis
 
 ```sql
 EXEC databricks_workspace.files.dbfs.mkdirs 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "path": "{{ path }}"
@@ -362,7 +378,8 @@ Moves a file from one location to another location within DBFS. If the source fi
 
 ```sql
 EXEC databricks_workspace.files.dbfs.move 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "source_path": "{{ source_path }}", 
@@ -377,7 +394,8 @@ Uploads a file through the use of multipart form post. It is mainly used for str
 
 ```sql
 EXEC databricks_workspace.files.dbfs.put 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "path": "{{ path }}", 
@@ -395,6 +413,7 @@ Returns the contents of a file. If the file does not exist, this call throws an 
 EXEC databricks_workspace.files.dbfs.read 
 @path='{{ path }}' --required, 
 @deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required, 
 @length='{{ length }}', 
 @offset='{{ offset }}'
 ;

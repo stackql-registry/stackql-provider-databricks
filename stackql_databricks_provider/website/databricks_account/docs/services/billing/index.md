@@ -27,10 +27,10 @@ total resources: __12__
 <div class="providerDocColumn">
 <a href="/services/billing/billable_usage/">billable_usage</a><br />
 <a href="/services/billing/budget_policy/">budget_policy</a><br />
+<a href="/services/billing/budget_spend_statuses/">budget_spend_statuses</a><br />
 <a href="/services/billing/budgets/">budgets</a><br />
 <a href="/services/billing/log_delivery/">log_delivery</a><br />
-<a href="/services/billing/usage_dashboards/">usage_dashboards</a><br />
-<a href="/services/billing/usage_policy/">usage_policy</a>
+<a href="/services/billing/usage_dashboards/">usage_dashboards</a>
 </div>
 <div class="providerDocColumn">
 <a href="/services/billing/vw_budget_alert_actions/">vw_budget_alert_actions</a><br />

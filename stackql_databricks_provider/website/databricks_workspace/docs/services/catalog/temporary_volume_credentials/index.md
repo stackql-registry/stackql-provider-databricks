@@ -54,7 +54,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#temporary_volume_credentials_generate_temporary_volume_credentials"><CopyableCode code="temporary_volume_credentials_generate_temporary_volume_credentials" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a short-lived credential for directly accessing the volume data on cloud storage. The metastore</td>
 </tr>
@@ -77,7 +77,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -99,12 +104,14 @@ Get a short-lived credential for directly accessing the volume data on cloud sto
 INSERT INTO databricks_workspace.catalog.temporary_volume_credentials (
 operation,
 volume_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ operation }}',
 '{{ volume_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 aws_temp_credentials,
 azure_aad,
@@ -112,7 +119,6 @@ azure_user_delegation_sas,
 expiration_time,
 gcp_oauth_token,
 r2_temp_credentials,
-uc_encrypted_token,
 url
 ;
 ```
@@ -124,6 +130,9 @@ url
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the temporary_volume_credentials resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the temporary_volume_credentials resource.
     - name: operation
       value: "{{ operation }}"

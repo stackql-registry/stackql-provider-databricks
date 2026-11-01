@@ -54,83 +54,56 @@ The following fields are returned by `SELECT` queries:
     "description": "Anomaly Detection Configuration, applicable to ``schema`` object types.",
     "children": [
       {
-        "name": "anomaly_detection_workflow_id",
-        "type": "integer",
-        "description": "The id of the workflow that detects the anomaly. This field will only be returned in the Get/Update response, if the request comes from the workspace where this anomaly detection job is created."
-      },
-      {
         "name": "excluded_table_full_names",
         "type": "array",
         "description": "List of fully qualified table names to exclude from anomaly detection."
       },
       {
-        "name": "job_type",
-        "type": "string",
-        "description": "The type of the last run of the workflow. (ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN, ANOMALY_DETECTION_JOB_TYPE_NORMAL)"
-      },
-      {
-        "name": "publish_health_indicator",
-        "type": "boolean",
-        "description": "If the health indicator should be shown."
-      },
-      {
-        "name": "validity_check_configurations",
-        "type": "array",
-        "description": "Validity check configurations for anomaly detection.",
+        "name": "notification_settings",
+        "type": "object",
+        "description": "Who to alert when anomaly detection finds unhealthy tables in this schema. Applicable to ``schema`` monitors only. This is the same schema alert you manage from **Manage alerts** in the Data Quality Monitoring UI, so a change made in either place shows in both. Set the recipients in ``on_unhealthy_table``; ``on_failure`` is not supported here. Only ``destination_ids`` and ``destination_user_ids`` are supported. On update, an update mask of ``*``, ``anomaly_detection_config``, or ``anomaly_detection_config.notification_settings`` replaces the alert's recipients with the ones in the request; omitting the field, or leaving both recipient lists empty, removes the alert. Other masks leave the alert unchanged.",
         "children": [
           {
-            "name": "name",
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "percent_null_validity_check",
+            "name": "on_failure",
             "type": "object",
-            "description": "",
+            "description": "Destinations to send notifications on failure/timeout.",
             "children": [
               {
-                "name": "column_names",
+                "name": "destination_ids",
                 "type": "array",
-                "description": ""
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
               },
               {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Optional upper bound; we should use auto determined bounds for now"
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "email_addresses",
+                "type": "array",
+                "description": "The list of email addresses to send the notification to. A maximum of 5 email addresses is supported."
               }
             ]
           },
           {
-            "name": "range_validity_check",
+            "name": "on_unhealthy_table",
             "type": "object",
-            "description": "",
+            "description": "Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each recipient gets one notification per important unhealthy table. Only supported on schema monitors, via ``anomaly_detection_config``.",
             "children": [
               {
-                "name": "column_names",
+                "name": "destination_ids",
                 "type": "array",
-                "description": ""
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
               },
               {
-                "name": "lower_bound",
-                "type": "number",
-                "description": "Lower bound for the range"
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
               },
               {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Upper bound for the range"
-              }
-            ]
-          },
-          {
-            "name": "uniqueness_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
+                "name": "email_addresses",
                 "type": "array",
-                "description": ""
+                "description": "The list of email addresses to send the notification to. A maximum of 5 email addresses is supported."
               }
             ]
           }
@@ -239,11 +212,6 @@ The following fields are returned by `SELECT` queries:
             "name": "label_column",
             "type": "string",
             "description": "Column for the label."
-          },
-          {
-            "name": "prediction_probability_column",
-            "type": "string",
-            "description": "Column for prediction probabilities"
           }
         ]
       },
@@ -272,6 +240,38 @@ The following fields are returned by `SELECT` queries:
             "type": "object",
             "description": "Destinations to send notifications on failure/timeout.",
             "children": [
+              {
+                "name": "destination_ids",
+                "type": "array",
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "email_addresses",
+                "type": "array",
+                "description": "The list of email addresses to send the notification to. A maximum of 5 email addresses is supported."
+              }
+            ]
+          },
+          {
+            "name": "on_unhealthy_table",
+            "type": "object",
+            "description": "Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each recipient gets one notification per important unhealthy table. Only supported on schema monitors, via ``anomaly_detection_config``.",
+            "children": [
+              {
+                "name": "destination_ids",
+                "type": "array",
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
               {
                 "name": "email_addresses",
                 "type": "array",
@@ -373,83 +373,56 @@ The following fields are returned by `SELECT` queries:
     "description": "Anomaly Detection Configuration, applicable to ``schema`` object types.",
     "children": [
       {
-        "name": "anomaly_detection_workflow_id",
-        "type": "integer",
-        "description": "The id of the workflow that detects the anomaly. This field will only be returned in the Get/Update response, if the request comes from the workspace where this anomaly detection job is created."
-      },
-      {
         "name": "excluded_table_full_names",
         "type": "array",
         "description": "List of fully qualified table names to exclude from anomaly detection."
       },
       {
-        "name": "job_type",
-        "type": "string",
-        "description": "The type of the last run of the workflow. (ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN, ANOMALY_DETECTION_JOB_TYPE_NORMAL)"
-      },
-      {
-        "name": "publish_health_indicator",
-        "type": "boolean",
-        "description": "If the health indicator should be shown."
-      },
-      {
-        "name": "validity_check_configurations",
-        "type": "array",
-        "description": "Validity check configurations for anomaly detection.",
+        "name": "notification_settings",
+        "type": "object",
+        "description": "Who to alert when anomaly detection finds unhealthy tables in this schema. Applicable to ``schema`` monitors only. This is the same schema alert you manage from **Manage alerts** in the Data Quality Monitoring UI, so a change made in either place shows in both. Set the recipients in ``on_unhealthy_table``; ``on_failure`` is not supported here. Only ``destination_ids`` and ``destination_user_ids`` are supported. On update, an update mask of ``*``, ``anomaly_detection_config``, or ``anomaly_detection_config.notification_settings`` replaces the alert's recipients with the ones in the request; omitting the field, or leaving both recipient lists empty, removes the alert. Other masks leave the alert unchanged.",
         "children": [
           {
-            "name": "name",
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "percent_null_validity_check",
+            "name": "on_failure",
             "type": "object",
-            "description": "",
+            "description": "Destinations to send notifications on failure/timeout.",
             "children": [
               {
-                "name": "column_names",
+                "name": "destination_ids",
                 "type": "array",
-                "description": ""
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
               },
               {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Optional upper bound; we should use auto determined bounds for now"
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "email_addresses",
+                "type": "array",
+                "description": "The list of email addresses to send the notification to. A maximum of 5 email addresses is supported."
               }
             ]
           },
           {
-            "name": "range_validity_check",
+            "name": "on_unhealthy_table",
             "type": "object",
-            "description": "",
+            "description": "Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each recipient gets one notification per important unhealthy table. Only supported on schema monitors, via ``anomaly_detection_config``.",
             "children": [
               {
-                "name": "column_names",
+                "name": "destination_ids",
                 "type": "array",
-                "description": ""
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
               },
               {
-                "name": "lower_bound",
-                "type": "number",
-                "description": "Lower bound for the range"
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
               },
               {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Upper bound for the range"
-              }
-            ]
-          },
-          {
-            "name": "uniqueness_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
+                "name": "email_addresses",
                 "type": "array",
-                "description": ""
+                "description": "The list of email addresses to send the notification to. A maximum of 5 email addresses is supported."
               }
             ]
           }
@@ -558,11 +531,6 @@ The following fields are returned by `SELECT` queries:
             "name": "label_column",
             "type": "string",
             "description": "Column for the label."
-          },
-          {
-            "name": "prediction_probability_column",
-            "type": "string",
-            "description": "Column for prediction probabilities"
           }
         ]
       },
@@ -591,6 +559,38 @@ The following fields are returned by `SELECT` queries:
             "type": "object",
             "description": "Destinations to send notifications on failure/timeout.",
             "children": [
+              {
+                "name": "destination_ids",
+                "type": "array",
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "email_addresses",
+                "type": "array",
+                "description": "The list of email addresses to send the notification to. A maximum of 5 email addresses is supported."
+              }
+            ]
+          },
+          {
+            "name": "on_unhealthy_table",
+            "type": "object",
+            "description": "Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each recipient gets one notification per important unhealthy table. Only supported on schema monitors, via ``anomaly_detection_config``.",
+            "children": [
+              {
+                "name": "destination_ids",
+                "type": "array",
+                "description": "The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The destinations must already exist in the workspace; a workspace admin creates them. A maximum of 25 destination IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
+              {
+                "name": "destination_user_ids",
+                "type": "array",
+                "description": "The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."
+              },
               {
                 "name": "email_addresses",
                 "type": "array",
@@ -698,35 +698,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Read a data quality monitor on a Unity Catalog object.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>(Unimplemented) List data quality monitors.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-monitor"><code>monitor</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-monitor"><code>monitor</code></a></td>
     <td></td>
     <td>Create a data quality monitor on a Unity Catalog object. The caller must provide either</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-monitor"><code>monitor</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-monitor"><code>monitor</code></a></td>
     <td></td>
     <td>Update a data quality monitor on Unity Catalog object.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a data quality monitor on Unity Catalog object.</td>
 </tr>
@@ -749,7 +749,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-object_id">
     <td><CopyableCode code="object_id" /></td>
@@ -765,6 +765,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask to specify which fields to update as a comma-separated list. Example value: ``data_profiling_config.custom_metrics,data_profiling_config.schedule.quartz_cron_expression``</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -802,6 +807,7 @@ FROM databricks_workspace.dataquality.data_quality
 WHERE object_type = '{{ object_type }}' -- required
 AND object_id = '{{ object_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -817,6 +823,7 @@ data_profiling_config,
 object_type
 FROM databricks_workspace.dataquality.data_quality
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -841,11 +848,13 @@ Create a data quality monitor on a Unity Catalog object. The caller must provide
 ```sql
 INSERT INTO databricks_workspace.dataquality.data_quality (
 monitor,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ monitor }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 object_id,
 anomaly_detection_config,
@@ -862,6 +871,9 @@ object_type
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the data_quality resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the data_quality resource.
     - name: monitor
       description: |
         The monitor to create.
@@ -869,25 +881,23 @@ object_type
         object_type: "{{ object_type }}"
         object_id: "{{ object_id }}"
         anomaly_detection_config:
-          anomaly_detection_workflow_id: {{ anomaly_detection_workflow_id }}
           excluded_table_full_names:
             - "{{ excluded_table_full_names }}"
-          job_type: "{{ job_type }}"
-          publish_health_indicator: {{ publish_health_indicator }}
-          validity_check_configurations:
-            - name: "{{ name }}"
-              percent_null_validity_check:
-                column_names:
-                  - "{{ column_names }}"
-                upper_bound: {{ upper_bound }}
-              range_validity_check:
-                column_names:
-                  - "{{ column_names }}"
-                lower_bound: {{ lower_bound }}
-                upper_bound: {{ upper_bound }}
-              uniqueness_validity_check:
-                column_names:
-                  - "{{ column_names }}"
+          notification_settings:
+            on_failure:
+              destination_ids:
+                - "{{ destination_ids }}"
+              destination_user_ids:
+                - {{ destination_user_ids }}
+              email_addresses:
+                - "{{ email_addresses }}"
+            on_unhealthy_table:
+              destination_ids:
+                - "{{ destination_ids }}"
+              destination_user_ids:
+                - {{ destination_user_ids }}
+              email_addresses:
+                - "{{ email_addresses }}"
         data_profiling_config:
           output_schema_id: "{{ output_schema_id }}"
           assets_dir: "{{ assets_dir }}"
@@ -909,12 +919,22 @@ object_type
             prediction_column: "{{ prediction_column }}"
             model_id_column: "{{ model_id_column }}"
             label_column: "{{ label_column }}"
-            prediction_probability_column: "{{ prediction_probability_column }}"
           latest_monitor_failure_message: "{{ latest_monitor_failure_message }}"
           monitor_version: {{ monitor_version }}
           monitored_table_name: "{{ monitored_table_name }}"
           notification_settings:
             on_failure:
+              destination_ids:
+                - "{{ destination_ids }}"
+              destination_user_ids:
+                - {{ destination_user_ids }}
+              email_addresses:
+                - "{{ email_addresses }}"
+            on_unhealthy_table:
+              destination_ids:
+                - "{{ destination_ids }}"
+              destination_user_ids:
+                - {{ destination_user_ids }}
               email_addresses:
                 - "{{ email_addresses }}"
           profile_metrics_table_name: "{{ profile_metrics_table_name }}"
@@ -959,6 +979,7 @@ object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND monitor = '{{ monitor }}' --required
 RETURNING
 object_id,
@@ -987,6 +1008,7 @@ DELETE FROM databricks_workspace.dataquality.data_quality
 WHERE object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

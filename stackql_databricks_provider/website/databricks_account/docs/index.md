@@ -27,8 +27,8 @@ For Databricks workspace operations use the [__`databricks_workspace`__](https:/
 
 :::info[Provider Summary]
 
-total services: __9__  
-total resources: __88__  
+total services: __10__  
+total resources: __94__  
 source project: __[stackql-provider-databricks](https://github.com/stackql-registry/stackql-provider-databricks)__  
 
 :::
@@ -54,7 +54,24 @@ Set the following environment variables:
 - <CopyableCode code="DATABRICKS_CLIENT_ID" /> - obtained after creating a service principal through the Databricks UI (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 - <CopyableCode code="DATABRICKS_CLIENT_SECRET" /> - obtained after creating a service principal secret through the Databricks UI, using the "Generate Secret" function (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 
-These are the same variables that Terraform, the Databricks SDKs, and CLI use.  
+These are the same variables that Terraform, the Databricks SDKs, and CLI use.
+
+### Cloud selection (AWS, Azure, GCP)
+
+The provider defaults to Databricks on AWS (`accounts.cloud.databricks.com`). The same service principal flow works on Azure Databricks (`accounts.azuredatabricks.net`) and Databricks on Google Cloud (`accounts.gcp.databricks.com`); select the cloud with one variable and both the OAuth token endpoint and the account API host follow:
+
+- <CopyableCode code="DATABRICKS_CLOUD" /> - `aws` (default), `azure` or `gcp`
+- <CopyableCode code="DATABRICKS_ACCOUNT_HOST" /> - optional, overrides the account console host (a bare host such as `accounts.azuredatabricks.net`, no scheme); wins over `DATABRICKS_CLOUD`
+
+```bash
+export DATABRICKS_CLOUD=azure
+export DATABRICKS_ACCOUNT_ID=...
+export DATABRICKS_CLIENT_ID=...
+export DATABRICKS_CLIENT_SECRET=...
+stackql exec "SELECT id, displayName FROM databricks_account.iam.account_groups WHERE account_id = '<account_id>'"
+```
+
+Queries are unchanged across clouds: `account_id` stays the only required predicate, and with no cloud variables set the provider behaves exactly as before. The service principal must be a Databricks-managed service principal with the account admin role (OAuth M2M); Entra ID and Google service-account tokens are not used for the account API.
 
 ### Personal Access Token (Bearer)
 
@@ -175,6 +192,7 @@ SELECT * FROM databricks_account.settings.vw_network_connectivity_configs WHERE 
 <a href="/services/iamv2/">iamv2</a><br />
 </div>
 <div class="providerDocColumn">
+<a href="/services/networking/">networking</a><br />
 <a href="/services/oauth2/">oauth2</a><br />
 <a href="/services/provisioning/">provisioning</a><br />
 <a href="/services/settings/">settings</a><br />

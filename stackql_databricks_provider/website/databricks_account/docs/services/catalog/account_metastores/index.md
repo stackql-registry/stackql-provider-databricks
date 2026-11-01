@@ -260,35 +260,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_metastores_get"><CopyableCode code="account_metastores_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a Unity Catalog metastore from an account, both specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#account_metastores_list"><CopyableCode code="account_metastores_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets all Unity Catalog metastores associated with an account specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#account_metastores_create"><CopyableCode code="account_metastores_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a Unity Catalog metastore.</td>
 </tr>
 <tr>
     <td><a href="#account_metastores_update"><CopyableCode code="account_metastores_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing Unity Catalog metastore.</td>
 </tr>
 <tr>
     <td><a href="#account_metastores_delete"><CopyableCode code="account_metastores_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes a Unity Catalog metastore for an account, both specified by ID.</td>
 </tr>
@@ -308,6 +308,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -363,6 +368,7 @@ updated_by
 FROM databricks_account.catalog.account_metastores
 WHERE account_id = '{{ account_id }}' -- required
 AND metastore_id = '{{ metastore_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -393,6 +399,7 @@ updated_at,
 updated_by
 FROM databricks_account.catalog.account_metastores
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -415,11 +422,13 @@ Creates a Unity Catalog metastore.
 ```sql
 INSERT INTO databricks_account.catalog.account_metastores (
 metastore_info,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ metastore_info }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 metastore_info
 ;
@@ -432,6 +441,9 @@ metastore_info
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the account_metastores resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_metastores resource.
     - name: metastore_info
       value:
@@ -464,6 +476,7 @@ metastore_info = '{{ metastore_info }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND metastore_id = '{{ metastore_id }}' --required
+AND account_host = '{{ account_host }}' --required
 RETURNING
 metastore_info;
 ```
@@ -487,6 +500,7 @@ Deletes a Unity Catalog metastore for an account, both specified by ID.
 DELETE FROM databricks_account.catalog.account_metastores
 WHERE account_id = '{{ account_id }}' --required
 AND metastore_id = '{{ metastore_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND force = '{{ force }}'
 ;
 ```

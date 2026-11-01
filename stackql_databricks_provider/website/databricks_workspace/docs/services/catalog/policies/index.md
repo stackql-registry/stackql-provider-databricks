@@ -134,7 +134,24 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "for_securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+  },
+  {
+    "name": "governed_tags",
+    "type": "array",
+    "description": "Governed tag keys and values referenced by this policy's conditions and function arguments. Output only.",
+    "children": [
+      {
+        "name": "tag_key",
+        "type": "string",
+        "description": "The governed tag key."
+      },
+      {
+        "name": "tag_value",
+        "type": "string",
+        "description": "The governed tag value, when the policy references a specific value."
+      }
+    ]
   },
   {
     "name": "grant",
@@ -173,7 +190,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "on_securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "policy_type",
@@ -235,11 +252,6 @@ The following fields are returned by `SELECT` queries:
     "name": "updated_by",
     "type": "string",
     "description": "Username of the user who last modified the policy. Output only."
-  },
-  {
-    "name": "use_session_identity",
-    "type": "boolean",
-    "description": "Temporary for migrating customers to session identity. Customers not currently using ABAC will not be able to set this field to false and all new policies will have this field default to true. Existing customers will have this field default to false, but can set it to true to opt in to session identity. after a grace period, this field will be removed and all policies will use session identity. Only for row filter and column mask policies. Not applicable to deny policies."
   },
   {
     "name": "when_condition",
@@ -342,7 +354,24 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "for_securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+  },
+  {
+    "name": "governed_tags",
+    "type": "array",
+    "description": "Governed tag keys and values referenced by this policy's conditions and function arguments. Output only.",
+    "children": [
+      {
+        "name": "tag_key",
+        "type": "string",
+        "description": "The governed tag key."
+      },
+      {
+        "name": "tag_value",
+        "type": "string",
+        "description": "The governed tag value, when the policy references a specific value."
+      }
+    ]
   },
   {
     "name": "grant",
@@ -381,7 +410,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "on_securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "policy_type",
@@ -445,11 +474,6 @@ The following fields are returned by `SELECT` queries:
     "description": "Username of the user who last modified the policy. Output only."
   },
   {
-    "name": "use_session_identity",
-    "type": "boolean",
-    "description": "Temporary for migrating customers to session identity. Customers not currently using ABAC will not be able to set this field to false and all new policies will have this field default to true. Existing customers will have this field default to false, but can set it to true to opt in to session identity. after a grace period, this field will be removed and all policies will use session identity. Only for row filter and column mask policies. Not applicable to deny policies."
-  },
-  {
     "name": "when_condition",
     "type": "string",
     "description": "Optional condition when the policy should take effect."
@@ -476,35 +500,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get the policy definition on a securable</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_inherited"><code>include_inherited</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all policies defined on a securable. Optionally, the list can include inherited policies defined</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-policy_info"><code>policy_info</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-policy_info"><code>policy_info</code></a></td>
     <td></td>
     <td>Creates a new policy on a securable. The new policy applies to the securable and all its descendants.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-policy_info"><code>policy_info</code></a></td>
+    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-policy_info"><code>policy_info</code></a></td>
     <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td>Update an ABAC policy on a securable.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-on_securable_type"><code>on_securable_type</code></a>, <a href="#parameter-on_securable_fullname"><code>on_securable_fullname</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete an ABAC policy defined on a securable.</td>
 </tr>
@@ -527,7 +551,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -543,6 +567,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="on_securable_type" /></td>
     <td><code>string</code></td>
     <td>Required. The type of the securable to delete the policy from.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-include_inherited">
     <td><CopyableCode code="include_inherited" /></td>
@@ -591,6 +620,7 @@ created_by,
 deny,
 except_principals,
 for_securable_type,
+governed_tags,
 grant,
 match_columns,
 on_securable_fullname,
@@ -600,13 +630,13 @@ row_filter,
 to_principals,
 updated_at,
 updated_by,
-use_session_identity,
 when_condition
 FROM databricks_workspace.catalog.policies
 WHERE on_securable_type = '{{ on_securable_type }}' -- required
 AND on_securable_fullname = '{{ on_securable_fullname }}' -- required
 AND name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -625,6 +655,7 @@ created_by,
 deny,
 except_principals,
 for_securable_type,
+governed_tags,
 grant,
 match_columns,
 on_securable_fullname,
@@ -634,12 +665,12 @@ row_filter,
 to_principals,
 updated_at,
 updated_by,
-use_session_identity,
 when_condition
 FROM databricks_workspace.catalog.policies
 WHERE on_securable_type = '{{ on_securable_type }}' -- required
 AND on_securable_fullname = '{{ on_securable_fullname }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_inherited = '{{ include_inherited }}'
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
@@ -665,11 +696,13 @@ Creates a new policy on a securable. The new policy applies to the securable and
 ```sql
 INSERT INTO databricks_workspace.catalog.policies (
 policy_info,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ policy_info }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -680,6 +713,7 @@ created_by,
 deny,
 except_principals,
 for_securable_type,
+governed_tags,
 grant,
 match_columns,
 on_securable_fullname,
@@ -689,7 +723,6 @@ row_filter,
 to_principals,
 updated_at,
 updated_by,
-use_session_identity,
 when_condition
 ;
 ```
@@ -701,6 +734,9 @@ when_condition
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the policies resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the policies resource.
     - name: policy_info
       description: |
@@ -728,6 +764,9 @@ when_condition
             - "{{ privileges }}"
         except_principals:
           - "{{ except_principals }}"
+        governed_tags:
+          - tag_key: "{{ tag_key }}"
+            tag_value: "{{ tag_value }}"
         grant:
           privileges:
             - "{{ privileges }}"
@@ -749,7 +788,6 @@ when_condition
                   tag_value: "{{ tag_value }}"
         updated_at: {{ updated_at }}
         updated_by: "{{ updated_by }}"
-        use_session_identity: {{ use_session_identity }}
         when_condition: "{{ when_condition }}"
 `}</CodeBlock>
 
@@ -778,6 +816,7 @@ on_securable_type = '{{ on_securable_type }}' --required
 AND on_securable_fullname = '{{ on_securable_fullname }}' --required
 AND name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND policy_info = '{{ policy_info }}' --required
 AND update_mask = '{{ update_mask}}'
 RETURNING
@@ -790,6 +829,7 @@ created_by,
 deny,
 except_principals,
 for_securable_type,
+governed_tags,
 grant,
 match_columns,
 on_securable_fullname,
@@ -799,7 +839,6 @@ row_filter,
 to_principals,
 updated_at,
 updated_by,
-use_session_identity,
 when_condition;
 ```
 </TabItem>
@@ -824,6 +863,7 @@ WHERE on_securable_type = '{{ on_securable_type }}' --required
 AND on_securable_fullname = '{{ on_securable_fullname }}' --required
 AND name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

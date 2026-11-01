@@ -35,11 +35,17 @@ class TestGenerateSpecForService:
 
     def test_account_server_url(self):
         spec = generate_spec_for_service("billing", "account")
-        assert "accounts" in spec["servers"][0]["url"]
+        assert spec["servers"][0]["url"] == "https://{account_host}"
+        host = spec["servers"][0]["variables"]["account_host"]
+        assert host["x-stackQL-envVar"] == "DATABRICKS_ACCOUNT_HOST"
+        assert host["x-stackQL-envVarSelector"]["envVar"] == "DATABRICKS_CLOUD"
 
     def test_workspace_server_url(self):
         spec = generate_spec_for_service("agentbricks", "workspace")
-        assert "{workspace}" in spec["servers"][0]["url"]
+        assert spec["servers"][0]["url"] == "https://{deployment_name}.{workspace_domain}"
+        variables = spec["servers"][0]["variables"]
+        assert variables["deployment_name"]["x-stackQL-envVar"] == "DATABRICKS_DEPLOYMENT_NAME"
+        assert variables["workspace_domain"]["x-stackQL-envVarSelector"]["default"] == "aws"
 
     def test_filter_by_api_class(self):
         # Only generate for AgentBricksAPI (the only one in this module)

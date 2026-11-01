@@ -162,21 +162,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get the status of libraries on a cluster. A status is returned for all libraries installed on this</td>
 </tr>
 <tr>
     <td><a href="#install"><CopyableCode code="install" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-libraries"><code>libraries</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-libraries"><code>libraries</code></a></td>
     <td></td>
     <td>Add libraries to install on a cluster. The installation is asynchronous; it happens in the background</td>
 </tr>
 <tr>
     <td><a href="#uninstall"><CopyableCode code="uninstall" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-libraries"><code>libraries</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cluster_id"><code>cluster_id</code></a>, <a href="#parameter-libraries"><code>libraries</code></a></td>
     <td></td>
     <td>Set libraries to uninstall from a cluster. The libraries won't be uninstalled until the cluster is</td>
 </tr>
@@ -204,7 +204,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -230,6 +235,7 @@ status
 FROM databricks_workspace.compute.libraries
 WHERE cluster_id = '{{ cluster_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -253,12 +259,14 @@ Add libraries to install on a cluster. The installation is asynchronous; it happ
 INSERT INTO databricks_workspace.compute.libraries (
 cluster_id,
 libraries,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ cluster_id }}' /* required */,
 '{{ libraries }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 ;
 ```
 </TabItem>
@@ -269,6 +277,9 @@ SELECT
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the libraries resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the libraries resource.
     - name: cluster_id
       value: "{{ cluster_id }}"
@@ -313,7 +324,8 @@ Set libraries to uninstall from a cluster. The libraries won't be uninstalled un
 
 ```sql
 EXEC databricks_workspace.compute.libraries.uninstall 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "cluster_id": "{{ cluster_id }}", 

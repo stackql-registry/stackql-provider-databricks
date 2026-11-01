@@ -18,17 +18,18 @@ catalog service documentation.
 
 :::info[Service Summary]
 
-total resources: __39__  
+total resources: __40__  
 
 :::
 
 ## Resources
 <div class="row">
 <div class="providerDocColumn">
-<a href="/services/catalog/ai_gateway_agent_services/">ai_gateway_agent_services</a><br />
+<a href="/services/catalog/ai_gateway_mcp_service_user_credentials/">ai_gateway_mcp_service_user_credentials</a><br />
 <a href="/services/catalog/ai_gateway_mcp_services/">ai_gateway_mcp_services</a><br />
 <a href="/services/catalog/ai_gateway_model_provider_services/">ai_gateway_model_provider_services</a><br />
 <a href="/services/catalog/ai_gateway_model_services/">ai_gateway_model_services</a><br />
+<a href="/services/catalog/ai_gateway_skills/">ai_gateway_skills</a><br />
 <a href="/services/catalog/artifact_allowlists/">artifact_allowlists</a><br />
 <a href="/services/catalog/catalogs/">catalogs</a><br />
 <a href="/services/catalog/connections/">connections</a><br />
@@ -43,10 +44,10 @@ total resources: __39__
 <a href="/services/catalog/grants/">grants</a><br />
 <a href="/services/catalog/metastore_summary/">metastore_summary</a><br />
 <a href="/services/catalog/metastores/">metastores</a><br />
-<a href="/services/catalog/model_versions/">model_versions</a><br />
-<a href="/services/catalog/online_tables/">online_tables</a>
+<a href="/services/catalog/model_versions/">model_versions</a>
 </div>
 <div class="providerDocColumn">
+<a href="/services/catalog/online_tables/">online_tables</a><br />
 <a href="/services/catalog/policies/">policies</a><br />
 <a href="/services/catalog/privilege_assignments/">privilege_assignments</a><br />
 <a href="/services/catalog/quality_monitor_refreshes/">quality_monitor_refreshes</a><br />

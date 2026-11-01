@@ -61,7 +61,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "parent_securable_type",
         "type": "string",
-        "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+        "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
       },
       {
         "name": "quota_count",
@@ -103,7 +103,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "parent_securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "quota_count",
@@ -137,14 +137,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-parent_securable_type"><code>parent_securable_type</code></a>, <a href="#parameter-parent_full_name"><code>parent_full_name</code></a>, <a href="#parameter-quota_name"><code>quota_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-parent_securable_type"><code>parent_securable_type</code></a>, <a href="#parameter-parent_full_name"><code>parent_full_name</code></a>, <a href="#parameter-quota_name"><code>quota_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>The GetQuota API returns usage information for a single resource quota, defined as a child-parent</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>ListQuotas returns all quota values under the metastore. There are no SLAs on the freshness of the</td>
 </tr>
@@ -167,7 +167,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-parent_full_name">
     <td><CopyableCode code="parent_full_name" /></td>
@@ -183,6 +183,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="quota_name" /></td>
     <td><code>string</code></td>
     <td>Name of the quota. Follows the pattern of the quota type, with "-quota" added as a suffix.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-max_results">
     <td><CopyableCode code="max_results" /></td>
@@ -218,6 +223,7 @@ WHERE parent_securable_type = '{{ parent_securable_type }}' -- required
 AND parent_full_name = '{{ parent_full_name }}' -- required
 AND quota_name = '{{ quota_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -235,6 +241,7 @@ quota_count,
 quota_limit
 FROM databricks_workspace.catalog.resource_quotas
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
 ;

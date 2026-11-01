@@ -74,14 +74,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_workspace_network_option_rpc"><CopyableCode code="get_workspace_network_option_rpc" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets the network option for a workspace. Every workspace has exactly one network policy binding, with</td>
 </tr>
 <tr>
     <td><a href="#update_workspace_network_option_rpc"><CopyableCode code="update_workspace_network_option_rpc" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-workspace_network_option"><code>workspace_network_option</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-workspace_network_option"><code>workspace_network_option</code></a></td>
     <td></td>
     <td>Updates the network option for a workspace. This operation associates the workspace with the specified</td>
 </tr>
@@ -101,6 +101,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -133,6 +138,7 @@ workspace_id
 FROM databricks_account.settings.workspace_network_configuration
 WHERE account_id = '{{ account_id }}' -- required
 AND workspace_id = '{{ workspace_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -158,6 +164,7 @@ workspace_network_option = '{{ workspace_network_option }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND workspace_network_option = '{{ workspace_network_option }}' --required
 RETURNING
 network_policy_id,

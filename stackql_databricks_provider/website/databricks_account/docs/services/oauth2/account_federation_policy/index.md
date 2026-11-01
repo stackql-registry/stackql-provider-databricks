@@ -71,7 +71,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "oidc_policy",
     "type": "object",
-    "description": "Specifies the policy to use for validating OIDC claims in your federated tokens.",
+    "description": "audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC policy configuration is captured in create/update audit logs (see go/auditlogs).",
     "children": [
       {
         "name": "audiences",
@@ -148,7 +148,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "oidc_policy",
     "type": "object",
-    "description": "Specifies the policy to use for validating OIDC claims in your federated tokens.",
+    "description": "audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC policy configuration is captured in create/update audit logs (see go/auditlogs).",
     "children": [
       {
         "name": "audiences",
@@ -214,35 +214,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_federation_policy_get"><CopyableCode code="account_federation_policy_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Get account federation policy.</td>
 </tr>
 <tr>
     <td><a href="#account_federation_policy_list"><CopyableCode code="account_federation_policy_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List account federation policies.</td>
 </tr>
 <tr>
     <td><a href="#account_federation_policy_create"><CopyableCode code="account_federation_policy_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
     <td><a href="#parameter-policy_id"><code>policy_id</code></a></td>
     <td>Create account federation policy.</td>
 </tr>
 <tr>
     <td><a href="#account_federation_policy_update"><CopyableCode code="account_federation_policy_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
     <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td>Update account federation policy.</td>
 </tr>
 <tr>
     <td><a href="#account_federation_policy_delete"><CopyableCode code="account_federation_policy_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Delete account federation policy.</td>
 </tr>
@@ -262,6 +262,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -321,6 +326,7 @@ update_time
 FROM databricks_account.oauth2.account_federation_policy
 WHERE account_id = '{{ account_id }}' -- required
 AND policy_id = '{{ policy_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -340,6 +346,7 @@ uid,
 update_time
 FROM databricks_account.oauth2.account_federation_policy
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -365,11 +372,13 @@ Create account federation policy.
 INSERT INTO databricks_account.oauth2.account_federation_policy (
 policy,
 account_id,
+account_host,
 policy_id
 )
 SELECT 
 '{{ policy }}' /* required */,
 '{{ account_id }}',
+'{{ account_host }}',
 '{{ policy_id }}'
 RETURNING
 name,
@@ -390,6 +399,9 @@ update_time
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the account_federation_policy resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_federation_policy resource.
     - name: policy
       value:
@@ -437,6 +449,7 @@ policy = '{{ policy }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND policy_id = '{{ policy_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND policy = '{{ policy }}' --required
 AND update_mask = '{{ update_mask}}'
 RETURNING
@@ -469,6 +482,7 @@ Delete account federation policy.
 DELETE FROM databricks_account.oauth2.account_federation_policy
 WHERE account_id = '{{ account_id }}' --required
 AND policy_id = '{{ policy_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

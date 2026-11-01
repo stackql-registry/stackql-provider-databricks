@@ -1,10 +1,18 @@
 """
 Authenticated smoke tests for the StackQL Databricks providers.
 
-Runs SELECT queries against every view defined under ``views/{account,workspace}``
-and verifies that each view executes without error and returns the expected
-columns. Views are the highest-value test surface because they exercise the
-underlying resources, the SQL dialect wiring, and the auth config all at once.
+Three layers, in order:
+
+1. Resource queries - the SELECTs most people run first (workspaces, account
+   groups, the current user, clusters, SQL warehouses, secret scopes), each
+   asserted to return rows with the documented columns.
+2. Lifecycles - cheap, self-cleaning mutations through the SQL verbs: an
+   account SCIM group (exists / INSERT / exports / DELETE, the stackql-deploy
+   shape) and a workspace secret scope (INSERT / SELECT / EXEC delete). Both
+   are free of charge: no compute is created. Everything is named
+   ``stackql-smoke-<stamp>`` and removed again; ``--read-only`` skips them.
+3. Views - SELECT * against every view under ``views/{account,workspace}``,
+   asserting the documented columns.
 
 Modes:
   local (default) - tests the locally generated provider in ``stackql-provider/``
@@ -13,12 +21,17 @@ Modes:
                     registry and tests those instead
 
 Both modes are authenticated: set DATABRICKS_ACCOUNT_ID, DATABRICKS_CLIENT_ID
-and DATABRICKS_CLIENT_SECRET (or put them in ``stackql_databricks_provider/.env``).
-DATABRICKS_DEPLOYMENT_NAME is optional; when unset the workspace deployment name
-is derived from ``databricks_account.provisioning.workspaces``.
+and DATABRICKS_CLIENT_SECRET (or put them in ``stackql_databricks_provider/.env``;
+``--env-file`` points at another file, e.g. ``.env.azure``). The cloud is
+selected the way the provider selects it: DATABRICKS_CLOUD = aws (default) |
+azure | gcp (``--cloud`` sets it for the run) and the optional
+DATABRICKS_ACCOUNT_HOST override. DATABRICKS_DEPLOYMENT_NAME is optional; when
+unset the workspace deployment name is derived from
+``databricks_account.provisioning.workspaces``.
 
 Usage:
-  python smoke_tests/smoke.py [--live] [--scope account|workspace|all]
+  python smoke_tests/smoke.py [--live] [--cloud aws|azure|gcp] [--env-file PATH]
+                              [--read-only] [--scope account|workspace|all]
                               [--view SUBSTR] [--verbose]
 """
 
@@ -52,8 +65,13 @@ PROVIDER_BY_SCOPE = {"account": "databricks_account", "workspace": "databricks_w
 PASS, EMPTY, FAIL, SKIP = "PASS", "EMPTY", "FAIL", "SKIP"
 
 
-def load_dotenv(path):
-    """Load KEY=VALUE pairs from a .env file without overriding existing env."""
+def load_dotenv(path, override=False):
+    """Load KEY=VALUE pairs from a .env file.
+
+    The default ``.env`` never overrides the environment; a file the caller
+    named explicitly (``--env-file``, ``make smoke CLOUD=azure``) does, so a
+    shell that still exports the AWS credentials cannot leak into an Azure run.
+    """
     if not path.exists():
         return
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -65,7 +83,7 @@ def load_dotenv(path):
         key, _, value = line.partition("=")
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        if key and key not in os.environ:
+        if key and (override or key not in os.environ):
             os.environ[key] = value
 
 
@@ -146,10 +164,20 @@ class StackQLRunner:
             (l for l in stderr.splitlines() if "error" in l.lower() and "http response" in l.lower()),
             "",
         )
+        # stackql exits 0 on a planning or HTTP error and reports it on stderr,
+        # so a mutation is only ok when nothing on stderr looks like one.
+        stderr_error = next(
+            (l for l in stderr.splitlines()
+             if re.search(r"error|unsatisfied|cannot find|unauthorized|status code: [45]\d\d", l, re.I)),
+            "",
+        )
         if output != "json":
-            ok = proc.returncode == 0
-            return ok, None, stdout if ok else (err_line or stderr or stdout)
-        if stdout:
+            ok = proc.returncode == 0 and not stderr_error
+            return ok, None, stdout if ok else (err_line or stderr_error or stderr or stdout)
+        # An HTTP or token failure on stderr makes any rows on stdout suspect
+        # (a COUNT(*) over a failed read still prints 0).
+        fatal = re.search(r"http response status code|cannot fetch token|unsatisfied required|unauthorized", stderr, re.I)
+        if stdout and not fatal:
             try:
                 rows = json.loads(stdout)
                 if isinstance(rows, list):
@@ -231,16 +259,222 @@ def run_view_test(runner, view, seeds):
     return PASS, len(rows), ""
 
 
+# ---------------------------------------------------------------------------
+# Resource queries: the SELECTs most people run first on each provider.
+# ``expect_rows`` marks the ones that always return data on any account.
+# ---------------------------------------------------------------------------
+
+RESOURCE_QUERIES = [
+    {
+        "scope": "account",
+        "name": "provisioning.workspaces",
+        "sql": "SELECT workspace_id, workspace_name, workspace_status, deployment_name "
+               "FROM databricks_account.provisioning.workspaces WHERE account_id = '{account_id}'",
+        "columns": ["workspace_id", "workspace_name", "workspace_status", "deployment_name"],
+        "expect_rows": True,
+    },
+    {
+        "scope": "account",
+        "name": "iam.account_groups",
+        "sql": "SELECT id, displayName FROM databricks_account.iam.account_groups WHERE account_id = '{account_id}'",
+        "columns": ["id", "displayName"],
+        "expect_rows": False,
+    },
+    {
+        "scope": "workspace",
+        "name": "iam.current_user",
+        "sql": "SELECT id, userName FROM databricks_workspace.iam.current_user WHERE deployment_name = '{deployment_name}'",
+        "columns": ["id", "userName"],
+        "expect_rows": True,
+    },
+    {
+        "scope": "workspace",
+        "name": "catalog.catalogs",
+        "sql": "SELECT name, catalog_type FROM databricks_workspace.catalog.catalogs WHERE deployment_name = '{deployment_name}'",
+        "columns": ["name", "catalog_type"],
+        "expect_rows": True,
+    },
+    {
+        "scope": "workspace",
+        "name": "compute.clusters",
+        "sql": "SELECT cluster_id, cluster_name, state FROM databricks_workspace.compute.clusters WHERE deployment_name = '{deployment_name}'",
+        "columns": ["cluster_id", "cluster_name", "state"],
+        "expect_rows": False,
+    },
+    {
+        "scope": "workspace",
+        "name": "sql.warehouses",
+        "sql": "SELECT id, name, state FROM databricks_workspace.sql.warehouses WHERE deployment_name = '{deployment_name}'",
+        "columns": ["id", "name", "state"],
+        "expect_rows": False,
+    },
+    {
+        "scope": "workspace",
+        "name": "workspace.secret_scopes",
+        "sql": "SELECT name FROM databricks_workspace.workspace.secret_scopes WHERE deployment_name = '{deployment_name}'",
+        "columns": ["name"],
+        "expect_rows": False,
+    },
+]
+
+
+def run_resource_test(runner, query, seeds):
+    """Run one resource SELECT and classify the outcome."""
+    params = re.findall(r"\{(\w+)\}", query["sql"])
+    missing = [p for p in params if p not in seeds]
+    if missing:
+        return SKIP, 0, f"no seed value for param(s): {', '.join(missing)}"
+    ok, rows, message = runner.exec(query["sql"].format(**seeds))
+    if not ok:
+        if "unknown key" in message:
+            return EMPTY, 0, "upstream returned an empty response object"
+        if "required pricing tier" in message:
+            return SKIP, 0, "feature not available on this account's pricing tier"
+        return FAIL, 0, message[:300]
+    if not rows:
+        if query["expect_rows"]:
+            return FAIL, 0, "expected at least one row"
+        return EMPTY, 0, "query succeeded, zero rows returned"
+    missing_cols = set(query["columns"]) - set(rows[0].keys())
+    if missing_cols:
+        return FAIL, len(rows), f"missing expected column(s): {', '.join(sorted(missing_cols))}"
+    return PASS, len(rows), ""
+
+
+# ---------------------------------------------------------------------------
+# Lifecycles: self-cleaning create/read/delete through the SQL verbs. Free of
+# charge (no compute). Each step is reported; a failure still runs the delete.
+# ---------------------------------------------------------------------------
+
+
+def smoke_name():
+    return f"stackql-smoke-{time.strftime('%Y%m%d%H%M%S')}"
+
+
+def lifecycle_account_group(runner, seeds, report):
+    """The stackql-deploy shape: exists / create / exports / delete on an account SCIM group."""
+    if "account_id" not in seeds:
+        report("account.iam.account_groups lifecycle", SKIP, "no account_id")
+        return
+    account_id, group_name = seeds["account_id"], smoke_name()
+    exists_sql = (
+        "SELECT COUNT(*) as count FROM databricks_account.iam.account_groups "
+        f"WHERE account_id = '{account_id}' AND displayName = '{group_name}'"
+    )
+    group_id = None
+    try:
+        ok, rows, message = runner.exec(exists_sql)
+        count = int(rows[0]["count"]) if ok and rows else (0 if ok else None)
+        report("account.iam.account_groups exists (before)", PASS if count == 0 else FAIL,
+               message if not ok else f"count={count}")
+
+        ok, _, message = runner.exec(
+            "INSERT INTO databricks_account.iam.account_groups (account_id, displayName) "
+            f"SELECT '{account_id}', '{group_name}'",
+            output="text",
+        )
+        report("account.iam.account_groups INSERT", PASS if ok else FAIL, message if not ok else group_name)
+        if not ok:
+            return
+
+        ok, rows, message = runner.exec(
+            "SELECT id AS databricks_group_id FROM databricks_account.iam.account_groups "
+            f"WHERE account_id = '{account_id}' AND displayName = '{group_name}'"
+        )
+        group_id = rows[0].get("databricks_group_id") if ok and rows else None
+        report("account.iam.account_groups exports", PASS if group_id else FAIL,
+               message if not ok else f"databricks_group_id={group_id}")
+
+        ok, rows, message = runner.exec(exists_sql)
+        count = int(rows[0]["count"]) if ok and rows else None
+        report("account.iam.account_groups exists (after create)", PASS if count == 1 else FAIL,
+               message if not ok else f"count={count}")
+    finally:
+        if group_id:
+            ok, _, message = runner.exec(
+                "DELETE FROM databricks_account.iam.account_groups "
+                f"WHERE account_id = '{account_id}' AND id = '{group_id}'",
+                output="text",
+            )
+            report("account.iam.account_groups DELETE", PASS if ok else FAIL, message if not ok else "")
+            if ok:
+                ok, rows, message = runner.exec(exists_sql)
+                count = int(rows[0]["count"]) if ok and rows else (0 if ok else None)
+                report("account.iam.account_groups exists (after delete)", PASS if count == 0 else FAIL,
+                       message if not ok else f"count={count}")
+
+
+def lifecycle_secret_scope(runner, seeds, report):
+    """INSERT / SELECT / EXEC delete on a workspace secret scope."""
+    if "deployment_name" not in seeds:
+        report("workspace.workspace.secret_scopes lifecycle", SKIP, "no deployment_name")
+        return
+    deployment, scope = seeds["deployment_name"], smoke_name()
+    created = False
+    try:
+        ok, _, message = runner.exec(
+            "INSERT INTO databricks_workspace.workspace.secret_scopes (deployment_name, scope) "
+            f"SELECT '{deployment}', '{scope}'",
+            output="text",
+        )
+        created = ok
+        report("workspace.workspace.secret_scopes INSERT", PASS if ok else FAIL, message if not ok else scope)
+        if not ok:
+            return
+        ok, rows, message = runner.exec(
+            "SELECT name FROM databricks_workspace.workspace.secret_scopes "
+            f"WHERE deployment_name = '{deployment}' AND name = '{scope}'"
+        )
+        found = ok and rows and rows[0].get("name") == scope
+        report("workspace.workspace.secret_scopes SELECT", PASS if found else FAIL,
+               message if not ok else ("found" if found else "scope not listed"))
+    finally:
+        if created:
+            # Named arguments reach the body on both engines; the @@json form is
+            # rejected by the any-sdk based releases (v0.12.x) for this method.
+            ok, _, message = runner.exec(
+                f"EXEC databricks_workspace.workspace.secret_scopes.delete "
+                f"@deployment_name = '{deployment}', @scope = '{scope}'",
+                output="text",
+            )
+            report("workspace.workspace.secret_scopes EXEC delete", PASS if ok else FAIL, message if not ok else "")
+            ok, rows, message = runner.exec(
+                "SELECT name FROM databricks_workspace.workspace.secret_scopes "
+                f"WHERE deployment_name = '{deployment}' AND name = '{scope}'"
+            )
+            gone = ok and not rows
+            report("workspace.workspace.secret_scopes SELECT (after delete)", PASS if gone else FAIL,
+                   message if not ok else ("" if gone else f"{scope} still listed - remove it by hand"))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Databricks provider smoke tests")
     parser.add_argument("--live", action="store_true", help="test latest published providers from the public registry")
+    parser.add_argument("--cloud", choices=["aws", "azure", "gcp"], default=None,
+                        help="set DATABRICKS_CLOUD for the run (default: the environment, else aws)")
+    parser.add_argument("--env-file", default=None,
+                        help="env file to load (default: stackql_databricks_provider/.env)")
+    parser.add_argument("--read-only", action="store_true", help="skip the create/delete lifecycles")
+    parser.add_argument("--skip-views", action="store_true", help="skip the view layer")
     parser.add_argument("--scope", choices=["account", "workspace", "all"], default="all")
     parser.add_argument("--view", default=None, help="only run views whose name contains this substring")
     parser.add_argument("--stackql-bin", default=None, help="path to the stackql binary")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
-    load_dotenv(PROVIDER_DIR / ".env")
+    default_env = (PROVIDER_DIR / ".env").resolve()
+    env_file = Path(args.env_file).resolve() if args.env_file else default_env
+    if env_file != default_env:
+        # A per-cloud file named explicitly (.env.azure, .env.gcp) must exist and wins
+        # over whatever the shell still exports.
+        if not env_file.exists():
+            print(f"ERROR: env file not found: {env_file} (copy the matching .env.<cloud>.example)", file=sys.stderr)
+            return 2
+        load_dotenv(env_file, override=True)
+    else:
+        load_dotenv(env_file)
+    if args.cloud:
+        os.environ["DATABRICKS_CLOUD"] = args.cloud
 
     missing_env = [v for v in REQUIRED_ENV if not os.environ.get(v)]
     if missing_env:
@@ -258,8 +492,11 @@ def main():
         return 2
 
     mode = "live (public registry)" if args.live else f"local ({REGISTRY_DIR})"
+    cloud = os.environ.get("DATABRICKS_CLOUD") or "aws (default)"
+    host_override = os.environ.get("DATABRICKS_ACCOUNT_HOST")
     print(f"Databricks provider smoke tests - mode: {mode}")
     print(f"stackql binary: {binary}")
+    print(f"cloud: {cloud}" + (f" (DATABRICKS_ACCOUNT_HOST={host_override})" if host_override else ""))
 
     runner = StackQLRunner(binary, args.live, args.verbose)
 
@@ -273,21 +510,42 @@ def main():
     seeds = derive_seed_params(runner, account_id)
     print(f"  seed params available: {', '.join(sorted(seeds))}")
 
-    views = discover_views(VIEWS_DIR, args.scope, args.view)
-    if not views:
-        print("ERROR: no views matched the given filters", file=sys.stderr)
-        return 2
-    print(f"Testing {len(views)} view(s)...\n")
-
     results = []
+
+    def report(name, status, message="", row_count=0, elapsed=0.0):
+        results.append((name, status, row_count, elapsed, message))
+        note = f" ({message})" if message and status in (FAIL, SKIP) else (f" {message}" if message and args.verbose else "")
+        print(f"  [{status:<5}] {name:<75} rows={row_count:<3} {elapsed:5.1f}s{note}")
+
+    scoped = lambda scope: args.scope in ("all", scope)  # noqa: E731
+
+    queries = [q for q in RESOURCE_QUERIES if scoped(q["scope"])]
+    print(f"\nResource queries ({len(queries)})...")
+    for query in queries:
+        started = time.time()
+        status, row_count, message = run_resource_test(runner, query, seeds)
+        report(f"{PROVIDER_BY_SCOPE[query['scope']]}.{query['name']}", status, message, row_count, time.time() - started)
+
+    if args.read_only:
+        print("\nLifecycles skipped (--read-only)")
+    else:
+        print("\nLifecycles (self-cleaning, no compute)...")
+        if scoped("account"):
+            lifecycle_account_group(runner, seeds, report)
+        if scoped("workspace"):
+            lifecycle_secret_scope(runner, seeds, report)
+
+    if args.skip_views:
+        views = []
+    else:
+        views = discover_views(VIEWS_DIR, args.scope, args.view)
+    if views:
+        print(f"\nViews ({len(views)})...")
     for view in views:
         fqn = f"{PROVIDER_BY_SCOPE[view['scope']]}.{view['service']}.{view['name']}"
         started = time.time()
         status, row_count, message = run_view_test(runner, view, seeds)
-        elapsed = time.time() - started
-        results.append((fqn, status, row_count, elapsed, message))
-        note = f" ({message})" if message and status in (FAIL, SKIP) else ""
-        print(f"  [{status:<5}] {fqn:<75} rows={row_count:<3} {elapsed:5.1f}s{note}")
+        report(fqn, status, message, row_count, time.time() - started)
 
     counts = {s: sum(1 for r in results if r[1] == s) for s in (PASS, EMPTY, FAIL, SKIP)}
     print("\n" + "=" * 70)

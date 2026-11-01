@@ -36,8 +36,7 @@ The following fields are returned by `SELECT` queries:
 <Tabs
     defaultValue="get"
     values={[
-        { label: 'get', value: 'get' },
-        { label: 'get_batch', value: 'get_batch' }
+        { label: 'get', value: 'get' }
     ]}
 >
 <TabItem value="get">
@@ -202,161 +201,6 @@ The following fields are returned by `SELECT` queries:
   }
 ]} />
 </TabItem>
-<TabItem value="get_batch">
-
-<SchemaTable fields={[
-  {
-    "name": "data",
-    "type": "object",
-    "description": "The params and metrics attached to the logged model.",
-    "children": [
-      {
-        "name": "metrics",
-        "type": "array",
-        "description": "Performance metrics linked to the model.",
-        "children": [
-          {
-            "name": "dataset_digest",
-            "type": "string",
-            "description": "The dataset digest of the dataset associated with the metric, e.g. an md5 hash of the dataset that uniquely identifies it within datasets of the same name."
-          },
-          {
-            "name": "dataset_name",
-            "type": "string",
-            "description": "The name of the dataset associated with the metric. E.g. “my.uc.table@2” “nyc-taxi-dataset”, “fantastic-elk-3”"
-          },
-          {
-            "name": "key",
-            "type": "string",
-            "description": "The key identifying the metric."
-          },
-          {
-            "name": "model_id",
-            "type": "string",
-            "description": "The ID of the logged model or registered model version associated with the metric, if applicable."
-          },
-          {
-            "name": "run_id",
-            "type": "string",
-            "description": "The ID of the run containing the metric."
-          },
-          {
-            "name": "step",
-            "type": "integer",
-            "description": "The step at which the metric was logged."
-          },
-          {
-            "name": "timestamp",
-            "type": "integer",
-            "description": "The timestamp at which the metric was recorded."
-          },
-          {
-            "name": "value",
-            "type": "number",
-            "description": "The value of the metric."
-          }
-        ]
-      },
-      {
-        "name": "params",
-        "type": "array",
-        "description": "Immutable string key-value pairs of the model.",
-        "children": [
-          {
-            "name": "key",
-            "type": "string",
-            "description": "The key identifying this param."
-          },
-          {
-            "name": "value",
-            "type": "string",
-            "description": "The value of this param."
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "info",
-    "type": "object",
-    "description": "The logged model attributes such as model ID, status, tags, etc.",
-    "children": [
-      {
-        "name": "artifact_uri",
-        "type": "string",
-        "description": "The URI of the directory where model artifacts are stored."
-      },
-      {
-        "name": "creation_timestamp_ms",
-        "type": "integer",
-        "description": "The timestamp when the model was created in milliseconds since the UNIX epoch."
-      },
-      {
-        "name": "creator_id",
-        "type": "integer",
-        "description": "The ID of the user or principal that created the model."
-      },
-      {
-        "name": "experiment_id",
-        "type": "string",
-        "description": "The ID of the experiment that owns the model."
-      },
-      {
-        "name": "last_updated_timestamp_ms",
-        "type": "integer",
-        "description": "The timestamp when the model was last updated in milliseconds since the UNIX epoch."
-      },
-      {
-        "name": "model_id",
-        "type": "string",
-        "description": "The unique identifier for the logged model."
-      },
-      {
-        "name": "model_type",
-        "type": "string",
-        "description": "The type of model, such as ``\"Agent\"``, ``\"Classifier\"``, ``\"LLM\"``."
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "description": "The name of the model."
-      },
-      {
-        "name": "source_run_id",
-        "type": "string",
-        "description": "The ID of the run that created the model."
-      },
-      {
-        "name": "status",
-        "type": "string",
-        "description": "The status of whether or not the model is ready for use. (LOGGED_MODEL_PENDING, LOGGED_MODEL_READY, LOGGED_MODEL_UPLOAD_FAILED)"
-      },
-      {
-        "name": "status_message",
-        "type": "string",
-        "description": "Details on the current model status."
-      },
-      {
-        "name": "tags",
-        "type": "array",
-        "description": "Mutable string key-value pairs set on the model.",
-        "children": [
-          {
-            "name": "key",
-            "type": "string",
-            "description": "The tag key."
-          },
-          {
-            "name": "value",
-            "type": "string",
-            "description": "The tag value."
-          }
-        ]
-      }
-    ]
-  }
-]} />
-</TabItem>
 </Tabs>
 
 ## Methods
@@ -377,63 +221,56 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a logged model.</td>
 </tr>
 <tr>
-    <td><a href="#get_batch"><CopyableCode code="get_batch" /></a></td>
-    <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-model_ids"><code>model_ids</code></a></td>
-    <td>Batch endpoint for getting logged models from a list of model IDs</td>
-</tr>
-<tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-experiment_id"><code>experiment_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-experiment_id"><code>experiment_id</code></a></td>
     <td></td>
     <td>Create a logged model.</td>
 </tr>
 <tr>
     <td><a href="#delete_tag"><CopyableCode code="delete_tag" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a tag on a logged model.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a logged model.</td>
 </tr>
 <tr>
     <td><a href="#finalize"><CopyableCode code="finalize" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-status"><code>status</code></a></td>
+    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-status"><code>status</code></a></td>
     <td></td>
     <td>Finalize a logged model.</td>
 </tr>
 <tr>
     <td><a href="#log_params"><CopyableCode code="log_params" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Logs params for a logged model. A param is a key-value pair (string key, string value). Examples</td>
 </tr>
 <tr>
     <td><a href="#search"><CopyableCode code="search" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Search for Logged Models that satisfy specified search criteria.</td>
 </tr>
 <tr>
     <td><a href="#set_tags"><CopyableCode code="set_tags" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-model_id"><code>model_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Set tags for a logged model.</td>
 </tr>
@@ -456,7 +293,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-model_id">
     <td><CopyableCode code="model_id" /></td>
@@ -468,10 +305,10 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>string</code></td>
     <td>The tag key.</td>
 </tr>
-<tr id="parameter-model_ids">
-    <td><CopyableCode code="model_ids" /></td>
-    <td><code>array</code></td>
-    <td>The IDs of the logged models to retrieve. Max threshold is 100.</td>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -481,8 +318,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <Tabs
     defaultValue="get"
     values={[
-        { label: 'get', value: 'get' },
-        { label: 'get_batch', value: 'get_batch' }
+        { label: 'get', value: 'get' }
     ]}
 >
 <TabItem value="get">
@@ -495,20 +331,7 @@ model
 FROM databricks_workspace.ml.logged_models
 WHERE model_id = '{{ model_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
-;
-```
-</TabItem>
-<TabItem value="get_batch">
-
-Batch endpoint for getting logged models from a list of model IDs
-
-```sql
-SELECT
-data,
-info
-FROM databricks_workspace.ml.logged_models
-WHERE deployment_name = '{{ deployment_name }}' -- required
-AND model_ids = '{{ model_ids }}'
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -536,7 +359,8 @@ name,
 params,
 source_run_id,
 tags,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ experiment_id }}' /* required */,
@@ -545,7 +369,8 @@ SELECT
 '{{ params }}',
 '{{ source_run_id }}',
 '{{ tags }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 model
 ;
@@ -558,6 +383,9 @@ model
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the logged_models resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the logged_models resource.
     - name: experiment_id
       value: "{{ experiment_id }}"
@@ -611,6 +439,7 @@ DELETE FROM databricks_workspace.ml.logged_models
 WHERE model_id = '{{ model_id }}' --required
 AND tag_key = '{{ tag_key }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -622,6 +451,7 @@ Delete a logged model.
 DELETE FROM databricks_workspace.ml.logged_models
 WHERE model_id = '{{ model_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -646,7 +476,8 @@ Finalize a logged model.
 ```sql
 EXEC databricks_workspace.ml.logged_models.finalize 
 @model_id='{{ model_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "status": "{{ status }}"
@@ -661,7 +492,8 @@ Logs params for a logged model. A param is a key-value pair (string key, string 
 ```sql
 EXEC databricks_workspace.ml.logged_models.log_params 
 @model_id='{{ model_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "params": "{{ params }}"
@@ -675,7 +507,8 @@ Search for Logged Models that satisfy specified search criteria.
 
 ```sql
 EXEC databricks_workspace.ml.logged_models.search 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "datasets": "{{ datasets }}", 
@@ -695,7 +528,8 @@ Set tags for a logged model.
 ```sql
 EXEC databricks_workspace.ml.logged_models.set_tags 
 @model_id='{{ model_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "tags": "{{ tags }}"

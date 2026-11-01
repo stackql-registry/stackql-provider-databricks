@@ -90,35 +90,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_metastore_assignments_get"><CopyableCode code="account_metastore_assignments_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets the metastore assignment, if any, for the workspace specified by ID. If the workspace is assigned</td>
 </tr>
 <tr>
     <td><a href="#account_metastore_assignments_list"><CopyableCode code="account_metastore_assignments_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a list of all Databricks workspace IDs that have been assigned to given metastore.</td>
 </tr>
 <tr>
     <td><a href="#account_metastore_assignments_create"><CopyableCode code="account_metastore_assignments_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates an assignment to a metastore for a workspace</td>
 </tr>
 <tr>
     <td><a href="#account_metastore_assignments_update"><CopyableCode code="account_metastore_assignments_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an assignment to a metastore for a workspace. Currently, only the default catalog may be</td>
 </tr>
 <tr>
     <td><a href="#account_metastore_assignments_delete"><CopyableCode code="account_metastore_assignments_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-metastore_id"><code>metastore_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a metastore assignment to a workspace, leaving the workspace with no metastore.</td>
 </tr>
@@ -138,6 +138,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -177,6 +182,7 @@ default_catalog_name
 FROM databricks_account.catalog.account_metastore_assignments
 WHERE account_id = '{{ account_id }}' -- required
 AND workspace_id = '{{ workspace_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -190,6 +196,7 @@ workspaces
 FROM databricks_account.catalog.account_metastore_assignments
 WHERE account_id = '{{ account_id }}' -- required
 AND metastore_id = '{{ metastore_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -214,13 +221,15 @@ INSERT INTO databricks_account.catalog.account_metastore_assignments (
 metastore_assignment,
 account_id,
 workspace_id,
-metastore_id
+metastore_id,
+account_host
 )
 SELECT 
 '{{ metastore_assignment }}',
 '{{ account_id }}',
 '{{ workspace_id }}',
-'{{ metastore_id }}'
+'{{ metastore_id }}',
+'{{ account_host }}'
 ;
 ```
 </TabItem>
@@ -237,6 +246,9 @@ SELECT
       description: Required parameter for the account_metastore_assignments resource.
     - name: metastore_id
       value: "{{ metastore_id }}"
+      description: Required parameter for the account_metastore_assignments resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_metastore_assignments resource.
     - name: metastore_assignment
       value:
@@ -268,7 +280,8 @@ metastore_assignment = '{{ metastore_assignment }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
-AND metastore_id = '{{ metastore_id }}' --required;
+AND metastore_id = '{{ metastore_id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -291,6 +304,7 @@ DELETE FROM databricks_account.catalog.account_metastore_assignments
 WHERE account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
 AND metastore_id = '{{ metastore_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

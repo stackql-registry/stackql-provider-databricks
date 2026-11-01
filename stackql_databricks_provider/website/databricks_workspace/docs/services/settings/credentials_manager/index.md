@@ -54,7 +54,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#exchange_token"><CopyableCode code="exchange_token" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-partition_id"><code>partition_id</code></a>, <a href="#parameter-tokenType"><code>tokenType</code></a>, <a href="#parameter-scopes"><code>scopes</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-partition_id"><code>partition_id</code></a>, <a href="#parameter-tokenType"><code>tokenType</code></a>, <a href="#parameter-scopes"><code>scopes</code></a></td>
     <td></td>
     <td>Exchange tokens with an Identity Provider to get a new access token. It allows specifying scopes to</td>
 </tr>
@@ -77,7 +77,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -100,13 +105,15 @@ INSERT INTO databricks_workspace.settings.credentials_manager (
 partition_id,
 tokenType,
 scopes,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ partition_id }}' /* required */,
 '{{ tokenType }}' /* required */,
 '{{ scopes }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 values
 ;
@@ -119,6 +126,9 @@ values
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the credentials_manager resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the credentials_manager resource.
     - name: partition_id
       description: |

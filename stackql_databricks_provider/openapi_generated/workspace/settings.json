@@ -5,17 +5,30 @@
     "description": "OpenAPI specification for the Databricks settings service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.settings"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
@@ -710,7 +723,6 @@
                             "items": {
                               "type": "string",
                               "x-enum": [
-                                "ARC_AMPE",
                                 "CANADA_PROTECTED_B",
                                 "CYBER_ESSENTIAL_PLUS",
                                 "FEDRAMP_HIGH",
@@ -988,7 +1000,6 @@
                             "items": {
                               "type": "string",
                               "x-enum": [
-                                "ARC_AMPE",
                                 "CANADA_PROTECTED_B",
                                 "CYBER_ESSENTIAL_PLUS",
                                 "FEDRAMP_HIGH",
@@ -4045,6 +4056,58 @@
                   "config": {
                     "type": "object",
                     "properties": {
+                      "databricks_app_slack": {
+                        "type": "object",
+                        "properties": {
+                          "channel_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Slack channel ID notifications are posted to."
+                          },
+                          "channel_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether channel ID is set."
+                          },
+                          "team_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Slack workspace (team) ID the Databricks app is installed in."
+                          },
+                          "team_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether team ID is set."
+                          }
+                        },
+                        "description": "Slack channel reached through the Databricks app. The app must already be installed in the Slack\n    workspace and connected to this Databricks workspace."
+                      },
+                      "databricks_app_teams": {
+                        "type": "object",
+                        "properties": {
+                          "channel_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Teams channel ID notifications are posted to."
+                          },
+                          "channel_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether channel ID is set."
+                          },
+                          "team_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Microsoft Entra group ID of the team that owns the channel."
+                          },
+                          "team_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether team ID is set."
+                          },
+                          "tenant_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Microsoft Entra tenant ID of the Microsoft 365 tenant the app is installed in."
+                          },
+                          "tenant_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether tenant ID is set."
+                          }
+                        },
+                        "description": "Microsoft Teams channel reached through the Databricks app. The app must already be installed in\n    the Microsoft 365 tenant and connected to this Databricks workspace."
+                      },
                       "email": {
                         "type": "object",
                         "properties": {
@@ -4059,51 +4122,8 @@
                       "generic_webhook": {
                         "type": "object",
                         "properties": {
-                          "oauth_audience": {
-                            "type": "string"
-                          },
-                          "oauth_audience_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 audience is set."
-                          },
-                          "oauth_client_id": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] OAuth2 client ID for the client_credentials grant."
-                          },
-                          "oauth_client_id_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 client ID is set."
-                          },
-                          "oauth_client_secret": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] OAuth2 client secret for the client_credentials grant."
-                          },
-                          "oauth_client_secret_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 client secret is set."
-                          },
-                          "oauth_scopes": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "[Input-Only][Optional] OAuth2 scopes requested at token mint (required by some IdPs)."
-                          },
-                          "oauth_scopes_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 scopes are set."
-                          },
-                          "oauth_token_url": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] OAuth2 token endpoint URL (customer IdP) where access tokens are minted."
-                          },
-                          "oauth_token_url_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 token URL is set."
-                          },
                           "password": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] Password for webhook."
+                            "type": "string"
                           },
                           "password_set": {
                             "type": "boolean",
@@ -4436,6 +4456,58 @@
                   "config": {
                     "type": "object",
                     "properties": {
+                      "databricks_app_slack": {
+                        "type": "object",
+                        "properties": {
+                          "channel_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Slack channel ID notifications are posted to."
+                          },
+                          "channel_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether channel ID is set."
+                          },
+                          "team_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Slack workspace (team) ID the Databricks app is installed in."
+                          },
+                          "team_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether team ID is set."
+                          }
+                        },
+                        "description": "Slack channel reached through the Databricks app. The app must already be installed in the Slack\n    workspace and connected to this Databricks workspace."
+                      },
+                      "databricks_app_teams": {
+                        "type": "object",
+                        "properties": {
+                          "channel_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Teams channel ID notifications are posted to."
+                          },
+                          "channel_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether channel ID is set."
+                          },
+                          "team_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Microsoft Entra group ID of the team that owns the channel."
+                          },
+                          "team_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether team ID is set."
+                          },
+                          "tenant_id": {
+                            "type": "string",
+                            "description": "[Input-Only] Microsoft Entra tenant ID of the Microsoft 365 tenant the app is installed in."
+                          },
+                          "tenant_id_set": {
+                            "type": "boolean",
+                            "description": "[Output-Only] Whether tenant ID is set."
+                          }
+                        },
+                        "description": "Microsoft Teams channel reached through the Databricks app. The app must already be installed in\n    the Microsoft 365 tenant and connected to this Databricks workspace."
+                      },
                       "email": {
                         "type": "object",
                         "properties": {
@@ -4450,51 +4522,8 @@
                       "generic_webhook": {
                         "type": "object",
                         "properties": {
-                          "oauth_audience": {
-                            "type": "string"
-                          },
-                          "oauth_audience_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 audience is set."
-                          },
-                          "oauth_client_id": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] OAuth2 client ID for the client_credentials grant."
-                          },
-                          "oauth_client_id_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 client ID is set."
-                          },
-                          "oauth_client_secret": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] OAuth2 client secret for the client_credentials grant."
-                          },
-                          "oauth_client_secret_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 client secret is set."
-                          },
-                          "oauth_scopes": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "[Input-Only][Optional] OAuth2 scopes requested at token mint (required by some IdPs)."
-                          },
-                          "oauth_scopes_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 scopes are set."
-                          },
-                          "oauth_token_url": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] OAuth2 token endpoint URL (customer IdP) where access tokens are minted."
-                          },
-                          "oauth_token_url_set": {
-                            "type": "boolean",
-                            "description": "[Output-Only] Whether OAuth2 token URL is set."
-                          },
                           "password": {
-                            "type": "string",
-                            "description": "[Input-Only][Optional] Password for webhook."
+                            "type": "string"
                           },
                           "password_set": {
                             "type": "boolean",
@@ -6104,10 +6133,6 @@
                         },
                         "description": "Output only. Inferred API path scopes collected for this token when autoscope is enabled."
                       },
-                      "last_accessed_time": {
-                        "type": "integer",
-                        "description": "Server time (in epoch milliseconds) when the token was accessed most recently."
-                      },
                       "scopes": {
                         "type": "array",
                         "items": {
@@ -6714,6 +6739,12 @@
       "Config": {
         "type": "object",
         "properties": {
+          "databricks_app_slack": {
+            "$ref": "#/components/schemas/DatabricksAppSlackConfig"
+          },
+          "databricks_app_teams": {
+            "$ref": "#/components/schemas/DatabricksAppTeamsConfig"
+          },
           "email": {
             "$ref": "#/components/schemas/EmailConfig"
           },
@@ -6861,7 +6892,8 @@
         "type": "object",
         "properties": {
           "cross_workspace_access": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess"
+            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess",
+            "description": "The network policy restrictions for cross-workspace access: which other workspaces may access this workspace."
           },
           "private_access": {
             "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyPrivateAccess",
@@ -6877,17 +6909,6 @@
       "CustomerFacingIngressNetworkPolicyAccountApiDestination": {
         "type": "object",
         "properties": {
-          "excluded_scopes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Inverse of ``scopes``: matches every API scope EXCEPT those listed here (\"allow all except\"). Mutually exclusive with ``scopes`` \u2014 a single destination may set at most one of the two."
-          },
-          "scope_constraint": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyApiScopeConstraint",
-            "description": "Deprecated: Use scope_qualifier instead."
-          },
           "scope_qualifier": {
             "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyApiScopeQualifier",
             "description": "Qualifies the breadth of API access for the listed scopes. See ApiScopeQualifier."
@@ -6963,13 +6984,15 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule"
-            }
+            },
+            "description": "Allow rules are evaluated after deny rules. A request matching any allow rule is allowed; a request matching no rule is denied by default. Only applies when restriction_mode is RESTRICTED_ACCESS."
           },
           "deny_rules": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule"
-            }
+            },
+            "description": "Deny rules are evaluated first. A request matching any deny rule is denied, regardless of allow rules. Only applies when restriction_mode is RESTRICTED_ACCESS."
           }
         },
         "required": [
@@ -6980,19 +7003,23 @@
         "type": "object",
         "properties": {
           "authentication": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyAuthentication"
+            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyAuthentication",
+            "description": "The authenticated identity the request must match. When unset, the rule matches all users and service principals."
           },
           "destination": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyRequestDestination"
+            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyRequestDestination",
+            "description": "The destination the request must match \u2014 the resource being accessed, for example the workspace UI or workspace APIs. See RequestDestination."
           },
           "label": {
             "type": "string",
             "description": "The label for this ingress rule."
           },
           "origin": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin"
+            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin",
+            "description": "The origin the request must match \u2014 the source workspace the request comes from, either specific source workspaces or any source workspace in any account. See CrossWorkspaceRequestOrigin."
           }
-        }
+        },
+        "description": "An ingress rule is enforced when a request satisfies all specified attributes \u2014 including\n    request origin, destination, and authentication."
       },
       "CustomerFacingIngressNetworkPolicyCrossWorkspaceRequestOrigin": {
         "type": "object",
@@ -7037,23 +7064,6 @@
             "type": "boolean"
           }
         }
-      },
-      "CustomerFacingIngressNetworkPolicyManagedIpRange": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the managed IP range, e.g., \"powerbi\"."
-          },
-          "regions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Partner regions to allow, e.g., [\"EastUS\", \"WestEurope\"]. Each region must belong to the partner named in ``name``. Empty list means all regions of the partner. Region casing matches the partner's source (e.g., Microsoft uses \"EastUS\"), so values are stored verbatim, not lowercased."
-          }
-        },
-        "description": "A Databricks-managed IP range identified by name (e.g., \"powerbi\", \"dbt\"), optionally scoped to\n    specific partner regions. Customers reference a name instead of raw CIDRs; Databricks keeps the\n    underlying IP list current."
       },
       "CustomerFacingIngressNetworkPolicyPrivateAccess": {
         "type": "object",
@@ -7181,10 +7191,6 @@
           "included_ip_ranges": {
             "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyIpRanges",
             "description": "Will not allow IP ranges with private IPs."
-          },
-          "managed_ip_range": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyManagedIpRange",
-            "description": "A single Databricks-maintained IP range for a well-known partner (e.g., Power BI, dbt), optionally scoped to specific partner regions. Customers create one rule per partner."
           }
         }
       },
@@ -7229,10 +7235,6 @@
               "type": "string"
             },
             "description": "Inverse of ``scopes``: matches every API scope EXCEPT those listed here (\"allow all except\"). Mutually exclusive with ``scopes`` \u2014 a single destination may set at most one of the two."
-          },
-          "scope_constraint": {
-            "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyApiScopeConstraint",
-            "description": "Deprecated: Use scope_qualifier instead."
           },
           "scope_qualifier": {
             "$ref": "#/components/schemas/CustomerFacingIngressNetworkPolicyApiScopeQualifier",
@@ -7350,6 +7352,58 @@
         "required": [
           "boolean_val"
         ]
+      },
+      "DatabricksAppSlackConfig": {
+        "type": "object",
+        "properties": {
+          "channel_id": {
+            "type": "string",
+            "description": "[Input-Only] Slack channel ID notifications are posted to."
+          },
+          "channel_id_set": {
+            "type": "boolean",
+            "description": "[Output-Only] Whether channel ID is set."
+          },
+          "team_id": {
+            "type": "string",
+            "description": "[Input-Only] Slack workspace (team) ID the Databricks app is installed in."
+          },
+          "team_id_set": {
+            "type": "boolean",
+            "description": "[Output-Only] Whether team ID is set."
+          }
+        },
+        "description": "Slack channel reached through the Databricks app. The app must already be installed in the Slack\n    workspace and connected to this Databricks workspace."
+      },
+      "DatabricksAppTeamsConfig": {
+        "type": "object",
+        "properties": {
+          "channel_id": {
+            "type": "string",
+            "description": "[Input-Only] Teams channel ID notifications are posted to."
+          },
+          "channel_id_set": {
+            "type": "boolean",
+            "description": "[Output-Only] Whether channel ID is set."
+          },
+          "team_id": {
+            "type": "string",
+            "description": "[Input-Only] Microsoft Entra group ID of the team that owns the channel."
+          },
+          "team_id_set": {
+            "type": "boolean",
+            "description": "[Output-Only] Whether team ID is set."
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "[Input-Only] Microsoft Entra tenant ID of the Microsoft 365 tenant the app is installed in."
+          },
+          "tenant_id_set": {
+            "type": "boolean",
+            "description": "[Output-Only] Whether tenant ID is set."
+          }
+        },
+        "description": "Microsoft Teams channel reached through the Databricks app. The app must already be installed in\n    the Microsoft 365 tenant and connected to this Databricks workspace."
       },
       "DefaultNamespaceSetting": {
         "type": "object",
@@ -7998,51 +8052,8 @@
       "GenericWebhookConfig": {
         "type": "object",
         "properties": {
-          "oauth_audience": {
-            "type": "string"
-          },
-          "oauth_audience_set": {
-            "type": "boolean",
-            "description": "[Output-Only] Whether OAuth2 audience is set."
-          },
-          "oauth_client_id": {
-            "type": "string",
-            "description": "[Input-Only][Optional] OAuth2 client ID for the client_credentials grant."
-          },
-          "oauth_client_id_set": {
-            "type": "boolean",
-            "description": "[Output-Only] Whether OAuth2 client ID is set."
-          },
-          "oauth_client_secret": {
-            "type": "string",
-            "description": "[Input-Only][Optional] OAuth2 client secret for the client_credentials grant."
-          },
-          "oauth_client_secret_set": {
-            "type": "boolean",
-            "description": "[Output-Only] Whether OAuth2 client secret is set."
-          },
-          "oauth_scopes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "[Input-Only][Optional] OAuth2 scopes requested at token mint (required by some IdPs)."
-          },
-          "oauth_scopes_set": {
-            "type": "boolean",
-            "description": "[Output-Only] Whether OAuth2 scopes are set."
-          },
-          "oauth_token_url": {
-            "type": "string",
-            "description": "[Input-Only][Optional] OAuth2 token endpoint URL (customer IdP) where access tokens are minted."
-          },
-          "oauth_token_url_set": {
-            "type": "boolean",
-            "description": "[Output-Only] Whether OAuth2 token URL is set."
-          },
           "password": {
-            "type": "string",
-            "description": "[Input-Only][Optional] Password for webhook."
+            "type": "string"
           },
           "password_set": {
             "type": "boolean",
@@ -8493,9 +8504,6 @@
           },
           "azure_service_endpoint_rule": {
             "$ref": "#/components/schemas/NccAzureServiceEndpointRule"
-          },
-          "gcp_project_id_rule": {
-            "$ref": "#/components/schemas/NetworkConnectivityConfigEgressConfigDefaultRuleGcpProjectIdRule"
           }
         },
         "description": "Default rules don't have specific targets."
@@ -8600,17 +8608,6 @@
           }
         },
         "description": "Properties of the new private endpoint rule. Note that you must approve the endpoint in Azure\n    portal after initialization."
-      },
-      "NetworkConnectivityConfigEgressConfigDefaultRuleGcpProjectIdRule": {
-        "type": "object",
-        "properties": {
-          "project_ids": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
       },
       "NetworkConnectivityConfiguration": {
         "type": "object",
@@ -8759,10 +8756,6 @@
               "type": "string"
             },
             "description": "Output only. Inferred API path scopes collected for this token when autoscope is enabled."
-          },
-          "last_accessed_time": {
-            "type": "integer",
-            "description": "Server time (in epoch milliseconds) when the token was accessed most recently."
           },
           "scopes": {
             "type": "array",
@@ -9110,7 +9103,6 @@
       "ComplianceStandard": {
         "type": "string",
         "x-enum": [
-          "ARC_AMPE",
           "CANADA_PROTECTED_B",
           "CYBER_ESSENTIAL_PLUS",
           "FEDRAMP_HIGH",
@@ -9129,14 +9121,6 @@
           "PCI_DSS"
         ],
         "description": "Compliance standard for SHIELD customers. See README.md for how instructions of how to add new\nstandards."
-      },
-      "CustomerFacingIngressNetworkPolicyApiScopeConstraint": {
-        "type": "string",
-        "x-enum": [
-          "ALL",
-          "READ"
-        ],
-        "description": "Deprecated: Use ApiScopeQualifier instead."
       },
       "CustomerFacingIngressNetworkPolicyApiScopeQualifier": {
         "type": "string",
@@ -9167,9 +9151,10 @@
         "type": "string",
         "x-enum": [
           "FULL_ACCESS",
+          "LEGACY_MODE",
           "RESTRICTED_ACCESS"
         ],
-        "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
+        "description": "The restriction mode for cross-workspace access. In FULL_ACCESS mode, requests from any source\nworkspace (in any account) are allowed, and deny rules and allow rules cannot be set. In\nRESTRICTED_ACCESS mode, access is restricted based on deny rules and allow rules; requests that\ndo not match any allow rule are denied. In LEGACY_MODE, cross-workspace ingress is not governed\nby this policy."
       },
       "CustomerFacingIngressNetworkPolicyPrivateAccessRestrictionMode": {
         "type": "string",
@@ -9203,6 +9188,8 @@
       "DestinationType": {
         "type": "string",
         "x-enum": [
+          "DATABRICKS_APP_SLACK",
+          "DATABRICKS_APP_TEAMS",
           "EMAIL",
           "MICROSOFT_TEAMS",
           "PAGERDUTY",

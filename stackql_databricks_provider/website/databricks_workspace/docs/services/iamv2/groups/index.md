@@ -54,7 +54,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the group in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "group_id",
     "type": "string",
     "description": "Internal group ID of the group in Databricks."
   },
@@ -79,7 +79,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the group in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "group_id",
     "type": "string",
     "description": "Internal group ID of the group in Databricks."
   },
@@ -110,42 +110,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Fetches a group by its internal ID from the Databricks account that parents the calling workspace.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists the groups in the Databricks account that parents the calling workspace, returning one page per</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-group"><code>group</code></a></td>
     <td></td>
-    <td>Creates a group in the Databricks account that parents the calling workspace and returns the resulting</td>
+    <td>Creates a local group in the Databricks account that parents the calling workspace and returns the</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-group"><code>group</code></a></td>
     <td></td>
     <td>Updates an existing group in the Databricks account that parents the calling workspace. Only the</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a group by its internal ID from the Databricks account that parents the calling workspace.</td>
 </tr>
 <tr>
     <td><a href="#resolve"><CopyableCode code="resolve" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
     <td></td>
     <td>Resolves a group with the given external ID from the customer's IdP. If the group does not exist, it</td>
 </tr>
@@ -168,17 +168,22 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
-<tr id="parameter-internal_id">
-    <td><CopyableCode code="internal_id" /></td>
+<tr id="parameter-group_id">
+    <td><CopyableCode code="group_id" /></td>
     <td><code>string</code></td>
     <td>Required. Internal ID of the group in Databricks.</td>
 </tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
-    <td>Optional. The list of fields to update.</td>
+    <td>Required. The list of fields to update.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-filter">
     <td><CopyableCode code="filter" /></td>
@@ -188,7 +193,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of groups to return. The service may return fewer than this value.</td>
+    <td>The maximum number of groups to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -215,11 +220,12 @@ Fetches a group by its internal ID from the Databricks account that parents the 
 SELECT
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name
 FROM databricks_workspace.iamv2.groups
-WHERE internal_id = '{{ internal_id }}' -- required
+WHERE group_id = '{{ group_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -231,10 +237,11 @@ Lists the groups in the Databricks account that parents the calling workspace, r
 SELECT
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name
 FROM databricks_workspace.iamv2.groups
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND filter = '{{ filter }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -255,20 +262,22 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Creates a group in the Databricks account that parents the calling workspace and returns the resulting
+Creates a local group in the Databricks account that parents the calling workspace and returns the
 
 ```sql
 INSERT INTO databricks_workspace.iamv2.groups (
 group,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ group }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name
 ;
 ```
@@ -281,14 +290,17 @@ group_name
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the groups resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the groups resource.
     - name: group
       description: |
-        Required. Group to be created in <Databricks>
+        Required. Group to be created in Databricks
       value:
         account_id: "{{ account_id }}"
         external_id: "{{ external_id }}"
+        group_id: "{{ group_id }}"
         group_name: "{{ group_name }}"
-        internal_id: "{{ internal_id }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -312,14 +324,15 @@ UPDATE databricks_workspace.iamv2.groups
 SET 
 group = '{{ group }}'
 WHERE 
-internal_id = '{{ internal_id }}' --required
+group_id = '{{ group_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND group = '{{ group }}' --required
 RETURNING
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name;
 ```
 </TabItem>
@@ -340,8 +353,9 @@ Deletes a group by its internal ID from the Databricks account that parents the 
 
 ```sql
 DELETE FROM databricks_workspace.iamv2.groups
-WHERE internal_id = '{{ internal_id }}' --required
+WHERE group_id = '{{ group_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -362,7 +376,8 @@ Resolves a group with the given external ID from the customer's IdP. If the grou
 
 ```sql
 EXEC databricks_workspace.iamv2.groups.resolve 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "external_id": "{{ external_id }}"

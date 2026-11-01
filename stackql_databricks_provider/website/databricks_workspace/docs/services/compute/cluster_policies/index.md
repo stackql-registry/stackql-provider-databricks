@@ -64,70 +64,6 @@ The following fields are returned by `SELECT` queries:
     "description": "Creator user name. The field won't be included in the response if the user has already been deleted."
   },
   {
-    "name": "auto_enforcement_config",
-    "type": "object",
-    "description": "If present, auto enforcement is enabled for the policy. After the policy is edited, a background operation may be scheduled to scan and edit all clusters and jobs using this policy to be in compliance with the policy. The background operation is created when a policy edit does one of the following: - Changes the policy definition, or - Changes auto enforcement from disabled to enabled Additionally, changes to the policy definition or auto enforcement configuration may cause an in-progress operation to be restarted. To cancel an in-progress operation, edit the policy to delete this auto enforcement configuration. The background operation status is reported via the ``background_enforcement`` field when reading the policy.",
-    "children": [
-      {
-        "name": "enforce_mode",
-        "type": "string",
-        "description": "For running clusters, whether to defer enforcement until the cluster terminates or to restart it immediately. (ENFORCE_IMMEDIATELY, WAIT_FOR_TERMINATION)"
-      }
-    ]
-  },
-  {
-    "name": "background_enforcement",
-    "type": "object",
-    "description": "Status and results of the background auto-enforcement operation for this policy. Only returned if calling \"Get a cluster policy\" with ``POLICY_VIEW_FULL``. Must be a workspace admin for this field to be populated.",
-    "children": [
-      {
-        "name": "deferred_cluster_enforce_count",
-        "type": "integer",
-        "description": "Number of clusters that are scheduled to enforce on next termination or restart."
-      },
-      {
-        "name": "end_time",
-        "type": "string (date-time)",
-        "description": "The time the enforcement operation finished. Only set once the operation reaches a COMPLETED or ABORTED state."
-      },
-      {
-        "name": "failed_cluster_enforce_count",
-        "type": "integer",
-        "description": "Number of clusters that could not be enforced due to an error."
-      },
-      {
-        "name": "failed_job_enforce_count",
-        "type": "integer",
-        "description": "Number of jobs that could not be enforced due to an error."
-      },
-      {
-        "name": "initiate_time",
-        "type": "string (date-time)",
-        "description": "The time the enforcement operation was initiated."
-      },
-      {
-        "name": "initiator_user",
-        "type": "string",
-        "description": "The user who edited the policy to initiate the enforcement operation."
-      },
-      {
-        "name": "status",
-        "type": "string",
-        "description": "Whether the enforcement operation is still in-progress or completed. (ABORTED, COMPLETED, IN_PROGRESS)"
-      },
-      {
-        "name": "success_cluster_enforce_count",
-        "type": "integer",
-        "description": "Number of clusters that were successfully enforced."
-      },
-      {
-        "name": "success_job_enforce_count",
-        "type": "integer",
-        "description": "Number of jobs that were successfully enforced."
-      }
-    ]
-  },
-  {
     "name": "created_at_timestamp",
     "type": "integer",
     "description": "Creation time. The timestamp (in millisecond) when this Cluster Policy was created."
@@ -266,70 +202,6 @@ The following fields are returned by `SELECT` queries:
     "description": "Creator user name. The field won't be included in the response if the user has already been deleted."
   },
   {
-    "name": "auto_enforcement_config",
-    "type": "object",
-    "description": "If present, auto enforcement is enabled for the policy. After the policy is edited, a background operation may be scheduled to scan and edit all clusters and jobs using this policy to be in compliance with the policy. The background operation is created when a policy edit does one of the following: - Changes the policy definition, or - Changes auto enforcement from disabled to enabled Additionally, changes to the policy definition or auto enforcement configuration may cause an in-progress operation to be restarted. To cancel an in-progress operation, edit the policy to delete this auto enforcement configuration. The background operation status is reported via the ``background_enforcement`` field when reading the policy.",
-    "children": [
-      {
-        "name": "enforce_mode",
-        "type": "string",
-        "description": "For running clusters, whether to defer enforcement until the cluster terminates or to restart it immediately. (ENFORCE_IMMEDIATELY, WAIT_FOR_TERMINATION)"
-      }
-    ]
-  },
-  {
-    "name": "background_enforcement",
-    "type": "object",
-    "description": "Status and results of the background auto-enforcement operation for this policy. Only returned if calling \"Get a cluster policy\" with ``POLICY_VIEW_FULL``. Must be a workspace admin for this field to be populated.",
-    "children": [
-      {
-        "name": "deferred_cluster_enforce_count",
-        "type": "integer",
-        "description": "Number of clusters that are scheduled to enforce on next termination or restart."
-      },
-      {
-        "name": "end_time",
-        "type": "string (date-time)",
-        "description": "The time the enforcement operation finished. Only set once the operation reaches a COMPLETED or ABORTED state."
-      },
-      {
-        "name": "failed_cluster_enforce_count",
-        "type": "integer",
-        "description": "Number of clusters that could not be enforced due to an error."
-      },
-      {
-        "name": "failed_job_enforce_count",
-        "type": "integer",
-        "description": "Number of jobs that could not be enforced due to an error."
-      },
-      {
-        "name": "initiate_time",
-        "type": "string (date-time)",
-        "description": "The time the enforcement operation was initiated."
-      },
-      {
-        "name": "initiator_user",
-        "type": "string",
-        "description": "The user who edited the policy to initiate the enforcement operation."
-      },
-      {
-        "name": "status",
-        "type": "string",
-        "description": "Whether the enforcement operation is still in-progress or completed. (ABORTED, COMPLETED, IN_PROGRESS)"
-      },
-      {
-        "name": "success_cluster_enforce_count",
-        "type": "integer",
-        "description": "Number of clusters that were successfully enforced."
-      },
-      {
-        "name": "success_job_enforce_count",
-        "type": "integer",
-        "description": "Number of jobs that were successfully enforced."
-      }
-    ]
-  },
-  {
     "name": "created_at_timestamp",
     "type": "integer",
     "description": "Creation time. The timestamp (in millisecond) when this Cluster Policy was created."
@@ -464,35 +336,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-policy_view"><code>policy_view</code></a></td>
+    <td><a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
     <td>Get a cluster policy entity. Creation and editing is available to admins only.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-sort_column"><code>sort_column</code></a>, <a href="#parameter-sort_order"><code>sort_order</code></a></td>
     <td>Returns a list of policies accessible by the requesting user.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new policy with prescribed settings.</td>
 </tr>
 <tr>
     <td><a href="#replace"><CopyableCode code="replace" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a></td>
     <td></td>
     <td>Update an existing policy for cluster. This operation may make some clusters governed by the previous</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a policy for a cluster. Clusters governed by this policy can still run, but cannot be edited.</td>
 </tr>
@@ -515,17 +387,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-policy_id">
     <td><CopyableCode code="policy_id" /></td>
     <td><code>string</code></td>
     <td>Canonical unique identifier for the Cluster Policy.</td>
 </tr>
-<tr id="parameter-policy_view">
-    <td><CopyableCode code="policy_view" /></td>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
     <td><code>string</code></td>
-    <td>Controls which fields are returned.</td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-sort_column">
     <td><CopyableCode code="sort_column" /></td>
@@ -559,8 +431,6 @@ name,
 policy_family_id,
 policy_id,
 creator_user_name,
-auto_enforcement_config,
-background_enforcement,
 created_at_timestamp,
 definition,
 description,
@@ -571,7 +441,7 @@ policy_family_definition_overrides
 FROM databricks_workspace.compute.cluster_policies
 WHERE policy_id = '{{ policy_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
-AND policy_view = '{{ policy_view }}'
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -585,8 +455,6 @@ name,
 policy_family_id,
 policy_id,
 creator_user_name,
-auto_enforcement_config,
-background_enforcement,
 created_at_timestamp,
 definition,
 description,
@@ -596,6 +464,7 @@ max_clusters_per_user,
 policy_family_definition_overrides
 FROM databricks_workspace.compute.cluster_policies
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND sort_column = '{{ sort_column }}'
 AND sort_order = '{{ sort_order }}'
 ;
@@ -619,7 +488,6 @@ Creates a new policy with prescribed settings.
 
 ```sql
 INSERT INTO databricks_workspace.compute.cluster_policies (
-auto_enforcement_config,
 definition,
 description,
 libraries,
@@ -627,10 +495,10 @@ max_clusters_per_user,
 name,
 policy_family_definition_overrides,
 policy_family_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ auto_enforcement_config }}',
 '{{ definition }}',
 '{{ description }}',
 '{{ libraries }}',
@@ -638,7 +506,8 @@ SELECT
 '{{ name }}',
 '{{ policy_family_definition_overrides }}',
 '{{ policy_family_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 policy_id
 ;
@@ -652,11 +521,9 @@ policy_id
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the cluster_policies resource.
-    - name: auto_enforcement_config
-      description: |
-        If present, auto enforcement is enabled for the policy. After the policy is edited, a background operation may be scheduled to scan and edit all clusters and jobs using this policy to be in compliance with the policy. The background operation is created when a policy edit does one of the following: - Changes the policy definition, or - Changes auto enforcement from disabled to enabled Additionally, changes to the policy definition or auto enforcement configuration may cause an in-progress operation to be restarted. To cancel an in-progress operation, edit the policy to delete this auto enforcement configuration. The background operation status is reported via the \`\`background_enforcement\`\` field when reading the policy.
-      value:
-        enforce_mode: "{{ enforce_mode }}"
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the cluster_policies resource.
     - name: definition
       value: "{{ definition }}"
       description: |
@@ -722,7 +589,6 @@ Update an existing policy for cluster. This operation may make some clusters gov
 REPLACE databricks_workspace.compute.cluster_policies
 SET 
 policy_id = '{{ policy_id }}',
-auto_enforcement_config = '{{ auto_enforcement_config }}',
 definition = '{{ definition }}',
 description = '{{ description }}',
 libraries = '{{ libraries }}',
@@ -732,6 +598,7 @@ policy_family_definition_overrides = '{{ policy_family_definition_overrides }}',
 policy_family_id = '{{ policy_family_id }}'
 WHERE 
 deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND policy_id = '{{ policy_id }}' --required;
 ```
 </TabItem>
@@ -753,6 +620,7 @@ Delete a policy for a cluster. Clusters governed by this policy can still run, b
 ```sql
 DELETE FROM databricks_workspace.compute.cluster_policies
 WHERE deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

@@ -71,7 +71,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "provider",
     "type": "string",
-    "description": "Git provider of the linked Git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit`` (deprecated)."
+    "description": "Git provider of the linked Git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit``."
   },
   {
     "name": "sparse_checkout",
@@ -118,7 +118,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "provider",
     "type": "string",
-    "description": "Git provider of the remote git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit`` (deprecated)."
+    "description": "Git provider of the remote git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit``."
   },
   {
     "name": "sparse_checkout",
@@ -159,35 +159,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-repo_id"><code>repo_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-repo_id"><code>repo_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Returns the repo with the given repo ID.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-next_page_token"><code>next_page_token</code></a>, <a href="#parameter-path_prefix"><code>path_prefix</code></a></td>
     <td>Returns repos that the calling user has Manage permissions on. Use ``next_page_token`` to iterate</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-url"><code>url</code></a>, <a href="#parameter-provider"><code>provider</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-url"><code>url</code></a>, <a href="#parameter-provider"><code>provider</code></a></td>
     <td></td>
     <td>Creates a repo in the workspace and links it to the remote Git repo specified. Note that repos created</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-repo_id"><code>repo_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-repo_id"><code>repo_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the repo to a different branch or tag, or updates the repo to the latest commit on the same</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-repo_id"><code>repo_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-repo_id"><code>repo_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes the specified repo.</td>
 </tr>
@@ -210,12 +210,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-repo_id">
     <td><CopyableCode code="repo_id" /></td>
     <td><code>integer</code></td>
     <td>The ID for the corresponding repo to delete.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-next_page_token">
     <td><CopyableCode code="next_page_token" /></td>
@@ -256,6 +261,7 @@ url
 FROM databricks_workspace.workspace.repos
 WHERE repo_id = '{{ repo_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -274,6 +280,7 @@ sparse_checkout,
 url
 FROM databricks_workspace.workspace.repos
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND next_page_token = '{{ next_page_token }}'
 AND path_prefix = '{{ path_prefix }}'
 ;
@@ -302,7 +309,8 @@ provider,
 git_credential_id,
 path,
 sparse_checkout,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ url }}' /* required */,
@@ -310,7 +318,8 @@ SELECT
 {{ git_credential_id }},
 '{{ path }}',
 '{{ sparse_checkout }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 head_commit_id,
@@ -330,6 +339,9 @@ url
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the repos resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the repos resource.
     - name: url
       value: "{{ url }}"
       description: |
@@ -337,7 +349,7 @@ url
     - name: provider
       value: "{{ provider }}"
       description: |
-        Git provider. This field is case-insensitive. The available Git providers are \`\`gitHub\`\`, \`\`bitbucketCloud\`\`, \`\`gitLab\`\`, \`\`azureDevOpsServices\`\` (Azure DevOps Services, including Microsoft Entra ID authentication), \`\`gitHubEnterprise\`\`, \`\`bitbucketServer\`\` (Bitbucket Data Center), \`\`gitLabEnterpriseEdition\`\` (GitLab Self-Managed), and \`\`awsCodeCommit\`\` (deprecated by AWS, not accepting new customers).
+        Git provider. This field is case-insensitive. The available Git providers are \`\`gitHub\`\`, \`\`bitbucketCloud\`\`, \`\`gitLab\`\`, \`\`azureDevOpsServices\`\` (Azure DevOps Services, including Microsoft Entra ID authentication), \`\`gitHubEnterprise\`\`, \`\`bitbucketServer\`\` (Bitbucket Data Center), \`\`gitLabEnterpriseEdition\`\` (GitLab Self-Managed), and \`\`awsCodeCommit\`\`.
     - name: git_credential_id
       value: {{ git_credential_id }}
       description: |
@@ -380,7 +392,8 @@ sparse_checkout = '{{ sparse_checkout }}',
 tag = '{{ tag }}'
 WHERE 
 repo_id = '{{ repo_id }}' --required
-AND deployment_name = '{{ deployment_name }}' --required;
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -402,6 +415,7 @@ Deletes the specified repo.
 DELETE FROM databricks_workspace.workspace.repos
 WHERE repo_id = '{{ repo_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

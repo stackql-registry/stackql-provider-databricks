@@ -540,35 +540,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-alert_id"><code>alert_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-alert_id"><code>alert_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets an alert.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a list of alerts.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-options"><code>options</code></a>, <a href="#parameter-query_id"><code>query_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-options"><code>options</code></a>, <a href="#parameter-query_id"><code>query_id</code></a></td>
     <td></td>
     <td>Creates an alert. An alert is a Databricks SQL object that periodically runs a query, evaluates a</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-alert_id"><code>alert_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-options"><code>options</code></a>, <a href="#parameter-query_id"><code>query_id</code></a></td>
+    <td><a href="#parameter-alert_id"><code>alert_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-options"><code>options</code></a>, <a href="#parameter-query_id"><code>query_id</code></a></td>
     <td></td>
     <td>Updates an alert.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-alert_id"><code>alert_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-alert_id"><code>alert_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes an alert. Deleted alerts are no longer accessible and cannot be restored. **Note**: Unlike</td>
 </tr>
@@ -596,7 +596,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -630,6 +635,7 @@ user
 FROM databricks_workspace.sql.alerts_legacy
 WHERE alert_id = '{{ alert_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -652,6 +658,7 @@ updated_at,
 user
 FROM databricks_workspace.sql.alerts_legacy
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -678,7 +685,8 @@ options,
 query_id,
 parent,
 rearm,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -686,7 +694,8 @@ SELECT
 '{{ query_id }}' /* required */,
 '{{ parent }}',
 {{ rearm }},
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -709,6 +718,9 @@ user
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the alerts_legacy resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the alerts_legacy resource.
     - name: name
       value: "{{ name }}"
@@ -765,6 +777,7 @@ rearm = {{ rearm }}
 WHERE 
 alert_id = '{{ alert_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND name = '{{ name }}' --required
 AND options = '{{ options }}' --required
 AND query_id = '{{ query_id }}' --required;
@@ -789,6 +802,7 @@ Deletes an alert. Deleted alerts are no longer accessible and cannot be restored
 DELETE FROM databricks_workspace.sql.alerts_legacy
 WHERE alert_id = '{{ alert_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

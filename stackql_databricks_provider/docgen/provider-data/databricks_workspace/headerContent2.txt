@@ -20,7 +20,33 @@ Set the following environment variables:
 - <CopyableCode code="DATABRICKS_CLIENT_ID" /> - obtained after creating a service principal through the Databricks UI (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 - <CopyableCode code="DATABRICKS_CLIENT_SECRET" /> - obtained after creating a service principal secret through the Databricks UI, using the "Generate Secret" function (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 
-These are the same variables that Terraform, the Databricks SDKs, and CLI use.  
+These are the same variables that Terraform, the Databricks SDKs, and CLI use.
+
+### Cloud selection (AWS, Azure, GCP)
+
+The provider defaults to Databricks on AWS. The same service principal flow works on Azure Databricks and Databricks on Google Cloud; select the cloud with one variable and both the OAuth token endpoint and the workspace host follow:
+
+- <CopyableCode code="DATABRICKS_CLOUD" /> - `aws` (default), `azure` or `gcp`
+- <CopyableCode code="DATABRICKS_ACCOUNT_HOST" /> - optional, overrides the account console host that issues tokens (a bare host such as `accounts.azuredatabricks.net`, no scheme)
+- <CopyableCode code="DATABRICKS_DEPLOYMENT_NAME" /> - optional, defaults the `deployment_name` predicate for the session
+
+The `deployment_name` predicate is the host prefix of the workspace URL on every cloud:
+
+| Cloud | Workspace URL | `deployment_name` |
+|-------|---------------|-------------------|
+| AWS | `https://dbc-abcd0123-a1bc.cloud.databricks.com` | `dbc-abcd0123-a1bc` |
+| Azure | `https://adb-1234567890123456.7.azuredatabricks.net` | `adb-1234567890123456.7` |
+| GCP | `https://1234567890123456.gcp.databricks.com` | `1234567890123456` |
+
+```bash
+export DATABRICKS_CLOUD=azure
+export DATABRICKS_ACCOUNT_ID=...
+export DATABRICKS_CLIENT_ID=...
+export DATABRICKS_CLIENT_SECRET=...
+stackql exec "SELECT * FROM databricks_workspace.iam.current_user WHERE deployment_name = 'adb-1234567890123456.7'"
+```
+
+With no cloud variables set, queries behave exactly as before: AWS hosts and the AWS token endpoint. Account API authentication on Azure and GCP uses a Databricks-managed service principal (OAuth M2M); Entra ID and Google service-account tokens are not used.
 
 ### Personal Access Token (Bearer)
 

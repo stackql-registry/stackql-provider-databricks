@@ -74,14 +74,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#usage_dashboards_get"><CopyableCode code="usage_dashboards_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-dashboard_type"><code>dashboard_type</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
     <td>Get a usage dashboard specified by workspaceId, accountId, and dashboard type.</td>
 </tr>
 <tr>
     <td><a href="#usage_dashboards_create"><CopyableCode code="usage_dashboards_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Create a usage dashboard specified by workspaceId, accountId, and dashboard type.</td>
 </tr>
@@ -101,6 +101,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -137,6 +142,7 @@ dashboard_id,
 dashboard_url
 FROM databricks_account.billing.usage_dashboards
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND dashboard_type = '{{ dashboard_type }}'
 AND workspace_id = '{{ workspace_id }}'
 ;
@@ -163,13 +169,15 @@ INSERT INTO databricks_account.billing.usage_dashboards (
 dashboard_type,
 major_version,
 workspace_id,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ dashboard_type }}',
 '{{ major_version }}',
 {{ workspace_id }},
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 dashboard_id
 ;
@@ -182,6 +190,9 @@ dashboard_id
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the usage_dashboards resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the usage_dashboards resource.
     - name: dashboard_type
       value: "{{ dashboard_type }}"

@@ -81,7 +81,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "entities",
     "type": "array",
-    "description": "The entity columns for the feature, used as aggregation keys and for query-time lookup.",
+    "description": "The entity columns for the feature, used as aggregation keys and for query-time lookup. Optional since entities are not set for RequestSource features or on-demand calculated features.",
     "children": [
       {
         "name": "name",
@@ -93,7 +93,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "filter_condition",
     "type": "string",
-    "description": "Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility. The filter condition applied to the source data before aggregation."
+    "description": ""
   },
   {
     "name": "function",
@@ -116,9 +116,14 @@ The following fields are returned by `SELECT` queries:
                 "description": "The input column from which the approximate count of distinct values is computed."
               },
               {
+                "name": "relative_error",
+                "type": "number",
+                "description": "The error the user accepts, as a fraction of the count, between 0.02 (by default) and 0.3. This is one standard error of the estimate, the same meaning as Spark's relativeSD: 0.02 means the result is within ±2% of the true count about 68% of the time (one standard deviation covers 68% of the region). Feature Store picks the sketch size that gives this relative error. If neither relative_error nor relative_sd is set, 0.02 is default chosen at feature creation."
+              },
+              {
                 "name": "relative_sd",
                 "type": "number",
-                "description": "The maximum relative standard deviation allowed (default defined by Spark)."
+                "description": "The maximum relative standard deviation allowed (default defined by Spark). Deprecated: use relative_error. When relative_error is set, reads return the same value here for clients that don't have relative_error, and a request may only send that value."
               }
             ]
           },
@@ -140,7 +145,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "accuracy",
                 "type": "integer",
-                "description": "The accuracy parameter (higher is more accurate but slower)."
+                "description": "The accuracy parameter (higher is more accurate but slower). Deprecated: use relative_error. When relative_error is set, reads return ceil(1 / relative_error) here for clients that don't have relative_error, and a request may only send that value."
+              },
+              {
+                "name": "relative_error",
+                "type": "number",
+                "description": "The error the user accepts, as a fraction of rank, between 0.01 (by default) and 0.3. The result is within this rank error with 99% confidence: at 0.01, the value returned for p95 is between the true p94 and p96 at least 99% of the time. Feature Store picks the sketch size that gives this error. If neither relative_error nor accuracy is set, 0.01 is default chosen at feature creation."
               }
             ]
           },
@@ -328,12 +338,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "continuous",
                 "type": "object",
-                "description": "Deprecated: use RollingWindow with ``delay`` instead."
+                "description": ""
               },
               {
                 "name": "rolling",
                 "type": "object",
-                "description": "A rolling time window with an optional delay. This is the SQL-spec-aligned replacement for<br />    ContinuousWindow: ``delay`` is the non-negative counterpart of the legacy non-positive<br />    ``ContinuousWindow.offset``."
+                "description": "A rolling time window with an optional non-negative delay."
               },
               {
                 "name": "sawtooth",
@@ -344,6 +354,11 @@ The following fields are returned by `SELECT` queries:
                 "name": "sliding",
                 "type": "object",
                 "description": ""
+              },
+              {
+                "name": "start_time",
+                "type": "string (date-time)",
+                "description": "Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not the historical inputs read by a window. For example, a 365-day window with start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting for 365 days of data; a lifetime window produces no output before start_time. If unset, tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as eligible source data exists. For sawtooth windows, start_time must not be later than the time the Feature is created. Not supported for rolling windows on Features with a stream source."
               },
               {
                 "name": "tumbling",
@@ -422,12 +437,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "extra_parameters",
         "type": "array",
-        "description": "Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility. Extra parameters for parameterized functions.",
+        "description": "",
         "children": [
           {
             "name": "key",
             "type": "string",
-            "description": "The name of the parameter."
+            "description": ""
           },
           {
             "name": "value",
@@ -439,14 +454,14 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "function_type",
         "type": "string",
-        "description": "Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility. The type of the function. (APPROX_COUNT_DISTINCT, APPROX_PERCENTILE, AVG, COUNT, FIRST, LAST, MAX, MIN, STDDEV_POP, STDDEV_SAMP, SUM, VAR_POP, VAR_SAMP)"
+        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (APPROX_COUNT_DISTINCT, APPROX_PERCENTILE, AVG, COUNT, FIRST, FUNCTION_TYPE_UNSPECIFIED, LAST, MAX, MIN, STDDEV_POP, STDDEV_SAMP, SUM, VAR_POP, VAR_SAMP)"
       }
     ]
   },
   {
     "name": "inputs",
     "type": "array",
-    "description": "Deprecated: Use AggregationFunction.inputs instead. Kept for backwards compatibility. The input columns from which the feature is computed."
+    "description": ""
   },
   {
     "name": "lineage_context",
@@ -500,7 +515,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "entity_columns",
             "type": "array",
-            "description": "Deprecated: Use Feature.entity instead. Kept for backwards compatibility. The entity columns of the Delta table."
+            "description": ""
           },
           {
             "name": "filter_condition",
@@ -510,12 +525,31 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "timeseries_column",
             "type": "string",
-            "description": "Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility. The timeseries column of the Delta table."
+            "description": ""
           },
           {
             "name": "transformation_sql",
             "type": "string",
             "description": "A single SQL SELECT expression applied after filter_condition. Should contains all the columns needed (eg. \"SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a &gt; 0\" would have ``transformation_sql`` \"*, col_a + col_b AS col_c\") If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe."
+          }
+        ]
+      },
+      {
+        "name": "feature_view_source",
+        "type": "object",
+        "description": "A data source composed from registered upstream Features.",
+        "children": [
+          {
+            "name": "feature_references",
+            "type": "array",
+            "description": "The upstream Features this source reads. Must include at least one feature.",
+            "children": [
+              {
+                "name": "feature",
+                "type": "string",
+                "description": "The three-part full name of the upstream Feature."
+              }
+            ]
           }
         ]
       },
@@ -530,14 +564,9 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "dataframe_schema",
-            "type": "string",
-            "description": "Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()). Any subsequent functions operate against this dataframe."
-          },
-          {
             "name": "entity_column_identifiers",
             "type": "array",
-            "description": "Deprecated: Use Feature.entity instead. Kept for backwards compatibility. The entity column identifiers of the Kafka source.",
+            "description": "",
             "children": [
               {
                 "name": "variant_expr_path",
@@ -554,7 +583,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "timeseries_column_identifier",
             "type": "object",
-            "description": "Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility. The timeseries column identifier of the Kafka source.",
+            "description": "",
             "children": [
               {
                 "name": "variant_expr_path",
@@ -562,11 +591,18 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               }
             ]
-          },
+          }
+        ]
+      },
+      {
+        "name": "lateness",
+        "type": "object",
+        "description": "Completeness timing for this Feature's use of the source. This configuration is part of the Feature definition; it does not modify the underlying table or stream.",
+        "children": [
           {
-            "name": "transformation_sql",
+            "name": "settling_delay",
             "type": "string",
-            "description": "The pipeline runs these SQL statements immediately after conversion into the schema specified on the KafkaConfig object."
+            "description": "Non-negative time to wait after a window ends before treating its source data as complete. Training shifts the eligible evaluation time backwards by this duration so it does not join data that would still have been settling online. Materialization waits for the duration to elapse before publishing the window. If unset, source data is considered settled immediately."
           }
         ]
       },
@@ -575,6 +611,11 @@ The following fields are returned by `SELECT` queries:
         "type": "object",
         "description": "A request-time data source.",
         "children": [
+          {
+            "name": "dataframe_schema",
+            "type": "string",
+            "description": "A schema containing scalar or nested fields, in Spark StructType JSON format (from df.schema.json()). This preserves field, array-element, and map-value nullability."
+          },
           {
             "name": "flat_schema",
             "type": "object",
@@ -586,6 +627,48 @@ The following fields are returned by `SELECT` queries:
                 "description": "The list of fields in this schema."
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "sdp_source",
+        "type": "object",
+        "description": "A Spark Declarative Pipeline data source.",
+        "children": [
+          {
+            "name": "dataframe_schema",
+            "type": "string",
+            "description": "Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()). Required if transformation_sql is specified. Example: &#123;\"type\":\"struct\",\"fields\":[&#123;\"name\":\"col_a\",\"type\":\"integer\",\"nullable\":true,\"metadata\":&#123;&#125;&#125;,&#123;\"name\":\"col_c\",\"type\":\"integer\",\"nullable\":true,\"metadata\":&#123;&#125;&#125;]&#125;"
+          },
+          {
+            "name": "filter_condition",
+            "type": "string",
+            "description": "Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections."
+          },
+          {
+            "name": "input_tables",
+            "type": "array",
+            "description": "The full three-part names of the tables the pipeline reads from. Required to materialize this feature with a TableTrigger, which starts a run when these tables update. Each table must exist when the feature is created. Feature Store doesn't confirm that the pipeline reads from these tables. At most 100 tables."
+          },
+          {
+            "name": "output_table",
+            "type": "string",
+            "description": "The full three-part (catalog, schema, table) name of the pipeline's output table to read from. The table doesn't need to exist until the pipeline first runs. Required."
+          },
+          {
+            "name": "pipeline_id",
+            "type": "string",
+            "description": "The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before each materialization or backfill. The pipeline must already exist when the feature is created, and you need CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have run yet. Deleting the feature doesn't delete the pipeline. If the pipeline is deleted, this field reads back empty. Required."
+          },
+          {
+            "name": "pipeline_state",
+            "type": "string",
+            "description": "State tracking pipeline execution and output table validation. PENDING until the pipeline has run at least once and created the output table; then RESOLVED on success, or ERROR on failure. (ERROR, PENDING, RESOLVED)"
+          },
+          {
+            "name": "transformation_sql",
+            "type": "string",
+            "description": "A single SQL SELECT expression applied after filter_condition. Should contain all the columns needed (eg. \"SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a &gt; 0\" would have ``transformation_sql`` \"*, col_a + col_b AS col_c\") If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe."
           }
         ]
       },
@@ -621,17 +704,17 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "time_window",
     "type": "object",
-    "description": "Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility. The time window in which the feature is computed.",
+    "description": "",
     "children": [
       {
         "name": "continuous",
         "type": "object",
-        "description": "Deprecated: use RollingWindow with ``delay`` instead.",
+        "description": "",
         "children": [
           {
             "name": "window_duration",
             "type": "string",
-            "description": "The duration of the continuous window (must be positive)."
+            "description": ""
           },
           {
             "name": "offset",
@@ -643,12 +726,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "rolling",
         "type": "object",
-        "description": "A rolling time window with an optional delay. This is the SQL-spec-aligned replacement for<br />    ContinuousWindow: ``delay`` is the non-negative counterpart of the legacy non-positive<br />    ``ContinuousWindow.offset``.",
+        "description": "A rolling time window with an optional non-negative delay.",
         "children": [
           {
             "name": "delay",
             "type": "string",
-            "description": "The delay applied to the end of the rolling window (must be non-negative). For example, delay=1d shifts the window end 1 day before the evaluation time."
+            "description": "Non-negative analytic lag that evaluates the window this far in the past. Use this for timing variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset, the analytic lag is zero. It composes with source.lateness when both are set."
           },
           {
             "name": "window_duration",
@@ -665,7 +748,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "delay",
             "type": "string",
-            "description": "The delay applied to the end of the window (must be non-negative). For example, delay=1d shifts the window end 1 day before the evaluation time."
+            "description": "Delay is not currently supported for Sawtooth windows."
           },
           {
             "name": "window_duration",
@@ -685,11 +768,26 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
+            "name": "delay",
+            "type": "string",
+            "description": "Non-negative analytic lag that evaluates the window this far in the past. Use this for timing variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset, the analytic lag is zero. It composes with source.lateness when both are set."
+          },
+          {
+            "name": "offset",
+            "type": "string",
+            "description": "Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on a 24h slide produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of midnight UTC. If unset, the offset is zero. Must be shorter than slide_duration (and therefore window_duration)."
+          },
+          {
             "name": "window_duration",
             "type": "string",
             "description": "The duration of the sliding window. Must be positive when set; absent means lifetime (aggregate over the entity's entire history)."
           }
         ]
+      },
+      {
+        "name": "start_time",
+        "type": "string (date-time)",
+        "description": "Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not the historical inputs read by a window. For example, a 365-day window with start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting for 365 days of data; a lifetime window produces no output before start_time. If unset, tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as eligible source data exists. For sawtooth windows, start_time must not be later than the time the Feature is created. Not supported for rolling windows on Features with a stream source."
       },
       {
         "name": "tumbling",
@@ -700,6 +798,16 @@ The following fields are returned by `SELECT` queries:
             "name": "window_duration",
             "type": "string",
             "description": ""
+          },
+          {
+            "name": "delay",
+            "type": "string",
+            "description": "Non-negative analytic lag that evaluates the window this far in the past. Use this for timing variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset, the analytic lag is zero. It composes with source.lateness when both are set."
+          },
+          {
+            "name": "offset",
+            "type": "string",
+            "description": "Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on a 24h window produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of midnight UTC. If unset, the offset is zero. Must be shorter than window_duration."
           }
         ]
       }
@@ -708,7 +816,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "timeseries_column",
     "type": "object",
-    "description": "Column recording time, used for point-in-time joins, backfills, and aggregations.",
+    "description": "Column recording time, used for point-in-time joins, backfills, and aggregations. Optional since a timeseries column is not set for RequestSource features or on-demand calculated features.",
     "children": [
       {
         "name": "name",
@@ -760,7 +868,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "entities",
     "type": "array",
-    "description": "The entity columns for the feature, used as aggregation keys and for query-time lookup.",
+    "description": "The entity columns for the feature, used as aggregation keys and for query-time lookup. Optional since entities are not set for RequestSource features or on-demand calculated features.",
     "children": [
       {
         "name": "name",
@@ -772,7 +880,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "filter_condition",
     "type": "string",
-    "description": "Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility. The filter condition applied to the source data before aggregation."
+    "description": ""
   },
   {
     "name": "function",
@@ -795,9 +903,14 @@ The following fields are returned by `SELECT` queries:
                 "description": "The input column from which the approximate count of distinct values is computed."
               },
               {
+                "name": "relative_error",
+                "type": "number",
+                "description": "The error the user accepts, as a fraction of the count, between 0.02 (by default) and 0.3. This is one standard error of the estimate, the same meaning as Spark's relativeSD: 0.02 means the result is within ±2% of the true count about 68% of the time (one standard deviation covers 68% of the region). Feature Store picks the sketch size that gives this relative error. If neither relative_error nor relative_sd is set, 0.02 is default chosen at feature creation."
+              },
+              {
                 "name": "relative_sd",
                 "type": "number",
-                "description": "The maximum relative standard deviation allowed (default defined by Spark)."
+                "description": "The maximum relative standard deviation allowed (default defined by Spark). Deprecated: use relative_error. When relative_error is set, reads return the same value here for clients that don't have relative_error, and a request may only send that value."
               }
             ]
           },
@@ -819,7 +932,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "accuracy",
                 "type": "integer",
-                "description": "The accuracy parameter (higher is more accurate but slower)."
+                "description": "The accuracy parameter (higher is more accurate but slower). Deprecated: use relative_error. When relative_error is set, reads return ceil(1 / relative_error) here for clients that don't have relative_error, and a request may only send that value."
+              },
+              {
+                "name": "relative_error",
+                "type": "number",
+                "description": "The error the user accepts, as a fraction of rank, between 0.01 (by default) and 0.3. The result is within this rank error with 99% confidence: at 0.01, the value returned for p95 is between the true p94 and p96 at least 99% of the time. Feature Store picks the sketch size that gives this error. If neither relative_error nor accuracy is set, 0.01 is default chosen at feature creation."
               }
             ]
           },
@@ -1007,12 +1125,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "continuous",
                 "type": "object",
-                "description": "Deprecated: use RollingWindow with ``delay`` instead."
+                "description": ""
               },
               {
                 "name": "rolling",
                 "type": "object",
-                "description": "A rolling time window with an optional delay. This is the SQL-spec-aligned replacement for<br />    ContinuousWindow: ``delay`` is the non-negative counterpart of the legacy non-positive<br />    ``ContinuousWindow.offset``."
+                "description": "A rolling time window with an optional non-negative delay."
               },
               {
                 "name": "sawtooth",
@@ -1023,6 +1141,11 @@ The following fields are returned by `SELECT` queries:
                 "name": "sliding",
                 "type": "object",
                 "description": ""
+              },
+              {
+                "name": "start_time",
+                "type": "string (date-time)",
+                "description": "Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not the historical inputs read by a window. For example, a 365-day window with start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting for 365 days of data; a lifetime window produces no output before start_time. If unset, tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as eligible source data exists. For sawtooth windows, start_time must not be later than the time the Feature is created. Not supported for rolling windows on Features with a stream source."
               },
               {
                 "name": "tumbling",
@@ -1101,12 +1224,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "extra_parameters",
         "type": "array",
-        "description": "Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility. Extra parameters for parameterized functions.",
+        "description": "",
         "children": [
           {
             "name": "key",
             "type": "string",
-            "description": "The name of the parameter."
+            "description": ""
           },
           {
             "name": "value",
@@ -1118,14 +1241,14 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "function_type",
         "type": "string",
-        "description": "Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility. The type of the function. (APPROX_COUNT_DISTINCT, APPROX_PERCENTILE, AVG, COUNT, FIRST, LAST, MAX, MIN, STDDEV_POP, STDDEV_SAMP, SUM, VAR_POP, VAR_SAMP)"
+        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (APPROX_COUNT_DISTINCT, APPROX_PERCENTILE, AVG, COUNT, FIRST, FUNCTION_TYPE_UNSPECIFIED, LAST, MAX, MIN, STDDEV_POP, STDDEV_SAMP, SUM, VAR_POP, VAR_SAMP)"
       }
     ]
   },
   {
     "name": "inputs",
     "type": "array",
-    "description": "Deprecated: Use AggregationFunction.inputs instead. Kept for backwards compatibility. The input columns from which the feature is computed."
+    "description": ""
   },
   {
     "name": "lineage_context",
@@ -1179,7 +1302,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "entity_columns",
             "type": "array",
-            "description": "Deprecated: Use Feature.entity instead. Kept for backwards compatibility. The entity columns of the Delta table."
+            "description": ""
           },
           {
             "name": "filter_condition",
@@ -1189,12 +1312,31 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "timeseries_column",
             "type": "string",
-            "description": "Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility. The timeseries column of the Delta table."
+            "description": ""
           },
           {
             "name": "transformation_sql",
             "type": "string",
             "description": "A single SQL SELECT expression applied after filter_condition. Should contains all the columns needed (eg. \"SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a &gt; 0\" would have ``transformation_sql`` \"*, col_a + col_b AS col_c\") If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe."
+          }
+        ]
+      },
+      {
+        "name": "feature_view_source",
+        "type": "object",
+        "description": "A data source composed from registered upstream Features.",
+        "children": [
+          {
+            "name": "feature_references",
+            "type": "array",
+            "description": "The upstream Features this source reads. Must include at least one feature.",
+            "children": [
+              {
+                "name": "feature",
+                "type": "string",
+                "description": "The three-part full name of the upstream Feature."
+              }
+            ]
           }
         ]
       },
@@ -1209,14 +1351,9 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "dataframe_schema",
-            "type": "string",
-            "description": "Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()). Any subsequent functions operate against this dataframe."
-          },
-          {
             "name": "entity_column_identifiers",
             "type": "array",
-            "description": "Deprecated: Use Feature.entity instead. Kept for backwards compatibility. The entity column identifiers of the Kafka source.",
+            "description": "",
             "children": [
               {
                 "name": "variant_expr_path",
@@ -1233,7 +1370,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "timeseries_column_identifier",
             "type": "object",
-            "description": "Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility. The timeseries column identifier of the Kafka source.",
+            "description": "",
             "children": [
               {
                 "name": "variant_expr_path",
@@ -1241,11 +1378,18 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               }
             ]
-          },
+          }
+        ]
+      },
+      {
+        "name": "lateness",
+        "type": "object",
+        "description": "Completeness timing for this Feature's use of the source. This configuration is part of the Feature definition; it does not modify the underlying table or stream.",
+        "children": [
           {
-            "name": "transformation_sql",
+            "name": "settling_delay",
             "type": "string",
-            "description": "The pipeline runs these SQL statements immediately after conversion into the schema specified on the KafkaConfig object."
+            "description": "Non-negative time to wait after a window ends before treating its source data as complete. Training shifts the eligible evaluation time backwards by this duration so it does not join data that would still have been settling online. Materialization waits for the duration to elapse before publishing the window. If unset, source data is considered settled immediately."
           }
         ]
       },
@@ -1254,6 +1398,11 @@ The following fields are returned by `SELECT` queries:
         "type": "object",
         "description": "A request-time data source.",
         "children": [
+          {
+            "name": "dataframe_schema",
+            "type": "string",
+            "description": "A schema containing scalar or nested fields, in Spark StructType JSON format (from df.schema.json()). This preserves field, array-element, and map-value nullability."
+          },
           {
             "name": "flat_schema",
             "type": "object",
@@ -1265,6 +1414,48 @@ The following fields are returned by `SELECT` queries:
                 "description": "The list of fields in this schema."
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "sdp_source",
+        "type": "object",
+        "description": "A Spark Declarative Pipeline data source.",
+        "children": [
+          {
+            "name": "dataframe_schema",
+            "type": "string",
+            "description": "Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()). Required if transformation_sql is specified. Example: &#123;\"type\":\"struct\",\"fields\":[&#123;\"name\":\"col_a\",\"type\":\"integer\",\"nullable\":true,\"metadata\":&#123;&#125;&#125;,&#123;\"name\":\"col_c\",\"type\":\"integer\",\"nullable\":true,\"metadata\":&#123;&#125;&#125;]&#125;"
+          },
+          {
+            "name": "filter_condition",
+            "type": "string",
+            "description": "Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections."
+          },
+          {
+            "name": "input_tables",
+            "type": "array",
+            "description": "The full three-part names of the tables the pipeline reads from. Required to materialize this feature with a TableTrigger, which starts a run when these tables update. Each table must exist when the feature is created. Feature Store doesn't confirm that the pipeline reads from these tables. At most 100 tables."
+          },
+          {
+            "name": "output_table",
+            "type": "string",
+            "description": "The full three-part (catalog, schema, table) name of the pipeline's output table to read from. The table doesn't need to exist until the pipeline first runs. Required."
+          },
+          {
+            "name": "pipeline_id",
+            "type": "string",
+            "description": "The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before each materialization or backfill. The pipeline must already exist when the feature is created, and you need CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have run yet. Deleting the feature doesn't delete the pipeline. If the pipeline is deleted, this field reads back empty. Required."
+          },
+          {
+            "name": "pipeline_state",
+            "type": "string",
+            "description": "State tracking pipeline execution and output table validation. PENDING until the pipeline has run at least once and created the output table; then RESOLVED on success, or ERROR on failure. (ERROR, PENDING, RESOLVED)"
+          },
+          {
+            "name": "transformation_sql",
+            "type": "string",
+            "description": "A single SQL SELECT expression applied after filter_condition. Should contain all the columns needed (eg. \"SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a &gt; 0\" would have ``transformation_sql`` \"*, col_a + col_b AS col_c\") If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe."
           }
         ]
       },
@@ -1300,17 +1491,17 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "time_window",
     "type": "object",
-    "description": "Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility. The time window in which the feature is computed.",
+    "description": "",
     "children": [
       {
         "name": "continuous",
         "type": "object",
-        "description": "Deprecated: use RollingWindow with ``delay`` instead.",
+        "description": "",
         "children": [
           {
             "name": "window_duration",
             "type": "string",
-            "description": "The duration of the continuous window (must be positive)."
+            "description": ""
           },
           {
             "name": "offset",
@@ -1322,12 +1513,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "rolling",
         "type": "object",
-        "description": "A rolling time window with an optional delay. This is the SQL-spec-aligned replacement for<br />    ContinuousWindow: ``delay`` is the non-negative counterpart of the legacy non-positive<br />    ``ContinuousWindow.offset``.",
+        "description": "A rolling time window with an optional non-negative delay.",
         "children": [
           {
             "name": "delay",
             "type": "string",
-            "description": "The delay applied to the end of the rolling window (must be non-negative). For example, delay=1d shifts the window end 1 day before the evaluation time."
+            "description": "Non-negative analytic lag that evaluates the window this far in the past. Use this for timing variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset, the analytic lag is zero. It composes with source.lateness when both are set."
           },
           {
             "name": "window_duration",
@@ -1344,7 +1535,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "delay",
             "type": "string",
-            "description": "The delay applied to the end of the window (must be non-negative). For example, delay=1d shifts the window end 1 day before the evaluation time."
+            "description": "Delay is not currently supported for Sawtooth windows."
           },
           {
             "name": "window_duration",
@@ -1364,11 +1555,26 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
+            "name": "delay",
+            "type": "string",
+            "description": "Non-negative analytic lag that evaluates the window this far in the past. Use this for timing variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset, the analytic lag is zero. It composes with source.lateness when both are set."
+          },
+          {
+            "name": "offset",
+            "type": "string",
+            "description": "Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on a 24h slide produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of midnight UTC. If unset, the offset is zero. Must be shorter than slide_duration (and therefore window_duration)."
+          },
+          {
             "name": "window_duration",
             "type": "string",
             "description": "The duration of the sliding window. Must be positive when set; absent means lifetime (aggregate over the entity's entire history)."
           }
         ]
+      },
+      {
+        "name": "start_time",
+        "type": "string (date-time)",
+        "description": "Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not the historical inputs read by a window. For example, a 365-day window with start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting for 365 days of data; a lifetime window produces no output before start_time. If unset, tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as eligible source data exists. For sawtooth windows, start_time must not be later than the time the Feature is created. Not supported for rolling windows on Features with a stream source."
       },
       {
         "name": "tumbling",
@@ -1379,6 +1585,16 @@ The following fields are returned by `SELECT` queries:
             "name": "window_duration",
             "type": "string",
             "description": ""
+          },
+          {
+            "name": "delay",
+            "type": "string",
+            "description": "Non-negative analytic lag that evaluates the window this far in the past. Use this for timing variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset, the analytic lag is zero. It composes with source.lateness when both are set."
+          },
+          {
+            "name": "offset",
+            "type": "string",
+            "description": "Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on a 24h window produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of midnight UTC. If unset, the offset is zero. Must be shorter than window_duration."
           }
         ]
       }
@@ -1387,7 +1603,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "timeseries_column",
     "type": "object",
-    "description": "Column recording time, used for point-in-time joins, backfills, and aggregations.",
+    "description": "Column recording time, used for point-in-time joins, backfills, and aggregations. Optional since a timeseries column is not set for RequestSource features or on-demand calculated features.",
     "children": [
       {
         "name": "name",
@@ -1418,37 +1634,51 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a Feature.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List Features.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-feature"><code>feature</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature"><code>feature</code></a></td>
     <td></td>
     <td>Create a Feature.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-feature"><code>feature</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature"><code>feature</code></a></td>
     <td></td>
     <td>Update a Feature.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a Feature.</td>
+</tr>
+<tr>
+    <td><a href="#backfill_features"><CopyableCode code="backfill_features" /></a></td>
+    <td><CopyableCode code="exec" /></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature_full_names"><code>feature_full_names</code></a>, <a href="#parameter-backfill_ranges"><code>backfill_ranges</code></a></td>
+    <td></td>
+    <td>Backfill features.</td>
+</tr>
+<tr>
+    <td><a href="#purge_feature_entities"><CopyableCode code="purge_feature_entities" /></a></td>
+    <td><CopyableCode code="exec" /></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-features"><code>features</code></a>, <a href="#parameter-entities_table"><code>entities_table</code></a></td>
+    <td></td>
+    <td>Purge materialized feature values for specified entities.</td>
 </tr>
 </tbody>
 </table>
@@ -1474,7 +1704,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-full_name">
     <td><CopyableCode code="full_name" /></td>
@@ -1489,7 +1719,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
-    <td>The list of fields to update.</td>
+    <td>Fields to update. The only supported path is description.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -1537,6 +1772,7 @@ timeseries_column
 FROM databricks_workspace.ml.feature_engineering
 WHERE full_name = '{{ full_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -1565,6 +1801,7 @@ FROM databricks_workspace.ml.feature_engineering
 WHERE catalog_name = '{{ catalog_name }}' -- required
 AND schema_name = '{{ schema_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -1589,11 +1826,13 @@ Create a Feature.
 ```sql
 INSERT INTO databricks_workspace.ml.feature_engineering (
 feature,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ feature }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 catalog_name,
@@ -1621,6 +1860,9 @@ timeseries_column
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the feature_engineering resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the feature_engineering resource.
     - name: feature
       description: |
         Feature to create.
@@ -1635,20 +1877,33 @@ timeseries_column
             filter_condition: "{{ filter_condition }}"
             timeseries_column: "{{ timeseries_column }}"
             transformation_sql: "{{ transformation_sql }}"
+          feature_view_source:
+            feature_references:
+              - feature: "{{ feature }}"
           kafka_source:
             name: "{{ name }}"
-            dataframe_schema: "{{ dataframe_schema }}"
             entity_column_identifiers:
               - variant_expr_path: "{{ variant_expr_path }}"
             filter_condition: "{{ filter_condition }}"
             timeseries_column_identifier:
               variant_expr_path: "{{ variant_expr_path }}"
-            transformation_sql: "{{ transformation_sql }}"
+          lateness:
+            settling_delay: "{{ settling_delay }}"
           request_source:
+            dataframe_schema: "{{ dataframe_schema }}"
             flat_schema:
               fields:
                 - name: "{{ name }}"
                   data_type: "{{ data_type }}"
+          sdp_source:
+            dataframe_schema: "{{ dataframe_schema }}"
+            filter_condition: "{{ filter_condition }}"
+            input_tables:
+              - "{{ input_tables }}"
+            output_table: "{{ output_table }}"
+            pipeline_id: "{{ pipeline_id }}"
+            pipeline_state: "{{ pipeline_state }}"
+            transformation_sql: "{{ transformation_sql }}"
           stream_source:
             full_name: "{{ full_name }}"
             dataframe_schema: "{{ dataframe_schema }}"
@@ -1658,11 +1913,13 @@ timeseries_column
           aggregation_function:
             approx_count_distinct:
               input: "{{ input }}"
+              relative_error: {{ relative_error }}
               relative_sd: {{ relative_sd }}
             approx_percentile:
               input: "{{ input }}"
               percentile: {{ percentile }}
               accuracy: {{ accuracy }}
+              relative_error: {{ relative_error }}
             avg:
               input: "{{ input }}"
             count_function:
@@ -1705,9 +1962,14 @@ timeseries_column
                 window_duration: "{{ window_duration }}"
               sliding:
                 slide_duration: "{{ slide_duration }}"
+                delay: "{{ delay }}"
+                offset: "{{ offset }}"
                 window_duration: "{{ window_duration }}"
+              start_time: "{{ start_time }}"
               tumbling:
                 window_duration: "{{ window_duration }}"
+                delay: "{{ delay }}"
+                offset: "{{ offset }}"
             var_pop:
               input: "{{ input }}"
             var_samp:
@@ -1751,9 +2013,14 @@ timeseries_column
             window_duration: "{{ window_duration }}"
           sliding:
             slide_duration: "{{ slide_duration }}"
+            delay: "{{ delay }}"
+            offset: "{{ offset }}"
             window_duration: "{{ window_duration }}"
+          start_time: "{{ start_time }}"
           tumbling:
             window_duration: "{{ window_duration }}"
+            delay: "{{ delay }}"
+            offset: "{{ offset }}"
         timeseries_column:
           name: "{{ name }}"
 `}</CodeBlock>
@@ -1782,6 +2049,7 @@ WHERE
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND feature = '{{ feature }}' --required
 RETURNING
 name,
@@ -1820,6 +2088,58 @@ Delete a Feature.
 DELETE FROM databricks_workspace.ml.feature_engineering
 WHERE full_name = '{{ full_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+;
+```
+</TabItem>
+</Tabs>
+
+
+## Lifecycle Methods
+
+<Tabs
+    defaultValue="backfill_features"
+    values={[
+        { label: 'backfill_features', value: 'backfill_features' },
+        { label: 'purge_feature_entities', value: 'purge_feature_entities' }
+    ]}
+>
+<TabItem value="backfill_features">
+
+Backfill features.
+
+```sql
+EXEC databricks_workspace.ml.feature_engineering.backfill_features 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
+@@json=
+'{
+"feature_full_names": "{{ feature_full_names }}", 
+"backfill_ranges": "{{ backfill_ranges }}", 
+"budget_policy_id": "{{ budget_policy_id }}", 
+"request_id": "{{ request_id }}", 
+"tags": "{{ tags }}"
+}'
+;
+```
+</TabItem>
+<TabItem value="purge_feature_entities">
+
+Purge materialized feature values for specified entities.
+
+```sql
+EXEC databricks_workspace.ml.feature_engineering.purge_feature_entities 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
+@@json=
+'{
+"features": "{{ features }}", 
+"entities_table": "{{ entities_table }}", 
+"budget_policy_id": "{{ budget_policy_id }}", 
+"delete_rows": {{ delete_rows }}, 
+"request_id": "{{ request_id }}", 
+"tags": "{{ tags }}"
+}'
 ;
 ```
 </TabItem>

@@ -54,7 +54,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the group in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "group_id",
     "type": "string",
     "description": "Internal group ID of the group in Databricks."
   },
@@ -79,7 +79,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the group in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "group_id",
     "type": "string",
     "description": "Internal group ID of the group in Databricks."
   },
@@ -110,42 +110,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Fetches a group from the Databricks account by its internal ID.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists the groups in the Databricks account, returning one page per call. Supports filtering by group</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-group"><code>group</code></a></td>
     <td></td>
-    <td>Creates a group in the Databricks account and returns the resulting Group resource.</td>
+    <td>Creates a local group in the Databricks account and returns the created group. A local group is one</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-group"><code>group</code></a></td>
     <td></td>
     <td>Updates an existing group in the Databricks account. Only the fields named in the update mask are</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a group from the Databricks account by its internal ID.</td>
 </tr>
 <tr>
     <td><a href="#resolve"><CopyableCode code="resolve" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
     <td></td>
     <td>Resolves a group with the given external ID from the customer's IdP. If the group does not exist, it</td>
 </tr>
@@ -165,20 +165,25 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
     <td></td>
 </tr>
-<tr id="parameter-internal_id">
-    <td><CopyableCode code="internal_id" /></td>
+<tr id="parameter-group_id">
+    <td><CopyableCode code="group_id" /></td>
     <td><code>string</code></td>
     <td>Required. Internal ID of the group in Databricks.</td>
 </tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
-    <td>Optional. The list of fields to update.</td>
+    <td>Required. The list of fields to update.</td>
 </tr>
 <tr id="parameter-filter">
     <td><CopyableCode code="filter" /></td>
@@ -188,7 +193,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of groups to return. The service may return fewer than this value.</td>
+    <td>The maximum number of groups to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -215,11 +220,12 @@ Fetches a group from the Databricks account by its internal ID.
 SELECT
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name
 FROM databricks_account.iamv2.groups
 WHERE account_id = '{{ account_id }}' -- required
-AND internal_id = '{{ internal_id }}' -- required
+AND group_id = '{{ group_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -231,10 +237,11 @@ Lists the groups in the Databricks account, returning one page per call. Support
 SELECT
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name
 FROM databricks_account.iamv2.groups
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND filter = '{{ filter }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -255,20 +262,22 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Creates a group in the Databricks account and returns the resulting Group resource.
+Creates a local group in the Databricks account and returns the created group. A local group is one
 
 ```sql
 INSERT INTO databricks_account.iamv2.groups (
 group,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ group }}' /* required */,
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name
 ;
 ```
@@ -281,14 +290,17 @@ group_name
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the groups resource.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the groups resource.
     - name: group
       description: |
-        Required. Group to be created in <Databricks>
+        Required. Group to be created in Databricks
       value:
         account_id: "{{ account_id }}"
         external_id: "{{ external_id }}"
+        group_id: "{{ group_id }}"
         group_name: "{{ group_name }}"
-        internal_id: "{{ internal_id }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -313,13 +325,14 @@ SET
 group = '{{ group }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND internal_id = '{{ internal_id }}' --required
+AND group_id = '{{ group_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
+AND account_host = '{{ account_host }}' --required
 AND group = '{{ group }}' --required
 RETURNING
 account_id,
 external_id,
-internal_id,
+group_id,
 group_name;
 ```
 </TabItem>
@@ -341,7 +354,8 @@ Deletes a group from the Databricks account by its internal ID.
 ```sql
 DELETE FROM databricks_account.iamv2.groups
 WHERE account_id = '{{ account_id }}' --required
-AND internal_id = '{{ internal_id }}' --required
+AND group_id = '{{ group_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>
@@ -362,7 +376,8 @@ Resolves a group with the given external ID from the customer's IdP. If the grou
 
 ```sql
 EXEC databricks_account.iamv2.groups.resolve 
-@account_id='{{ account_id }}' --required 
+@account_id='{{ account_id }}' --required, 
+@account_host='{{ account_host }}' --required 
 @@json=
 '{
 "external_id": "{{ external_id }}"

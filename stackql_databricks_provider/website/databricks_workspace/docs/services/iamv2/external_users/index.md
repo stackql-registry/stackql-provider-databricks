@@ -45,7 +45,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "name",
     "type": "string",
-    "description": "The resource name of the external user. Format: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;"
+    "description": "The resource name of the external user. The format depends on the API that returned it: - Account-scoped: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125; - Workspace-scoped: external-users/&#123;external_user_id&#125;"
   },
   {
     "name": "account_id",
@@ -116,7 +116,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-external_user_id"><code>external_user_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Retrieves an external user with the given external ID from the customer's IdP. If the user does not</td>
 </tr>
@@ -139,12 +139,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
-<tr id="parameter-name">
-    <td><CopyableCode code="name" /></td>
+<tr id="parameter-external_user_id">
+    <td><CopyableCode code="external_user_id" /></td>
     <td><code>string</code></td>
-    <td>Required. The resource name of the external user. Format: external-users/&#123;external_user_id&#125;</td>
+    <td>The `external_user_id` segment of the `name` resource name (`external-users/&#123;external_user_id&#125;`). Required. The resource name of the external user. Format: external-users/&#123;external_user_id&#125;</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -172,8 +177,9 @@ full_name,
 account_user_status,
 username
 FROM databricks_workspace.iamv2.external_users
-WHERE name = '{{ name }}' -- required
+WHERE external_user_id = '{{ external_user_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>

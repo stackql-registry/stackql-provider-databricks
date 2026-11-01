@@ -42,6 +42,15 @@ CSV_COLUMNS = [
     "stackql_object_key",
 ]
 
+# The hand-curated routing columns: preserved across regenerations and
+# carried over when an operation's path changes but its operationId does not.
+CURATED_COLUMNS = [
+    "stackql_resource_name",
+    "stackql_method_name",
+    "stackql_verb",
+    "stackql_object_key",
+]
+
 # Maps HTTP verbs to default StackQL verbs (lowercase for provider-utils)
 HTTP_TO_STACKQL_VERB = {
     "get": "select",
@@ -180,11 +189,13 @@ def generate_inventory_for_spec(
     spec_path: str,
     output_dir: str,
     scope: str,
-) -> Tuple[str, int, int, List[Dict[str, str]]]:
+) -> Tuple[str, int, int, List[Dict[str, str]], List[Dict[str, str]], List[Dict[str, str]]]:
     """Generate or update a CSV inventory for one spec file.
 
-    Existing rows are preserved (not overwritten). Only new operations
-    are appended.
+    Existing rows are preserved (not overwritten). New operations are
+    appended; a row whose path changed but whose operationId survives keeps
+    its curated mapping; rows whose operation no longer exists in the spec
+    are dropped.
 
     Args:
         spec_path: Path to the OpenAPI JSON spec.
@@ -192,7 +203,8 @@ def generate_inventory_for_spec(
         scope: ``"account"`` or ``"workspace"``.
 
     Returns:
-        Tuple of (csv_path, new_count, existing_count, new_operations).
+        Tuple of (csv_path, new_count, existing_count, new_operations,
+        removed_operations, migrated_operations).
     """
     service_name = os.path.splitext(os.path.basename(spec_path))[0]
     filename = f"{service_name}.json"
@@ -214,21 +226,78 @@ def generate_inventory_for_spec(
     final_rows: List[Dict[str, str]] = []
     seen_keys: Set[str] = set()
 
-    # Keep all existing rows in their original order
+    # An existing row is current only when the spec still has the same
+    # operation (operationId) at the same ``filename::path::verb`` key: before
+    # the resource-name expansion several operations shared one path, so a key
+    # alone can now name a different operation. Any other row is either an
+    # operation removed upstream or one whose path changed (resource-name
+    # expansion of ``/api/2.0/{name}``, an upstream path move). The operationId
+    # (``<resource>_<method>``) survives a path change, so a stale row whose
+    # operationId reappears on a new path keeps its curated mapping and its
+    # position (reported as migrated); anything else is dropped and reported.
+    # Dropping a curated row is a breaking change for the provider and
+    # belongs in the release notes.
+    current_opid_by_key = {_make_row_key(row): row.get("operationId", "") for row in rows}
+    current_keys = {
+        key for key, row in existing.items()
+        if current_opid_by_key.get(key) == row.get("operationId", "")
+    }
+    stale = {key: row for key, row in existing.items() if key not in current_keys}
+    stale_key_by_opid: Dict[str, str] = {}
+    for key, row in stale.items():
+        stale_key_by_opid.setdefault(row.get("operationId", ""), key)
+    migrated_by_old_key: Dict[str, Dict[str, str]] = {}
+    new_operations: List[Dict[str, str]] = []
+    migrated_operations: List[Dict[str, str]] = []
+    for row in rows:
+        key = _make_row_key(row)
+        if key in current_keys:
+            continue
+        old_key = stale_key_by_opid.pop(row.get("operationId", ""), None)
+        if old_key is None:
+            new_operations.append(row)
+            continue
+        old = stale.pop(old_key)
+        for col in CURATED_COLUMNS:
+            row[col] = old.get(col, "")
+        row["_old_path"] = old.get("path", "")
+        migrated_by_old_key[old_key] = row
+        migrated_operations.append(row)
+        logger.info(
+            "%s/%s: path changed, mapping kept: %s %s -> %s (%s.%s)",
+            scope, service_name, row.get("verb", "").upper(), old.get("path", ""),
+            row.get("path", ""), row.get("stackql_resource_name", ""),
+            row.get("stackql_method_name", ""),
+        )
+    removed_operations: List[Dict[str, str]] = []
+
+    # Keep existing rows in their original order, a migrated row in its
+    # predecessor's place.
     for key, row in existing.items():
-        final_rows.append(row)
-        seen_keys.add(key)
-        existing_count += 1
+        if key in current_keys:
+            final_rows.append(row)
+            seen_keys.add(key)
+            existing_count += 1
+        elif key in migrated_by_old_key:
+            migrated = migrated_by_old_key[key]
+            final_rows.append(migrated)
+            seen_keys.add(_make_row_key(migrated))
+            existing_count += 1
+        else:
+            removed_operations.append(row)
+            logger.warning(
+                "%s/%s: operation removed upstream, dropping %s %s (%s.%s)",
+                scope, service_name, row.get("verb", "").upper(), row.get("path", ""),
+                row.get("stackql_resource_name", ""), row.get("stackql_method_name", ""),
+            )
 
     # Add new rows only
-    new_operations: List[Dict[str, str]] = []
-    for row in rows:
+    for row in new_operations:
         key = _make_row_key(row)
         if key not in seen_keys:
             final_rows.append(row)
             seen_keys.add(key)
             new_count += 1
-            new_operations.append(row)
 
     # Write
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
@@ -237,10 +306,11 @@ def generate_inventory_for_spec(
         writer.writerows(final_rows)
 
     logger.info(
-        "%s/%s: %d existing preserved, %d new added",
-        scope, service_name, existing_count, new_count,
+        "%s/%s: %d existing preserved (%d on a changed path), %d new added, %d removed",
+        scope, service_name, existing_count, len(migrated_operations), new_count,
+        len(removed_operations),
     )
-    return csv_path, new_count, existing_count, new_operations
+    return csv_path, new_count, existing_count, new_operations, removed_operations, migrated_operations
 
 
 def generate_all_inventories(
@@ -269,7 +339,11 @@ def generate_all_inventories(
         "files_generated": 0,
         "total_new": 0,
         "total_existing": 0,
+        "total_removed": 0,
+        "total_migrated": 0,
         "new_operations": [],
+        "removed_operations": [],
+        "migrated_operations": [],
     }
 
     for scope in ("account", "workspace"):
@@ -284,12 +358,25 @@ def generate_all_inventories(
                 continue
             spec_path = os.path.join(scope_spec_dir, fname)
             try:
-                csv_path, new_count, existing_count, new_ops = generate_inventory_for_spec(
-                    spec_path, output_dir, scope
+                csv_path, new_count, existing_count, new_ops, removed_ops, migrated_ops = (
+                    generate_inventory_for_spec(spec_path, output_dir, scope)
                 )
                 summary["files_generated"] += 1
                 summary["total_new"] += new_count
                 summary["total_existing"] += existing_count
+                summary["total_removed"] += len(removed_ops)
+                summary["total_migrated"] += len(migrated_ops)
+                for op in migrated_ops:
+                    summary["migrated_operations"].append({
+                        "scope": scope,
+                        "service": os.path.splitext(fname)[0],
+                        "operationId": op.get("operationId", ""),
+                        "verb": op.get("verb", ""),
+                        "old_path": op.get("_old_path", ""),
+                        "path": op.get("path", ""),
+                        "stackql_resource_name": op.get("stackql_resource_name", ""),
+                        "stackql_method_name": op.get("stackql_method_name", ""),
+                    })
                 for op in new_ops:
                     summary["new_operations"].append({
                         "scope": scope,
@@ -298,6 +385,16 @@ def generate_all_inventories(
                         "verb": op.get("verb", ""),
                         "path": op.get("path", ""),
                         "stackql_verb": op.get("stackql_verb", ""),
+                    })
+                for op in removed_ops:
+                    summary["removed_operations"].append({
+                        "scope": scope,
+                        "service": os.path.splitext(fname)[0],
+                        "operationId": op.get("operationId", ""),
+                        "verb": op.get("verb", ""),
+                        "path": op.get("path", ""),
+                        "stackql_resource_name": op.get("stackql_resource_name", ""),
+                        "stackql_method_name": op.get("stackql_method_name", ""),
                     })
 
                 # Collect rows for consolidated CSV
@@ -676,6 +773,32 @@ def main():
     print(f"  CSV files generated: {summary['files_generated']}")
     print(f"  New operations:      {summary['total_new']}")
     print(f"  Existing preserved:  {summary['total_existing']}")
+    print(f"  Removed upstream:    {summary['total_removed']}")
+    print(f"  Path changed (mapping kept): {summary['total_migrated']}")
+
+    migrated_ops = summary.get("migrated_operations", [])
+    if migrated_ops:
+        print()
+        print("=" * 60)
+        print("Path Changes (curated mapping carried over by operationId)")
+        print("=" * 60)
+        for op in sorted(migrated_ops, key=lambda x: (x["scope"], x["service"], x["operationId"])):
+            print(
+                f"    [{op['scope']}/{op['service']}] {op['verb'].upper():7s} {op['old_path']} -> {op['path']} "
+                f"({op['stackql_resource_name']}.{op['stackql_method_name']})"
+            )
+
+    removed_ops = summary.get("removed_operations", [])
+    if removed_ops:
+        print()
+        print("=" * 60)
+        print("Removed Operations (dropped from CSVs - breaking change, note in release)")
+        print("=" * 60)
+        for op in sorted(removed_ops, key=lambda x: (x["scope"], x["service"], x["operationId"])):
+            print(
+                f"    [{op['scope']}/{op['service']}] {op['verb'].upper():7s} {op['operationId']:<50s} "
+                f"was {op['stackql_resource_name']}.{op['stackql_method_name']}"
+            )
 
     new_ops = summary.get("new_operations", [])
     if new_ops:

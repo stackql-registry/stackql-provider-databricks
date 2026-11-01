@@ -116,35 +116,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-notebooks_modified_after"><code>notebooks_modified_after</code></a></td>
     <td>Lists the contents of a directory, or the object if it is not a directory. If the input path does not</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-path"><code>path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Deletes an object or a directory (and optionally recursively deletes all objects in the directory).</td>
 </tr>
 <tr>
     <td><a href="#export"><CopyableCode code="export" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-format"><code>format</code></a>, <a href="#parameter-outputs"><code>outputs</code></a></td>
+    <td><a href="#parameter-path"><code>path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-format"><code>format</code></a></td>
     <td>Exports an object or the contents of an entire directory.</td>
 </tr>
 <tr>
     <td><a href="#import"><CopyableCode code="import" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-path"><code>path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Imports a workspace object (for example, a notebook or file) or the contents of an entire directory.</td>
 </tr>
 <tr>
     <td><a href="#mkdirs"><CopyableCode code="mkdirs" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-path"><code>path</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Creates the specified directory (and necessary parent directories if they do not exist). If there is</td>
 </tr>
@@ -167,12 +167,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-path">
     <td><CopyableCode code="path" /></td>
     <td><code>string</code></td>
     <td>The absolute path of the object or directory. Exporting a directory is only supported for the ``DBC``, ``SOURCE``, and ``AUTO`` format.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-format">
     <td><CopyableCode code="format" /></td>
@@ -183,11 +188,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="notebooks_modified_after" /></td>
     <td><code>integer</code></td>
     <td>UTC timestamp in milliseconds</td>
-</tr>
-<tr id="parameter-outputs">
-    <td><CopyableCode code="outputs" /></td>
-    <td><code>string</code></td>
-    <td>This specifies which cell outputs should be included in the export (if the export format allows it). If not specified, the behavior is determined by the format. For JUPYTER format, the default is to include all outputs. This is a public endpoint, but only ALL or NONE is documented publically, DATABRICKS is internal only</td>
 </tr>
 </tbody>
 </table>
@@ -218,6 +218,7 @@ size
 FROM databricks_workspace.workspace.workspace
 WHERE path = '{{ path }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND notebooks_modified_after = '{{ notebooks_modified_after }}'
 ;
 ```
@@ -242,7 +243,8 @@ Deletes an object or a directory (and optionally recursively deletes all objects
 
 ```sql
 EXEC databricks_workspace.workspace.workspace.delete 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "path": "{{ path }}", 
@@ -259,8 +261,8 @@ Exports an object or the contents of an entire directory.
 EXEC databricks_workspace.workspace.workspace.export 
 @path='{{ path }}' --required, 
 @deployment_name='{{ deployment_name }}' --required, 
-@format='{{ format }}', 
-@outputs='{{ outputs }}'
+@workspace_domain='{{ workspace_domain }}' --required, 
+@format='{{ format }}'
 ;
 ```
 </TabItem>
@@ -270,7 +272,8 @@ Imports a workspace object (for example, a notebook or file) or the contents of 
 
 ```sql
 EXEC databricks_workspace.workspace.workspace.import 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "path": "{{ path }}", 
@@ -288,7 +291,8 @@ Creates the specified directory (and necessary parent directories if they do not
 
 ```sql
 EXEC databricks_workspace.workspace.workspace.mkdirs 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "path": "{{ path }}"

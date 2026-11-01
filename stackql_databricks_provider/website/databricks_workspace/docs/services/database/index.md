@@ -18,14 +18,13 @@ database service documentation.
 
 :::info[Service Summary]
 
-total resources: __7__  
+total resources: __6__  
 
 :::
 
 ## Resources
 <div class="row">
 <div class="providerDocColumn">
-<a href="/services/database/database/">database</a><br />
 <a href="/services/database/database_catalogs/">database_catalogs</a><br />
 <a href="/services/database/database_credentials/">database_credentials</a><br />
 <a href="/services/database/database_instance_roles/">database_instance_roles</a>

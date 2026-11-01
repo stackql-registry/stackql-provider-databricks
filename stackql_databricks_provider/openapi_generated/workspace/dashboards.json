@@ -5,17 +5,30 @@
     "description": "OpenAPI specification for the Databricks dashboards service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.dashboards"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
@@ -24,12 +37,12 @@
     "/api/2.0/genie/spaces/{space_id}/conversations/{conversation_id}/messages": {
       "post": {
         "operationId": "genie_create_message",
-        "summary": "Create new message in a [conversation](:method:genie/startconversation). The AI response uses all",
+        "summary": "Sends a new message in a chat-mode [conversation](:method:genie/startconversation). The AI response",
         "tags": [
           "dashboards",
           "genie"
         ],
-        "description": "Create new message in a [conversation](:method:genie/startconversation). The AI response uses all\npreviously created messages in the conversation to respond.\n\n:param space_id: str\n  The ID associated with the Genie space where the conversation is started.\n:param conversation_id: str\n  The ID associated with the conversation.\n:param content: str\n  User message content.\n:param enable_visualization: bool (optional)\n  Enable visualization generation.\n\n:returns:\n  Long-running operation waiter for :class:`GenieMessage`.\n  See :method:wait_get_message_genie_completed for more details.",
+        "description": "Sends a new message in a chat-mode [conversation](:method:genie/startconversation). The AI response\nuses all previously created messages in the conversation to respond.\n\n:param space_id: str\n  The ID associated with the Genie space where the conversation is started.\n:param conversation_id: str\n  The ID associated with the conversation.\n:param content: str\n  User message content.\n:param enable_visualization: bool (optional)\n  Enable visualization generation.\n\n:returns:\n  Long-running operation waiter for :class:`GenieMessage`.\n  See :method:wait_get_message_genie_completed for more details.",
         "parameters": [
           {
             "name": "space_id",
@@ -106,12 +119,12 @@
       },
       "get": {
         "operationId": "genie_list_conversation_messages",
-        "summary": "List messages in a conversation",
+        "summary": "Lists messages in a chat-mode or agent-mode conversation. Agent-mode messages are returned as",
         "tags": [
           "dashboards",
           "genie"
         ],
-        "description": "List messages in a conversation\n\n:param space_id: str\n  The ID associated with the Genie space where the conversation is located\n:param conversation_id: str\n  The ID of the conversation to list messages from\n:param page_size: int (optional)\n  Maximum number of messages to return per page\n:param page_token: str (optional)\n  Token to get the next page of results\n\n:returns: :class:`GenieListConversationMessagesResponse`",
+        "description": "Lists messages in a chat-mode or agent-mode conversation. Agent-mode messages are returned as\nGenieMessage projections. Use the List conversation items endpoint for the complete reasoning and\ntool-call history.\n\n:param space_id: str\n  The ID associated with the Genie space where the conversation is located\n:param conversation_id: str\n  The ID of the conversation to list messages from\n:param page_size: int (optional)\n  Maximum number of messages to return per page\n:param page_token: str (optional)\n  Token to get the next page of results\n\n:returns: :class:`GenieListConversationMessagesResponse`",
         "parameters": [
           {
             "name": "space_id",
@@ -616,12 +629,12 @@
       },
       "get": {
         "operationId": "genie_get_message",
-        "summary": "Get message from conversation.",
+        "summary": "Gets a message from a chat-mode or agent-mode conversation. For a complete agent-mode transcript, use",
         "tags": [
           "dashboards",
           "genie"
         ],
-        "description": "Get message from conversation.\n\n:param space_id: str\n  The ID associated with the Genie space where the target conversation is located.\n:param conversation_id: str\n  The ID associated with the target conversation.\n:param message_id: str\n  The ID associated with the target message from the identified conversation.\n\n:returns: :class:`GenieMessage`",
+        "description": "Gets a message from a chat-mode or agent-mode conversation. For a complete agent-mode transcript, use\nthe List conversation items endpoint.\n\n:param space_id: str\n  The ID associated with the Genie space where the target conversation is located.\n:param conversation_id: str\n  The ID associated with the target conversation.\n:param message_id: str\n  The ID associated with the target message from the identified conversation.\n\n:returns: :class:`GenieMessage`",
         "parameters": [
           {
             "name": "space_id",
@@ -684,7 +697,7 @@
         "x-stackql-sdk-source": "GenieAPI"
       }
     },
-    "/api/2.0/genie/{name}/download-visualization": {
+    "/api/2.0/genie/spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}/download-visualization": {
       "get": {
         "operationId": "genie_download_message_attachment_visualization",
         "summary": "Download a rendered image of a message visualization attachment. The response body is the raw PNG",
@@ -692,16 +705,43 @@
           "dashboards",
           "genie"
         ],
-        "description": "Download a rendered image of a message visualization attachment. The response body is the raw PNG\nimage, not a JSON payload. This is only available if the attachment is a visualization and the message\nstatus is ``COMPLETED``. This endpoint is not supported for Private Link workspaces.\n\n:param name: str\n  The resource name of the attachment to render, in the format\n  ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``.\n\n:returns: :class:`DownloadMessageAttachmentVisualizationResponse`",
+        "description": "Download a rendered image of a message visualization attachment. The response body is the raw PNG\nimage, not a JSON payload. This is only available if the attachment is a visualization and the message\nstatus is ``COMPLETED``.\n\n:param name: str\n  The resource name of the attachment to render, in the format\n  ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``.\n\n:returns: :class:`DownloadMessageAttachmentVisualizationResponse`",
         "parameters": [
           {
-            "name": "name",
+            "name": "space_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "The resource name of the attachment to render, in the format ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``."
+            "description": "The `space_id` segment of the `name` resource name (`spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}`). The resource name of the attachment to render, in the format ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``."
+          },
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `conversation_id` segment of the `name` resource name (`spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}`). The resource name of the attachment to render, in the format ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``."
+          },
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `message_id` segment of the `name` resource name (`spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}`). The resource name of the attachment to render, in the format ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``."
+          },
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `attachment_id` segment of the `name` resource name (`spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}`). The resource name of the attachment to render, in the format ``spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/attachments/{attachment_id}``."
           }
         ],
         "responses": {
@@ -897,7 +937,7 @@
           "dashboards",
           "genie"
         ],
-        "description": "Initiates a new SQL execution and returns a ``download_id`` and ``download_id_signature`` that you can\nuse to track the progress of the download. The query result is stored in an external link and can be\nretrieved using the [Get Download Full Query Result](:method:genie/getdownloadfullqueryresult) API.\nBoth ``download_id`` and ``download_id_signature`` must be provided when calling the Get endpoint.\n\n**Warning: Databricks strongly recommends that you protect the URLs that are returned by the\n``EXTERNAL_LINKS`` disposition.**\n\nWhen you use the ``EXTERNAL_LINKS`` disposition, a short-lived, URL is generated, which can be used to\ndownload the results directly from . As a short-lived is embedded in this URL, you should protect the\nURL.\n\nBecause URLs are already generated with embedded temporary s, you must not set an ``Authorization``\nheader in the download requests.\n\nSee [Execute Statement](:method:statementexecution/executestatement) for more details.\n\n:param space_id: str\n  Genie space ID\n:param conversation_id: str\n  Conversation ID\n:param message_id: str\n  Message ID\n:param attachment_id: str\n  Attachment ID\n\n:returns: :class:`GenieGenerateDownloadFullQueryResultResponse`",
+        "description": "Initiates a new SQL execution and returns a ``download_id`` and ``download_id_signature`` that you can\nuse to track the progress of the download. The query result is stored in an external link and can be\nretrieved using the [Get Download Full Query Result](:method:genie/getdownloadfullqueryresult) API.\nBoth ``download_id`` and ``download_id_signature`` must be provided when calling the Get endpoint.\n\n**Warning: Databricks strongly recommends that you protect the URLs that are returned by the\n``EXTERNAL_LINKS`` disposition.**\n\nWhen you use the ``EXTERNAL_LINKS`` disposition, a short-lived cloud-storage URL is generated to\ndownload the results. The URL contains temporary access credentials, so protect it and do not set an\n``Authorization`` header in the download request.\n\nSee [Execute Statement](:method:statementexecution/executestatement) for more details.\n\n:param space_id: str\n  Genie space ID\n:param conversation_id: str\n  Conversation ID\n:param message_id: str\n  Message ID\n:param attachment_id: str\n  Attachment ID\n\n:returns: :class:`GenieGenerateDownloadFullQueryResultResponse`",
         "parameters": [
           {
             "name": "space_id",
@@ -969,15 +1009,86 @@
         "x-stackql-sdk-source": "GenieAPI"
       }
     },
-    "/api/2.0/genie/spaces/{space_id}/eval-runs": {
+    "/api/2.0/genie/agents/{agent_id}/conversations/{conversation_id}/responses/{response_id}/cancel": {
       "post": {
-        "operationId": "genie_genie_create_eval_run",
-        "summary": "Create and run evaluations for multiple benchmark questions in a Genie space.",
+        "operationId": "genie_genie_cancel_response",
+        "summary": "Cancels an in-flight agent-mode response. ``response_id`` is the id returned in the",
         "tags": [
           "dashboards",
           "genie"
         ],
-        "description": "Create and run evaluations for multiple benchmark questions in a Genie space.\n\n:param space_id: str\n  The ID associated with the Genie space where the evaluations will be executed.\n:param benchmark_question_ids: List[str] (optional)\n  List of benchmark question IDs to evaluate. These questions must exist in the specified Genie space.\n  If none are specified, then all benchmark questions are evaluated.\n\n:returns: :class:`GenieEvalRunResponse`",
+        "description": "Cancels an in-flight agent-mode response. ``response_id`` is the id returned in the\n``response.created`` event from the agent-mode responses endpoint. The response stops at the next\nagent boundary and its terminal state is returned.\n\n:param agent_id: str\n  The ID of the Genie agent (synonymous with the Genie space ID).\n:param conversation_id: str\n  The ID of the conversation containing the response.\n:param response_id: str\n  The ID of the response to cancel (the id from the ``response.created`` event).\n\n:returns: :class:`GenieMessage`",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the Genie agent (synonymous with the Genie space ID)."
+          },
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the conversation containing the response."
+          },
+          {
+            "name": "response_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the response to cancel (the id from the ``response.created`` event)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenieMessage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-stackql-sdk-source": "GenieAPI"
+      }
+    },
+    "/api/2.0/genie/spaces/{space_id}/eval-runs": {
+      "post": {
+        "operationId": "genie_genie_create_eval_run",
+        "summary": "Creates and runs chat-mode evaluations for multiple benchmark questions in a Genie space.",
+        "tags": [
+          "dashboards",
+          "genie"
+        ],
+        "description": "Creates and runs chat-mode evaluations for multiple benchmark questions in a Genie space.\n\n:param space_id: str\n  The ID associated with the Genie space where the evaluations will be executed.\n:param benchmark_question_ids: List[str] (optional)\n  List of benchmark question IDs to evaluate. These questions must exist in the specified Genie space.\n  If none are specified, then all benchmark questions are evaluated.\n\n:returns: :class:`GenieEvalRunResponse`",
         "parameters": [
           {
             "name": "space_id",
@@ -1329,7 +1440,7 @@
           "dashboards",
           "genie"
         ],
-        "description": "After [Generating a Full Query Result Download](:method:genie/generatedownloadfullqueryresult) and\nsuccessfully receiving a ``download_id`` and ``download_id_signature``, use this API to poll the\ndownload progress. Both ``download_id`` and ``download_id_signature`` are required to call this\nendpoint. When the download is complete, the API returns the result in the ``EXTERNAL_LINKS``\ndisposition, containing one or more external links to the query result files.\n\n**Warning: Databricks strongly recommends that you protect the URLs that are returned by the\n``EXTERNAL_LINKS`` disposition.**\n\nWhen you use the ``EXTERNAL_LINKS`` disposition, a short-lived, URL is generated, which can be used to\ndownload the results directly from . As a short-lived is embedded in this URL, you should protect the\nURL.\n\nBecause URLs are already generated with embedded temporary s, you must not set an ``Authorization``\nheader in the download requests.\n\nSee [Execute Statement](:method:statementexecution/executestatement) for more details.\n\n:param space_id: str\n  Genie space ID\n:param conversation_id: str\n  Conversation ID\n:param message_id: str\n  Message ID\n:param attachment_id: str\n  Attachment ID\n:param download_id: str\n  Download ID. This ID is provided by the [Generate Download\n  endpoint](:method:genie/generateDownloadFullQueryResult)\n:param download_id_signature: str\n  JWT signature for the download_id to ensure secure access to query results\n\n:returns: :class:`GenieGetDownloadFullQueryResultResponse`",
+        "description": "After [Generating a Full Query Result Download](:method:genie/generatedownloadfullqueryresult) and\nsuccessfully receiving a ``download_id`` and ``download_id_signature``, use this API to poll the\ndownload progress. Both ``download_id`` and ``download_id_signature`` are required to call this\nendpoint. When the download is complete, the API returns the result in the ``EXTERNAL_LINKS``\ndisposition, containing one or more external links to the query result files.\n\n**Warning: Databricks strongly recommends that you protect the URLs that are returned by the\n``EXTERNAL_LINKS`` disposition.**\n\nWhen you use the ``EXTERNAL_LINKS`` disposition, a short-lived cloud-storage URL is generated to\ndownload the results. The URL contains temporary access credentials, so protect it and do not set an\n``Authorization`` header in the download request.\n\nSee [Execute Statement](:method:statementexecution/executestatement) for more details.\n\n:param space_id: str\n  Genie space ID\n:param conversation_id: str\n  Conversation ID\n:param message_id: str\n  Message ID\n:param attachment_id: str\n  Attachment ID\n:param download_id: str\n  Download ID. This ID is provided by the [Generate Download\n  endpoint](:method:genie/generateDownloadFullQueryResult)\n:param download_id_signature: str\n  JWT signature for the download_id to ensure secure access to query results\n\n:returns: :class:`GenieGetDownloadFullQueryResultResponse`",
         "parameters": [
           {
             "name": "space_id",
@@ -2005,12 +2116,12 @@
     "/api/2.0/genie/spaces/{space_id}/conversations/{conversation_id}/messages/{message_id}/feedback": {
       "post": {
         "operationId": "genie_send_message_feedback",
-        "summary": "Send feedback for a message.",
+        "summary": "Sends feedback for a message in a chat-mode or agent-mode conversation.",
         "tags": [
           "dashboards",
           "genie"
         ],
-        "description": "Send feedback for a message.\n\n:param space_id: str\n  The ID associated with the Genie space where the message is located.\n:param conversation_id: str\n  The ID associated with the conversation.\n:param message_id: str\n  The ID associated with the message to provide feedback for.\n:param rating: :class:`GenieFeedbackRating`\n  The rating (POSITIVE, NEGATIVE, or NONE).\n:param comment: str (optional)\n  Optional text feedback that will be stored as a comment.",
+        "description": "Sends feedback for a message in a chat-mode or agent-mode conversation.\n\n:param space_id: str\n  The ID associated with the Genie space where the message is located.\n:param conversation_id: str\n  The ID associated with the conversation.\n:param message_id: str\n  The ID associated with the message to provide feedback for.\n:param rating: :class:`GenieFeedbackRating`\n  The rating (POSITIVE, NEGATIVE, or NONE).\n:param comment: str (optional)\n  Optional text feedback that will be stored as a comment.",
         "parameters": [
           {
             "name": "space_id",
@@ -2096,12 +2207,12 @@
     "/api/2.0/genie/spaces/{space_id}/start-conversation": {
       "post": {
         "operationId": "genie_start_conversation",
-        "summary": "Start a new conversation.",
+        "summary": "Starts a new chat-mode conversation and sends its first message.",
         "tags": [
           "dashboards",
           "genie"
         ],
-        "description": "Start a new conversation.\n\n:param space_id: str\n  The ID associated with the Genie space where you want to start a conversation.\n:param content: str\n  The text of the message that starts the conversation.\n:param enable_visualization: bool (optional)\n  Enable visualization generation.\n\n:returns:\n  Long-running operation waiter for :class:`GenieMessage`.\n  See :method:wait_get_message_genie_completed for more details.",
+        "description": "Starts a new chat-mode conversation and sends its first message.\n\n:param space_id: str\n  The ID associated with the Genie space where you want to start a conversation.\n:param content: str\n  The text of the message that starts the conversation.\n:param enable_visualization: bool (optional)\n  Enable visualization generation.\n\n:returns:\n  Long-running operation waiter for :class:`GenieMessage`.\n  See :method:wait_get_message_genie_completed for more details.",
         "parameters": [
           {
             "name": "space_id",
@@ -2176,7 +2287,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Create a draft dashboard.\n\n:param dashboard: :class:`Dashboard`\n:param dataset_catalog: str (optional)\n  Sets the default catalog for all datasets in this dashboard. Does not impact table references that\n  use fully qualified catalog names (ex: samples.nyctaxi.trips). Leave blank to keep each dataset\u2019s\n  existing configuration.\n:param dataset_schema: str (optional)\n  Sets the default schema for all datasets in this dashboard. Does not impact table references that\n  use fully qualified schema names (ex: nyctaxi.trips). Leave blank to keep each dataset\u2019s existing\n  configuration.\n\n:returns: :class:`Dashboard`",
+        "description": "Create a draft dashboard.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard: :class:`Dashboard`\n:param dataset_catalog: str (optional)\n  Sets the default catalog for all datasets in this dashboard. Does not impact table references that\n  use fully qualified catalog names (ex: samples.nyctaxi.trips). Leave blank to keep each dataset\u2019s\n  existing configuration.\n:param dataset_schema: str (optional)\n  Sets the default schema for all datasets in this dashboard. Does not impact table references that\n  use fully qualified schema names (ex: nyctaxi.trips). Leave blank to keep each dataset\u2019s existing\n  configuration.\n\n:returns: :class:`Dashboard`",
         "parameters": [
           {
             "name": "dataset_catalog",
@@ -2203,58 +2314,50 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "dashboard": {
-                    "type": "object",
-                    "properties": {
-                      "create_time": {
-                        "type": "string"
-                      },
-                      "dashboard_id": {
-                        "type": "string",
-                        "description": "UUID identifying the dashboard."
-                      },
-                      "display_name": {
-                        "type": "string",
-                        "description": "The display name of the dashboard."
-                      },
-                      "etag": {
-                        "type": "string",
-                        "description": "The etag for the dashboard. Can be optionally provided on updates to ensure that the dashboard has not been modified since the last read. This field is excluded in List Dashboards responses."
-                      },
-                      "lifecycle_state": {
-                        "type": "string",
-                        "x-enum": [
-                          "ACTIVE",
-                          "TRASHED"
-                        ],
-                        "description": "The state of the dashboard resource. Used for tracking trashed status."
-                      },
-                      "parent_path": {
-                        "type": "string",
-                        "description": "The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash. This field is excluded in List Dashboards responses."
-                      },
-                      "path": {
-                        "type": "string",
-                        "description": "The workspace path of the dashboard asset, including the file name. Exported dashboards always have the file extension ``.lvdash.json``. This field is excluded in List Dashboards responses."
-                      },
-                      "serialized_dashboard": {
-                        "type": "string",
-                        "description": "The contents of the dashboard in serialized string form. This field is excluded in List Dashboards responses. Use the `get dashboard API <https://docs.databricks.com/api/workspace/lakeview/get>`__ to retrieve an example response, which includes the ``serialized_dashboard`` field. This field provides the structure of the JSON string that represents the dashboard's layout and components."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "The timestamp of when the dashboard was last updated by the user. This field is excluded in List Dashboards responses."
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "The warehouse ID used to run the dashboard."
-                      }
-                    }
+                  "create_time": {
+                    "type": "string"
+                  },
+                  "dashboard_id": {
+                    "type": "string",
+                    "description": "UUID identifying the dashboard."
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "description": "The display name of the dashboard."
+                  },
+                  "etag": {
+                    "type": "string",
+                    "description": "The etag for the dashboard. Can be optionally provided on updates to ensure that the dashboard has not been modified since the last read. This field is excluded in List Dashboards responses."
+                  },
+                  "lifecycle_state": {
+                    "type": "string",
+                    "x-enum": [
+                      "ACTIVE",
+                      "TRASHED"
+                    ],
+                    "description": "The state of the dashboard resource. Used for tracking trashed status."
+                  },
+                  "parent_path": {
+                    "type": "string",
+                    "description": "The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash. This field is excluded in List Dashboards responses."
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "The workspace path of the dashboard asset, including the file name. Exported dashboards always have the file extension ``.lvdash.json``. This field is excluded in List Dashboards responses."
+                  },
+                  "serialized_dashboard": {
+                    "type": "string",
+                    "description": "The contents of the dashboard in serialized string form. This field is excluded in List Dashboards responses. Use the `get dashboard API <https://docs.databricks.com/api/workspace/lakeview/get>`__ to retrieve an example response, which includes the ``serialized_dashboard`` field. This field provides the structure of the JSON string that represents the dashboard's layout and components."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "The timestamp of when the dashboard was last updated by the user. This field is excluded in List Dashboards responses."
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "The warehouse ID used to run the dashboard."
                   }
-                },
-                "required": [
-                  "dashboard"
-                ]
+                }
               }
             }
           }
@@ -2298,7 +2401,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "List dashboards.\n\n:param page_size: int (optional)\n  The number of dashboards to return per page.\n:param page_token: str (optional)\n  A page token, received from a previous ``ListDashboards`` call. This token can be used to retrieve\n  the subsequent page.\n:param show_trashed: bool (optional)\n  The flag to include dashboards located in the trash. If unspecified, only active dashboards will be\n  returned.\n:param view: :class:`DashboardView` (optional)\n  ``DASHBOARD_VIEW_BASIC`` only includes summary metadata from the dashboard.\n\n:returns: Iterator over :class:`Dashboard`",
+        "description": "List dashboards.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param page_size: int (optional)\n  The number of dashboards to return per page.\n:param page_token: str (optional)\n  A page token, received from a previous ``ListDashboards`` call. This token can be used to retrieve\n  the subsequent page.\n:param show_trashed: bool (optional)\n  The flag to include dashboards located in the trash. If unspecified, only active dashboards will be\n  returned.\n:param view: :class:`DashboardView` (optional)\n  ``DASHBOARD_VIEW_BASIC`` only includes summary metadata from the dashboard.\n\n:returns: Iterator over :class:`Dashboard`",
         "parameters": [
           {
             "name": "page_size",
@@ -2378,7 +2481,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Create dashboard schedule.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule: :class:`Schedule`\n  The schedule to create. A dashboard is limited to 10 schedules.\n\n:returns: :class:`Schedule`",
+        "description": "Create dashboard schedule.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule: :class:`Schedule`\n  The schedule to create. A dashboard is limited to 10 schedules.\n\n:returns: :class:`Schedule`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2396,70 +2499,61 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "schedule": {
+                  "cron_schedule": {
                     "type": "object",
                     "properties": {
-                      "cron_schedule": {
-                        "type": "object",
-                        "properties": {
-                          "quartz_cron_expression": {
-                            "type": "string"
-                          },
-                          "timezone_id": {
-                            "type": "string",
-                            "description": "A Java timezone id. The schedule will be resolved with respect to this timezone. See `Java TimeZone <https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html>`__ for details."
-                          }
-                        },
-                        "required": [
-                          "quartz_cron_expression",
-                          "timezone_id"
-                        ]
+                      "quartz_cron_expression": {
+                        "type": "string"
                       },
-                      "create_time": {
+                      "timezone_id": {
                         "type": "string",
-                        "description": "A timestamp indicating when the schedule was created."
-                      },
-                      "dashboard_id": {
-                        "type": "string",
-                        "description": "UUID identifying the dashboard to which the schedule belongs."
-                      },
-                      "display_name": {
-                        "type": "string",
-                        "description": "The display name for schedule."
-                      },
-                      "etag": {
-                        "type": "string",
-                        "description": "The etag for the schedule. Must be left empty on create, must be provided on updates to ensure that the schedule has not been modified since the last read, and can be optionally provided on delete."
-                      },
-                      "pause_status": {
-                        "type": "string",
-                        "x-enum": [
-                          "PAUSED",
-                          "UNPAUSED"
-                        ],
-                        "description": "The status indicates whether this schedule is paused or not."
-                      },
-                      "schedule_id": {
-                        "type": "string",
-                        "description": "UUID identifying the schedule."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "A timestamp indicating when the schedule was last updated."
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "The warehouse id to run the dashboard with for the schedule."
+                        "description": "A Java timezone id. The schedule will be resolved with respect to this timezone. See `Java TimeZone <https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html>`__ for details."
                       }
                     },
                     "required": [
-                      "cron_schedule"
+                      "quartz_cron_expression",
+                      "timezone_id"
+                    ]
+                  },
+                  "create_time": {
+                    "type": "string",
+                    "description": "A timestamp indicating when the schedule was created."
+                  },
+                  "dashboard_id": {
+                    "type": "string",
+                    "description": "UUID identifying the dashboard to which the schedule belongs."
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "description": "The display name for schedule."
+                  },
+                  "etag": {
+                    "type": "string",
+                    "description": "The etag for the schedule. Must be left empty on create, must be provided on updates to ensure that the schedule has not been modified since the last read, and can be optionally provided on delete."
+                  },
+                  "pause_status": {
+                    "type": "string",
+                    "x-enum": [
+                      "PAUSED",
+                      "UNPAUSED"
                     ],
-                    "description": "The schedule to create. A dashboard is limited to 10 schedules."
+                    "description": "The status indicates whether this schedule is paused or not."
+                  },
+                  "schedule_id": {
+                    "type": "string",
+                    "description": "UUID identifying the schedule."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "A timestamp indicating when the schedule was last updated."
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "The warehouse id to run the dashboard with for the schedule."
                   }
                 },
                 "required": [
-                  "schedule"
+                  "cron_schedule"
                 ]
               }
             }
@@ -2504,7 +2598,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "List dashboard schedules.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedules belongs.\n:param page_size: int (optional)\n  The number of schedules to return per page.\n:param page_token: str (optional)\n  A page token, received from a previous ``ListSchedules`` call. Use this to retrieve the subsequent\n  page.\n\n:returns: Iterator over :class:`Schedule`",
+        "description": "List dashboard schedules.\n\nThe caller must be a workspace user with one of the following `entitlements\n<https://docs.databricks.com/security/auth/entitlements>`__: Workspace access, Databricks SQL access,\nor Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedules belongs.\n:param page_size: int (optional)\n  The number of schedules to return per page.\n:param page_token: str (optional)\n  A page token, received from a previous ``ListSchedules`` call. Use this to retrieve the subsequent\n  page.\n\n:returns: Iterator over :class:`Schedule`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2575,7 +2669,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Create schedule subscription.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the subscription belongs.\n:param schedule_id: str\n  UUID identifying the schedule to which the subscription belongs.\n:param subscription: :class:`Subscription`\n  The subscription to create. A schedule is limited to 100 subscriptions.\n\n:returns: :class:`Subscription`",
+        "description": "Create schedule subscription.\n\nThe caller must be a workspace user with one of the following `entitlements\n<https://docs.databricks.com/security/auth/entitlements>`__: Workspace access, Databricks SQL access,\nor Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the subscription belongs.\n:param schedule_id: str\n  UUID identifying the schedule to which the subscription belongs.\n:param subscription: :class:`Subscription`\n  The subscription to create. A schedule is limited to 100 subscriptions.\n\n:returns: :class:`Subscription`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2602,78 +2696,69 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "subscription": {
+                  "subscriber": {
                     "type": "object",
                     "properties": {
-                      "subscriber": {
+                      "destination_subscriber": {
                         "type": "object",
                         "properties": {
-                          "destination_subscriber": {
-                            "type": "object",
-                            "properties": {
-                              "destination_id": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "destination_id"
-                            ]
-                          },
-                          "user_subscriber": {
-                            "type": "object",
-                            "properties": {
-                              "user_id": {
-                                "type": "integer"
-                              }
-                            },
-                            "required": [
-                              "user_id"
-                            ],
-                            "description": "The user to receive the subscription email. This parameter is mutually exclusive with ``destination_subscriber``."
+                          "destination_id": {
+                            "type": "string"
                           }
-                        }
+                        },
+                        "required": [
+                          "destination_id"
+                        ]
                       },
-                      "create_time": {
-                        "type": "string",
-                        "description": "A timestamp indicating when the subscription was created."
-                      },
-                      "created_by_user_id": {
-                        "type": "integer",
-                        "description": "UserId of the user who adds subscribers (users or notification destinations) to the dashboard's schedule."
-                      },
-                      "dashboard_id": {
-                        "type": "string",
-                        "description": "UUID identifying the dashboard to which the subscription belongs."
-                      },
-                      "etag": {
-                        "type": "string",
-                        "description": "The etag for the subscription. Must be left empty on create, can be optionally provided on delete to ensure that the subscription has not been deleted since the last read."
-                      },
-                      "schedule_id": {
-                        "type": "string",
-                        "description": "UUID identifying the schedule to which the subscription belongs."
-                      },
-                      "skip_notify": {
-                        "type": "boolean",
-                        "description": "Controls whether notifications are sent to the subscriber for scheduled dashboard refreshes. If not defined, defaults to false in the backend to match the current behavior (refresh and notify)"
-                      },
-                      "subscription_id": {
-                        "type": "string",
-                        "description": "UUID identifying the subscription."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "A timestamp indicating when the subscription was last updated."
+                      "user_subscriber": {
+                        "type": "object",
+                        "properties": {
+                          "user_id": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "user_id"
+                        ],
+                        "description": "The user to receive the subscription email. This parameter is mutually exclusive with ``destination_subscriber``."
                       }
-                    },
-                    "required": [
-                      "subscriber"
-                    ],
-                    "description": "The subscription to create. A schedule is limited to 100 subscriptions."
+                    }
+                  },
+                  "create_time": {
+                    "type": "string",
+                    "description": "A timestamp indicating when the subscription was created."
+                  },
+                  "created_by_user_id": {
+                    "type": "integer",
+                    "description": "UserId of the user who adds subscribers (users or notification destinations) to the dashboard's schedule."
+                  },
+                  "dashboard_id": {
+                    "type": "string",
+                    "description": "UUID identifying the dashboard to which the subscription belongs."
+                  },
+                  "etag": {
+                    "type": "string",
+                    "description": "The etag for the subscription. Must be left empty on create, can be optionally provided on delete to ensure that the subscription has not been deleted since the last read."
+                  },
+                  "schedule_id": {
+                    "type": "string",
+                    "description": "UUID identifying the schedule to which the subscription belongs."
+                  },
+                  "skip_notify": {
+                    "type": "boolean",
+                    "description": "Controls whether notifications are sent to the subscriber for scheduled dashboard refreshes. If not defined, defaults to false in the backend to match the current behavior (refresh and notify)"
+                  },
+                  "subscription_id": {
+                    "type": "string",
+                    "description": "UUID identifying the subscription."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "A timestamp indicating when the subscription was last updated."
                   }
                 },
                 "required": [
-                  "subscription"
+                  "subscriber"
                 ]
               }
             }
@@ -2718,7 +2803,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "List schedule subscriptions.\n\n:param dashboard_id: str\n  UUID identifying the dashboard which the subscriptions belongs.\n:param schedule_id: str\n  UUID identifying the schedule which the subscriptions belongs.\n:param page_size: int (optional)\n  The number of subscriptions to return per page.\n:param page_token: str (optional)\n  A page token, received from a previous ``ListSubscriptions`` call. Use this to retrieve the\n  subsequent page.\n\n:returns: Iterator over :class:`Subscription`",
+        "description": "List schedule subscriptions.\n\nThe caller must be a workspace user with one of the following `entitlements\n<https://docs.databricks.com/security/auth/entitlements>`__: Workspace access, Databricks SQL access,\nor Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the dashboard which the subscriptions belongs.\n:param schedule_id: str\n  UUID identifying the schedule which the subscriptions belongs.\n:param page_size: int (optional)\n  The number of subscriptions to return per page.\n:param page_token: str (optional)\n  A page token, received from a previous ``ListSubscriptions`` call. Use this to retrieve the\n  subsequent page.\n\n:returns: Iterator over :class:`Subscription`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2798,7 +2883,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Delete dashboard schedule.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule_id: str\n  UUID identifying the schedule.\n:param etag: str (optional)\n  The etag for the schedule. Optionally, it can be provided to verify that the schedule has not been\n  modified from its last retrieval.",
+        "description": "Delete dashboard schedule.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule_id: str\n  UUID identifying the schedule.\n:param etag: str (optional)\n  The etag for the schedule. Optionally, it can be provided to verify that the schedule has not been\n  modified from its last retrieval.",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2860,7 +2945,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Get dashboard schedule.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule_id: str\n  UUID identifying the schedule.\n\n:returns: :class:`Schedule`",
+        "description": "Get dashboard schedule.\n\nThe caller must be a workspace user with one of the following `entitlements\n<https://docs.databricks.com/security/auth/entitlements>`__: Workspace access, Databricks SQL access,\nor Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule_id: str\n  UUID identifying the schedule.\n\n:returns: :class:`Schedule`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2920,7 +3005,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Update dashboard schedule.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule_id: str\n  UUID identifying the schedule.\n:param schedule: :class:`Schedule`\n  The schedule to update.\n\n:returns: :class:`Schedule`",
+        "description": "Update dashboard schedule.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to which the schedule belongs.\n:param schedule_id: str\n  UUID identifying the schedule.\n:param schedule: :class:`Schedule`\n  The schedule to update.\n\n:returns: :class:`Schedule`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -2947,70 +3032,61 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "schedule": {
+                  "cron_schedule": {
                     "type": "object",
                     "properties": {
-                      "cron_schedule": {
-                        "type": "object",
-                        "properties": {
-                          "quartz_cron_expression": {
-                            "type": "string"
-                          },
-                          "timezone_id": {
-                            "type": "string",
-                            "description": "A Java timezone id. The schedule will be resolved with respect to this timezone. See `Java TimeZone <https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html>`__ for details."
-                          }
-                        },
-                        "required": [
-                          "quartz_cron_expression",
-                          "timezone_id"
-                        ]
+                      "quartz_cron_expression": {
+                        "type": "string"
                       },
-                      "create_time": {
+                      "timezone_id": {
                         "type": "string",
-                        "description": "A timestamp indicating when the schedule was created."
-                      },
-                      "dashboard_id": {
-                        "type": "string",
-                        "description": "UUID identifying the dashboard to which the schedule belongs."
-                      },
-                      "display_name": {
-                        "type": "string",
-                        "description": "The display name for schedule."
-                      },
-                      "etag": {
-                        "type": "string",
-                        "description": "The etag for the schedule. Must be left empty on create, must be provided on updates to ensure that the schedule has not been modified since the last read, and can be optionally provided on delete."
-                      },
-                      "pause_status": {
-                        "type": "string",
-                        "x-enum": [
-                          "PAUSED",
-                          "UNPAUSED"
-                        ],
-                        "description": "The status indicates whether this schedule is paused or not."
-                      },
-                      "schedule_id": {
-                        "type": "string",
-                        "description": "UUID identifying the schedule."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "A timestamp indicating when the schedule was last updated."
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "The warehouse id to run the dashboard with for the schedule."
+                        "description": "A Java timezone id. The schedule will be resolved with respect to this timezone. See `Java TimeZone <https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html>`__ for details."
                       }
                     },
                     "required": [
-                      "cron_schedule"
+                      "quartz_cron_expression",
+                      "timezone_id"
+                    ]
+                  },
+                  "create_time": {
+                    "type": "string",
+                    "description": "A timestamp indicating when the schedule was created."
+                  },
+                  "dashboard_id": {
+                    "type": "string",
+                    "description": "UUID identifying the dashboard to which the schedule belongs."
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "description": "The display name for schedule."
+                  },
+                  "etag": {
+                    "type": "string",
+                    "description": "The etag for the schedule. Must be left empty on create, must be provided on updates to ensure that the schedule has not been modified since the last read, and can be optionally provided on delete."
+                  },
+                  "pause_status": {
+                    "type": "string",
+                    "x-enum": [
+                      "PAUSED",
+                      "UNPAUSED"
                     ],
-                    "description": "The schedule to update."
+                    "description": "The status indicates whether this schedule is paused or not."
+                  },
+                  "schedule_id": {
+                    "type": "string",
+                    "description": "UUID identifying the schedule."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "A timestamp indicating when the schedule was last updated."
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "The warehouse id to run the dashboard with for the schedule."
                   }
                 },
                 "required": [
-                  "schedule"
+                  "cron_schedule"
                 ]
               }
             }
@@ -3057,7 +3133,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Delete schedule subscription.\n\n:param dashboard_id: str\n  UUID identifying the dashboard which the subscription belongs.\n:param schedule_id: str\n  UUID identifying the schedule which the subscription belongs.\n:param subscription_id: str\n  UUID identifying the subscription.\n:param etag: str (optional)\n  The etag for the subscription. Can be optionally provided to ensure that the subscription has not\n  been modified since the last read.",
+        "description": "Delete schedule subscription.\n\nThe caller must be a workspace user with one of the following `entitlements\n<https://docs.databricks.com/security/auth/entitlements>`__: Workspace access, Databricks SQL access,\nor Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the dashboard which the subscription belongs.\n:param schedule_id: str\n  UUID identifying the schedule which the subscription belongs.\n:param subscription_id: str\n  UUID identifying the subscription.\n:param etag: str (optional)\n  The etag for the subscription. Can be optionally provided to ensure that the subscription has not\n  been modified since the last read.",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3128,7 +3204,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Get schedule subscription.\n\n:param dashboard_id: str\n  UUID identifying the dashboard which the subscription belongs.\n:param schedule_id: str\n  UUID identifying the schedule which the subscription belongs.\n:param subscription_id: str\n  UUID identifying the subscription.\n\n:returns: :class:`Subscription`",
+        "description": "Get schedule subscription.\n\nThe caller must be a workspace user with one of the following `entitlements\n<https://docs.databricks.com/security/auth/entitlements>`__: Workspace access, Databricks SQL access,\nor Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the dashboard which the subscription belongs.\n:param schedule_id: str\n  UUID identifying the schedule which the subscription belongs.\n:param subscription_id: str\n  UUID identifying the subscription.\n\n:returns: :class:`Subscription`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3199,7 +3275,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Get a draft dashboard.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.\n\n:returns: :class:`Dashboard`",
+        "description": "Get a draft dashboard.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.\n\n:returns: :class:`Dashboard`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3250,7 +3326,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Trash a dashboard.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.",
+        "description": "Trash a dashboard.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3294,7 +3370,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Update a draft dashboard.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.\n:param dashboard: :class:`Dashboard`\n:param dataset_catalog: str (optional)\n  Sets the default catalog for all datasets in this dashboard. Does not impact table references that\n  use fully qualified catalog names (ex: samples.nyctaxi.trips). Leave blank to keep each dataset\u2019s\n  existing configuration.\n:param dataset_schema: str (optional)\n  Sets the default schema for all datasets in this dashboard. Does not impact table references that\n  use fully qualified schema names (ex: nyctaxi.trips). Leave blank to keep each dataset\u2019s existing\n  configuration.\n\n:returns: :class:`Dashboard`",
+        "description": "Update a draft dashboard.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.\n:param dashboard: :class:`Dashboard`\n:param dataset_catalog: str (optional)\n  Sets the default catalog for all datasets in this dashboard. Does not impact table references that\n  use fully qualified catalog names (ex: samples.nyctaxi.trips). Leave blank to keep each dataset\u2019s\n  existing configuration.\n:param dataset_schema: str (optional)\n  Sets the default schema for all datasets in this dashboard. Does not impact table references that\n  use fully qualified schema names (ex: nyctaxi.trips). Leave blank to keep each dataset\u2019s existing\n  configuration.\n\n:returns: :class:`Dashboard`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3330,58 +3406,50 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "dashboard": {
-                    "type": "object",
-                    "properties": {
-                      "create_time": {
-                        "type": "string"
-                      },
-                      "dashboard_id": {
-                        "type": "string",
-                        "description": "UUID identifying the dashboard."
-                      },
-                      "display_name": {
-                        "type": "string",
-                        "description": "The display name of the dashboard."
-                      },
-                      "etag": {
-                        "type": "string",
-                        "description": "The etag for the dashboard. Can be optionally provided on updates to ensure that the dashboard has not been modified since the last read. This field is excluded in List Dashboards responses."
-                      },
-                      "lifecycle_state": {
-                        "type": "string",
-                        "x-enum": [
-                          "ACTIVE",
-                          "TRASHED"
-                        ],
-                        "description": "The state of the dashboard resource. Used for tracking trashed status."
-                      },
-                      "parent_path": {
-                        "type": "string",
-                        "description": "The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash. This field is excluded in List Dashboards responses."
-                      },
-                      "path": {
-                        "type": "string",
-                        "description": "The workspace path of the dashboard asset, including the file name. Exported dashboards always have the file extension ``.lvdash.json``. This field is excluded in List Dashboards responses."
-                      },
-                      "serialized_dashboard": {
-                        "type": "string",
-                        "description": "The contents of the dashboard in serialized string form. This field is excluded in List Dashboards responses. Use the `get dashboard API <https://docs.databricks.com/api/workspace/lakeview/get>`__ to retrieve an example response, which includes the ``serialized_dashboard`` field. This field provides the structure of the JSON string that represents the dashboard's layout and components."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "The timestamp of when the dashboard was last updated by the user. This field is excluded in List Dashboards responses."
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "The warehouse ID used to run the dashboard."
-                      }
-                    }
+                  "create_time": {
+                    "type": "string"
+                  },
+                  "dashboard_id": {
+                    "type": "string",
+                    "description": "UUID identifying the dashboard."
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "description": "The display name of the dashboard."
+                  },
+                  "etag": {
+                    "type": "string",
+                    "description": "The etag for the dashboard. Can be optionally provided on updates to ensure that the dashboard has not been modified since the last read. This field is excluded in List Dashboards responses."
+                  },
+                  "lifecycle_state": {
+                    "type": "string",
+                    "x-enum": [
+                      "ACTIVE",
+                      "TRASHED"
+                    ],
+                    "description": "The state of the dashboard resource. Used for tracking trashed status."
+                  },
+                  "parent_path": {
+                    "type": "string",
+                    "description": "The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash. This field is excluded in List Dashboards responses."
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "The workspace path of the dashboard asset, including the file name. Exported dashboards always have the file extension ``.lvdash.json``. This field is excluded in List Dashboards responses."
+                  },
+                  "serialized_dashboard": {
+                    "type": "string",
+                    "description": "The contents of the dashboard in serialized string form. This field is excluded in List Dashboards responses. Use the `get dashboard API <https://docs.databricks.com/api/workspace/lakeview/get>`__ to retrieve an example response, which includes the ``serialized_dashboard`` field. This field provides the structure of the JSON string that represents the dashboard's layout and components."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "The timestamp of when the dashboard was last updated by the user. This field is excluded in List Dashboards responses."
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "The warehouse ID used to run the dashboard."
                   }
-                },
-                "required": [
-                  "dashboard"
-                ]
+                }
               }
             }
           }
@@ -3427,7 +3495,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Get the current published dashboard.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.\n\n:returns: :class:`PublishedDashboard`",
+        "description": "Get the current published dashboard.\n\nThe caller must be a workspace user with one of the following entitlements: Workspace access,\nDatabricks SQL access, or Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.\n\n:returns: :class:`PublishedDashboard`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3478,7 +3546,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Publish the current draft dashboard.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to be published.\n:param embed_credentials: bool (optional)\n  Flag to indicate if the publisher's credentials should be embedded in the published dashboard. These\n  embedded credentials will be used to execute the published dashboard's queries.\n:param warehouse_id: str (optional)\n  The ID of the warehouse that can be used to override the warehouse which was set in the draft.\n\n:returns: :class:`PublishedDashboard`",
+        "description": "Publish the current draft dashboard.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard to be published.\n:param embed_credentials: bool (optional)\n  Flag to indicate if the publisher's credentials should be embedded in the published dashboard. These\n  embedded credentials will be used to execute the published dashboard's queries.\n:param warehouse_id: str (optional)\n  The ID of the warehouse that can be used to override the warehouse which was set in the draft.\n\n:returns: :class:`PublishedDashboard`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3548,7 +3616,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Unpublish the dashboard.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.",
+        "description": "Unpublish the dashboard.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3589,12 +3657,12 @@
     "/api/2.0/lakeview/dashboards/migrate": {
       "post": {
         "operationId": "lakeview_migrate",
-        "summary": "Migrates a classic SQL dashboard to Lakeview.",
+        "summary": "Deprecated: Legacy dashboard migration is no longer supported. Use Lakeview (AI/BI) dashboards",
         "tags": [
           "dashboards",
           "lakeview"
         ],
-        "description": "Migrates a classic SQL dashboard to Lakeview.\n\n:param source_dashboard_id: str\n  UUID of the dashboard to be migrated.\n:param display_name: str (optional)\n  Display name for the new Lakeview dashboard.\n:param parent_path: str (optional)\n  The workspace path of the folder to contain the migrated Lakeview dashboard.\n:param update_parameter_syntax: bool (optional)\n  Flag to indicate if mustache parameter syntax ({{ param }}) should be auto-updated to named syntax\n  (:param) when converting datasets in the dashboard.\n\n:returns: :class:`Dashboard`",
+        "description": "Deprecated: Legacy dashboard migration is no longer supported. Use Lakeview (AI/BI) dashboards\ninstead.\n\n:param source_dashboard_id: str\n  UUID of the dashboard to be migrated.\n:param display_name: str (optional)\n  Display name for the new Lakeview dashboard.\n:param parent_path: str (optional)\n  The workspace path of the folder to contain the migrated Lakeview dashboard.\n:param update_parameter_syntax: bool (optional)\n  Flag to indicate if mustache parameter syntax ({{ param }}) should be auto-updated to named syntax\n  (:param) when converting datasets in the dashboard.\n\n:returns: :class:`Dashboard`",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3666,7 +3734,7 @@
           "dashboards",
           "lakeview"
         ],
-        "description": "Revert a dashboard's definition in draft mode to the last published version.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.\n:param etag: str (optional)\n  The etag for the dashboard. Optionally, it can be provided to verify that the dashboard has not been\n  modified from its last retrieval.\n\n:returns: :class:`RevertDashboardResponse`",
+        "description": "Revert a dashboard's definition in draft mode to the last published version.\n\nRequires the `Databricks SQL access <https://docs.databricks.com/security/auth/entitlements>`__\nentitlement. Grant Databricks SQL access in addition to Workspace access.\n\n:param dashboard_id: str\n  UUID identifying the dashboard.\n:param etag: str (optional)\n  The etag for the dashboard. Optionally, it can be provided to verify that the dashboard has not been\n  modified from its last retrieval.\n\n:returns: :class:`RevertDashboardResponse`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3726,52 +3794,6 @@
         "x-stackql-sdk-source": "LakeviewAPI"
       }
     },
-    "/api/2.0/lakeview/dashboards/{dashboard_id}/published/embedded": {
-      "get": {
-        "operationId": "lakeview_embedded_get_published_dashboard_embedded",
-        "summary": "Get the current published dashboard within an embedded context.",
-        "tags": [
-          "dashboards",
-          "lakeview_embedded"
-        ],
-        "description": "Get the current published dashboard within an embedded context.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.",
-        "parameters": [
-          {
-            "name": "dashboard_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "UUID identifying the published dashboard."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "default": {
-            "description": "Error response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "x-stackql-sdk-source": "LakeviewEmbeddedAPI"
-      }
-    },
     "/api/2.0/lakeview/dashboards/{dashboard_id}/published/tokeninfo": {
       "get": {
         "operationId": "lakeview_embedded_get_published_dashboard_token_info",
@@ -3780,7 +3802,7 @@
           "dashboards",
           "lakeview_embedded"
         ],
-        "description": "Get a required authorization details and scopes of a published dashboard to mint an OAuth token.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.\n:param external_value: str (optional)\n  Provided external value to be included in the custom claim.\n:param external_viewer_id: str (optional)\n  Provided external viewer id to be included in the custom claim.\n\n:returns: :class:`GetPublishedDashboardTokenInfoResponse`",
+        "description": "Get a required authorization details and scopes of a published dashboard to mint an OAuth token.\n\nThe caller must be a workspace user with one of the following entitlements: Workspace access,\nDatabricks SQL access, or Consumer access.\n\nAccount-level users who are not members of the workspace cannot call this endpoint, even if the\ndashboard has been shared with them.\n\n:param dashboard_id: str\n  UUID identifying the published dashboard.\n:param external_value: str (optional)\n  Provided external value to be included in the custom claim.\n:param external_viewer_id: str (optional)\n  Provided external viewer id to be included in the custom claim.\n\n:returns: :class:`GetPublishedDashboardTokenInfoResponse`",
         "parameters": [
           {
             "name": "dashboard_id",
@@ -3976,7 +3998,8 @@
         "type": "object",
         "properties": {
           "space_id": {
-            "type": "string"
+            "type": "string",
+            "description": "Genie space ID"
           },
           "title": {
             "type": "string",
@@ -4007,13 +4030,18 @@
           "space_id",
           "title",
           "conversation_id"
-        ]
+        ],
+        "description": "A Genie conversation. Use chat-mode message endpoints for classic chats and agent-mode response\n    and item endpoints for agent conversations. Conversation management, feedback, comments, and\n    attachment operations support both modes."
       },
       "GenieConversationSummary": {
         "type": "object",
         "properties": {
           "conversation_id": {
             "type": "string"
+          },
+          "agent_type": {
+            "$ref": "#/components/schemas/GenieConversationType",
+            "description": "Whether this is a classic chat or an agent-mode conversation. Allows callers to route message retrieval (chat vs. agent endpoint) without an extra lookup."
           },
           "created_timestamp": {
             "type": "integer"
@@ -4141,7 +4169,8 @@
         "type": "object",
         "properties": {
           "eval_run_id": {
-            "type": "string"
+            "type": "string",
+            "description": "The unique identifier for the evaluation run."
           },
           "created_timestamp": {
             "type": "integer",
@@ -4178,7 +4207,8 @@
         },
         "required": [
           "eval_run_id"
-        ]
+        ],
+        "description": "A benchmark evaluation run. The public benchmark API currently evaluates chat-mode responses."
       },
       "GenieFeedback": {
         "type": "object",
@@ -4498,6 +4528,11 @@
             "type": "string",
             "description": "Title of the Genie Space"
           },
+          "create_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time when the Genie space was created."
+          },
           "description": {
             "type": "string",
             "description": "Description of the Genie Space"
@@ -4513,6 +4548,11 @@
           "serialized_space": {
             "type": "string",
             "description": "The contents of the Genie Space in serialized string form. This field is excluded in List Genie spaces responses. Use the [Get Genie Space](:method:genie/getspace) API to retrieve an example response, which includes the ``serialized_space`` field. This field provides the structure of the JSON string that represents the space's layout and components."
+          },
+          "update_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time when the Genie space was last modified, matching the value shown in the Genie Agent UI."
           },
           "warehouse_id": {
             "type": "string",
@@ -4572,10 +4612,6 @@
           }
         },
         "description": "Visualization generated by Genie for a query result. Use the attachment ID with the download\n    visualization API to retrieve the rendered image."
-      },
-      "GetPublishedDashboardEmbeddedResponse": {
-        "type": "object",
-        "properties": {}
       },
       "GetPublishedDashboardTokenInfoResponse": {
         "type": "object",
@@ -4838,23 +4874,18 @@
         "type": "object",
         "properties": {
           "content": {
-            "type": "string"
+            "type": "string",
+            "description": "AI generated message"
           },
           "id": {
             "type": "string"
           },
-          "phase": {
-            "$ref": "#/components/schemas/ResponsePhase"
-          },
           "purpose": {
             "$ref": "#/components/schemas/TextAttachmentPurpose",
-            "description": "Purpose/intent of this text attachment"
-          },
-          "verification_metadata": {
-            "$ref": "#/components/schemas/VerificationMetadata",
-            "description": "Metadata for verification phase attachments. Only set when phase = RESPONSE_PHASE_VERIFYING."
+            "description": "Purpose of this text attachment. A completed message may contain more than one text attachment (for example a clarifying follow-up question alongside the final answer); use this field to tell them apart. ``TEXT_ATTACHMENT_PURPOSE_ANSWER`` marks the final answer/summary and ``FOLLOW_UP_QUESTION`` marks a clarifying question."
           }
-        }
+        },
+        "description": "A text response on a conversation message: the answer, the final summary, or a clarifying\n    follow-up question, along with optional phase and verification metadata."
       },
       "Thought": {
         "type": "object",
@@ -4878,19 +4909,6 @@
         "type": "object",
         "properties": {}
       },
-      "VerificationMetadata": {
-        "type": "object",
-        "properties": {
-          "index": {
-            "type": "integer",
-            "description": "Optional index to help order attachments within the same section"
-          },
-          "section": {
-            "$ref": "#/components/schemas/VerificationSection"
-          }
-        },
-        "description": "Metadata for verification phase attachments"
-      },
       "DashboardView": {
         "type": "string",
         "x-enum": [
@@ -4909,6 +4927,14 @@
           "RUNNING"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
+      },
+      "GenieConversationType": {
+        "type": "string",
+        "x-enum": [
+          "GENIE_CONVERSATION_TYPE_AGENT",
+          "GENIE_CONVERSATION_TYPE_CHAT"
+        ],
+        "description": "The type of a Genie conversation. Distinguishes an agent-mode conversation from a classic chat\nconversation so callers can route message retrieval accordingly without a per-conversation\nlookup."
       },
       "GenieEvalAssessment": {
         "type": "string",
@@ -4948,8 +4974,6 @@
         "type": "string",
         "x-enum": [
           "BLOCK_MULTIPLE_EXECUTIONS_EXCEPTION",
-          "BUDGET_EXCEEDED_EXCEPTION",
-          "CERTIFIED_ANSWERS_MISSING_EXCEPTION",
           "CHAT_COMPLETION_CLIENT_EXCEPTION",
           "CHAT_COMPLETION_CLIENT_TIMEOUT_EXCEPTION",
           "CHAT_COMPLETION_NETWORK_EXCEPTION",
@@ -4958,8 +4982,6 @@
           "COULD_NOT_GET_DASHBOARD_SCHEMA_EXCEPTION",
           "COULD_NOT_GET_MODEL_DEPLOYMENTS_EXCEPTION",
           "COULD_NOT_GET_UC_SCHEMA_EXCEPTION",
-          "DASHBOARD_PERMISSION_DENIED_EXCEPTION",
-          "DELEGATION_NOT_FOUND_EXCEPTION",
           "DEPLOYMENT_NOT_FOUND_EXCEPTION",
           "DESCRIBE_QUERY_INVALID_SQL_ERROR",
           "DESCRIBE_QUERY_TIMEOUT",
@@ -4982,7 +5004,6 @@
           "INTERNAL_CATALOG_PATH_OVERLAP_EXCEPTION",
           "INVALID_CERTIFIED_ANSWER_FUNCTION_EXCEPTION",
           "INVALID_CERTIFIED_ANSWER_IDENTIFIER_EXCEPTION",
-          "INVALID_CHAT_COMPLETION_ARGUMENTS_JSON_EXCEPTION",
           "INVALID_CHAT_COMPLETION_JSON_EXCEPTION",
           "INVALID_COMPLETION_REQUEST_EXCEPTION",
           "INVALID_FUNCTION_CALL_EXCEPTION",
@@ -4999,7 +5020,6 @@
           "NO_DEPLOYMENTS_AVAILABLE_TO_WORKSPACE",
           "NO_QUERY_TO_VISUALIZE_EXCEPTION",
           "NO_TABLES_TO_QUERY_EXCEPTION",
-          "PAY_PER_TOKEN_DISABLED_EXCEPTION",
           "RATE_LIMIT_EXCEEDED_GENERIC_EXCEPTION",
           "RATE_LIMIT_EXCEEDED_SPECIFIED_WAIT_EXCEPTION",
           "REPLY_PROCESS_TIMEOUT_EXCEPTION",
@@ -5032,14 +5052,6 @@
           "SUBMITTED"
         ],
         "description": "MessageStatus. The possible values are:\n\n- ``FETCHING_METADATA``: Fetching metadata from the data sources.\n- ``FILTERING_CONTEXT``: Running smart context step to determine relevant context.\n- ``ASKING_AI``: Waiting for the LLM to respond to the user's question.\n- ``PENDING_WAREHOUSE``: Waiting for warehouse before the SQL query can start executing.\n- ``EXECUTING_QUERY``: Executing a generated SQL query. Get the SQL query result by calling\n  [getMessageAttachmentQueryResult](:method:genie/getMessageAttachmentQueryResult) API.\n- ``FAILED``: The response generation or query execution failed. See ``error`` field.\n- ``COMPLETED``: Message processing is completed. Results are in the ``attachments`` field. Get\n  the SQL query result by calling\n  [getMessageAttachmentQueryResult](:method:genie/getMessageAttachmentQueryResult) API.\n- ``SUBMITTED``: Message has been submitted.\n- ``QUERY_RESULT_EXPIRED``: SQL result is not available anymore. The user needs to rerun the\n  query. Rerun the SQL query result by calling\n  [executeMessageAttachmentQuery](:method:genie/executeMessageAttachmentQuery) API.\n- ``CANCELLED``: Message has been cancelled."
-      },
-      "ResponsePhase": {
-        "type": "string",
-        "x-enum": [
-          "RESPONSE_PHASE_THINKING",
-          "RESPONSE_PHASE_VERIFYING"
-        ],
-        "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
       },
       "SchedulePauseStatus": {
         "type": "string",
@@ -5076,15 +5088,15 @@
           "RESULT_EXTRA_ROWS",
           "RESULT_MISSING_COLUMNS",
           "RESULT_MISSING_ROWS",
-          "SINGLE_CELL_DIFFERENCE",
-          "TRANSIENT_ERROR"
+          "SINGLE_CELL_DIFFERENCE"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
       },
       "TextAttachmentPurpose": {
         "type": "string",
         "x-enum": [
-          "FOLLOW_UP_QUESTION"
+          "FOLLOW_UP_QUESTION",
+          "TEXT_ATTACHMENT_PURPOSE_ANSWER"
         ],
         "description": "Purpose/intent of a text attachment"
       },
@@ -5098,16 +5110,6 @@
           "THOUGHT_TYPE_UNDERSTANDING"
         ],
         "description": "ThoughtType. The possible values are:\n\n- ``THOUGHT_TYPE_UNSPECIFIED``: Default value that should not be used.\n- ``THOUGHT_TYPE_DESCRIPTION``: A high-level description of how the question was interpreted.\n- ``THOUGHT_TYPE_UNDERSTANDING``: How ambiguous parts of the question were resolved.\n- ``THOUGHT_TYPE_DATA_SOURCING``: Which tables or datasets were identified as relevant.\n- ``THOUGHT_TYPE_INSTRUCTIONS``: Which author-defined instructions were referenced.\n- ``THOUGHT_TYPE_STEPS``: The logical steps taken to compute the answer. The category of a\n  Thought. Additional values may be added in the future."
-      },
-      "VerificationSection": {
-        "type": "string",
-        "x-enum": [
-          "VERIFICATION_SECTION_FINAL_DECISION",
-          "VERIFICATION_SECTION_PROPOSED_IMPROVEMENT",
-          "VERIFICATION_SECTION_SQL_EXAMPLES_VALIDATION",
-          "VERIFICATION_SECTION_VERIFICATION_QUERIES"
-        ],
-        "description": "Verification workflow section - indicates which stage of verification this attachment belongs to\nThese sections are used for grouping and ordering attachments in the frontend UI"
       }
     }
   }

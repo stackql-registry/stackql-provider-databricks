@@ -5,6 +5,7 @@ Each function has a single, well-defined responsibility and returns
 typed, predictable results suitable for OpenAPI spec generation.
 """
 
+import copy
 import dataclasses
 import inspect
 import logging
@@ -108,8 +109,26 @@ def get_operation_details(
     docstring = inspect.getdoc(method) or ""
 
     path_params = _extract_path_params(url_path)
+
+    # Resource-name style APIs (domains, sandbox, agentkit, ...) route every
+    # operation through ``/api/2.0/{name}`` where ``name`` is a full resource
+    # name such as ``domains/{domain_id}``. Expand those placeholders into the
+    # real path so each resource gets its own OpenAPI path and typed params.
+    param_docs = _parse_param_docs(docstring)
+    url_path, path_params, expanded = _expand_resource_name_params(
+        url_path, path_params, param_docs,
+        _resource_name_templates(service_module, class_name), method_name,
+    )
+    if expanded:
+        logger.info(
+            "%s.%s: expanded resource name param(s) %s -> %s",
+            class_name, method_name, ", ".join(sorted(expanded)), url_path,
+        )
+
+    # The consumed SDK parameters (``name``/``parent``) are represented by the
+    # expanded placeholders; keep them out of the query/body classification.
     body_params, query_params, positional_params = _classify_params(
-        sig, path_params, http_method, source
+        sig, path_params + sorted(expanded), http_method, source
     )
 
     tags = _build_tags(service_name, resource_snake_name)
@@ -128,7 +147,9 @@ def get_operation_details(
         "description": docstring,
     }
 
-    parameters = _build_parameters(path_params, query_params, sig, docstring, service_module)
+    parameters = _build_parameters(
+        path_params, query_params, sig, docstring, service_module, expanded=expanded
+    )
     if parameters:
         operation["parameters"] = parameters
 
@@ -441,10 +462,25 @@ def _build_parameters(
     sig: inspect.Signature,
     docstring: str,
     service_module=None,
+    expanded: Optional[Dict[str, Tuple[str, str]]] = None,
 ) -> List[Dict[str, Any]]:
-    """Build OpenAPI parameter objects for path and query params."""
+    """Build OpenAPI parameter objects for path and query params.
+
+    ``expanded`` maps an SDK resource-name parameter (``name``/``parent``)
+    to ``(template, [placeholders])`` when it was expanded into the path by
+    :func:`_expand_resource_name_params`; the placeholders inherit the
+    original parameter's description.
+    """
     params = []
     param_docs = _parse_param_docs(docstring)
+    placeholder_docs: Dict[str, str] = {}
+    for orig, (template, placeholders) in (expanded or {}).items():
+        for ph in placeholders:
+            base = param_docs.get(orig, "")
+            placeholder_docs[ph] = (
+                f"The `{ph}` segment of the `{orig}` resource name (`{template}`)."
+                + (f" {base}" if base else "")
+            )
 
     for name in path_params:
         p: Dict[str, Any] = {
@@ -453,7 +489,7 @@ def _build_parameters(
             "required": True,
             "schema": _python_type_to_openapi(sig.parameters.get(name), service_module),
         }
-        desc = param_docs.get(name)
+        desc = param_docs.get(name) or placeholder_docs.get(name)
         if desc:
             p["description"] = desc
         params.append(p)
@@ -474,6 +510,31 @@ def _build_parameters(
     return params
 
 
+_SPREAD_BODY_RE = re.compile(r"^\s*body\s*=\s*([a-z_][a-z0-9_]*)\.as_dict\(\)\s*$", re.MULTILINE)
+
+
+def _extract_spread_body_param(source: str) -> Optional[str]:
+    """Return the parameter spread into the body by ``body = <param>.as_dict()``."""
+    m = _SPREAD_BODY_RE.search(source)
+    return m.group(1) if m else None
+
+
+def _dataclass_schema_for_param(param: Optional[inspect.Parameter], service_module) -> Optional[Dict[str, Any]]:
+    """Return the component schema of a parameter annotated with a dataclass."""
+    if param is None or param.annotation is inspect.Parameter.empty or service_module is None:
+        return None
+    annotation = param.annotation
+    if isinstance(annotation, str):
+        annotation = _resolve_string_annotation(annotation, service_module)
+    if not (inspect.isclass(annotation) and dataclasses.is_dataclass(annotation)):
+        return None
+    try:
+        return get_schema_from_data_class(service_module, annotation).get(annotation.__name__)
+    except Exception as e:  # pragma: no cover - defensive, falls back to the wrapper shape
+        logger.warning("Could not inline %s as a request body: %s", annotation.__name__, e)
+        return None
+
+
 def _build_request_body(
     body_params: List[str],
     sig: inspect.Signature,
@@ -490,6 +551,19 @@ def _build_request_body(
     body_key_map = _extract_body_key_mapping(source) if source else {}
     properties: Dict[str, Any] = {}
     required: List[str] = []
+
+    # ``body = <param>.as_dict()``: the SDK sends the dataclass's fields as the
+    # body itself (``{"name": ..., "region": ...}``), not nested under the
+    # parameter name. Model the body as that dataclass so its fields become
+    # the INSERT/UPDATE columns; any ``body["key"] = ...`` assignments that
+    # follow are merged in as further properties.
+    spread_param = _extract_spread_body_param(source) if source else None
+    if spread_param and spread_param in body_params:
+        spread_schema = _dataclass_schema_for_param(sig.parameters.get(spread_param), service_module)
+        if spread_schema is not None:
+            properties.update(copy.deepcopy(spread_schema.get("properties") or {}))
+            required.extend(spread_schema.get("required") or [])
+            body_params = [p for p in body_params if p != spread_param]
 
     for name in body_params:
         sig_param = sig.parameters.get(name)
@@ -761,6 +835,209 @@ def _normalize_path(url_path: str) -> str:
     # Replace {_escape_multi_segment_path_parameter(file_path)} with {file_path}
     path = re.sub(r"\{_escape_multi_segment_path_parameter\((\w+)\)\}", r"{\1}", path)
     return path
+
+
+# ---------------------------------------------------------------------------
+# Resource-name style paths
+#
+# Newer Databricks APIs follow the Google AIP resource-name convention: the
+# SDK method takes ``name="domains/{domain_id}"`` (or ``parent=...``) and the
+# wire call is ``self._api.do("GET", f"/api/2.0/{name}")``. Several
+# operations on different resources therefore share one f-string path, and
+# the parameter value carries slashes. The helpers below recover the real
+# path from the template the SDK documents ("Format: domains/{domain_id}",
+# "in the form ``sandboxes/{sandbox_id}``"), so each resource gets its own
+# OpenAPI path and typed path parameters.
+# ---------------------------------------------------------------------------
+
+_RESOURCE_NAME_PARAMS = ("name", "parent")
+_TEMPLATE_SEGMENT_RE = re.compile(r"\{[a-z_][a-z0-9_]*\}|[A-Za-z0-9_\-.]+")
+_TEMPLATE_CUE_RE = re.compile(
+    r"(?:Format:|in the form(?: of)?|of the form)\s*[`'\"]*([A-Za-z0-9_\-{}/.]+)"
+)
+_TEMPLATE_TOKEN_RE = re.compile(r"[A-Za-z0-9_\-{}/.]+")
+_DOTTED_SEGMENT_RE = re.compile(r"\{[a-z_][a-z0-9_]*\}(?:\.\{[a-z_][a-z0-9_]*\})+")
+_METHOD_VERB_PREFIX_RE = re.compile(
+    r"^(?:get|list|create|delete|update|patch|put|start|stop|cancel|describe|"
+    r"grant|revoke|search|append|clear|pop|fork|make|remove|rename|sync|exec|"
+    r"refresh|set|batch_[a-z]+)_"
+)
+_resource_template_cache: Dict[Tuple[int, str], Dict[str, Any]] = {}
+_curated_templates: Optional[Dict[str, Dict[str, str]]] = None
+CURATED_TEMPLATES_FILE = "resource_name_templates.json"
+
+
+def _load_curated_templates() -> Dict[str, Dict[str, str]]:
+    """Load ``resource_name_templates.json`` (``{service: {"Class.method.param": template}}``).
+
+    The file records templates the SDK does not document for a parameter and
+    that cannot be inferred from sibling methods; keys starting with ``_``
+    are comments.
+    """
+    global _curated_templates
+    if _curated_templates is None:
+        import json
+        import os
+
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), CURATED_TEMPLATES_FILE)
+        loaded: Dict[str, Dict[str, str]] = {}
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                raw = json.load(f)
+            for service, entries in raw.items():
+                if service.startswith("_") or not isinstance(entries, dict):
+                    continue
+                loaded[service] = {k: v for k, v in entries.items() if not k.startswith("_")}
+        _curated_templates = loaded
+    return _curated_templates
+
+
+def _is_resource_template(candidate: str, require_placeholder: bool) -> bool:
+    """True when *candidate* looks like ``segment/{param}/segment``."""
+    segments = candidate.split("/")
+    if not segments or any(not s for s in segments):
+        return False
+    if require_placeholder and not any(s.startswith("{") for s in segments):
+        return False
+    return all(_TEMPLATE_SEGMENT_RE.fullmatch(s) for s in segments)
+
+
+def _parse_resource_name_template(description: str) -> Optional[str]:
+    """Return the resource-name template documented in a parameter description.
+
+    ``"Full resource name of the domain. Format: ``domains/{domain_id}``"``
+    yields ``"domains/{domain_id}"``. A template introduced by ``Format:`` may
+    be a bare singleton (``default-workspace-base-environment``); any other
+    candidate must contain at least one ``{placeholder}``.
+    """
+    if not description:
+        return None
+    text = description.replace("`", " ").replace('"', " ")
+    # A Unity Catalog three-level name is one path segment written as
+    # ``{catalog}.{schema}.{skill}``; it is a single ``full_name`` parameter
+    # (the convention the catalog service already uses for tables).
+    text = _DOTTED_SEGMENT_RE.sub("{full_name}", text)
+    m = _TEMPLATE_CUE_RE.search(text)
+    if m:
+        candidate = m.group(1).strip("/.,;:")
+        explicit = m.group(0).startswith("Format:")
+        if _is_resource_template(candidate, require_placeholder=not explicit):
+            return candidate
+    for token in _TEMPLATE_TOKEN_RE.findall(text):
+        token = token.strip("/.,;:")
+        if "/" in token and "{" in token and _is_resource_template(token, True):
+            return token
+    return None
+
+
+def _method_noun(method_name: str) -> str:
+    """``get_sandbox`` -> ``sandbox``; ``list_memory_stores`` -> ``memory_stores``."""
+    return _METHOD_VERB_PREFIX_RE.sub("", method_name)
+
+
+def _resource_name_templates(service_module, class_name: str) -> Dict[str, Any]:
+    """Index the resource-name templates documented across an API class.
+
+    Used to fill in methods whose ``name``/``parent`` docstring omits the
+    format (``SandboxAPI.get_sandbox`` documents nothing, ``start_sandbox``
+    documents ``sandboxes/{sandbox_id}``). Returns::
+
+        {"by_noun": {noun: {param: template}},
+         "by_path_param": {(url_path, param): {template, ...}},
+         "by_param": {param: {template, ...}}}
+    """
+    key = (id(service_module), class_name)
+    cached = _resource_template_cache.get(key)
+    if cached is not None:
+        return cached
+    index: Dict[str, Any] = {"by_noun": {}, "by_path_param": {}, "by_param": {}, "curated": {}}
+    service_short = getattr(service_module, "__name__", "").rsplit(".", 1)[-1]
+    prefix = f"{class_name}."
+    for ref, template in _load_curated_templates().get(service_short, {}).items():
+        if ref.startswith(prefix):
+            index["curated"][ref[len(prefix):]] = template
+    cls = getattr(service_module, class_name, None)
+    for method_name in get_operations(service_module, class_name) if cls else []:
+        method = getattr(cls, method_name)
+        source = _get_source_safe(method)
+        if not source:
+            continue
+        _, url_path = _extract_http_call(source)
+        if not url_path:
+            continue
+        docs = _parse_param_docs(inspect.getdoc(method) or "")
+        for param in _extract_path_params(url_path):
+            if param not in _RESOURCE_NAME_PARAMS:
+                continue
+            template = _parse_resource_name_template(docs.get(param, ""))
+            if not template:
+                continue
+            index["by_noun"].setdefault(_method_noun(method_name), {}).setdefault(param, template)
+            index["by_path_param"].setdefault((url_path, param), set()).add(template)
+            index["by_param"].setdefault(param, set()).add(template)
+    _resource_template_cache[key] = index
+    return index
+
+
+def _expand_resource_name_params(
+    url_path: str,
+    path_params: List[str],
+    param_docs: Dict[str, str],
+    templates: Dict[str, Any],
+    method_name: str,
+) -> Tuple[str, List[str], Dict[str, Tuple[str, List[str]]]]:
+    """Replace ``{name}``/``{parent}`` in *url_path* with their documented template.
+
+    Resolution order for a template: the method's own docstring, a sibling
+    method on the same noun (``get_sandbox`` <- ``start_sandbox``), the
+    unique template seen for the same ``(path, param)`` in the class, then
+    the unique template for the param across the class. A parameter with no
+    resolvable template is left as-is and logged.
+
+    Returns ``(url_path, path_params, expanded)`` where ``expanded`` maps
+    each consumed parameter to ``(template, placeholders)``.
+    """
+    expanded: Dict[str, Tuple[str, List[str]]] = {}
+    new_params: List[str] = []
+    curated = templates.get("curated", {})
+    for param in path_params:
+        if f"{{{param}}}" not in url_path:
+            new_params.append(param)
+            continue
+        doc = param_docs.get(param, "")
+        # Curated templates (resource_name_templates.json) win, then the
+        # method's own docstring. Any path parameter may document a template
+        # (agentkit's ``session_store``); only ``name``/``parent`` fall back
+        # to sibling methods, and never for long-running-operation names,
+        # whose format (``.../operations/{id}``) the siblings do not share.
+        template = curated.get(f"{method_name}.{param}") or _parse_resource_name_template(doc)
+        is_lro_name = "operation resource" in doc or _method_noun(method_name).endswith("operation")
+        if not template and param in _RESOURCE_NAME_PARAMS and not is_lro_name:
+            template = templates["by_noun"].get(_method_noun(method_name), {}).get(param)
+            if not template:
+                seen = templates["by_path_param"].get((url_path, param), set())
+                template = next(iter(seen)) if len(seen) == 1 else None
+            if not template:
+                seen = templates["by_param"].get(param, set())
+                template = next(iter(seen)) if len(seen) == 1 else None
+        if not template:
+            # Only worth a warning in a class that uses resource names at all;
+            # elsewhere ``name`` is an ordinary path parameter (vector search
+            # endpoints are addressed by their plain name).
+            if param in _RESOURCE_NAME_PARAMS and templates["by_param"]:
+                logger.warning(
+                    "%s: no resource-name template found for path param '%s' in %s; left unexpanded",
+                    method_name, param, url_path,
+                )
+            new_params.append(param)
+            continue
+        placeholders = re.findall(r"\{([a-z_][a-z0-9_]*)\}", template)
+        url_path = url_path.replace(f"{{{param}}}", template)
+        expanded[param] = (template, placeholders)
+        for ph in placeholders:
+            if ph not in new_params:
+                new_params.append(ph)
+    return url_path, new_params, expanded
 
 
 def _parse_param_docs(docstring: str) -> Dict[str, str]:

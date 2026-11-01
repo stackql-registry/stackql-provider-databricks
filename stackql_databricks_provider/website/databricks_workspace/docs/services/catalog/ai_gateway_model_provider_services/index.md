@@ -34,12 +34,13 @@ Creates, updates, deletes, gets or lists an <code>ai_gateway_model_provider_serv
 The following fields are returned by `SELECT` queries:
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
-<TabItem value="list">
+<TabItem value="get">
 
 <SchemaTable fields={[
   {
@@ -53,11 +54,6 @@ The following fields are returned by `SELECT` queries:
     "description": "Metastore hosting the provider service."
   },
   {
-    "name": "browse_only",
-    "type": "boolean",
-    "description": "Whether the caller sees only metadata available through the BROWSE privilege."
-  },
-  {
     "name": "comment",
     "type": "string",
     "description": "User-provided description."
@@ -65,12 +61,12 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "config",
     "type": "object",
-    "description": "Behavioral configuration: provider connection, model catalog, and passthrough policy. See ``ModelProviderServiceConfig`` for the per-field contract. Required on CreateModelProviderService; on Update it is required only when ``config`` (or a ``config.*`` subpath) appears in ``update_mask``.",
+    "description": "Provider authentication, exposed models, request-forwarding controls, rate limits, and payload logging. Required on Create. On Update, it is required only when ``config`` or one of its subpaths appears in ``update_mask``.",
     "children": [
       {
         "name": "allow_all_targets",
         "type": "boolean",
-        "description": "When true, accepts any model exposed by the upstream provider; ``targets`` is not required and does not restrict routability. When false, only models listed in ``targets`` are routable."
+        "description": "When true, allows models from the provider's built-in model catalog in addition to explicit ``targets``. When false, only models listed in ``targets`` are routable. Defaults to false. CUSTOM providers have no built-in model catalog and must leave this false and list their models in ``targets``."
       },
       {
         "name": "amazon_bedrock",
@@ -80,22 +76,12 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct form of Amazon Bedrock provider config.<br /><br />    Authentication is one of two mutually exclusive modes, exactly one of which must be supplied on<br />    Create:<br /><br />    - Access keys: set ``aws_access_key``, leave ``service_credential`` unset.<br />    - UC service credential: set ``service_credential.name`` to the AIP-122 resource-name form<br />      ``credentials/&#123;name&#125;``, leave ``aws_access_key`` unset. The credential value lives in UC and<br />      is referenced by name, not held on this message. Setting more than one mode is rejected.",
+            "description": "Amazon Bedrock region and authentication configuration.",
             "children": [
               {
                 "name": "aws_access_key",
                 "type": "object",
-                "description": "AWS access-key-pair auth. Mutually exclusive with ``service_credential``. Supersedes the flat ``aws_access_key_id`` / ``aws_secret_access_key`` fields."
-              },
-              {
-                "name": "aws_access_key_id",
-                "type": "string",
-                "description": "Deprecated flat AWS access key ID. Superseded by ``aws_access_key.access_key_id``. Kept for one migration cycle; the handler mirrors it to/from ``aws_access_key``. Treated as username-equivalent (not a secret value): round-trips on reads and is scrubbed from audit logs."
-              },
-              {
-                "name": "aws_secret_access_key",
-                "type": "object",
-                "description": "Deprecated flat AWS secret access key. Superseded by ``aws_access_key.secret_access_key``. Kept for one migration cycle; the handler mirrors it to/from ``aws_access_key``. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "AWS access-key-pair authentication. Set ``access_key_id`` and ``secret_access_key.plaintext``. Mutually exclusive with ``service_credential``."
               },
               {
                 "name": "region",
@@ -105,7 +91,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "service_credential",
                 "type": "object",
-                "description": "Reference to a UC service credential authorizing Bedrock requests. On Create the caller supplies ``service_credential.name`` in the AIP-122 resource-name form ``credentials/&#123;name&#125;``. Required on Create when using UC-service-credential auth; mutually exclusive with ``aws_access_key``. The credential is referenced by name; its value is not carried here. On read the resolved ``id`` and ``is_deleted`` are also populated. Only supported on AWS-hosted workspaces; Create requests from other clouds are rejected with INVALID_PARAMETER_VALUE."
+                "description": "Reference to a Unity Catalog service credential authorizing Bedrock requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``aws_access_key``. The credential is referenced by name; its value is not carried here. Only supported on AWS-hosted workspaces."
               }
             ]
           }
@@ -119,26 +105,19 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct (inline-credentials) form: caller supplies the API key in the request body. Required on Create unless ``relayed`` is set.",
+            "description": "Direct authentication with an API key supplied in ``direct.api_key.plaintext``. Required unless ``relayed`` is set.",
             "children": [
               {
                 "name": "api_key",
                 "type": "object",
-                "description": "Anthropic API key. Required on Create. Sent as the ``x-api-key`` header on outbound requests. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "Anthropic API key. Required when creating the service. Supply the value in ``api_key.plaintext``."
               }
             ]
           },
           {
             "name": "relayed",
             "type": "object",
-            "description": "Relayed (credential-less) form: no Anthropic credential is stored. Each inference request instead carries the caller's own OAuth token, which the platform forwards to Anthropic on outbound requests. Mutually exclusive with ``direct``; no ``api_key`` is required or persisted.",
-            "children": [
-              {
-                "name": "plan_type",
-                "type": "string",
-                "description": "Which Anthropic subscription tier the relayed token belongs to. Optional; when unset the MPS gets the full governance surface (see TEAM_ENTERPRISE). Immutable after Create, so the tier cannot be flipped in place. (ANTHROPIC_RELAYED_PLAN_TYPE_MAX, ANTHROPIC_RELAYED_PLAN_TYPE_TEAM_ENTERPRISE)"
-              }
-            ]
+            "description": "Relayed authentication. Each inference request supplies the caller's OAuth token, which is forwarded to Anthropic. No Anthropic credential is stored. Mutually exclusive with ``direct``."
           }
         ]
       },
@@ -150,12 +129,12 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct form of Azure OpenAI provider config. Exactly one of three mutually-exclusive auth modes<br />    must be supplied on Create:<br /><br />    - API key: set ``api_key``, leave ``entra_service_principal`` and ``service_credential`` unset.<br />    - Entra ID (service principal): set ``entra_service_principal``, leave ``api_key`` and<br />      ``service_credential`` unset.<br />    - UC service credential: set ``service_credential.name`` to the AIP-122 resource-name form<br />      ``credentials/&#123;name&#125;``, leave ``api_key`` and ``entra_service_principal`` unset. The<br />      credential value lives in UC and is referenced by name, not held on this message. Only<br />      supported on Azure-hosted workspaces. Setting more than one mode is rejected.",
+            "description": "Azure OpenAI endpoint and authentication configuration.",
             "children": [
               {
                 "name": "api_key",
                 "type": "object",
-                "description": "Azure OpenAI API key. Mutually exclusive with the Entra and service-credential modes. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "Azure OpenAI API key. Supply the value in ``api_key.plaintext``. Mutually exclusive with Entra ID and Unity Catalog service credential authentication."
               },
               {
                 "name": "base_url",
@@ -163,29 +142,43 @@ The following fields are returned by `SELECT` queries:
                 "description": "Full Azure OpenAI endpoint base URL, e.g. ``https://myresource.openai.azure.com``. Required on Create."
               },
               {
-                "name": "client_id",
-                "type": "string",
-                "description": "Deprecated flat Entra client ID. Superseded by ``entra_service_principal.client_id``. Kept for one migration cycle; the handler mirrors it to/from ``entra_service_principal``."
-              },
-              {
-                "name": "client_secret",
-                "type": "object",
-                "description": "Deprecated flat Entra client secret. Superseded by ``entra_service_principal.client_secret``. Kept for one migration cycle; the handler mirrors it to/from ``entra_service_principal``. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
-              },
-              {
                 "name": "entra_service_principal",
                 "type": "object",
-                "description": "Entra ID (service principal) auth. Mutually exclusive with ``api_key`` and ``service_credential``. Supersedes the flat ``tenant_id`` / ``client_id`` / ``client_secret`` fields."
+                "description": "Entra ID service-principal authentication. Set ``tenant_id``, ``client_id``, and ``client_secret.plaintext``. Mutually exclusive with ``api_key`` and ``service_credential``."
               },
               {
                 "name": "service_credential",
                 "type": "object",
-                "description": "Reference to a UC service credential authorizing Azure OpenAI requests. On Create the caller supplies ``service_credential.name`` in the AIP-122 resource-name form ``credentials/&#123;name&#125;``. Required on Create when using UC-service-credential auth; mutually exclusive with ``api_key`` and ``entra_service_principal``. The credential is referenced by name; its value is not carried here. On read the resolved ``id`` and ``is_deleted`` are also populated. Only supported on Azure-hosted workspaces; Create requests from other clouds are rejected with INVALID_PARAMETER_VALUE."
+                "description": "Reference to a Unity Catalog service credential authorizing Azure OpenAI requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``api_key`` and ``entra_service_principal``. The credential is referenced by name; its value is not carried here. Only supported on Azure-hosted workspaces."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "bedrock_mantle",
+        "type": "object",
+        "description": "Amazon Bedrock provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Amazon Bedrock region and authentication configuration.",
+            "children": [
+              {
+                "name": "aws_access_key",
+                "type": "object",
+                "description": "AWS access-key-pair authentication. Set ``access_key_id`` and ``secret_access_key.plaintext``. Mutually exclusive with ``service_credential``."
               },
               {
-                "name": "tenant_id",
+                "name": "region",
                 "type": "string",
-                "description": "Deprecated flat Entra tenant ID. Superseded by ``entra_service_principal.tenant_id``. Kept for one migration cycle; the handler mirrors it to/from ``entra_service_principal``."
+                "description": "AWS region where the Bedrock endpoint is hosted (e.g., ``us-east-1``). Required on Create."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Bedrock requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``aws_access_key``. The credential is referenced by name; its value is not carried here. Only supported on AWS-hosted workspaces."
               }
             ]
           }
@@ -194,22 +187,27 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "custom",
         "type": "object",
-        "description": "Custom provider configuration: arbitrary HTTP endpoint with bearer-token auth.",
+        "description": "Custom OpenAI-compatible provider configuration.",
         "children": [
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct form of custom provider config.<br /><br />    Authentication is one of two mutually exclusive modes, exactly one of which must be supplied on<br />    Create:<br /><br />    - Bearer: set ``api_key``, leave ``header_auth`` unset. The secret is forwarded as<br />      ``Authorization: Bearer &lt;secret&gt;``.<br />    - Header: set ``header_auth``, leave ``api_key`` unset. The secret is forwarded as<br />      ``&lt;api_key_name&gt;: &lt;api_key_value&gt;``. Setting both modes or neither mode is rejected.",
+            "description": "Endpoint and authentication configuration for the custom provider.",
             "children": [
               {
                 "name": "api_key",
                 "type": "object",
-                "description": "Bearer token forwarded as the ``Authorization: Bearer ...`` header on outbound requests. Supplied as inline plaintext via ``ProviderSecret.plaintext``. Set this for bearer-token auth."
+                "description": "Bearer token forwarded in the ``Authorization`` header. Supply the value in ``api_key.plaintext``."
               },
               {
                 "name": "base_url",
                 "type": "string",
                 "description": "Endpoint URL of the OpenAI-compatible service (e.g., ``https://api.example.com/v1``). Required on Create."
+              },
+              {
+                "name": "header_auth",
+                "type": "object",
+                "description": "Header-based API-key auth: the secret is forwarded on outbound requests under a caller-chosen HTTP header rather than as an ``Authorization`` bearer token. Set this instead of ``api_key`` for header auth."
               }
             ]
           }
@@ -218,17 +216,17 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "forward_headers",
         "type": "boolean",
-        "description": "Whether to forward incoming request headers to the upstream provider. Applies to managed (multi-model) requests as well as passthrough requests served by this provider service. Governance-level decision by the provider service owner; not selectable per inference call."
+        "description": "Whether to forward incoming HTTP headers to the upstream provider. Defaults to false and is configured for the entire provider service, not per request. Upstream authentication is configured separately in the provider-specific configuration."
       },
       {
         "name": "forward_query_parameters",
         "type": "boolean",
-        "description": "Whether to forward incoming request query parameters to the upstream provider. Same trust-boundary semantics as ``forward_headers``."
+        "description": "Whether to forward incoming query parameters to the upstream provider. Defaults to false and is configured for the entire provider service, not per request."
       },
       {
         "name": "forward_unmanaged_paths",
         "type": "boolean",
-        "description": "Whether to forward request paths that fall outside this service's managed API set to the upstream provider as opaque passthrough. When true, requests addressed to subpaths not recognized by the managed API surface are proxied to the upstream provider over the same provider connection. When false, only managed-API paths are served. Governance-level decision by the provider service owner; expanding this expands the trust boundary that the ModelProviderService exposes."
+        "description": "Whether to proxy paths that AI Gateway does not recognize as configured provider-native API types. Defaults to false. When true, these paths are forwarded unchanged to the upstream provider. When false, only recognized API paths are served. Enabling this broadens the upstream API surface exposed through the provider service. AI Gateway cannot evaluate Service Policies on opaque unmanaged requests, so unmanaged requests are rejected whenever Service Policies are attached to this securable."
       },
       {
         "name": "gemini_enterprise",
@@ -238,12 +236,12 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct form of Gemini Enterprise provider config.",
+            "description": "Gemini Enterprise project, region, and authentication configuration.",
             "children": [
               {
                 "name": "api_key",
                 "type": "object",
-                "description": "Google Gemini Enterprise API key. Required on Create. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "Google Gemini Enterprise API key. Required when creating the service. Supply the value in ``api_key.plaintext``."
               },
               {
                 "name": "project_id",
@@ -254,6 +252,11 @@ The following fields are returned by `SELECT` queries:
                 "name": "region",
                 "type": "string",
                 "description": "GCP region of the Gemini Enterprise endpoint (e.g., ``us-central1``). Required on Create."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Gemini Enterprise requests. On Create, supply ``service_credential.name`` as ``credentials/&#123;name&#125;``; required when using service-credential authentication and mutually exclusive with ``api_key``. The credential is referenced by name; its value is not carried here. On read, the resolved ``id`` and ``is_deleted`` are also populated. Supported only on GCP-hosted workspaces."
               }
             ]
           }
@@ -262,22 +265,17 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "inference_table",
         "type": "object",
-        "description": "Inference table configuration for payload logging when this provider service is invoked directly. When it is invoked through a model service, the model service's own inference table captures the invocation instead. Mirrors ``ModelServiceConfig.inference_table`` / ``AgentServiceConfig.inference_table``.",
+        "description": "Payload logging configuration for requests sent directly to this provider service. Requests routed through a model service are captured by that model service's inference table instead.",
         "children": [
           {
             "name": "parent",
             "type": "string",
-            "description": "Parent UC schema where the inference table is created. Format: ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Set at create time and immutable thereafter; changing it on an existing service is rejected."
-          },
-          {
-            "name": "disabled",
-            "type": "boolean",
-            "description": "Indicates whether payload logging is disabled (opt-out). Unset means that payload logging is active (the on-by-default state coincides with the proto zero-value, so the server never fills this field for a client that leaves it unset). Set ``disabled = true`` to pause runtime logging while keeping the sub-message attached (preserving ``parent`` and ``table_name_prefix`` for a later flip back to active). ``parent`` remains required either way."
+            "description": "Parent Unity Catalog schema where the inference table is created, in the form ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Required when configuring an inference table. After the inference table is created, this field cannot be changed."
           },
           {
             "name": "is_deleted",
             "type": "boolean",
-            "description": "True when the bound inference TABLE has been deleted but the parent service still references it. The dangling reference is surfaced (not silently dropped) so callers can see the broken dependency. AI Gateway payload logging fails closed in this state."
+            "description": "Whether the referenced inference table has been deleted. The configuration remains visible so you can identify the broken dependency. Payload logging cannot continue until the table is restored or the configuration is updated."
           },
           {
             "name": "table",
@@ -287,7 +285,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "table_name_prefix",
             "type": "string",
-            "description": "Prefix for the inference-table's UC-registered name. The actual leaf name UC stores is ``&lt;table_name_prefix&gt;_payload``; the ``_payload`` suffix is appended automatically. To find the actual UC table after Create, read the ``table`` field on the response. Defaults to ``&lt;model_service_name&gt;_payload`` when unset. Set at create time and immutable thereafter; changing it on an existing service is rejected."
+            "description": "Prefix used to form the inference table's registered name. AI Gateway appends ``_payload``; for example, ``table_name_prefix = \"orders\"`` creates ``orders_payload``. If unset, the prefix defaults to the service name. Read ``table`` from the response for the resulting resource name. After the inference table is created, this field cannot be changed."
           }
         ]
       },
@@ -299,42 +297,27 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct form of Microsoft Foundry provider config.<br /><br />    Authentication is one of three mutually exclusive modes, exactly one of which must be supplied<br />    on Create:<br /><br />    - API key: set ``api_key``, leave ``entra_service_principal`` and ``service_credential`` unset.<br />    - Entra ID (service principal): set ``entra_service_principal``, leave ``api_key`` and<br />      ``service_credential`` unset. AI Gateway exchanges these for an Entra bearer token on outbound<br />      requests via the OAuth2 client-credentials grant.<br />    - UC service credential: set ``service_credential.name`` to the AIP-122 resource-name form<br />      ``credentials/&#123;name&#125;``, leave ``api_key`` and ``entra_service_principal`` unset. The<br />      credential value lives in UC and is referenced by name, not held on this message. Only<br />      supported on Azure-hosted workspaces. Setting more than one mode is rejected.",
+            "description": "Microsoft Foundry endpoint and authentication configuration.",
             "children": [
               {
                 "name": "api_key",
                 "type": "object",
-                "description": "Microsoft AI Foundry API key. Mutually exclusive with the Entra and service-credential modes. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "Microsoft Foundry API key. Supply the value in ``api_key.plaintext``. Mutually exclusive with Entra ID and Unity Catalog service credential authentication."
               },
               {
                 "name": "base_url",
                 "type": "string",
-                "description": "Microsoft AI Foundry endpoint URL. Required on Create."
-              },
-              {
-                "name": "client_id",
-                "type": "string",
-                "description": "Deprecated flat Entra client ID. Superseded by ``entra_service_principal.client_id``. Kept for one migration cycle; the handler mirrors it to/from ``entra_service_principal``."
-              },
-              {
-                "name": "client_secret",
-                "type": "object",
-                "description": "Deprecated flat Entra client secret. Superseded by ``entra_service_principal.client_secret``. Kept for one migration cycle; the handler mirrors it to/from ``entra_service_principal``. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "Microsoft Foundry endpoint URL. Required on Create."
               },
               {
                 "name": "entra_service_principal",
                 "type": "object",
-                "description": "Entra ID (service principal) auth. Mutually exclusive with ``api_key`` and ``service_credential``. Supersedes the flat ``tenant_id`` / ``client_id`` / ``client_secret`` fields."
+                "description": "Entra ID service-principal authentication. Set ``tenant_id``, ``client_id``, and ``client_secret.plaintext``. Mutually exclusive with ``api_key`` and ``service_credential``."
               },
               {
                 "name": "service_credential",
                 "type": "object",
-                "description": "Reference to a UC service credential authorizing Microsoft Foundry requests. On Create the caller supplies ``service_credential.name`` in the AIP-122 resource-name form ``credentials/&#123;name&#125;``. Required on Create when using UC-service-credential auth; mutually exclusive with ``api_key`` and ``entra_service_principal``. The credential is referenced by name; its value is not carried here. On read the resolved ``id`` and ``is_deleted`` are also populated. Only supported on Azure-hosted workspaces; Create requests from other clouds are rejected with INVALID_PARAMETER_VALUE."
-              },
-              {
-                "name": "tenant_id",
-                "type": "string",
-                "description": "Deprecated flat Entra tenant ID. Superseded by ``entra_service_principal.tenant_id``. Kept for one migration cycle; the handler mirrors it to/from ``entra_service_principal``."
+                "description": "Reference to a Unity Catalog service credential authorizing Microsoft Foundry requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``api_key`` and ``entra_service_principal``. The credential is referenced by name; its value is not carried here. Only supported on Azure-hosted workspaces."
               }
             ]
           }
@@ -348,12 +331,12 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "direct",
             "type": "object",
-            "description": "Direct (inline-credentials) form of the OpenAI provider config.",
+            "description": "OpenAI configuration with an API key supplied in the request.",
             "children": [
               {
                 "name": "api_key",
                 "type": "object",
-                "description": "OpenAI API key. Required on Create. Supplied as inline plaintext via ``ProviderSecret.plaintext``."
+                "description": "OpenAI API key. Required when creating the service. Supply the value in ``api_key.plaintext``."
               },
               {
                 "name": "base_url",
@@ -370,19 +353,31 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
+        "name": "pricing",
+        "type": "object",
+        "description": "Pricing configuration for this provider service. An explicitly empty configuration is retained on Create and Update and applies no adjustment.",
+        "children": [
+          {
+            "name": "default_discount_basis_points",
+            "type": "integer",
+            "description": "Provider-wide adjustment to external-model spend estimates in basis points: 2000 = 20% off; -2000 = a 20% markup. Negative values have no lower bound beyond the int32 range. Values cannot exceed 10000 (100% off). An omitted value or zero leaves the estimate unchanged."
+          }
+        ]
+      },
+      {
         "name": "provider_type",
         "type": "string",
-        "description": "Provider type discriminator. Required at create time; immutable after. Determines which variant of the ``provider`` oneof must be set. May not be changed via Update; attempts to include ``config.provider_type`` in ``UpdateModelProviderServiceRequest.update_mask`` are rejected. Required on CreateModelProviderService and immutable thereafter. (EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK, EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC, EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI, EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM, EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE, EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY, EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI)"
+        "description": "External model provider. Required on Create and immutable thereafter. Set the matching provider-specific configuration, such as ``openai``, ``azure_openai``, or ``amazon_bedrock``. (EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK, EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC, EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI, EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE, EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM, EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE, EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY, EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI)"
       },
       {
         "name": "rate_limits",
         "type": "array",
-        "description": "Rate limits applied when this provider service is invoked directly. When it is invoked through a model service, the model service's own ``rate_limits`` apply instead. Mirrors ``ModelServiceConfig.rate_limits`` / ``McpServiceConfig.rate_limits``.",
+        "description": "Rate limits for requests sent directly to this provider service. Requests routed through a model service use that model service's rate limits instead.",
         "children": [
           {
             "name": "key",
             "type": "string",
-            "description": "Scope key. Determines whether ``principal`` is required. (RATE_LIMIT_KEY_REQUEST_TAG, RATE_LIMIT_KEY_SERVICE, RATE_LIMIT_KEY_SERVICE_PRINCIPAL, RATE_LIMIT_KEY_USER, RATE_LIMIT_KEY_USER_DEFAULT, RATE_LIMIT_KEY_USER_GROUP)"
+            "description": "Scope of the rate limit. Depending on this value, the limit applies to a principal, the service as a whole, or each user by default. (RATE_LIMIT_KEY_SERVICE, RATE_LIMIT_KEY_SERVICE_PRINCIPAL, RATE_LIMIT_KEY_USER, RATE_LIMIT_KEY_USER_DEFAULT, RATE_LIMIT_KEY_USER_GROUP)"
           },
           {
             "name": "renewal_period",
@@ -392,44 +387,39 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "principal",
             "type": "string",
-            "description": "Principal this limit applies to: user email, group name, or service principal application ID. Required unless ``key`` is ``RATE_LIMIT_KEY_SERVICE``, ``RATE_LIMIT_KEY_USER_DEFAULT``, or ``RATE_LIMIT_KEY_REQUEST_TAG`` (which must not set a principal)."
-          },
-          {
-            "name": "request_tag_key",
-            "type": "string",
-            "description": "Request tag key this limit applies to. Required when ``key`` is ``RATE_LIMIT_KEY_REQUEST_TAG``, forbidden otherwise."
-          },
-          {
-            "name": "request_tag_value",
-            "type": "string",
-            "description": "Request tag value this limit applies to. Only valid when ``key`` is ``RATE_LIMIT_KEY_REQUEST_TAG``. Leave unset to apply the limit to every value of ``request_tag_key`` (an any-value default); a set value is a specific override for that value."
+            "description": "Principal this limit applies to: user email, group name, or service principal application ID. Required when ``key`` applies to a user, group, or service principal; otherwise it must be unset."
           },
           {
             "name": "requests",
             "type": "integer",
-            "description": "Max requests allowed within a renewal period. Leave unset for no request limit."
+            "description": "Maximum requests allowed in one renewal period. Leave unset for no request limit. Set to ``0`` to deny all requests."
           },
           {
             "name": "tokens",
             "type": "integer",
-            "description": "Max tokens allowed within a renewal period. Leave unset for no token limit."
+            "description": "Maximum tokens allowed in one renewal period. Leave unset for no token limit. Set to ``0`` to deny all requests."
           }
         ]
       },
       {
         "name": "targets",
         "type": "array",
-        "description": "Routing targets this provider service exposes (provider-side model identifier + unified API types per entry). Required (&gt;=1) when ``allow_all_targets = false``; optional and additive when ``allow_all_targets = true``. References from ``ExternalModelConfig.target`` must match an entry here unless ``allow_all_targets = true``.",
+        "description": "Models and provider-native API types exposed by this provider service. Each entry must include at least one ``native_api_types`` value. When ``allow_all_targets`` is false, at least one entry is required and model service destinations can reference only listed models. When ``allow_all_targets`` is true, models from the provider's built-in model catalog are also routable. CUSTOM providers must explicitly list their models here and cannot enable ``allow_all_targets``.",
         "children": [
           {
             "name": "model",
             "type": "string",
-            "description": "Provider-side model identifier (e.g. \"gpt-5\", \"claude-opus-4-7\"). This is a string on the LLM provider's side, not a UC entity. The UC governance hook for external destinations is the ModelProviderService referenced by ``ExternalModelConfig.model_provider_service``, not the model itself."
+            "description": "Provider-side model identifier, such as ``gpt-5`` or ``claude-opus-4-7``. This identifies a model at the upstream provider; it is not a Unity Catalog model resource."
+          },
+          {
+            "name": "endpoint_route",
+            "type": "string",
+            "description": "Relative path appended to a custom provider's ``base_url`` for this model, such as ``serve/openai/chat``. Nonempty values are only supported for custom model provider service targets; other provider types reject them. Model service destinations do not support this field. Do not include URI templates, queries, or fragments. When empty, ``base_url`` is used unchanged."
           },
           {
             "name": "native_api_types",
             "type": "array",
-            "description": "Provider-native API types the model supports (e.g. \"openai/v1/chat/completions\"). Used by the platform for request/response translation from the unified API type. At most 64 entries of at most 256 characters each; the list is persisted into the destination binding's bounded storage envelope."
+            "description": "Provider-native API types supported by this model, such as ``openai/v1/chat/completions``. A model provider service target requires at least one value. A model service destination may omit the list to use the matching provider service target's types when available. AI Gateway uses the selected types for translation. At most 64 entries of 256 characters each are allowed."
           }
         ]
       }
@@ -438,7 +428,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "create_time",
     "type": "string (date-time)",
-    "description": "When the provider service was created."
+    "description": "Time the provider service was created."
   },
   {
     "name": "created_by",
@@ -448,22 +438,434 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "effective_owner",
     "type": "string",
-    "description": "The resolved owner of the model provider service. Falls back to the caller's identity when ``owner`` is not explicitly set on creation."
+    "description": "Owner of the model provider service."
   },
   {
     "name": "etag",
     "type": "string",
-    "description": "Optimistic concurrency control token. Server-generated from the entity's state and returned on every read. To use it as an if-match precondition on a mutation, echo the last-read value back via the dedicated ``etag`` field on the Update / Delete request; the server rejects the mutation if the stored etag differs."
-  },
-  {
-    "name": "owner",
-    "type": "string",
-    "description": "The owner of the model provider service. Write-only; read owner via effective_owner."
+    "description": "Optimistic concurrency token returned on every read. To make an Update or Delete conditional, pass the last-read value in that request's ``etag`` field. In REST responses, this value is a base64 string; URL-encode it when setting the ``etag`` query parameter."
   },
   {
     "name": "update_time",
     "type": "string (date-time)",
-    "description": "When the provider service was last modified."
+    "description": "Time the provider service was last modified."
+  },
+  {
+    "name": "updated_by",
+    "type": "string",
+    "description": "Identity of the last updater."
+  }
+]} />
+</TabItem>
+<TabItem value="list">
+
+<SchemaTable fields={[
+  {
+    "name": "name",
+    "type": "string",
+    "description": "Resource name of the provider service. Format: ``model-provider-services/&#123;catalog&#125;.&#123;schema&#125;.&#123;model_provider_service&#125;``. Each ``&#123;...&#125;`` component is capped at 255 characters individually. Server-derived on Create from ``parent`` + ``model_provider_service_id``; required and immutable on Update/Get/Delete."
+  },
+  {
+    "name": "metastore_id",
+    "type": "string",
+    "description": "Metastore hosting the provider service."
+  },
+  {
+    "name": "comment",
+    "type": "string",
+    "description": "User-provided description."
+  },
+  {
+    "name": "config",
+    "type": "object",
+    "description": "Provider authentication, exposed models, request-forwarding controls, rate limits, and payload logging. Required on Create. On Update, it is required only when ``config`` or one of its subpaths appears in ``update_mask``.",
+    "children": [
+      {
+        "name": "allow_all_targets",
+        "type": "boolean",
+        "description": "When true, allows models from the provider's built-in model catalog in addition to explicit ``targets``. When false, only models listed in ``targets`` are routable. Defaults to false. CUSTOM providers have no built-in model catalog and must leave this false and list their models in ``targets``."
+      },
+      {
+        "name": "amazon_bedrock",
+        "type": "object",
+        "description": "Amazon Bedrock provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Amazon Bedrock region and authentication configuration.",
+            "children": [
+              {
+                "name": "aws_access_key",
+                "type": "object",
+                "description": "AWS access-key-pair authentication. Set ``access_key_id`` and ``secret_access_key.plaintext``. Mutually exclusive with ``service_credential``."
+              },
+              {
+                "name": "region",
+                "type": "string",
+                "description": "AWS region where the Bedrock endpoint is hosted (e.g., ``us-east-1``). Required on Create."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Bedrock requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``aws_access_key``. The credential is referenced by name; its value is not carried here. Only supported on AWS-hosted workspaces."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "anthropic",
+        "type": "object",
+        "description": "Anthropic provider configuration. Exactly one of ``direct`` or ``relayed`` must be set on<br />    Create; the two are mutually exclusive.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Direct authentication with an API key supplied in ``direct.api_key.plaintext``. Required unless ``relayed`` is set.",
+            "children": [
+              {
+                "name": "api_key",
+                "type": "object",
+                "description": "Anthropic API key. Required when creating the service. Supply the value in ``api_key.plaintext``."
+              }
+            ]
+          },
+          {
+            "name": "relayed",
+            "type": "object",
+            "description": "Relayed authentication. Each inference request supplies the caller's OAuth token, which is forwarded to Anthropic. No Anthropic credential is stored. Mutually exclusive with ``direct``."
+          }
+        ]
+      },
+      {
+        "name": "azure_openai",
+        "type": "object",
+        "description": "Azure OpenAI provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Azure OpenAI endpoint and authentication configuration.",
+            "children": [
+              {
+                "name": "api_key",
+                "type": "object",
+                "description": "Azure OpenAI API key. Supply the value in ``api_key.plaintext``. Mutually exclusive with Entra ID and Unity Catalog service credential authentication."
+              },
+              {
+                "name": "base_url",
+                "type": "string",
+                "description": "Full Azure OpenAI endpoint base URL, e.g. ``https://myresource.openai.azure.com``. Required on Create."
+              },
+              {
+                "name": "entra_service_principal",
+                "type": "object",
+                "description": "Entra ID service-principal authentication. Set ``tenant_id``, ``client_id``, and ``client_secret.plaintext``. Mutually exclusive with ``api_key`` and ``service_credential``."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Azure OpenAI requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``api_key`` and ``entra_service_principal``. The credential is referenced by name; its value is not carried here. Only supported on Azure-hosted workspaces."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "bedrock_mantle",
+        "type": "object",
+        "description": "Amazon Bedrock provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Amazon Bedrock region and authentication configuration.",
+            "children": [
+              {
+                "name": "aws_access_key",
+                "type": "object",
+                "description": "AWS access-key-pair authentication. Set ``access_key_id`` and ``secret_access_key.plaintext``. Mutually exclusive with ``service_credential``."
+              },
+              {
+                "name": "region",
+                "type": "string",
+                "description": "AWS region where the Bedrock endpoint is hosted (e.g., ``us-east-1``). Required on Create."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Bedrock requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``aws_access_key``. The credential is referenced by name; its value is not carried here. Only supported on AWS-hosted workspaces."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "custom",
+        "type": "object",
+        "description": "Custom OpenAI-compatible provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Endpoint and authentication configuration for the custom provider.",
+            "children": [
+              {
+                "name": "api_key",
+                "type": "object",
+                "description": "Bearer token forwarded in the ``Authorization`` header. Supply the value in ``api_key.plaintext``."
+              },
+              {
+                "name": "base_url",
+                "type": "string",
+                "description": "Endpoint URL of the OpenAI-compatible service (e.g., ``https://api.example.com/v1``). Required on Create."
+              },
+              {
+                "name": "header_auth",
+                "type": "object",
+                "description": "Header-based API-key auth: the secret is forwarded on outbound requests under a caller-chosen HTTP header rather than as an ``Authorization`` bearer token. Set this instead of ``api_key`` for header auth."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "forward_headers",
+        "type": "boolean",
+        "description": "Whether to forward incoming HTTP headers to the upstream provider. Defaults to false and is configured for the entire provider service, not per request. Upstream authentication is configured separately in the provider-specific configuration."
+      },
+      {
+        "name": "forward_query_parameters",
+        "type": "boolean",
+        "description": "Whether to forward incoming query parameters to the upstream provider. Defaults to false and is configured for the entire provider service, not per request."
+      },
+      {
+        "name": "forward_unmanaged_paths",
+        "type": "boolean",
+        "description": "Whether to proxy paths that AI Gateway does not recognize as configured provider-native API types. Defaults to false. When true, these paths are forwarded unchanged to the upstream provider. When false, only recognized API paths are served. Enabling this broadens the upstream API surface exposed through the provider service. AI Gateway cannot evaluate Service Policies on opaque unmanaged requests, so unmanaged requests are rejected whenever Service Policies are attached to this securable."
+      },
+      {
+        "name": "gemini_enterprise",
+        "type": "object",
+        "description": "Gemini Enterprise provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Gemini Enterprise project, region, and authentication configuration.",
+            "children": [
+              {
+                "name": "api_key",
+                "type": "object",
+                "description": "Google Gemini Enterprise API key. Required when creating the service. Supply the value in ``api_key.plaintext``."
+              },
+              {
+                "name": "project_id",
+                "type": "string",
+                "description": "GCP project ID hosting the Gemini Enterprise endpoint. Required on Create."
+              },
+              {
+                "name": "region",
+                "type": "string",
+                "description": "GCP region of the Gemini Enterprise endpoint (e.g., ``us-central1``). Required on Create."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Gemini Enterprise requests. On Create, supply ``service_credential.name`` as ``credentials/&#123;name&#125;``; required when using service-credential authentication and mutually exclusive with ``api_key``. The credential is referenced by name; its value is not carried here. On read, the resolved ``id`` and ``is_deleted`` are also populated. Supported only on GCP-hosted workspaces."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "inference_table",
+        "type": "object",
+        "description": "Payload logging configuration for requests sent directly to this provider service. Requests routed through a model service are captured by that model service's inference table instead.",
+        "children": [
+          {
+            "name": "parent",
+            "type": "string",
+            "description": "Parent Unity Catalog schema where the inference table is created, in the form ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Required when configuring an inference table. After the inference table is created, this field cannot be changed."
+          },
+          {
+            "name": "is_deleted",
+            "type": "boolean",
+            "description": "Whether the referenced inference table has been deleted. The configuration remains visible so you can identify the broken dependency. Payload logging cannot continue until the table is restored or the configuration is updated."
+          },
+          {
+            "name": "table",
+            "type": "string",
+            "description": "Resolved UC table for payload logs. Format: ``tables/&#123;catalog&#125;.&#123;schema&#125;.&#123;table&#125;``."
+          },
+          {
+            "name": "table_name_prefix",
+            "type": "string",
+            "description": "Prefix used to form the inference table's registered name. AI Gateway appends ``_payload``; for example, ``table_name_prefix = \"orders\"`` creates ``orders_payload``. If unset, the prefix defaults to the service name. Read ``table`` from the response for the resulting resource name. After the inference table is created, this field cannot be changed."
+          }
+        ]
+      },
+      {
+        "name": "microsoft_foundry",
+        "type": "object",
+        "description": "Microsoft Foundry provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "Microsoft Foundry endpoint and authentication configuration.",
+            "children": [
+              {
+                "name": "api_key",
+                "type": "object",
+                "description": "Microsoft Foundry API key. Supply the value in ``api_key.plaintext``. Mutually exclusive with Entra ID and Unity Catalog service credential authentication."
+              },
+              {
+                "name": "base_url",
+                "type": "string",
+                "description": "Microsoft Foundry endpoint URL. Required on Create."
+              },
+              {
+                "name": "entra_service_principal",
+                "type": "object",
+                "description": "Entra ID service-principal authentication. Set ``tenant_id``, ``client_id``, and ``client_secret.plaintext``. Mutually exclusive with ``api_key`` and ``service_credential``."
+              },
+              {
+                "name": "service_credential",
+                "type": "object",
+                "description": "Reference to a Unity Catalog service credential authorizing Microsoft Foundry requests. On Create, supply ``service_credential.name`` in the form ``credentials/&#123;name&#125;``. Required on Create when using service-credential authentication; mutually exclusive with ``api_key`` and ``entra_service_principal``. The credential is referenced by name; its value is not carried here. Only supported on Azure-hosted workspaces."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "openai",
+        "type": "object",
+        "description": "OpenAI provider configuration.",
+        "children": [
+          {
+            "name": "direct",
+            "type": "object",
+            "description": "OpenAI configuration with an API key supplied in the request.",
+            "children": [
+              {
+                "name": "api_key",
+                "type": "object",
+                "description": "OpenAI API key. Required when creating the service. Supply the value in ``api_key.plaintext``."
+              },
+              {
+                "name": "base_url",
+                "type": "string",
+                "description": "Optional custom base URL. Defaults to ``https://api.openai.com/v1``. Use for OpenAI-API-compatible third-party endpoints or in-network proxies."
+              },
+              {
+                "name": "organization",
+                "type": "string",
+                "description": "Optional OpenAI organization ID. When set, the platform forwards it as the ``OpenAI-Organization`` header."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pricing",
+        "type": "object",
+        "description": "Pricing configuration for this provider service. An explicitly empty configuration is retained on Create and Update and applies no adjustment.",
+        "children": [
+          {
+            "name": "default_discount_basis_points",
+            "type": "integer",
+            "description": "Provider-wide adjustment to external-model spend estimates in basis points: 2000 = 20% off; -2000 = a 20% markup. Negative values have no lower bound beyond the int32 range. Values cannot exceed 10000 (100% off). An omitted value or zero leaves the estimate unchanged."
+          }
+        ]
+      },
+      {
+        "name": "provider_type",
+        "type": "string",
+        "description": "External model provider. Required on Create and immutable thereafter. Set the matching provider-specific configuration, such as ``openai``, ``azure_openai``, or ``amazon_bedrock``. (EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK, EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC, EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI, EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE, EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM, EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE, EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY, EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI)"
+      },
+      {
+        "name": "rate_limits",
+        "type": "array",
+        "description": "Rate limits for requests sent directly to this provider service. Requests routed through a model service use that model service's rate limits instead.",
+        "children": [
+          {
+            "name": "key",
+            "type": "string",
+            "description": "Scope of the rate limit. Depending on this value, the limit applies to a principal, the service as a whole, or each user by default. (RATE_LIMIT_KEY_SERVICE, RATE_LIMIT_KEY_SERVICE_PRINCIPAL, RATE_LIMIT_KEY_USER, RATE_LIMIT_KEY_USER_DEFAULT, RATE_LIMIT_KEY_USER_GROUP)"
+          },
+          {
+            "name": "renewal_period",
+            "type": "string",
+            "description": "Renewal period. (RATE_LIMIT_RENEWAL_PERIOD_HOUR, RATE_LIMIT_RENEWAL_PERIOD_MINUTE)"
+          },
+          {
+            "name": "principal",
+            "type": "string",
+            "description": "Principal this limit applies to: user email, group name, or service principal application ID. Required when ``key`` applies to a user, group, or service principal; otherwise it must be unset."
+          },
+          {
+            "name": "requests",
+            "type": "integer",
+            "description": "Maximum requests allowed in one renewal period. Leave unset for no request limit. Set to ``0`` to deny all requests."
+          },
+          {
+            "name": "tokens",
+            "type": "integer",
+            "description": "Maximum tokens allowed in one renewal period. Leave unset for no token limit. Set to ``0`` to deny all requests."
+          }
+        ]
+      },
+      {
+        "name": "targets",
+        "type": "array",
+        "description": "Models and provider-native API types exposed by this provider service. Each entry must include at least one ``native_api_types`` value. When ``allow_all_targets`` is false, at least one entry is required and model service destinations can reference only listed models. When ``allow_all_targets`` is true, models from the provider's built-in model catalog are also routable. CUSTOM providers must explicitly list their models here and cannot enable ``allow_all_targets``.",
+        "children": [
+          {
+            "name": "model",
+            "type": "string",
+            "description": "Provider-side model identifier, such as ``gpt-5`` or ``claude-opus-4-7``. This identifies a model at the upstream provider; it is not a Unity Catalog model resource."
+          },
+          {
+            "name": "endpoint_route",
+            "type": "string",
+            "description": "Relative path appended to a custom provider's ``base_url`` for this model, such as ``serve/openai/chat``. Nonempty values are only supported for custom model provider service targets; other provider types reject them. Model service destinations do not support this field. Do not include URI templates, queries, or fragments. When empty, ``base_url`` is used unchanged."
+          },
+          {
+            "name": "native_api_types",
+            "type": "array",
+            "description": "Provider-native API types supported by this model, such as ``openai/v1/chat/completions``. A model provider service target requires at least one value. A model service destination may omit the list to use the matching provider service target's types when available. AI Gateway uses the selected types for translation. At most 64 entries of 256 characters each are allowed."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "create_time",
+    "type": "string (date-time)",
+    "description": "Time the provider service was created."
+  },
+  {
+    "name": "created_by",
+    "type": "string",
+    "description": "Creator identity."
+  },
+  {
+    "name": "effective_owner",
+    "type": "string",
+    "description": "Owner of the model provider service."
+  },
+  {
+    "name": "etag",
+    "type": "string",
+    "description": "Optimistic concurrency token returned on every read. To make an Update or Delete conditional, pass the last-read value in that request's ``etag`` field. In REST responses, this value is a base64 string; URL-encode it when setting the ``etag`` query parameter."
+  },
+  {
+    "name": "update_time",
+    "type": "string (date-time)",
+    "description": "Time the provider service was last modified."
   },
   {
     "name": "updated_by",
@@ -490,18 +892,39 @@ The following methods are available for this resource:
 </thead>
 <tbody>
 <tr>
+    <td><a href="#get"><CopyableCode code="get" /></a></td>
+    <td><CopyableCode code="select" /></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Returns the model provider service identified by its resource name.</td>
+</tr>
+<tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-view"><code>view</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-view"><code>view</code></a></td>
     <td>Lists the model provider services in a Unity Catalog schema. Provide ``parent`` as</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-model_provider_service_id"><code>model_provider_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-model_provider_service"><code>model_provider_service</code></a></td>
+    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-model_provider_service_id"><code>model_provider_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-model_provider_service"><code>model_provider_service</code></a></td>
     <td></td>
-    <td>Creates a model provider service in a Unity Catalog schema. A model provider service is a governed</td>
+    <td>Creates a model provider service in a Unity Catalog schema. A model provider service stores</td>
+</tr>
+<tr>
+    <td><a href="#update"><CopyableCode code="update" /></a></td>
+    <td><CopyableCode code="update" /></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-model_provider_service"><code>model_provider_service</code></a></td>
+    <td><a href="#parameter-etag"><code>etag</code></a></td>
+    <td>Updates a model provider service. Only the fields named in ``update_mask`` are changed; the resource</td>
+</tr>
+<tr>
+    <td><a href="#delete"><CopyableCode code="delete" /></a></td>
+    <td><CopyableCode code="delete" /></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-etag"><code>etag</code></a></td>
+    <td>Deletes the model provider service identified by its resource name. Optionally supply an ``etag`` to</td>
 </tr>
 </tbody>
 </table>
@@ -522,42 +945,57 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-full_name">
+    <td><CopyableCode code="full_name" /></td>
+    <td><code>string</code></td>
+    <td>The `full_name` segment of the `name` resource name (`model-provider-services/&#123;full_name&#125;`). Resource name of the model provider service. Format: ``model-provider-services/&#123;catalog&#125;.&#123;schema&#125;.&#123;model_provider_service&#125;``. Each ``&#123;...&#125;`` component is capped at 255 characters individually.</td>
 </tr>
 <tr id="parameter-model_provider_service_id">
     <td><CopyableCode code="model_provider_service_id" /></td>
     <td><code>string</code></td>
-    <td>Leaf identifier for the provider service (the unqualified name within the parent schema, e.g. "openai_prod").</td>
+    <td>Name for the model provider service, e.g. "openai_prod".</td>
 </tr>
 <tr id="parameter-parent">
     <td><CopyableCode code="parent" /></td>
     <td><code>string</code></td>
-    <td>Resource name of the parent schema. Format: ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Each ``&#123;...&#125;`` component is capped at 255 characters individually.</td>
+    <td>Name of the parent schema. Format: ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Each ``&#123;...&#125;`` component is capped at 255 characters individually.</td>
 </tr>
-<tr id="parameter-include_browse">
-    <td><CopyableCode code="include_browse" /></td>
-    <td><code>boolean</code></td>
-    <td>Whether to include provider services for which the principal can only access selective metadata.</td>
+<tr id="parameter-update_mask">
+    <td><CopyableCode code="update_mask" /></td>
+    <td><code>object</code></td>
+    <td>Fields to update. Use ``config`` to replace the entire configuration. The replacement must include every required field; any optional field you omit is cleared. To preserve sibling fields, use one or more granular paths: ``comment``; ``config.provider`` to replace the active provider-specific value (for example, ``config.openai``; the mask path remains ``config.provider``); ``config.allow_all_targets``, ``config.targets``, ``config.forward_headers``, ``config.forward_query_parameters``, ``config.forward_unmanaged_paths``, ``config.rate_limits``, ``config.pricing.default_discount_basis_points``, or ``config.inference_table``. For a pricing update, an explicitly empty ``pricing`` object clears the discount but retains the object; omitting ``pricing`` clears it. ``config.pricing`` is not a supported mask path. The provider type is immutable. A ``config`` or ``config.provider`` replacement that carries no authentication material preserves the existing authentication binding; input-only plaintext does not need to be read back and re-sent.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
+<tr id="parameter-etag">
+    <td><CopyableCode code="etag" /></td>
+    <td><code>string</code></td>
+    <td>Optimistic concurrency token from the most recent read. When set, the delete succeeds only if the resource has not changed. Leave unset for an unconditional delete. For REST requests, URL-encode the base64 string returned by the API when setting the ``etag`` query parameter.</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>Maximum number of provider services to return. Defaults to 100 when unset or 0; the maximum is 1000. Use ``next_page_token`` to retrieve additional pages.</td>
+    <td>Maximum number of provider services to return. Defaults to 200 when unset or 0; the maximum is 1000 for ``view = BASIC`` and 200 for ``view = FULL``. Use ``page_token`` to retrieve additional pages.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
     <td><code>string</code></td>
-    <td>Opaque pagination token from a previous request.</td>
+    <td>Opaque pagination token from the previous response.</td>
 </tr>
 <tr id="parameter-parent">
     <td><CopyableCode code="parent" /></td>
     <td><code>string</code></td>
-    <td>Resource name of the parent schema to list within, as ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Each ``&#123;...&#125;`` component is capped at 255 characters individually.</td>
+    <td>Parent schema to list within, in the form ``schemas/&#123;catalog&#125;.&#123;schema&#125;``. Required. Each ``&#123;...&#125;`` component is capped at 255 characters individually.</td>
 </tr>
 <tr id="parameter-view">
     <td><CopyableCode code="view" /></td>
     <td><code>string</code></td>
-    <td>View selector controlling which fields are populated per row.</td>
+    <td>Fields to return for each service. ``FULL`` includes resolved service-credential and inference-table details and rate-limit principal names. ``BASIC`` omits those details and principal names from rate limits. Defaults to ``BASIC`` when unset.</td>
 </tr>
 </tbody>
 </table>
@@ -565,11 +1003,35 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 ## `SELECT` examples
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+Returns the model provider service identified by its resource name.
+
+```sql
+SELECT
+name,
+metastore_id,
+comment,
+config,
+create_time,
+created_by,
+effective_owner,
+etag,
+update_time,
+updated_by
+FROM databricks_workspace.catalog.ai_gateway_model_provider_services
+WHERE full_name = '{{ full_name }}' -- required
+AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
+;
+```
+</TabItem>
 <TabItem value="list">
 
 Lists the model provider services in a Unity Catalog schema. Provide ``parent`` as
@@ -578,19 +1040,17 @@ Lists the model provider services in a Unity Catalog schema. Provide ``parent`` 
 SELECT
 name,
 metastore_id,
-browse_only,
 comment,
 config,
 create_time,
 created_by,
 effective_owner,
 etag,
-owner,
 update_time,
 updated_by
 FROM databricks_workspace.catalog.ai_gateway_model_provider_services
 WHERE deployment_name = '{{ deployment_name }}' -- required
-AND include_browse = '{{ include_browse }}'
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 AND parent = '{{ parent }}'
@@ -612,31 +1072,31 @@ AND view = '{{ view }}'
 >
 <TabItem value="create">
 
-Creates a model provider service in a Unity Catalog schema. A model provider service is a governed
+Creates a model provider service in a Unity Catalog schema. A model provider service stores
 
 ```sql
 INSERT INTO databricks_workspace.catalog.ai_gateway_model_provider_services (
 model_provider_service,
 parent,
 model_provider_service_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ model_provider_service }}' /* required */,
 '{{ parent }}',
 '{{ model_provider_service_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 metastore_id,
-browse_only,
 comment,
 config,
 create_time,
 created_by,
 effective_owner,
 etag,
-owner,
 update_time,
 updated_by
 ;
@@ -656,11 +1116,13 @@ updated_by
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the ai_gateway_model_provider_services resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the ai_gateway_model_provider_services resource.
     - name: model_provider_service
       description: |
-        The model provider service to create. The server populates \`\`name\`\` from \`\`parent\`\` + \`\`model_provider_service_id\`\`; clients should leave it unset.
+        The model provider service to create. Do not set \`\`name\`\`; the server derives it from \`\`parent\`\` and \`\`model_provider_service_id\`\`.
       value:
-        browse_only: {{ browse_only }}
         comment: "{{ comment }}"
         config:
           allow_all_targets: {{ allow_all_targets }}
@@ -669,9 +1131,6 @@ updated_by
               aws_access_key:
                 access_key_id: "{{ access_key_id }}"
                 secret_access_key: "{{ secret_access_key }}"
-              aws_access_key_id: "{{ aws_access_key_id }}"
-              aws_secret_access_key:
-                plaintext: "{{ plaintext }}"
               region: "{{ region }}"
               service_credential:
                 name: "{{ name }}"
@@ -679,28 +1138,37 @@ updated_by
             direct:
               api_key:
                 plaintext: "{{ plaintext }}"
-            relayed:
-              plan_type: "{{ plan_type }}"
+                secret_reference: "{{ secret_reference }}"
+            relayed: "{{ relayed }}"
           azure_openai:
             direct:
               api_key:
                 plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
               base_url: "{{ base_url }}"
-              client_id: "{{ client_id }}"
-              client_secret:
-                plaintext: "{{ plaintext }}"
               entra_service_principal:
                 client_id: "{{ client_id }}"
                 client_secret: "{{ client_secret }}"
                 tenant_id: "{{ tenant_id }}"
               service_credential:
                 name: "{{ name }}"
-              tenant_id: "{{ tenant_id }}"
+          bedrock_mantle:
+            direct:
+              aws_access_key:
+                access_key_id: "{{ access_key_id }}"
+                secret_access_key: "{{ secret_access_key }}"
+              region: "{{ region }}"
+              service_credential:
+                name: "{{ name }}"
           custom:
             direct:
               api_key:
                 plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
               base_url: "{{ base_url }}"
+              header_auth:
+                api_key_name: "{{ api_key_name }}"
+                api_key_value: "{{ api_key_value }}"
           forward_headers: {{ forward_headers }}
           forward_query_parameters: {{ forward_query_parameters }}
           forward_unmanaged_paths: {{ forward_unmanaged_paths }}
@@ -708,11 +1176,13 @@ updated_by
             direct:
               api_key:
                 plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
               project_id: "{{ project_id }}"
               region: "{{ region }}"
+              service_credential:
+                name: "{{ name }}"
           inference_table:
             parent: "{{ parent }}"
-            disabled: {{ disabled }}
             is_deleted: {{ is_deleted }}
             table: "{{ table }}"
             table_name_prefix: "{{ table_name_prefix }}"
@@ -720,34 +1190,33 @@ updated_by
             direct:
               api_key:
                 plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
               base_url: "{{ base_url }}"
-              client_id: "{{ client_id }}"
-              client_secret:
-                plaintext: "{{ plaintext }}"
               entra_service_principal:
                 client_id: "{{ client_id }}"
                 client_secret: "{{ client_secret }}"
                 tenant_id: "{{ tenant_id }}"
               service_credential:
                 name: "{{ name }}"
-              tenant_id: "{{ tenant_id }}"
           openai:
             direct:
               api_key:
                 plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
               base_url: "{{ base_url }}"
               organization: "{{ organization }}"
+          pricing:
+            default_discount_basis_points: {{ default_discount_basis_points }}
           provider_type: "{{ provider_type }}"
           rate_limits:
             - key: "{{ key }}"
               renewal_period: "{{ renewal_period }}"
               principal: "{{ principal }}"
-              request_tag_key: "{{ request_tag_key }}"
-              request_tag_value: "{{ request_tag_value }}"
               requests: {{ requests }}
               tokens: {{ tokens }}
           targets:
             - model: "{{ model }}"
+              endpoint_route: "{{ endpoint_route }}"
               native_api_types: "{{ native_api_types }}"
         create_time: "{{ create_time }}"
         created_by: "{{ created_by }}"
@@ -755,10 +1224,72 @@ updated_by
         etag: "{{ etag }}"
         metastore_id: "{{ metastore_id }}"
         name: "{{ name }}"
-        owner: "{{ owner }}"
         update_time: "{{ update_time }}"
         updated_by: "{{ updated_by }}"
 `}</CodeBlock>
 
+</TabItem>
+</Tabs>
+
+
+## `UPDATE` examples
+
+<Tabs
+    defaultValue="update"
+    values={[
+        { label: 'update', value: 'update' }
+    ]}
+>
+<TabItem value="update">
+
+Updates a model provider service. Only the fields named in ``update_mask`` are changed; the resource
+
+```sql
+UPDATE databricks_workspace.catalog.ai_gateway_model_provider_services
+SET 
+model_provider_service = '{{ model_provider_service }}'
+WHERE 
+full_name = '{{ full_name }}' --required
+AND update_mask = '{{ update_mask }}' --required
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND model_provider_service = '{{ model_provider_service }}' --required
+AND etag = '{{ etag}}'
+RETURNING
+name,
+metastore_id,
+comment,
+config,
+create_time,
+created_by,
+effective_owner,
+etag,
+update_time,
+updated_by;
+```
+</TabItem>
+</Tabs>
+
+
+## `DELETE` examples
+
+<Tabs
+    defaultValue="delete"
+    values={[
+        { label: 'delete', value: 'delete' }
+    ]}
+>
+<TabItem value="delete">
+
+Deletes the model provider service identified by its resource name. Optionally supply an ``etag`` to
+
+```sql
+DELETE FROM databricks_workspace.catalog.ai_gateway_model_provider_services
+WHERE full_name = '{{ full_name }}' --required
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND etag = '{{ etag }}'
+;
+```
 </TabItem>
 </Tabs>

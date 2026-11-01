@@ -308,35 +308,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_private_endpoint_rule"><CopyableCode code="get_private_endpoint_rule" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule_id"><code>private_endpoint_rule_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule_id"><code>private_endpoint_rule_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets the private endpoint rule.</td>
 </tr>
 <tr>
     <td><a href="#list_private_endpoint_rules"><CopyableCode code="list_private_endpoint_rules" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a></td>
-    <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td><a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of private endpoint rules.</td>
 </tr>
 <tr>
     <td><a href="#create_private_endpoint_rule"><CopyableCode code="create_private_endpoint_rule" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule"><code>private_endpoint_rule</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-private_endpoint_rule"><code>private_endpoint_rule</code></a></td>
     <td></td>
     <td>Create a private endpoint rule for the specified network connectivity config object. Once the object</td>
 </tr>
 <tr>
     <td><a href="#update_private_endpoint_rule"><CopyableCode code="update_private_endpoint_rule" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule_id"><code>private_endpoint_rule_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-private_endpoint_rule"><code>private_endpoint_rule</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule_id"><code>private_endpoint_rule_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-private_endpoint_rule"><code>private_endpoint_rule</code></a></td>
     <td></td>
     <td>Updates a private endpoint rule. Currently only a private endpoint rule to customer-managed resources</td>
 </tr>
 <tr>
     <td><a href="#delete_private_endpoint_rule"><CopyableCode code="delete_private_endpoint_rule" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule_id"><code>private_endpoint_rule_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-private_endpoint_rule_id"><code>private_endpoint_rule_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Initiates deleting a private endpoint rule. If the connection state is PENDING or EXPIRED, the private</td>
 </tr>
@@ -356,6 +356,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -375,11 +380,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask must be a single string, with multiple fields separated by commas (no spaces). The field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g., ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only the entire collection field can be specified. Field names must exactly match the resource field names.</td>
-</tr>
-<tr id="parameter-page_size">
-    <td><CopyableCode code="page_size" /></td>
-    <td><code>integer</code></td>
-    <td></td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -426,6 +426,7 @@ FROM databricks_account.settings.private_endpoint_rules
 WHERE account_id = '{{ account_id }}' -- required
 AND network_connectivity_config_id = '{{ network_connectivity_config_id }}' -- required
 AND private_endpoint_rule_id = '{{ private_endpoint_rule_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -456,7 +457,7 @@ updated_time
 FROM databricks_account.settings.private_endpoint_rules
 WHERE account_id = '{{ account_id }}' -- required
 AND network_connectivity_config_id = '{{ network_connectivity_config_id }}' -- required
-AND page_size = '{{ page_size }}'
+AND account_host = '{{ account_host }}' -- required
 AND page_token = '{{ page_token }}'
 ;
 ```
@@ -481,12 +482,14 @@ Create a private endpoint rule for the specified network connectivity config obj
 INSERT INTO databricks_account.settings.private_endpoint_rules (
 private_endpoint_rule,
 account_id,
-network_connectivity_config_id
+network_connectivity_config_id,
+account_host
 )
 SELECT 
 '{{ private_endpoint_rule }}' /* required */,
 '{{ account_id }}',
-'{{ network_connectivity_config_id }}'
+'{{ network_connectivity_config_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 group_id,
@@ -519,6 +522,9 @@ updated_time
       description: Required parameter for the private_endpoint_rules resource.
     - name: network_connectivity_config_id
       value: "{{ network_connectivity_config_id }}"
+      description: Required parameter for the private_endpoint_rules resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the private_endpoint_rules resource.
     - name: private_endpoint_rule
       description: |
@@ -567,6 +573,7 @@ account_id = '{{ account_id }}' --required
 AND network_connectivity_config_id = '{{ network_connectivity_config_id }}' --required
 AND private_endpoint_rule_id = '{{ private_endpoint_rule_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
+AND account_host = '{{ account_host }}' --required
 AND private_endpoint_rule = '{{ private_endpoint_rule }}' --required
 RETURNING
 account_id,
@@ -609,6 +616,7 @@ DELETE FROM databricks_account.settings.private_endpoint_rules
 WHERE account_id = '{{ account_id }}' --required
 AND network_connectivity_config_id = '{{ network_connectivity_config_id }}' --required
 AND private_endpoint_rule_id = '{{ private_endpoint_rule_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

@@ -788,35 +788,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Returns a JSON representation of a dashboard object, including its visualization and query objects.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-order"><code>order</code></a>, <a href="#parameter-page"><code>page</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-q"><code>q</code></a></td>
     <td>Fetch a paginated list of dashboard objects.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Modify this dashboard definition. This operation only affects attributes of the dashboard object. It</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Moves a dashboard to the trash. Trashed dashboards do not appear in list views or searches, and cannot</td>
 </tr>
 <tr>
     <td><a href="#restore"><CopyableCode code="restore" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>A restored dashboard appears in list views and searches and can be shared.</td>
 </tr>
@@ -844,7 +844,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-order">
     <td><CopyableCode code="order" /></td>
@@ -904,6 +909,7 @@ widgets
 FROM databricks_workspace.sql.dashboards
 WHERE dashboard_id = '{{ dashboard_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -932,6 +938,7 @@ user,
 widgets
 FROM databricks_workspace.sql.dashboards
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND order = '{{ order }}'
 AND page = '{{ page }}'
 AND page_size = '{{ page_size }}'
@@ -961,14 +968,16 @@ name,
 run_as_role,
 tags,
 dashboard_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}',
 '{{ run_as_role }}',
 '{{ tags }}',
 '{{ dashboard_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -1000,6 +1009,9 @@ widgets
       description: Required parameter for the dashboards resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the dashboards resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the dashboards resource.
     - name: name
       value: "{{ name }}"
@@ -1034,6 +1046,7 @@ Moves a dashboard to the trash. Trashed dashboards do not appear in list views o
 DELETE FROM databricks_workspace.sql.dashboards
 WHERE dashboard_id = '{{ dashboard_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -1055,7 +1068,8 @@ A restored dashboard appears in list views and searches and can be shared.
 ```sql
 EXEC databricks_workspace.sql.dashboards.restore 
 @dashboard_id='{{ dashboard_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

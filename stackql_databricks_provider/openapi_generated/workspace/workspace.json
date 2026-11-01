@@ -5,17 +5,30 @@
     "description": "OpenAPI specification for the Databricks workspace service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.workspace"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
@@ -29,7 +42,7 @@
           "workspace",
           "git_credentials"
         ],
-        "description": "Creates a Git credential entry for the user. Use the PATCH endpoint to update existing credentials, or\nthe DELETE endpoint to delete existing credentials.\n\n:param git_provider: str\n  Git provider. This field is case-insensitive. The available Git providers are ``gitHub``,\n  ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft\n  Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center),\n  ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit`` (deprecated by AWS, not\n  accepting new customers).\n:param git_email: str (optional)\n  The authenticating email associated with your Git provider user account. Used for authentication\n  with the remote repository and also sets the author & committer identity for commits. Required for\n  most Git providers except AWS CodeCommit. Learn more at\n  https://docs.databricks.com/aws/en/repos/get-access-tokens-from-git-provider\n:param git_username: str (optional)\n  The username provided with your Git provider account and associated with the credential. For most\n  Git providers it is only used to set the Git committer & author names for commits, however it may be\n  required for authentication depending on your Git provider / token requirements. Required for AWS\n  CodeCommit.\n:param is_default_for_provider: bool (optional)\n  if the credential is the default for the given provider\n:param name: str (optional)\n  the name of the git credential, used for identification and ease of lookup\n:param personal_access_token: str (optional)\n  The personal access token used to authenticate to the corresponding Git provider. For certain\n  providers, support may exist for other types of scoped access tokens. `Learn more\n  <https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html>`__.\n:param principal_id: int (optional)\n  The ID of the service principal whose credentials will be modified. Only service principal managers\n  can perform this action.\n\n:returns: :class:`CreateCredentialsResponse`",
+        "description": "Creates a Git credential entry for the user. Use the PATCH endpoint to update existing credentials, or\nthe DELETE endpoint to delete existing credentials.\n\n:param git_provider: str\n  Git provider. This field is case-insensitive. The available Git providers are ``gitHub``,\n  ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft\n  Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center),\n  ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit``.\n:param git_email: str (optional)\n  The authenticating email associated with your Git provider user account. Used for authentication\n  with the remote repository and also sets the author & committer identity for commits. Required for\n  most Git providers except AWS CodeCommit. Learn more at\n  https://docs.databricks.com/aws/en/repos/get-access-tokens-from-git-provider\n:param git_username: str (optional)\n  The username provided with your Git provider account and associated with the credential. For most\n  Git providers it is only used to set the Git committer & author names for commits, however it may be\n  required for authentication depending on your Git provider / token requirements. Required for AWS\n  CodeCommit.\n:param is_default_for_provider: bool (optional)\n  if the credential is the default for the given provider\n:param name: str (optional)\n  the name of the git credential, used for identification and ease of lookup\n:param personal_access_token: str (optional)\n  The personal access token used to authenticate to the corresponding Git provider. For certain\n  providers, support may exist for other types of scoped access tokens. `Learn more\n  <https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html>`__.\n:param principal_id: int (optional)\n  The ID of the service principal whose credentials will be modified. Only service principal managers\n  can perform this action.\n\n:returns: :class:`CreateCredentialsResponse`",
         "requestBody": {
           "content": {
             "application/json": {
@@ -38,7 +51,7 @@
                 "properties": {
                   "git_provider": {
                     "type": "string",
-                    "description": "Git provider. This field is case-insensitive. The available Git providers are ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit`` (deprecated by AWS, not accepting new customers)."
+                    "description": "Git provider. This field is case-insensitive. The available Git providers are ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit``."
                   },
                   "git_email": {
                     "type": "string",
@@ -277,7 +290,7 @@
           "workspace",
           "git_credentials"
         ],
-        "description": "Updates the specified Git credential.\n\n:param credential_id: int\n  The ID for the corresponding credential to access.\n:param git_provider: str\n  Git provider. This field is case-insensitive. The available Git providers are ``gitHub``,\n  ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft\n  Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center),\n  ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit`` (deprecated by AWS, not\n  accepting new customers).\n:param git_email: str (optional)\n  The authenticating email associated with your Git provider user account. Used for authentication\n  with the remote repository and also sets the author & committer identity for commits. Required for\n  most Git providers except AWS CodeCommit. Learn more at\n  https://docs.databricks.com/aws/en/repos/get-access-tokens-from-git-provider\n:param git_username: str (optional)\n  The username provided with your Git provider account and associated with the credential. For most\n  Git providers it is only used to set the Git committer & author names for commits, however it may be\n  required for authentication depending on your Git provider / token requirements. Required for AWS\n  CodeCommit.\n:param is_default_for_provider: bool (optional)\n  if the credential is the default for the given provider\n:param name: str (optional)\n  the name of the git credential, used for identification and ease of lookup\n:param personal_access_token: str (optional)\n  The personal access token used to authenticate to the corresponding Git provider. For certain\n  providers, support may exist for other types of scoped access tokens. `Learn more\n  <https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html>`__.\n:param principal_id: int (optional)\n  The ID of the service principal whose credentials will be modified. Only service principal managers\n  can perform this action.",
+        "description": "Updates the specified Git credential.\n\n:param credential_id: int\n  The ID for the corresponding credential to access.\n:param git_provider: str\n  Git provider. This field is case-insensitive. The available Git providers are ``gitHub``,\n  ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft\n  Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center),\n  ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit``.\n:param git_email: str (optional)\n  The authenticating email associated with your Git provider user account. Used for authentication\n  with the remote repository and also sets the author & committer identity for commits. Required for\n  most Git providers except AWS CodeCommit. Learn more at\n  https://docs.databricks.com/aws/en/repos/get-access-tokens-from-git-provider\n:param git_username: str (optional)\n  The username provided with your Git provider account and associated with the credential. For most\n  Git providers it is only used to set the Git committer & author names for commits, however it may be\n  required for authentication depending on your Git provider / token requirements. Required for AWS\n  CodeCommit.\n:param is_default_for_provider: bool (optional)\n  if the credential is the default for the given provider\n:param name: str (optional)\n  the name of the git credential, used for identification and ease of lookup\n:param personal_access_token: str (optional)\n  The personal access token used to authenticate to the corresponding Git provider. For certain\n  providers, support may exist for other types of scoped access tokens. `Learn more\n  <https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html>`__.\n:param principal_id: int (optional)\n  The ID of the service principal whose credentials will be modified. Only service principal managers\n  can perform this action.",
         "parameters": [
           {
             "name": "credential_id",
@@ -297,7 +310,7 @@
                 "properties": {
                   "git_provider": {
                     "type": "string",
-                    "description": "Git provider. This field is case-insensitive. The available Git providers are ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit`` (deprecated by AWS, not accepting new customers)."
+                    "description": "Git provider. This field is case-insensitive. The available Git providers are ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit``."
                   },
                   "git_email": {
                     "type": "string",
@@ -365,7 +378,7 @@
           "workspace",
           "repos"
         ],
-        "description": "Creates a repo in the workspace and links it to the remote Git repo specified. Note that repos created\nprogrammatically must be linked to a remote Git repo, unlike repos created in the browser.\n\n:param url: str\n  URL of the Git repository to be linked.\n:param provider: str\n  Git provider. This field is case-insensitive. The available Git providers are ``gitHub``,\n  ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft\n  Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center),\n  ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit`` (deprecated by AWS, not\n  accepting new customers).\n:param git_credential_id: int (optional)\n  Git credential ID to use when cloning the repository. The Git credential must be configured for the\n  current user.\n:param path: str (optional)\n  Desired path for the repo in the workspace. Almost any path in the workspace can be chosen. If repo\n  is created in ``/Repos``, path must be in the format ``/Repos/{folder}/{repo-name}``.\n:param sparse_checkout: :class:`SparseCheckout` (optional)\n  If specified, the repo will be created with sparse checkout enabled. You cannot enable/disable\n  sparse checkout after the repo is created.\n\n:returns: :class:`CreateRepoResponse`",
+        "description": "Creates a repo in the workspace and links it to the remote Git repo specified. Note that repos created\nprogrammatically must be linked to a remote Git repo, unlike repos created in the browser.\n\n:param url: str\n  URL of the Git repository to be linked.\n:param provider: str\n  Git provider. This field is case-insensitive. The available Git providers are ``gitHub``,\n  ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft\n  Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center),\n  ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit``.\n:param git_credential_id: int (optional)\n  Git credential ID to use when cloning the repository. The Git credential must be configured for the\n  current user.\n:param path: str (optional)\n  Desired path for the repo in the workspace. Almost any path in the workspace can be chosen. If repo\n  is created in ``/Repos``, path must be in the format ``/Repos/{folder}/{repo-name}``.\n:param sparse_checkout: :class:`SparseCheckout` (optional)\n  If specified, the repo will be created with sparse checkout enabled. You cannot enable/disable\n  sparse checkout after the repo is created.\n\n:returns: :class:`CreateRepoResponse`",
         "requestBody": {
           "content": {
             "application/json": {
@@ -378,7 +391,7 @@
                   },
                   "provider": {
                     "type": "string",
-                    "description": "Git provider. This field is case-insensitive. The available Git providers are ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit`` (deprecated by AWS, not accepting new customers)."
+                    "description": "Git provider. This field is case-insensitive. The available Git providers are ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), and ``awsCodeCommit``."
                   },
                   "git_credential_id": {
                     "type": "integer",
@@ -1693,7 +1706,7 @@
         "tags": [
           "workspace"
         ],
-        "description": "Exports an object or the contents of an entire directory.\n\nIf ``path`` does not exist, this call returns an error ``RESOURCE_DOES_NOT_EXIST``.\n\nIf the exported data would exceed size limit, this call returns ``MAX_NOTEBOOK_SIZE_EXCEEDED``.\nCurrently, this API does not support exporting a library.\n\n:param path: str\n  The absolute path of the object or directory. Exporting a directory is only supported for the\n  ``DBC``, ``SOURCE``, and ``AUTO`` format.\n:param format: :class:`ExportFormat` (optional)\n  This specifies the format of the exported file. By default, this is ``SOURCE``.\n\n  The value is case sensitive.\n\n  - ``SOURCE``: The notebook is exported as source code. Directory exports will not include\n    non-notebook entries.\n  - ``HTML``: The notebook is exported as an HTML file.\n  - ``JUPYTER``: The notebook is exported as a Jupyter/IPython Notebook file.\n  - ``DBC``: The notebook is exported in Databricks archive format. Directory exports will not include\n    non-notebook entries.\n  - ``R_MARKDOWN``: The notebook is exported to R Markdown format.\n  - ``AUTO``: The object or directory is exported depending on the objects type. Directory exports\n    will include notebooks and workspace files.\n:param outputs: :class:`ExportOutputs` (optional)\n  This specifies which cell outputs should be included in the export (if the export format allows it).\n  If not specified, the behavior is determined by the format. For JUPYTER format, the default is to\n  include all outputs. This is a public endpoint, but only ALL or NONE is documented publically,\n  DATABRICKS is internal only\n\n:returns: :class:`ExportResponse`",
+        "description": "Exports an object or the contents of an entire directory.\n\nIf ``path`` does not exist, this call returns an error ``RESOURCE_DOES_NOT_EXIST``.\n\nIf the exported data would exceed size limit, this call returns ``MAX_NOTEBOOK_SIZE_EXCEEDED``.\nCurrently, this API does not support exporting a library.\n\n:param path: str\n  The absolute path of the object or directory. Exporting a directory is only supported for the\n  ``DBC``, ``SOURCE``, and ``AUTO`` format.\n:param format: :class:`ExportFormat` (optional)\n  This specifies the format of the exported file. By default, this is ``SOURCE``.\n\n  The value is case sensitive.\n\n  - ``SOURCE``: The notebook is exported as source code. Directory exports will not include\n    non-notebook entries.\n  - ``HTML``: The notebook is exported as an HTML file.\n  - ``JUPYTER``: The notebook is exported as a Jupyter/IPython Notebook file.\n  - ``DBC``: The notebook is exported in Databricks archive format. Directory exports will not include\n    non-notebook entries.\n  - ``R_MARKDOWN``: The notebook is exported to R Markdown format.\n  - ``AUTO``: The object or directory is exported depending on the objects type. Directory exports\n    will include notebooks and workspace files.\n\n:returns: :class:`ExportResponse`",
         "parameters": [
           {
             "name": "path",
@@ -1712,15 +1725,6 @@
               "$ref": "#/components/schemas/ExportFormat"
             },
             "description": "This specifies the format of the exported file. By default, this is ``SOURCE``. The value is case sensitive. - ``SOURCE``: The notebook is exported as source code. Directory exports will not include non-notebook entries. - ``HTML``: The notebook is exported as an HTML file. - ``JUPYTER``: The notebook is exported as a Jupyter/IPython Notebook file. - ``DBC``: The notebook is exported in Databricks archive format. Directory exports will not include non-notebook entries. - ``R_MARKDOWN``: The notebook is exported to R Markdown format. - ``AUTO``: The object or directory is exported depending on the objects type. Directory exports will include notebooks and workspace files."
-          },
-          {
-            "name": "outputs",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/ExportOutputs"
-            },
-            "description": "This specifies which cell outputs should be included in the export (if the export format allows it). If not specified, the behavior is determined by the format. For JUPYTER format, the default is to include all outputs. This is a public endpoint, but only ALL or NONE is documented publically, DATABRICKS is internal only"
           }
         ],
         "responses": {
@@ -2415,7 +2419,7 @@
           },
           "provider": {
             "type": "string",
-            "description": "Git provider of the linked Git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit`` (deprecated)."
+            "description": "Git provider of the linked Git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit``."
           },
           "sparse_checkout": {
             "$ref": "#/components/schemas/SparseCheckout",
@@ -2439,7 +2443,7 @@
           },
           "git_provider": {
             "type": "string",
-            "description": "The Git provider associated with the credential. One of ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit`` (deprecated)."
+            "description": "The Git provider associated with the credential. One of ``gitHub``, ``bitbucketCloud``, ``gitLab``, ``azureDevOpsServices`` (Azure DevOps Services, including Microsoft Entra ID authentication), ``gitHubEnterprise``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit``."
           },
           "git_username": {
             "type": "string",
@@ -2564,7 +2568,7 @@
           },
           "provider": {
             "type": "string",
-            "description": "Git provider of the linked Git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit`` (deprecated)."
+            "description": "Git provider of the linked Git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit``."
           },
           "sparse_checkout": {
             "$ref": "#/components/schemas/SparseCheckout",
@@ -2786,7 +2790,7 @@
           },
           "provider": {
             "type": "string",
-            "description": "Git provider of the remote git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit`` (deprecated)."
+            "description": "Git provider of the remote git repository, e.g. ``gitHub``, ``azureDevOpsServices``, ``bitbucketServer`` (Bitbucket Data Center), ``gitLabEnterpriseEdition`` (GitLab Self-Managed), or ``awsCodeCommit``."
           },
           "sparse_checkout": {
             "$ref": "#/components/schemas/SparseCheckout",
@@ -3022,14 +3026,6 @@
           "SOURCE"
         ],
         "description": "The format for workspace import and export."
-      },
-      "ExportOutputs": {
-        "type": "string",
-        "x-enum": [
-          "ALL",
-          "NONE"
-        ],
-        "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
       },
       "ImportFormat": {
         "type": "string",

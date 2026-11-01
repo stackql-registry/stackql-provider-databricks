@@ -46,7 +46,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "name",
     "type": "string",
-    "description": "A fully qualified name that uniquely identifies the asset within the clean room. This is also the name displayed in the clean room UI. For UC securable assets (tables, volumes, etc.), the format is *shared_catalog*.*shared_schema*.*asset_name* For notebooks, the name is the notebook file name. For jar analyses, the name is the jar analysis name."
+    "description": "A fully qualified name that uniquely identifies the asset within the clean room. This is also the name displayed in the clean room UI. For UC securable assets (tables, volumes, etc.), the format is *shared_catalog*.*shared_schema*.*asset_name* For notebooks, the name is the notebook file name. For jar analyses, the name is the jar analysis name. For Genie spaces, the name is derived from the clean room; the caller does not choose it."
   },
   {
     "name": "clean_room_name",
@@ -61,7 +61,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "asset_type",
     "type": "string",
-    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (FOREIGN_TABLE, GENIE_SPACE, JAR_ANALYSIS, NOTEBOOK_FILE, TABLE, VIEW, VOLUME)"
+    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (FOREIGN_TABLE, JAR_ANALYSIS, NOTEBOOK_FILE, TABLE, VIEW, VOLUME)"
   },
   {
     "name": "foreign_table",
@@ -88,11 +88,6 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "genie_space",
-    "type": "object",
-    "description": "Genie space details. The space_id sub-field is only returned to the owner; other fields (e.g. prompts_limit_per_day) are visible to all collaborators. Present if and only if **asset_type** is **GENIE_SPACE**"
-  },
-  {
     "name": "jar_analysis",
     "type": "object",
     "description": "Jar analysis details available to all collaborators of the clean room. Present if and only if **asset_type** is **JAR_ANALYSIS**",
@@ -110,7 +105,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "environment_version",
         "type": "string",
-        "description": "The serverless environment version used to execute the JAR analysis (e.g. \"4\"). Defaults to \"4-scala-preview\" if not specified."
+        "description": "The serverless environment version used to execute the JAR analysis (e.g. \"4\"). If not specified, uses the service-configured JAR analysis default."
       },
       {
         "name": "etag",
@@ -248,7 +243,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "table",
     "type": "object",
-    "description": "Table details available to all collaborators of the clean room. Present if and only if **asset_type** is **TABLE**",
+    "description": "Table details available to all collaborators of the clean room. Present if and only if **asset_type** is **TABLE** or **STREAMING_TABLE**",
     "children": [
       {
         "name": "columns",
@@ -260,7 +255,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "table_local_details",
     "type": "object",
-    "description": "Local details for a table that are only available to its owner. Present if and only if **asset_type** is **TABLE**",
+    "description": "Local details for a table that are only available to its owner. Present if and only if **asset_type** is **TABLE** or **STREAMING_TABLE**",
     "children": [
       {
         "name": "local_name",
@@ -277,7 +272,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "view",
     "type": "object",
-    "description": "View details available to all collaborators of the clean room. Present if and only if **asset_type** is **VIEW**",
+    "description": "View details available to all collaborators of the clean room. Present if and only if **asset_type** is **VIEW** or **METRIC_VIEW**",
     "children": [
       {
         "name": "columns",
@@ -289,7 +284,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "view_local_details",
     "type": "object",
-    "description": "Local details for a view that are only available to its owner. Present if and only if **asset_type** is **VIEW**",
+    "description": "Local details for a view that are only available to its owner. Present if and only if **asset_type** is **VIEW** or **METRIC_VIEW**",
     "children": [
       {
         "name": "local_name",
@@ -336,42 +331,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get the details of a clean room asset by its type and full name.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List assets.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-asset"><code>asset</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-asset"><code>asset</code></a></td>
     <td></td>
     <td>Create a clean room asset —share an asset like a notebook or table into the clean room. For each UC</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a>, <a href="#parameter-asset"><code>asset</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a>, <a href="#parameter-asset"><code>asset</code></a></td>
     <td></td>
     <td>Update a clean room asset. For example, updating the content of a notebook; changing the shared</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a clean room asset - unshare/remove the asset from the clean room</td>
 </tr>
 <tr>
     <td><a href="#review"><CopyableCode code="review" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-asset_type.value"><code>asset_type.value</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-asset_type"><code>asset_type</code></a></td>
     <td></td>
     <td>Submit an asset review</td>
 </tr>
@@ -409,12 +404,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Name of the asset</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -445,7 +445,6 @@ added_at,
 asset_type,
 foreign_table,
 foreign_table_local_details,
-genie_space,
 jar_analysis,
 notebook,
 owner_collaborator_alias,
@@ -461,6 +460,7 @@ AND asset_type.value = '{{ asset_type.value }}' -- required
 AND name = '{{ name }}' -- required
 AND asset_type = '{{ asset_type }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -474,6 +474,7 @@ SELECT
 FROM databricks_workspace.cleanrooms.assets
 WHERE clean_room_name = '{{ clean_room_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_token = '{{ page_token }}'
 ;
 ```
@@ -498,12 +499,14 @@ Create a clean room asset —share an asset like a notebook or table into the cl
 INSERT INTO databricks_workspace.cleanrooms.assets (
 asset,
 clean_room_name,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ asset }}' /* required */,
 '{{ clean_room_name }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 clean_room_name,
@@ -511,7 +514,6 @@ added_at,
 asset_type,
 foreign_table,
 foreign_table_local_details,
-genie_space,
 jar_analysis,
 notebook,
 owner_collaborator_alias,
@@ -535,6 +537,9 @@ volume_local_details
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the assets resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the assets resource.
     - name: asset
       description: |
         Metadata of the clean room asset
@@ -547,7 +552,6 @@ volume_local_details
           columns: "{{ columns }}"
         foreign_table_local_details:
           local_name: "{{ local_name }}"
-        genie_space: "{{ genie_space }}"
         jar_analysis:
           central_jar_file_paths:
             - "{{ central_jar_file_paths }}"
@@ -619,6 +623,7 @@ clean_room_name = '{{ clean_room_name }}' --required
 AND asset_type.value = '{{ asset_type.value }}' --required
 AND name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND asset_type = '{{ asset_type }}' --required
 AND asset = '{{ asset }}' --required
 RETURNING
@@ -628,7 +633,6 @@ added_at,
 asset_type,
 foreign_table,
 foreign_table_local_details,
-genie_space,
 jar_analysis,
 notebook,
 owner_collaborator_alias,
@@ -662,6 +666,7 @@ AND asset_type.value = '{{ asset_type.value }}' --required
 AND name = '{{ name }}' --required
 AND asset_type = '{{ asset_type }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -685,7 +690,8 @@ EXEC databricks_workspace.cleanrooms.assets.review
 @clean_room_name='{{ clean_room_name }}' --required, 
 @asset_type.value='{{ asset_type.value }}' --required, 
 @name='{{ name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "asset_type": "{{ asset_type }}", 

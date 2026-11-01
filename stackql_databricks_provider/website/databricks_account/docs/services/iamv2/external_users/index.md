@@ -45,7 +45,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "name",
     "type": "string",
-    "description": "The resource name of the external user. Format: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;"
+    "description": "The resource name of the external user. The format depends on the API that returned it: - Account-scoped: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125; - Workspace-scoped: external-users/&#123;external_user_id&#125;"
   },
   {
     "name": "account_id",
@@ -116,7 +116,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-external_user_id"><code>external_user_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Retrieves an external user with the given external ID from the customer's IdP. If the user does not</td>
 </tr>
@@ -136,10 +136,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
-<tr id="parameter-name">
-    <td><CopyableCode code="name" /></td>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
     <td><code>string</code></td>
-    <td>Required. The resource name of the external user. Format: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;</td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
+<tr id="parameter-account_id">
+    <td><CopyableCode code="account_id" /></td>
+    <td><code>string</code></td>
+    <td>The `account_id` segment of the `name` resource name (`accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;`). Required. The resource name of the external user. Format: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;</td>
+</tr>
+<tr id="parameter-external_user_id">
+    <td><CopyableCode code="external_user_id" /></td>
+    <td><code>string</code></td>
+    <td>The `external_user_id` segment of the `name` resource name (`accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;`). Required. The resource name of the external user. Format: accounts/&#123;account_id&#125;/external-users/&#123;external_user_id&#125;</td>
 </tr>
 </tbody>
 </table>
@@ -167,7 +177,9 @@ full_name,
 account_user_status,
 username
 FROM databricks_account.iamv2.external_users
-WHERE name = '{{ name }}' -- required
+WHERE account_id = '{{ account_id }}' -- required
+AND external_user_id = '{{ external_user_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>

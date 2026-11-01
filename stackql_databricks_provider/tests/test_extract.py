@@ -3,9 +3,22 @@
 import json
 
 import pytest
-from databricks.sdk.service import agentbricks, billing, catalog, compute, iam, provisioning
+from databricks.sdk.service import (
+    agentbricks,
+    agentkit,
+    billing,
+    catalog,
+    compute,
+    domains,
+    iam,
+    networking,
+    provisioning,
+    sandbox,
+    settings,
+)
 
 from stackql_databricks_provider.extract import (
+    _parse_resource_name_template,
     get_data_classes,
     get_enums,
     get_operation_details,
@@ -434,3 +447,178 @@ class TestObjectFieldExpansion:
         cred_name = schema["properties"]["credentials_name"]
         assert cred_name.get("type") == "string"
         assert "$ref" not in cred_name
+
+
+# ---------------------------------------------------------------------------
+# Resource-name style paths (/api/2.0/{name} with name="domains/{domain_id}")
+# ---------------------------------------------------------------------------
+
+
+class TestResourceNameTemplates:
+    def test_parse_format_cue(self):
+        assert _parse_resource_name_template(
+            "Full resource name of the domain to delete. Format: ``domains/{domain_id}``"
+        ) == "domains/{domain_id}"
+
+    def test_parse_in_the_form_cue(self):
+        assert _parse_resource_name_template(
+            "Resource name of the sandbox to start, in the form ``sandboxes/{sandbox_id}``."
+        ) == "sandboxes/{sandbox_id}"
+
+    def test_parse_multi_segment(self):
+        desc = ("Resource name in the form "
+                "``memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}``.")
+        assert _parse_resource_name_template(desc) == (
+            "memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}"
+        )
+
+    def test_parse_singleton_requires_format_cue(self):
+        assert _parse_resource_name_template(
+            "The resource name of this singleton resource. Format: default-workspace-base-environment"
+        ) == "default-workspace-base-environment"
+        # Prose after "in the form" with no placeholder is not a template.
+        assert _parse_resource_name_template("Supplied in the form of a JSON string") is None
+
+    def test_parse_example_value_is_not_a_template(self):
+        assert _parse_resource_name_template(
+            "Sandbox resource name, for example ``sandboxes/my-sandbox``."
+        ) is None
+
+    def test_parse_empty(self):
+        assert _parse_resource_name_template("") is None
+        assert _parse_resource_name_template("The name of the operation resource.") is None
+
+    def test_parse_three_level_name_is_one_full_name_segment(self):
+        assert _parse_resource_name_template(
+            "Full resource name of the skill. Format: ``skills/{catalog}.{schema}.{skill}``. Each "
+            "``{...}`` component is capped at 255 characters individually."
+        ) == "skills/{full_name}"
+        assert _parse_resource_name_template(
+            'The Full resource name of the synced table, of the format '
+            '"synced_tables/{catalog}.{schema}.{table}", where (catalog, schema, table) are the UC entity names.'
+        ) == "synced_tables/{full_name}"
+
+
+class TestResourceNameExpansion:
+    def test_domains_expand_name(self):
+        details = get_operation_details(
+            domains, "DomainsAPI", "get_domain", service_name="domains", resource_snake_name="domains"
+        )
+        assert list(details) == ["/api/2.0/domains/{domain_id}"]
+        params = details["/api/2.0/domains/{domain_id}"]["get"]["parameters"]
+        path_params = [p for p in params if p["in"] == "path"]
+        assert [p["name"] for p in path_params] == ["domain_id"]
+        assert path_params[0]["required"] is True
+        assert path_params[0]["schema"] == {"type": "string"}
+        assert "domains/{domain_id}" in path_params[0]["description"]
+        # the consumed ``name`` parameter is not re-emitted as a query param
+        assert not any(p["name"] == "name" for p in params)
+
+    def test_sibling_fallback_for_undocumented_name(self):
+        # SandboxAPI.get_sandbox documents no format; start_sandbox documents
+        # ``sandboxes/{sandbox_id}`` for the same noun.
+        details = get_operation_details(
+            sandbox, "SandboxAPI", "get_sandbox", service_name="sandbox", resource_snake_name="sandbox"
+        )
+        assert list(details) == ["/api/2.0/sandboxes/{sandbox_id}"]
+
+    def test_parent_in_nested_path(self):
+        details = get_operation_details(
+            sandbox, "SandboxAPI", "list_commands", service_name="sandbox", resource_snake_name="sandbox"
+        )
+        assert list(details) == ["/api/2.0/sandbox-exec/sandboxes/{sandbox_id}/commands"]
+
+    def test_non_name_param_with_documented_template(self):
+        details = get_operation_details(
+            agentkit, "AgentKitAPI", "extract_memories",
+            service_name="agentkit", resource_snake_name="agent_kit",
+        )
+        path = "/api/2.0/agents/session-stores/{session_store_id}/sessions/{session_id}/extractions"
+        assert list(details) == [path]
+        names = [p["name"] for p in details[path]["post"]["parameters"] if p["in"] == "path"]
+        assert names == ["session_store_id", "session_id"]
+
+    def test_curated_template(self):
+        # networking.EndpointsAPI.get_endpoint documents nothing for ``name``;
+        # resource_name_templates.json supplies the template.
+        details = get_operation_details(
+            networking, "EndpointsAPI", "get_endpoint",
+            service_name="networking", resource_snake_name="endpoints",
+        )
+        assert list(details) == ["/api/networking/v1/accounts/{account_id}/endpoints/{endpoint_id}"]
+
+    def test_lro_operation_name_is_not_inferred_from_siblings(self):
+        details = get_operation_details(
+            networking, "PrivateNetworkGatewaysAPI", "get_private_network_gateway_operation",
+            service_name="networking", resource_snake_name="private_network_gateways",
+        )
+        assert list(details) == ["/api/networking/v1/{name}"]
+
+    def test_distinct_resources_no_longer_collide(self):
+        paths = set()
+        for op in ("get_memory_store", "get_session_store", "get_session", "get_memory"):
+            details = get_operation_details(
+                agentkit, "AgentKitAPI", op, service_name="agentkit", resource_snake_name="agent_kit"
+            )
+            paths.update(details)
+        assert len(paths) == 4
+
+
+# ---------------------------------------------------------------------------
+# Request bodies spread from a dataclass (body = <param>.as_dict())
+# ---------------------------------------------------------------------------
+
+
+def _body_schema(details, path, verb):
+    return details[path][verb]["requestBody"]["content"]["application/json"]["schema"]
+
+
+class TestSpreadRequestBody:
+    def test_dataclass_fields_are_the_body(self):
+        # create_network_connectivity_configuration(network_connectivity_config: Create...)
+        # sends network_connectivity_config.as_dict() as the body: {"name", "region"}.
+        details = get_operation_details(
+            settings, "NetworkConnectivityAPI", "create_network_connectivity_configuration",
+            service_name="settings", resource_snake_name="network_connectivity",
+        )
+        schema = _body_schema(details, "/api/2.0/accounts/{account_id}/network-connectivity-configs", "post")
+        assert "network_connectivity_config" not in schema["properties"]
+        assert set(schema["properties"]) >= {"name", "region"}
+        assert set(schema.get("required", [])) >= {"name", "region"}
+
+    def test_private_endpoint_rule_body(self):
+        details = get_operation_details(
+            settings, "NetworkConnectivityAPI", "create_private_endpoint_rule",
+            service_name="settings", resource_snake_name="private_endpoint_rules",
+        )
+        path = "/api/2.0/accounts/{account_id}/network-connectivity-configs/{network_connectivity_config_id}/private-endpoint-rules"
+        schema = _body_schema(details, path, "post")
+        assert "private_endpoint_rule" not in schema["properties"]
+        assert {"resource_id", "group_id"} <= set(schema["properties"])
+
+    def test_spread_body_keeps_other_body_params(self):
+        # update_private_endpoint_rule spreads the rule and takes update_mask as a query param
+        details = get_operation_details(
+            settings, "NetworkConnectivityAPI", "update_private_endpoint_rule",
+            service_name="settings", resource_snake_name="private_endpoint_rules",
+        )
+        (path,) = details
+        op = details[path]["patch"]
+        assert "private_endpoint_rule" not in op["requestBody"]["content"]["application/json"]["schema"]["properties"]
+        assert any(p["name"] == "update_mask" and p["in"] == "query" for p in op["parameters"])
+
+    def test_explicit_body_keys_unchanged(self):
+        # ClustersAPI.create assigns body["spark_version"] = ... field by field: no spread
+        details = get_operation_details(
+            compute, "ClustersAPI", "create", service_name="compute", resource_snake_name="clusters"
+        )
+        schema = _body_schema(details, "/api/2.1/clusters/create", "post")
+        assert "spark_version" in schema["properties"]
+
+    def test_new_service_create_is_spread(self):
+        details = get_operation_details(
+            domains, "DomainsAPI", "create_domain", service_name="domains", resource_snake_name="domains"
+        )
+        schema = _body_schema(details, "/api/2.0/domains", "post")
+        assert "domain" not in schema["properties"]
+        assert {"name", "tag_key"} <= set(schema["properties"])

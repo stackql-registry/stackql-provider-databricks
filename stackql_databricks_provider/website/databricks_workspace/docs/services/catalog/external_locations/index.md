@@ -121,38 +121,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "managed_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
-          }
-        ]
-      },
-      {
         "name": "managed_pubsub",
         "type": "object",
         "description": "",
@@ -210,38 +178,6 @@ The following fields are returned by `SELECT` queries:
             "name": "subscription_id",
             "type": "string",
             "description": "Optional subscription id for the queue, event grid subscription, and external location storage account. Required for locations with a service principal storage credential"
-          }
-        ]
-      },
-      {
-        "name": "provided_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
           }
         ]
       },
@@ -348,38 +284,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "managed_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
-          }
-        ]
-      },
-      {
         "name": "managed_pubsub",
         "type": "object",
         "description": "",
@@ -441,38 +345,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "provided_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
-          }
-        ]
-      },
-      {
         "name": "provided_pubsub",
         "type": "object",
         "description": "",
@@ -511,7 +383,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN, ISOLATION_MODE_OPEN_IN_ACCOUNT)"
+    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN)"
   },
   {
     "name": "owner",
@@ -621,38 +493,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "managed_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
-          }
-        ]
-      },
-      {
         "name": "managed_pubsub",
         "type": "object",
         "description": "",
@@ -710,38 +550,6 @@ The following fields are returned by `SELECT` queries:
             "name": "subscription_id",
             "type": "string",
             "description": "Optional subscription id for the queue, event grid subscription, and external location storage account. Required for locations with a service principal storage credential"
-          }
-        ]
-      },
-      {
-        "name": "provided_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
           }
         ]
       },
@@ -848,38 +656,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "managed_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
-          }
-        ]
-      },
-      {
         "name": "managed_pubsub",
         "type": "object",
         "description": "",
@@ -941,38 +717,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "provided_onelake",
-        "type": "object",
-        "description": "File event queue for OneLake (Microsoft Fabric) locations. Events flow through Fabric<br />    Eventstream in both arms; CSMS consumes from a user-provided Azure Event Hub (provided_onelake)<br />    or from a Fabric Eventstream that CSMS provisions in the user's workspace (managed_onelake).",
-        "children": [
-          {
-            "name": "consumer_group",
-            "type": "string",
-            "description": "Event Hubs consumer group used to consume file events. Defaults to \"$Default\" when unset. Recommended for provided_onelake: create a dedicated consumer group on the Event Hub for file events to avoid contending with the customer's other consumers."
-          },
-          {
-            "name": "event_hub_name",
-            "type": "string",
-            "description": "Event Hub entity name within the namespace. Only required for provided_onelake."
-          },
-          {
-            "name": "event_hub_url",
-            "type": "string",
-            "description": "The Event Hub URL in the format https://&#123;namespace&#125;.servicebus.windows.net/&#123;event_hub_name&#125;. Deprecated: use fully_qualified_namespace + event_hub_name instead."
-          },
-          {
-            "name": "fully_qualified_namespace",
-            "type": "string",
-            "description": "The fully qualified domain name of the Event Hubs namespace, e.g. &#123;yournamespace&#125;.servicebus.windows.net. Only required for provided_onelake."
-          },
-          {
-            "name": "managed_resource_id",
-            "type": "string",
-            "description": "Unique identifier included in the name of the file events managed resources."
-          }
-        ]
-      },
-      {
         "name": "provided_pubsub",
         "type": "object",
         "description": "",
@@ -1011,7 +755,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN, ISOLATION_MODE_OPEN_IN_ACCOUNT)"
+    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN)"
   },
   {
     "name": "owner",
@@ -1060,35 +804,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a></td>
     <td>Gets an external location from the metastore. The caller must be either a metastore admin, the owner</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-include_unbound"><code>include_unbound</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of external locations (**ExternalLocationInfo** objects) from the metastore. The caller</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-url"><code>url</code></a>, <a href="#parameter-credential_name"><code>credential_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-url"><code>url</code></a>, <a href="#parameter-credential_name"><code>credential_name</code></a></td>
     <td></td>
     <td>Creates a new external location entry in the metastore. The caller must be a metastore admin or have</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates an external location in the metastore. The caller must be the owner of the external location,</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes the specified external location from the metastore. The caller must be the owner of the</td>
 </tr>
@@ -1111,12 +855,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Name of the external location.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-force">
     <td><CopyableCode code="force" /></td>
@@ -1184,6 +933,7 @@ url
 FROM databricks_workspace.catalog.external_locations
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 ;
 ```
@@ -1216,6 +966,7 @@ updated_by,
 url
 FROM databricks_workspace.catalog.external_locations
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 AND include_unbound = '{{ include_unbound }}'
 AND max_results = '{{ max_results }}'
@@ -1253,7 +1004,8 @@ fallback,
 file_event_queue,
 read_only,
 skip_validation,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -1268,7 +1020,8 @@ SELECT
 '{{ file_event_queue }}',
 {{ read_only }},
 {{ skip_validation }},
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 credential_id,
@@ -1301,6 +1054,9 @@ url
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the external_locations resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the external_locations resource.
     - name: name
       value: "{{ name }}"
       description: |
@@ -1330,12 +1086,6 @@ url
           queue_url: "{{ queue_url }}"
           resource_group: "{{ resource_group }}"
           subscription_id: "{{ subscription_id }}"
-        managed_onelake:
-          consumer_group: "{{ consumer_group }}"
-          event_hub_name: "{{ event_hub_name }}"
-          event_hub_url: "{{ event_hub_url }}"
-          fully_qualified_namespace: "{{ fully_qualified_namespace }}"
-          managed_resource_id: "{{ managed_resource_id }}"
         managed_pubsub:
           managed_resource_id: "{{ managed_resource_id }}"
           subscription_name: "{{ subscription_name }}"
@@ -1347,12 +1097,6 @@ url
           queue_url: "{{ queue_url }}"
           resource_group: "{{ resource_group }}"
           subscription_id: "{{ subscription_id }}"
-        provided_onelake:
-          consumer_group: "{{ consumer_group }}"
-          event_hub_name: "{{ event_hub_name }}"
-          event_hub_url: "{{ event_hub_url }}"
-          fully_qualified_namespace: "{{ fully_qualified_namespace }}"
-          managed_resource_id: "{{ managed_resource_id }}"
         provided_pubsub:
           managed_resource_id: "{{ managed_resource_id }}"
           subscription_name: "{{ subscription_name }}"
@@ -1383,12 +1127,6 @@ url
           queue_url: "{{ queue_url }}"
           resource_group: "{{ resource_group }}"
           subscription_id: "{{ subscription_id }}"
-        managed_onelake:
-          consumer_group: "{{ consumer_group }}"
-          event_hub_name: "{{ event_hub_name }}"
-          event_hub_url: "{{ event_hub_url }}"
-          fully_qualified_namespace: "{{ fully_qualified_namespace }}"
-          managed_resource_id: "{{ managed_resource_id }}"
         managed_pubsub:
           managed_resource_id: "{{ managed_resource_id }}"
           subscription_name: "{{ subscription_name }}"
@@ -1400,12 +1138,6 @@ url
           queue_url: "{{ queue_url }}"
           resource_group: "{{ resource_group }}"
           subscription_id: "{{ subscription_id }}"
-        provided_onelake:
-          consumer_group: "{{ consumer_group }}"
-          event_hub_name: "{{ event_hub_name }}"
-          event_hub_url: "{{ event_hub_url }}"
-          fully_qualified_namespace: "{{ fully_qualified_namespace }}"
-          managed_resource_id: "{{ managed_resource_id }}"
         provided_pubsub:
           managed_resource_id: "{{ managed_resource_id }}"
           subscription_name: "{{ subscription_name }}"
@@ -1459,6 +1191,7 @@ url = '{{ url }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 name,
 credential_id,
@@ -1501,6 +1234,7 @@ Deletes the specified external location from the metastore. The caller must be t
 DELETE FROM databricks_workspace.catalog.external_locations
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND force = '{{ force }}'
 ;
 ```

@@ -59,9 +59,9 @@ The following fields are returned by `SELECT` queries:
     "description": "Serverless budget policy ID of this pipeline."
   },
   {
-    "name": "effective_usage_policy_id",
+    "name": "effective_serverless_compute_id",
     "type": "string",
-    "description": "Serverless usage policy ID of the pipeline."
+    "description": "Serverless compute ID resolved for the pipeline."
   },
   {
     "name": "pipeline_id",
@@ -82,11 +82,6 @@ The following fields are returned by `SELECT` queries:
     "name": "cause",
     "type": "string",
     "description": ""
-  },
-  {
-    "name": "effective_environment_version",
-    "type": "string",
-    "description": "The effective environment version resolved for the pipeline."
   },
   {
     "name": "effective_publishing_mode",
@@ -136,6 +131,11 @@ The following fields are returned by `SELECT` queries:
     "description": "The user or service principal that the pipeline runs as, if specified in the request. This field indicates the explicit configuration of ``run_as`` for the pipeline. To find the value in all cases, explicit or implicit, use ``run_as_user_name``.",
     "children": [
       {
+        "name": "group_name",
+        "type": "string",
+        "description": "Group name of an account group assigned to the workspace. When set, the pipeline runs as the group and the group's permissions are used for data access. Setting this field requires being a member of the group, or having the ``Assume`` permission on the group."
+      },
+      {
         "name": "service_principal_name",
         "type": "string",
         "description": "Application ID of an active service principal. Setting this field requires the ``servicePrincipal/user`` role."
@@ -170,7 +170,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "clusters",
         "type": "array",
-        "description": "Cluster settings for this pipeline deployment.",
+        "description": "Cluster settings for this pipeline deployment. Applies to classic (non-serverless) pipelines. Omit this field when ``serverless`` is ``true``.",
         "children": [
           {
             "name": "apply_policy_default_values",
@@ -252,7 +252,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "label",
             "type": "string",
-            "description": "A label for the cluster specification, either ``default`` to configure the default cluster, or ``maintenance`` to configure the maintenance cluster. This field is optional. The default value is ``default``."
+            "description": "A label for the cluster specification, either ``default`` to configure the default cluster settings applied to both the update and maintenance clusters, ``updates`` to configure the update cluster, or ``maintenance`` to configure the maintenance cluster. This field is optional. The default value is ``default``."
           },
           {
             "name": "node_type_id",
@@ -294,7 +294,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "continuous",
         "type": "boolean",
-        "description": "Whether the pipeline is continuous or triggered. This replaces ``trigger``."
+        "description": "Whether the pipeline is continuous or triggered. This replaces ``trigger``. Deprecated: wrap the pipeline in a continuous job instead, which also lets you take advantage of job-level settings such as performance mode. When the pipeline is started by a continuous job, the job's setting takes precedence and this field is ignored."
       },
       {
         "name": "deployment",
@@ -326,7 +326,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "development",
         "type": "boolean",
-        "description": "Whether the pipeline is in Development mode. Defaults to false."
+        "description": "Whether the pipeline is in Development mode. Defaults to false. Deprecated: set development mode for each update instead."
       },
       {
         "name": "edition",
@@ -559,7 +559,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "source_type",
             "type": "string",
-            "description": "The type of the foreign source. The source type will be inferred from the source connection or ingestion gateway. This field is output only and will be ignored if provided. (ADOBE_CAMPAIGNS, ADOBE_COMMERCE, ADP_WORKFORCE_NOW, AHA, AIRTABLE, AKAMAI_WAF, AMPLITUDE, API_SOURCE, APPFIGURES, APPLE_APP_STORE, APPLE_SEARCH_ADS, ATLASSIAN_ORGANIZATION, AWIN, AZURE_MONITOR_LOGS, BIGQUERY, BING_ADS, CERIDIAN_DAYFORCE, COMMUNITY, CONFLUENCE, CROWDSTRIKE_EVENT_STREAM, DELIGHTED, DYNAMICS365, EPIC_CLARITY, FOREIGN_CATALOG, FRESHSERVICE, FRONT, GA4_RAW_DATA, GENESYS, GITHUB, GITLAB, GMAIL, GONG, GOOGLE_ADS, GOOGLE_ANALYTICS, GOOGLE_CALENDAR, GOOGLE_DRIVE, GOOGLE_SEARCH_CONSOLE, GOOGLE_WORKSPACE, GUIDEWIRE, GURU, HIBOB, HUBSPOT, IRONCLAD, JIRA, KAFKA, LINEAR, LINKEDIN_ADS, M365_AUDIT_LOGS, MANAGED_POSTGRESQL, MARKETO, META_MARKETING, MICROSOFT_ENTRA_ID, MICROSOFT_TEAMS, MONDAY_COM, MYSQL, NETSKOPE_LOGS, NETSUITE, NOTION, OKTA_SYSTEM_LOGS, ONE_PASSWORD_EVENT_LOGS, ORACLE, ORACLE_ELOQUA, ORACLE_FUSION_CLOUD, OUTLOOK, PAGERDUTY, PARTNERSTACK, PENDO, PINTEREST_ADS, POSTGRESQL, PROOFPOINT_SIEM, QUICKBOOKS, RABBITMQ, REDDIT_ADS, REDSHIFT, SALESFORCE, SALESFORCE_MARKETING_CLOUD, SALESLOFT, SAP_SUCCESSFACTORS, SAS, SENDGRID, SERVICENOW, SHAREPOINT, SHOPIFY, SLACK_ACCESS_AND_INTEGRATION_LOGS, SLACK_AUDIT_LOGS, SMARTSHEET, SNAPCHAT_ADS, SPLUNK, SQLDW, SQLSERVER, SQUARE, TERADATA, TIKTOK_ADS, VEEVA, VEEVA_VAULT, VERKADA, WIZ_AUDIT_LOGS, WORKDAY_ACTIVITY_LOGGING, WORKDAY_HCM, WORKDAY_RAAS, X_ADS, YOUTUBE_ANALYTICS, ZENDESK, ZIP, ZOHO_BOOKS, ZOOM, ZOOM_LOGS)"
+            "description": "The type of the foreign source. The source type will be inferred from the source connection or ingestion gateway. This field is output only and will be ignored if provided. (BIGQUERY, CONFLUENCE, DYNAMICS365, FOREIGN_CATALOG, GA4_RAW_DATA, GOOGLE_DRIVE, JIRA, MANAGED_POSTGRESQL, META_MARKETING, MYSQL, NETSUITE, ONEDRIVE, ORACLE, POSTGRESQL, RABBITMQ, SALESFORCE, SERVICENOW, SHAREPOINT, SMARTSHEET, SQLSERVER, TERADATA, TIKTOK_ADS, WORKDAY_RAAS, ZENDESK)"
           },
           {
             "name": "table_configuration",
@@ -625,11 +625,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "source_metadata_column",
                 "type": "string",
                 "description": "(Optional) Name of the struct column added to each ingested record to hold per row source metadata."
-              },
-              {
-                "name": "storage_mode",
-                "type": "string",
-                "description": "(Optional) Defines how ingested data is written and maintained in the destination table. Mutually exclusive with scd_type — a 400 error is returned if both are set. (APPEND_ONLY, SCD_TYPE_1, SCD_TYPE_2)"
               },
               {
                 "name": "table_properties",
@@ -726,6 +721,11 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
+        "name": "parent_path",
+        "type": "string",
+        "description": "Path of the pipeline parent folder in workspace file tree. If absent, the pipeline doesn't have a workspace object."
+      },
+      {
         "name": "photon",
         "type": "boolean",
         "description": "Whether Photon is enabled for this pipeline."
@@ -753,23 +753,6 @@ The following fields are returned by `SELECT` queries:
         ]
       },
       {
-        "name": "rewind_generation_interval",
-        "type": "object",
-        "description": "Interval at which rewind points are generated during pipeline execution.",
-        "children": [
-          {
-            "name": "interval",
-            "type": "integer",
-            "description": "An integer value representing the interval quantity for the schedule."
-          },
-          {
-            "name": "unit",
-            "type": "string",
-            "description": "A time unit for the schedule. (DAYS, HOURS, WEEKS)"
-          }
-        ]
-      },
-      {
         "name": "root_path",
         "type": "string",
         "description": "Root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during pipeline execution."
@@ -782,7 +765,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "serverless",
         "type": "boolean",
-        "description": "Whether serverless compute is enabled for this pipeline."
+        "description": "Whether serverless compute is enabled for this pipeline. Serverless is the recommended compute for new pipelines; set this to ``true`` to run the pipeline on serverless. For notebook/file pipelines, omitting this field uses classic compute configured through the ``clusters`` field. When ``true``, omit ``clusters``; Photon is always enabled."
       },
       {
         "name": "serverless_compute_id",
@@ -929,63 +912,56 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a pipeline.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-order_by"><code>order_by</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists pipelines defined in the Spark Declarative Pipelines system.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new data processing pipeline based on the requested configuration. If successful, this</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a pipeline with the supplied configuration.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-cascade"><code>cascade</code></a>, <a href="#parameter-delete_datasets"><code>delete_datasets</code></a>, <a href="#parameter-force"><code>force</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-cascade"><code>cascade</code></a>, <a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes a pipeline. If the pipeline publishes to Unity Catalog, pipeline deletion will cascade to all</td>
 </tr>
 <tr>
     <td><a href="#apply_environment"><CopyableCode code="apply_environment" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Applies the current pipeline environment onto the pipeline compute. The environment applied can be</td>
 </tr>
 <tr>
     <td><a href="#clone"><CopyableCode code="clone" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new pipeline using Unity Catalog from a pipeline using Hive Metastore. This method returns</td>
 </tr>
 <tr>
-    <td><a href="#restore"><CopyableCode code="restore" /></a></td>
-    <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td></td>
-    <td>Restores a pipeline that was previously deleted, if within the restoration window. All tables deleted</td>
-</tr>
-<tr>
     <td><a href="#stop"><CopyableCode code="stop" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-pipeline_id"><code>pipeline_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Stops the pipeline by canceling the active update. If there is no active update for the pipeline, this</td>
 </tr>
@@ -1008,22 +984,22 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-pipeline_id">
     <td><CopyableCode code="pipeline_id" /></td>
     <td><code>string</code></td>
     <td></td>
 </tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-cascade">
     <td><CopyableCode code="cascade" /></td>
     <td><code>boolean</code></td>
     <td>If false, pipeline deletion will not cascade to its datasets (MVs, STs, Views). By default, this parameter will be true and all tables will be deleted with the pipeline.</td>
-</tr>
-<tr id="parameter-delete_datasets">
-    <td><CopyableCode code="delete_datasets" /></td>
-    <td><code>boolean</code></td>
-    <td>Deprecated: Use ``cascade`` instead.</td>
 </tr>
 <tr id="parameter-filter">
     <td><CopyableCode code="filter" /></td>
@@ -1038,12 +1014,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-max_results">
     <td><CopyableCode code="max_results" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of entries to return in a single page. The system may return fewer than max_results events in a response, even if there are more events available. This field is optional. The default value is 25. The maximum value is 100. An error is returned if the value of max_results is greater than 100.</td>
+    <td>The maximum number of entries to return in a single page. The system may return fewer than max_results pipelines in a response, even if there are more pipelines available. This field is optional. The default value is 25. The maximum value is 100. An error is returned if the value of max_results is greater than 100.</td>
 </tr>
 <tr id="parameter-order_by">
     <td><CopyableCode code="order_by" /></td>
     <td><code>array</code></td>
-    <td>A list of strings specifying the order of results. Supported order_by fields are id and name. The default is id asc. This field is optional.</td>
+    <td>A list of strings specifying the order of results. The supported order_by field is id. The default is id asc. This field is optional.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -1071,12 +1047,11 @@ SELECT
 name,
 cluster_id,
 effective_budget_policy_id,
-effective_usage_policy_id,
+effective_serverless_compute_id,
 pipeline_id,
 creator_user_name,
 run_as_user_name,
 cause,
-effective_environment_version,
 effective_publishing_mode,
 health,
 last_modified,
@@ -1088,6 +1063,7 @@ state
 FROM databricks_workspace.pipelines.pipelines
 WHERE pipeline_id = '{{ pipeline_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -1107,6 +1083,7 @@ latest_updates,
 state
 FROM databricks_workspace.pipelines.pipelines
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND filter = '{{ filter }}'
 AND max_results = '{{ max_results }}'
 AND order_by = '{{ order_by }}'
@@ -1153,9 +1130,9 @@ libraries,
 name,
 notifications,
 parameters,
+parent_path,
 photon,
 restart_window,
-rewind_generation_interval,
 root_path,
 run_as,
 schema,
@@ -1166,7 +1143,8 @@ tags,
 target,
 trigger,
 usage_policy_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 {{ allow_duplicate_names }},
@@ -1190,9 +1168,9 @@ SELECT
 '{{ name }}',
 '{{ notifications }}',
 '{{ parameters }}',
+'{{ parent_path }}',
 {{ photon }},
 '{{ restart_window }}',
-'{{ rewind_generation_interval }}',
 '{{ root_path }}',
 '{{ run_as }}',
 '{{ schema }}',
@@ -1203,7 +1181,8 @@ SELECT
 '{{ target }}',
 '{{ trigger }}',
 '{{ usage_policy_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 pipeline_id,
 effective_settings
@@ -1217,6 +1196,9 @@ effective_settings
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the pipelines resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the pipelines resource.
     - name: allow_duplicate_names
       value: {{ allow_duplicate_names }}
@@ -1236,7 +1218,7 @@ effective_settings
         SDP Release Channel that specifies which version to use.
     - name: clusters
       description: |
-        Cluster settings for this pipeline deployment.
+        Cluster settings for this pipeline deployment. Applies to classic (non-serverless) pipelines. Omit this field when \`\`serverless\`\` is \`\`true\`\`.
       value:
         - apply_policy_default_values: {{ apply_policy_default_values }}
           autoscale:
@@ -1267,7 +1249,7 @@ effective_settings
     - name: continuous
       value: {{ continuous }}
       description: |
-        Whether the pipeline is continuous or triggered. This replaces \`\`trigger\`\`.
+        Whether the pipeline is continuous or triggered. This replaces \`\`trigger\`\`. Deprecated: wrap the pipeline in a continuous job instead, which also lets you take advantage of job-level settings such as performance mode. When the pipeline is started by a continuous job, the job's setting takes precedence and this field is ignored.
     - name: deployment
       description: |
         Deployment type of this pipeline.
@@ -1279,7 +1261,7 @@ effective_settings
     - name: development
       value: {{ development }}
       description: |
-        Whether the pipeline is in Development mode. Defaults to false.
+        Whether the pipeline is in Development mode. Defaults to false. Deprecated: set development mode for each update instead.
     - name: dry_run
       value: {{ dry_run }}
     - name: edition
@@ -1370,39 +1352,23 @@ effective_settings
                 sequence_by:
                   - "{{ sequence_by }}"
                 source_metadata_column: "{{ source_metadata_column }}"
-                storage_mode: "{{ storage_mode }}"
                 table_properties: "{{ table_properties }}"
                 workday_report_parameters:
                   incremental: {{ incremental }}
                   parameters: "{{ parameters }}"
                   report_parameters: "{{ report_parameters }}"
             schema:
-              source_schema: "{{ source_schema }}"
               destination_catalog: "{{ destination_catalog }}"
               destination_schema: "{{ destination_schema }}"
-              confluence_options:
-                include_confluence_spaces:
-                  - "{{ include_confluence_spaces }}"
               connector_options:
-                akamai_options:
-                  config_ids: "{{ config_ids }}"
                 api_source_connector_options:
-                  options: "{{ options }}"
-                bing_ads_options:
-                  custom_report_options: "{{ custom_report_options }}"
-                  lookback_window_days: {{ lookback_window_days }}
-                  sync_start_date: "{{ sync_start_date }}"
-                community_connector_options:
                   options: "{{ options }}"
                 confluence_options:
                   include_confluence_spaces: "{{ include_confluence_spaces }}"
                 gdrive_options:
                   entity_type: "{{ entity_type }}"
                   file_ingestion_options: "{{ file_ingestion_options }}"
-                  scope: "{{ scope }}"
                   url: "{{ url }}"
-                github_options:
-                  repository_branch_selections: "{{ repository_branch_selections }}"
                 google_ads_options:
                   manager_account_id: "{{ manager_account_id }}"
                   custom_report_options: "{{ custom_report_options }}"
@@ -1410,12 +1376,10 @@ effective_settings
                   sync_start_date: "{{ sync_start_date }}"
                 jira_options:
                   include_jira_spaces: "{{ include_jira_spaces }}"
-                  use_audit_logs: {{ use_audit_logs }}
                 kafka_options:
                   client_config: "{{ client_config }}"
                   key_transformer: "{{ key_transformer }}"
                   max_offsets_per_trigger: {{ max_offsets_per_trigger }}
-                  max_partitions: "{{ max_partitions }}"
                   starting_offset: "{{ starting_offset }}"
                   topic_pattern: "{{ topic_pattern }}"
                   topics: "{{ topics }}"
@@ -1436,6 +1400,10 @@ effective_settings
                   level: "{{ level }}"
                   start_date: "{{ start_date }}"
                   time_increment: "{{ time_increment }}"
+                onedrive_options:
+                  entity_type: "{{ entity_type }}"
+                  file_ingestion_options: "{{ file_ingestion_options }}"
+                  url: "{{ url }}"
                 outlook_options:
                   attachment_mode: "{{ attachment_mode }}"
                   body_format: "{{ body_format }}"
@@ -1493,10 +1461,8 @@ effective_settings
                       parse_mode: "{{ parse_mode }}"
                       recursive_fields_max_depth: {{ recursive_fields_max_depth }}
                       schema_registry: "{{ schema_registry }}"
-              jira_options:
-                include_jira_spaces:
-                  - "{{ include_jira_spaces }}"
               source_catalog: "{{ source_catalog }}"
+              source_schema: "{{ source_schema }}"
               table_configuration:
                 auto_full_refresh_policy:
                   enabled: {{ enabled }}
@@ -1520,39 +1486,23 @@ effective_settings
                 sequence_by:
                   - "{{ sequence_by }}"
                 source_metadata_column: "{{ source_metadata_column }}"
-                storage_mode: "{{ storage_mode }}"
                 table_properties: "{{ table_properties }}"
                 workday_report_parameters:
                   incremental: {{ incremental }}
                   parameters: "{{ parameters }}"
                   report_parameters: "{{ report_parameters }}"
             table:
-              source_table: "{{ source_table }}"
               destination_catalog: "{{ destination_catalog }}"
               destination_schema: "{{ destination_schema }}"
-              confluence_options:
-                include_confluence_spaces:
-                  - "{{ include_confluence_spaces }}"
               connector_options:
-                akamai_options:
-                  config_ids: "{{ config_ids }}"
                 api_source_connector_options:
-                  options: "{{ options }}"
-                bing_ads_options:
-                  custom_report_options: "{{ custom_report_options }}"
-                  lookback_window_days: {{ lookback_window_days }}
-                  sync_start_date: "{{ sync_start_date }}"
-                community_connector_options:
                   options: "{{ options }}"
                 confluence_options:
                   include_confluence_spaces: "{{ include_confluence_spaces }}"
                 gdrive_options:
                   entity_type: "{{ entity_type }}"
                   file_ingestion_options: "{{ file_ingestion_options }}"
-                  scope: "{{ scope }}"
                   url: "{{ url }}"
-                github_options:
-                  repository_branch_selections: "{{ repository_branch_selections }}"
                 google_ads_options:
                   manager_account_id: "{{ manager_account_id }}"
                   custom_report_options: "{{ custom_report_options }}"
@@ -1560,12 +1510,10 @@ effective_settings
                   sync_start_date: "{{ sync_start_date }}"
                 jira_options:
                   include_jira_spaces: "{{ include_jira_spaces }}"
-                  use_audit_logs: {{ use_audit_logs }}
                 kafka_options:
                   client_config: "{{ client_config }}"
                   key_transformer: "{{ key_transformer }}"
                   max_offsets_per_trigger: {{ max_offsets_per_trigger }}
-                  max_partitions: "{{ max_partitions }}"
                   starting_offset: "{{ starting_offset }}"
                   topic_pattern: "{{ topic_pattern }}"
                   topics: "{{ topics }}"
@@ -1586,6 +1534,10 @@ effective_settings
                   level: "{{ level }}"
                   start_date: "{{ start_date }}"
                   time_increment: "{{ time_increment }}"
+                onedrive_options:
+                  entity_type: "{{ entity_type }}"
+                  file_ingestion_options: "{{ file_ingestion_options }}"
+                  url: "{{ url }}"
                 outlook_options:
                   attachment_mode: "{{ attachment_mode }}"
                   body_format: "{{ body_format }}"
@@ -1621,11 +1573,9 @@ effective_settings
                 zendesk_support_options:
                   start_date: "{{ start_date }}"
               destination_table: "{{ destination_table }}"
-              jira_options:
-                include_jira_spaces:
-                  - "{{ include_jira_spaces }}"
               source_catalog: "{{ source_catalog }}"
               source_schema: "{{ source_schema }}"
+              source_table: "{{ source_table }}"
               table_configuration:
                 auto_full_refresh_policy:
                   enabled: {{ enabled }}
@@ -1649,7 +1599,6 @@ effective_settings
                 sequence_by:
                   - "{{ sequence_by }}"
                 source_metadata_column: "{{ source_metadata_column }}"
-                storage_mode: "{{ storage_mode }}"
                 table_properties: "{{ table_properties }}"
                 workday_report_parameters:
                   incremental: {{ incremental }}
@@ -1691,7 +1640,6 @@ effective_settings
           sequence_by:
             - "{{ sequence_by }}"
           source_metadata_column: "{{ source_metadata_column }}"
-          storage_mode: "{{ storage_mode }}"
           table_properties: "{{ table_properties }}"
           workday_report_parameters:
             incremental: {{ incremental }}
@@ -1726,6 +1674,10 @@ effective_settings
       value: "{{ parameters }}"
       description: |
         Key/value map of default parameters to use for pipeline execution. Maximum total size: 10k characters (JSON format)
+    - name: parent_path
+      value: "{{ parent_path }}"
+      description: |
+        Path of the pipeline parent folder in workspace file tree. If absent, the pipeline doesn't have a workspace object.
     - name: photon
       value: {{ photon }}
       description: |
@@ -1738,12 +1690,6 @@ effective_settings
         days_of_week:
           - "{{ days_of_week }}"
         time_zone_id: "{{ time_zone_id }}"
-    - name: rewind_generation_interval
-      description: |
-        Interval at which rewind points are generated during pipeline execution.
-      value:
-        interval: {{ interval }}
-        unit: "{{ unit }}"
     - name: root_path
       value: "{{ root_path }}"
       description: |
@@ -1756,6 +1702,7 @@ effective_settings
         Only \`\`user_name\`\` or \`\`service_principal_name\`\` can be specified. If both are specified, an
         error is thrown.
       value:
+        group_name: "{{ group_name }}"
         service_principal_name: "{{ service_principal_name }}"
         user_name: "{{ user_name }}"
     - name: schema
@@ -1765,7 +1712,7 @@ effective_settings
     - name: serverless
       value: {{ serverless }}
       description: |
-        Whether serverless compute is enabled for this pipeline.
+        Whether serverless compute is enabled for this pipeline. Serverless is the recommended compute for new pipelines; set this to \`\`true\`\` to run the pipeline on serverless. For notebook/file pipelines, omitting this field uses classic compute configured through the \`\`clusters\`\` field. When \`\`true\`\`, omit \`\`clusters\`\`; Photon is always enabled.
     - name: serverless_compute_id
       value: "{{ serverless_compute_id }}"
       description: |
@@ -1836,9 +1783,9 @@ libraries = '{{ libraries }}',
 name = '{{ name }}',
 notifications = '{{ notifications }}',
 parameters = '{{ parameters }}',
+parent_path = '{{ parent_path }}',
 photon = {{ photon }},
 restart_window = '{{ restart_window }}',
-rewind_generation_interval = '{{ rewind_generation_interval }}',
 root_path = '{{ root_path }}',
 run_as = '{{ run_as }}',
 schema = '{{ schema }}',
@@ -1851,7 +1798,8 @@ trigger = '{{ trigger }}',
 usage_policy_id = '{{ usage_policy_id }}'
 WHERE 
 pipeline_id = '{{ pipeline_id }}' --required
-AND deployment_name = '{{ deployment_name }}' --required;
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -1873,8 +1821,8 @@ Deletes a pipeline. If the pipeline publishes to Unity Catalog, pipeline deletio
 DELETE FROM databricks_workspace.pipelines.pipelines
 WHERE pipeline_id = '{{ pipeline_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND cascade = '{{ cascade }}'
-AND delete_datasets = '{{ delete_datasets }}'
 AND force = '{{ force }}'
 ;
 ```
@@ -1889,7 +1837,6 @@ AND force = '{{ force }}'
     values={[
         { label: 'apply_environment', value: 'apply_environment' },
         { label: 'clone', value: 'clone' },
-        { label: 'restore', value: 'restore' },
         { label: 'stop', value: 'stop' }
     ]}
 >
@@ -1900,7 +1847,8 @@ Applies the current pipeline environment onto the pipeline compute. The environm
 ```sql
 EXEC databricks_workspace.pipelines.pipelines.apply_environment 
 @pipeline_id='{{ pipeline_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -1911,7 +1859,8 @@ Creates a new pipeline using Unity Catalog from a pipeline using Hive Metastore.
 ```sql
 EXEC databricks_workspace.pipelines.pipelines.clone 
 @pipeline_id='{{ pipeline_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "allow_duplicate_names": {{ allow_duplicate_names }}, 
@@ -1935,9 +1884,9 @@ EXEC databricks_workspace.pipelines.pipelines.clone
 "libraries": "{{ libraries }}", 
 "name": "{{ name }}", 
 "notifications": "{{ notifications }}", 
+"parent_path": "{{ parent_path }}", 
 "photon": {{ photon }}, 
 "restart_window": "{{ restart_window }}", 
-"rewind_generation_interval": "{{ rewind_generation_interval }}", 
 "root_path": "{{ root_path }}", 
 "schema": "{{ schema }}", 
 "serverless": {{ serverless }}, 
@@ -1951,17 +1900,6 @@ EXEC databricks_workspace.pipelines.pipelines.clone
 ;
 ```
 </TabItem>
-<TabItem value="restore">
-
-Restores a pipeline that was previously deleted, if within the restoration window. All tables deleted
-
-```sql
-EXEC databricks_workspace.pipelines.pipelines.restore 
-@pipeline_id='{{ pipeline_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
-;
-```
-</TabItem>
 <TabItem value="stop">
 
 Stops the pipeline by canceling the active update. If there is no active update for the pipeline, this
@@ -1969,7 +1907,8 @@ Stops the pipeline by canceling the active update. If there is no active update 
 ```sql
 EXEC databricks_workspace.pipelines.pipelines.stop 
 @pipeline_id='{{ pipeline_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

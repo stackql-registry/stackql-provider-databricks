@@ -16,6 +16,10 @@ config.projectName = 'stackql-provider-databricks';
 config.presets[0][1].docs.editUrl =
   'https://github.com/stackql-registry/stackql-provider-databricks/edit/stackql-provider/stackql_databricks_provider/website/databricks_workspace/';
 
+// Date-stamp every doc page ("Last updated on ..."). The pages are regenerated
+// and committed on every provider refresh, so the stamp is the regeneration date.
+config.presets[0][1].docs.showLastUpdateTime = true;
+
 // Use the locally vendored registry-branded logos (STACKQL>> | REGISTRY) instead
 // of the shared config's hotlinked main-site wordmark - self-contained assets, no
 // cross-origin fetch. global.css swaps in the -mobile variants below 996px.

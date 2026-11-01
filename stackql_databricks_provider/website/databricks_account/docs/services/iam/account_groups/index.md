@@ -262,42 +262,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_groups_v2_get"><CopyableCode code="account_groups_v2_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets the information for a specific group in the Databricks account.</td>
 </tr>
 <tr>
     <td><a href="#account_groups_v2_list"><CopyableCode code="account_groups_v2_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-attributes"><code>attributes</code></a>, <a href="#parameter-count"><code>count</code></a>, <a href="#parameter-excluded_attributes"><code>excluded_attributes</code></a>, <a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-sort_by"><code>sort_by</code></a>, <a href="#parameter-sort_order"><code>sort_order</code></a>, <a href="#parameter-start_index"><code>start_index</code></a></td>
     <td>Gets all details of the groups associated with the Databricks account. As of 08/22/2025, this endpoint</td>
 </tr>
 <tr>
     <td><a href="#account_groups_v2_create"><CopyableCode code="account_groups_v2_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a group in the Databricks account with a unique name, using the supplied group details.</td>
 </tr>
 <tr>
     <td><a href="#account_groups_v2_patch"><CopyableCode code="account_groups_v2_patch" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Partially updates the details of a group.</td>
 </tr>
 <tr>
     <td><a href="#account_groups_v2_update"><CopyableCode code="account_groups_v2_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates the details of a group by replacing the entire group entity.</td>
 </tr>
 <tr>
     <td><a href="#account_groups_v2_delete"><CopyableCode code="account_groups_v2_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-id"><code>id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a group from the Databricks account.</td>
 </tr>
@@ -317,6 +317,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -390,6 +395,7 @@ roles
 FROM databricks_account.iam.account_groups
 WHERE account_id = '{{ account_id }}' -- required
 AND id = '{{ id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -408,6 +414,7 @@ meta,
 roles
 FROM databricks_account.iam.account_groups
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND attributes = '{{ attributes }}'
 AND count = '{{ count }}'
 AND excluded_attributes = '{{ excluded_attributes }}'
@@ -442,7 +449,8 @@ id,
 members,
 meta,
 roles,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ displayName }}',
@@ -451,7 +459,8 @@ SELECT
 '{{ members }}',
 '{{ meta }}',
 '{{ roles }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 id,
 account_id,
@@ -470,6 +479,9 @@ roles
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the account_groups resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_groups resource.
     - name: displayName
       value: "{{ displayName }}"
@@ -527,7 +539,8 @@ Operations = '{{ Operations }}',
 schemas = '{{ schemas }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND id = '{{ id }}' --required;
+AND id = '{{ id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -555,7 +568,8 @@ meta = '{{ meta }}',
 roles = '{{ roles }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND id = '{{ id }}' --required;
+AND id = '{{ id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -577,6 +591,7 @@ Deletes a group from the Databricks account.
 DELETE FROM databricks_account.iam.account_groups
 WHERE account_id = '{{ account_id }}' --required
 AND id = '{{ id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>
