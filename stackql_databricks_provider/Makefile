@@ -1,7 +1,7 @@
 # Makefile for the StackQL Databricks provider workflow.
 #
 # Run from this directory (stackql_databricks_provider/) in a POSIX shell
-# (Linux, macOS, or WSL on Windows). See CLAUDE.md at the repo root for the
+# (Linux, macOS, or WSL on Windows). See AGENTS.md at the repo root for the
 # full workflow description.
 #
 #   make upstream-pull   pull the latest upstream Databricks SDK changes
