@@ -228,7 +228,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-workspace_base_environment"><code>workspace_base_environment</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a></td>
     <td><a href="#parameter-request_id"><code>request_id</code></a>, <a href="#parameter-workspace_base_environment_id"><code>workspace_base_environment_id</code></a></td>
     <td>Creates a new WorkspaceBaseEnvironment. This is a long-running operation. The operation will</td>
 </tr>
@@ -385,14 +385,36 @@ Creates a new WorkspaceBaseEnvironment. This is a long-running operation. The op
 
 ```sql
 INSERT INTO databricks_workspace.environments.workspace_base_environments (
-workspace_base_environment,
+display_name,
+base_environment_type,
+create_time,
+creator_user_id,
+filepath,
+is_default,
+last_updated_user_id,
+message,
+name,
+spec,
+status,
+update_time,
 deployment_name,
 workspace_domain,
 request_id,
 workspace_base_environment_id
 )
 SELECT 
-'{{ workspace_base_environment }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ base_environment_type }}',
+'{{ create_time }}',
+'{{ creator_user_id }}',
+'{{ filepath }}',
+{{ is_default }},
+'{{ last_updated_user_id }}',
+'{{ message }}',
+'{{ name }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
 '{{ request_id }}',
@@ -411,25 +433,57 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the workspace_base_environments resource.
-    - name: workspace_base_environment
+    - name: display_name
+      value: "{{ display_name }}"
       description: |
-        Required. The workspace base environment to create.
+        Human-readable display name for the workspace base environment.
+    - name: base_environment_type
+      value: "{{ base_environment_type }}"
+      description: |
+        The type of base environment (CPU or GPU).
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Timestamp when the environment was created.
+    - name: creator_user_id
+      value: "{{ creator_user_id }}"
+      description: |
+        User ID of the creator.
+    - name: filepath
+      value: "{{ filepath }}"
+      description: |
+        The WSFS or UC Volumes path to the environment YAML file.
+    - name: is_default
+      value: {{ is_default }}
+      description: |
+        Whether this is the default environment for the workspace.
+    - name: last_updated_user_id
+      value: "{{ last_updated_user_id }}"
+      description: |
+        User ID of the last user who updated the environment.
+    - name: message
+      value: "{{ message }}"
+      description: |
+        Status message providing additional details about the environment status.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the workspace base environment. Format: workspace-base-environments/{workspace-base-environment}
+    - name: spec
+      description: |
+        The environment specification containing version and dependencies.
       value:
-        display_name: "{{ display_name }}"
-        base_environment_type: "{{ base_environment_type }}"
-        create_time: "{{ create_time }}"
-        creator_user_id: "{{ creator_user_id }}"
-        filepath: "{{ filepath }}"
-        is_default: {{ is_default }}
-        last_updated_user_id: "{{ last_updated_user_id }}"
-        message: "{{ message }}"
-        name: "{{ name }}"
-        spec:
-          dependencies:
-            - "{{ dependencies }}"
-          environment_version: "{{ environment_version }}"
-        status: "{{ status }}"
-        update_time: "{{ update_time }}"
+        dependencies:
+          - "{{ dependencies }}"
+        environment_version: "{{ environment_version }}"
+    - name: status
+      value: "{{ status }}"
+      description: |
+        The status of the materialized workspace base environment.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Timestamp when the environment was last updated.
     - name: request_id
       value: "{{ request_id }}"
       description: A unique identifier for this request. A random UUID is recommended. This request is only idempotent if a request_id is provided.

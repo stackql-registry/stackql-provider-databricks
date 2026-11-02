@@ -563,7 +563,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#workspaces_update"><CopyableCode code="workspaces_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-customer_facing_workspace"><code>customer_facing_workspace</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td>Updates a workspace.</td>
 </tr>
@@ -921,12 +921,37 @@ Updates a workspace.
 ```sql
 UPDATE databricks_account.provisioning.workspaces
 SET 
-customer_facing_workspace = '{{ customer_facing_workspace }}'
+account_id = '{{ account_id }}',
+aws_region = '{{ aws_region }}',
+azure_workspace_info = '{{ azure_workspace_info }}',
+cloud = '{{ cloud }}',
+cloud_resource_container = '{{ cloud_resource_container }}',
+compute_mode = '{{ compute_mode }}',
+creation_time = {{ creation_time }},
+credentials_id = '{{ credentials_id }}',
+custom_tags = '{{ custom_tags }}',
+deployment_name = '{{ deployment_name }}',
+expected_workspace_status = '{{ expected_workspace_status }}',
+gcp_managed_network_config = '{{ gcp_managed_network_config }}',
+gke_config = '{{ gke_config }}',
+location = '{{ location }}',
+managed_services_customer_managed_key_id = '{{ managed_services_customer_managed_key_id }}',
+network = '{{ network }}',
+network_connectivity_config_id = '{{ network_connectivity_config_id }}',
+network_id = '{{ network_id }}',
+pricing_tier = '{{ pricing_tier }}',
+private_access_settings_id = '{{ private_access_settings_id }}',
+storage_configuration_id = '{{ storage_configuration_id }}',
+storage_customer_managed_key_id = '{{ storage_customer_managed_key_id }}',
+storage_mode = '{{ storage_mode }}',
+workspace_id = {{ workspace_id }},
+workspace_name = '{{ workspace_name }}',
+workspace_status = '{{ workspace_status }}',
+workspace_status_message = '{{ workspace_status_message }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
 AND account_host = '{{ account_host }}' --required
-AND customer_facing_workspace = '{{ customer_facing_workspace }}' --required
 AND update_mask = '{{ update_mask}}'
 RETURNING
 account_id,

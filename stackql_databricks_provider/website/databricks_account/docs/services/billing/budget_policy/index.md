@@ -131,7 +131,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#budget_policy_update"><CopyableCode code="budget_policy_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-limit_config"><code>limit_config</code></a></td>
     <td>Updates a policy</td>
 </tr>
@@ -328,12 +328,14 @@ Updates a policy
 ```sql
 UPDATE databricks_account.billing.budget_policy
 SET 
-policy = '{{ policy }}'
+binding_workspace_ids = '{{ binding_workspace_ids }}',
+custom_tags = '{{ custom_tags }}',
+policy_id = '{{ policy_id }}',
+policy_name = '{{ policy_name }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND policy_id = '{{ policy_id }}' --required
 AND account_host = '{{ account_host }}' --required
-AND policy = '{{ policy }}' --required
 AND limit_config = '{{ limit_config}}'
 RETURNING
 policy_id,

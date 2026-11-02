@@ -408,7 +408,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-app_deployment"><code>app_deployment</code></a></td>
+    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates an app deployment for the app with the supplied name.</td>
 </tr>
@@ -541,13 +541,35 @@ Creates an app deployment for the app with the supplied name.
 
 ```sql
 INSERT INTO databricks_workspace.apps.app_deployments (
-app_deployment,
+command,
+create_time,
+creator,
+deployment_artifacts,
+deployment_id,
+env_vars,
+git_source,
+health_check,
+mode,
+source_code_path,
+status,
+update_time,
 app_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ app_deployment }}' /* required */,
+'{{ command }}',
+'{{ create_time }}',
+'{{ creator }}',
+'{{ deployment_artifacts }}',
+'{{ deployment_id }}',
+'{{ env_vars }}',
+'{{ git_source }}',
+'{{ health_check }}',
+'{{ mode }}',
+'{{ source_code_path }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ app_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -581,41 +603,71 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the app_deployments resource.
-    - name: app_deployment
-      description: |
-        The app deployment configuration.
+    - name: command
       value:
-        command:
-          - "{{ command }}"
-        create_time: "{{ create_time }}"
-        creator: "{{ creator }}"
-        deployment_artifacts:
-          source_code_path: "{{ source_code_path }}"
-        deployment_id: "{{ deployment_id }}"
-        env_vars:
-          - name: "{{ name }}"
-            value: "{{ value }}"
-            value_from: "{{ value_from }}"
-        git_source:
-          branch: "{{ branch }}"
-          commit: "{{ commit }}"
-          git_repository:
-            url: "{{ url }}"
-            provider: "{{ provider }}"
-            auto_deploy: {{ auto_deploy }}
-            caller_credential_id: {{ caller_credential_id }}
-          resolved_commit: "{{ resolved_commit }}"
-          source_code_path: "{{ source_code_path }}"
-          tag: "{{ tag }}"
-        health_check:
-          path: "{{ path }}"
-          timeout: "{{ timeout }}"
-        mode: "{{ mode }}"
+        - "{{ command }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The creation time of the deployment. Formatted timestamp in ISO 6801.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The email of the user creates the deployment.
+    - name: deployment_artifacts
+      description: |
+        The deployment artifacts for an app.
+      value:
         source_code_path: "{{ source_code_path }}"
-        status:
-          message: "{{ message }}"
-          state: "{{ state }}"
-        update_time: "{{ update_time }}"
+    - name: deployment_id
+      value: "{{ deployment_id }}"
+      description: |
+        The unique id of the deployment.
+    - name: env_vars
+      description: |
+        The environment variables to set in the app runtime environment. This will override the environment variables specified in the app.yaml file.
+      value:
+        - name: "{{ name }}"
+          value: "{{ value }}"
+          value_from: "{{ value_from }}"
+    - name: git_source
+      description: |
+        Git repository to use as the source for the app deployment.
+      value:
+        branch: "{{ branch }}"
+        commit: "{{ commit }}"
+        git_repository:
+          url: "{{ url }}"
+          provider: "{{ provider }}"
+          auto_deploy: {{ auto_deploy }}
+          caller_credential_id: {{ caller_credential_id }}
+        resolved_commit: "{{ resolved_commit }}"
+        source_code_path: "{{ source_code_path }}"
+        tag: "{{ tag }}"
+    - name: health_check
+      description: |
+        Deploy-time health check for the app. Verifies the app is responding to HTTP requests before considering the deployment successful.
+      value:
+        path: "{{ path }}"
+        timeout: "{{ timeout }}"
+    - name: mode
+      value: "{{ mode }}"
+      description: |
+        The mode of which the deployment will manage the source code.
+    - name: source_code_path
+      value: "{{ source_code_path }}"
+      description: |
+        The workspace file system path of the source code used to create the app deployment. This is different from \`\`deployment_artifacts.source_code_path\`\`, which is the path used by the deployed app. The former refers to the original source code location of the app in the workspace during deployment creation, whereas the latter provides a system generated stable snapshotted source code path used by the deployment.
+    - name: status
+      description: |
+        Status and status message of the deployment
+      value:
+        message: "{{ message }}"
+        state: "{{ state }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The update time of the deployment. Formatted timestamp in ISO 6801.
 `}</CodeBlock>
 
 </TabItem>

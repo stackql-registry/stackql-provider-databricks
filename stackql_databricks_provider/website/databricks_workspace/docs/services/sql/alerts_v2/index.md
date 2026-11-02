@@ -638,14 +638,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-alert"><code>alert</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-query_text"><code>query_text</code></a>, <a href="#parameter-warehouse_id"><code>warehouse_id</code></a>, <a href="#parameter-evaluation"><code>evaluation</code></a>, <a href="#parameter-schedule"><code>schedule</code></a></td>
     <td></td>
     <td>Create Alert</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-alert"><code>alert</code></a></td>
+    <td><a href="#parameter-id"><code>id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-query_text"><code>query_text</code></a>, <a href="#parameter-warehouse_id"><code>warehouse_id</code></a>, <a href="#parameter-evaluation"><code>evaluation</code></a>, <a href="#parameter-schedule"><code>schedule</code></a></td>
     <td></td>
     <td>Update alert</td>
 </tr>
@@ -800,12 +800,46 @@ Create Alert
 
 ```sql
 INSERT INTO databricks_workspace.sql.alerts_v2 (
-alert,
+display_name,
+query_text,
+warehouse_id,
+evaluation,
+schedule,
+create_time,
+custom_description,
+custom_summary,
+custom_template_format,
+effective_run_as,
+id,
+lifecycle_state,
+owner_user_name,
+parameters,
+parent_path,
+run_as,
+run_as_user_name,
+update_time,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ alert }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ query_text }}' /* required */,
+'{{ warehouse_id }}' /* required */,
+'{{ evaluation }}' /* required */,
+'{{ schedule }}' /* required */,
+'{{ create_time }}',
+'{{ custom_description }}',
+'{{ custom_summary }}',
+'{{ custom_template_format }}',
+'{{ effective_run_as }}',
+'{{ id }}',
+'{{ lifecycle_state }}',
+'{{ owner_user_name }}',
+'{{ parameters }}',
+'{{ parent_path }}',
+'{{ run_as }}',
+'{{ run_as_user_name }}',
+'{{ update_time }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -841,59 +875,105 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the alerts_v2 resource.
-    - name: alert
+    - name: display_name
+      value: "{{ display_name }}"
+    - name: query_text
+      value: "{{ query_text }}"
+      description: |
+        Text of the query to be run.
+    - name: warehouse_id
+      value: "{{ warehouse_id }}"
+      description: |
+        ID of the SQL warehouse attached to the alert.
+    - name: evaluation
       value:
-        display_name: "{{ display_name }}"
-        query_text: "{{ query_text }}"
-        warehouse_id: "{{ warehouse_id }}"
-        evaluation:
-          source:
+        source:
+          name: "{{ name }}"
+          aggregation: "{{ aggregation }}"
+          display: "{{ display }}"
+        comparison_operator: "{{ comparison_operator }}"
+        empty_result_state: "{{ empty_result_state }}"
+        last_evaluated_at: "{{ last_evaluated_at }}"
+        notification:
+          notify_on_ok: {{ notify_on_ok }}
+          retrigger_seconds: {{ retrigger_seconds }}
+          subscriptions:
+            - destination_id: "{{ destination_id }}"
+              user_email: "{{ user_email }}"
+        state: "{{ state }}"
+        threshold:
+          column:
             name: "{{ name }}"
             aggregation: "{{ aggregation }}"
             display: "{{ display }}"
-          comparison_operator: "{{ comparison_operator }}"
-          empty_result_state: "{{ empty_result_state }}"
-          last_evaluated_at: "{{ last_evaluated_at }}"
-          notification:
-            notify_on_ok: {{ notify_on_ok }}
-            retrigger_seconds: {{ retrigger_seconds }}
-            subscriptions:
-              - destination_id: "{{ destination_id }}"
-                user_email: "{{ user_email }}"
-          state: "{{ state }}"
-          threshold:
-            column:
-              name: "{{ name }}"
-              aggregation: "{{ aggregation }}"
-              display: "{{ display }}"
-            value:
-              bool_value: {{ bool_value }}
-              double_value: {{ double_value }}
-              string_value: "{{ string_value }}"
-        schedule:
-          quartz_cron_schedule: "{{ quartz_cron_schedule }}"
-          timezone_id: "{{ timezone_id }}"
-          pause_status: "{{ pause_status }}"
-        create_time: "{{ create_time }}"
-        custom_description: "{{ custom_description }}"
-        custom_summary: "{{ custom_summary }}"
-        custom_template_format: "{{ custom_template_format }}"
-        effective_run_as:
-          service_principal_name: "{{ service_principal_name }}"
-          user_name: "{{ user_name }}"
-        id: "{{ id }}"
-        lifecycle_state: "{{ lifecycle_state }}"
-        owner_user_name: "{{ owner_user_name }}"
-        parameters:
-          - name: "{{ name }}"
-            type: "{{ type }}"
-            value: "{{ value }}"
-        parent_path: "{{ parent_path }}"
-        run_as:
-          service_principal_name: "{{ service_principal_name }}"
-          user_name: "{{ user_name }}"
-        run_as_user_name: "{{ run_as_user_name }}"
-        update_time: "{{ update_time }}"
+          value:
+            bool_value: {{ bool_value }}
+            double_value: {{ double_value }}
+            string_value: "{{ string_value }}"
+    - name: schedule
+      value:
+        quartz_cron_schedule: "{{ quartz_cron_schedule }}"
+        timezone_id: "{{ timezone_id }}"
+        pause_status: "{{ pause_status }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The timestamp indicating when the alert was created.
+    - name: custom_description
+      value: "{{ custom_description }}"
+      description: |
+        Custom description for the alert. Interpreted according to \`\`custom_template_format\`\`.
+    - name: custom_summary
+      value: "{{ custom_summary }}"
+      description: |
+        Custom summary for the alert. Interpreted according to \`\`custom_template_format\`\`.
+    - name: custom_template_format
+      value: "{{ custom_template_format }}"
+      description: |
+        The format used to interpret the \`\`custom_summary\`\` and \`\`custom_description\`\` templates. \`\`HTML\`\` treats both templates as HTML with Mustache \`\`{{VARIABLE_NAME}}\`\` placeholders. \`\`MARKDOWN\`\` treats them as Markdown with allowlisted \`\`@VARIABLE_NAME\`\` placeholders and converts them to the format each notification destination expects, so a single template renders correctly in email, Slack, and Microsoft Teams. When unset, the API applies no default. Responses omit the field unless a format is stored, and a template with no format is rendered as HTML.
+    - name: effective_run_as
+      description: |
+        The actual identity that will be used to execute the alert. This is an output-only field that shows the resolved run-as identity after applying permissions and defaults.
+      value:
+        service_principal_name: "{{ service_principal_name }}"
+        user_name: "{{ user_name }}"
+    - name: id
+      value: "{{ id }}"
+      description: |
+        The canonical identifier of the alert to retrieve information about.
+    - name: lifecycle_state
+      value: "{{ lifecycle_state }}"
+      description: |
+        Indicates whether the query is trashed.
+    - name: owner_user_name
+      value: "{{ owner_user_name }}"
+      description: |
+        The owner's username. This field is set to "Unavailable" if the user has been deleted.
+    - name: parameters
+      description: |
+        A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only. Reference a parameter in the query text as \`\`:name\`\`. Each parameter must have a unique, non-empty name. Each parameter consists of a name, a value, and optionally a type. To represent a NULL value, the \`\`value\`\` field may be omitted or set to \`\`null\`\` explicitly. If the \`\`type\`\` field is omitted, the value is interpreted as a string. If the type is given, parameters will be checked for type correctness according to the given type. A value is correct if the provided string can be converted to the requested type using the \`\`cast\`\` function. The exact semantics are described in the section \`cast function <https://docs.databricks.com/sql/language-manual/functions/cast.html>\`__ of the SQL language reference.
+      value:
+        - name: "{{ name }}"
+          type: "{{ type }}"
+          value: "{{ value }}"
+    - name: parent_path
+      value: "{{ parent_path }}"
+      description: |
+        The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated.
+    - name: run_as
+      description: |
+        Specifies the identity that will be used to run the alert. This field allows you to configure alerts to run as a specific user or service principal. - For user identity: Set \`\`user_name\`\` to the email of an active workspace user. Users can only set this to their own email. - For service principal: Set \`\`service_principal_name\`\` to the application ID. Requires the \`\`servicePrincipal/user\`\` role. If not specified, the alert will run as the request user.
+      value:
+        service_principal_name: "{{ service_principal_name }}"
+        user_name: "{{ user_name }}"
+    - name: run_as_user_name
+      value: "{{ run_as_user_name }}"
+      description: |
+        The run as username or application ID of service principal. On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role. Deprecated: Use \`\`run_as\`\` field instead. This field will be removed in a future release.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The timestamp indicating when the alert was updated.
 `}</CodeBlock>
 
 </TabItem>
@@ -915,13 +995,34 @@ Update alert
 ```sql
 UPDATE databricks_workspace.sql.alerts_v2
 SET 
-alert = '{{ alert }}'
+display_name = '{{ display_name }}',
+query_text = '{{ query_text }}',
+warehouse_id = '{{ warehouse_id }}',
+evaluation = '{{ evaluation }}',
+schedule = '{{ schedule }}',
+create_time = '{{ create_time }}',
+custom_description = '{{ custom_description }}',
+custom_summary = '{{ custom_summary }}',
+custom_template_format = '{{ custom_template_format }}',
+effective_run_as = '{{ effective_run_as }}',
+id = '{{ id }}',
+lifecycle_state = '{{ lifecycle_state }}',
+owner_user_name = '{{ owner_user_name }}',
+parameters = '{{ parameters }}',
+parent_path = '{{ parent_path }}',
+run_as = '{{ run_as }}',
+run_as_user_name = '{{ run_as_user_name }}',
+update_time = '{{ update_time }}'
 WHERE 
 id = '{{ id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND alert = '{{ alert }}' --required
+AND display_name = '{{ display_name }}' --required
+AND query_text = '{{ query_text }}' --required
+AND warehouse_id = '{{ warehouse_id }}' --required
+AND evaluation = '{{ evaluation }}' --required
+AND schedule = '{{ schedule }}' --required
 RETURNING
 id,
 warehouse_id,

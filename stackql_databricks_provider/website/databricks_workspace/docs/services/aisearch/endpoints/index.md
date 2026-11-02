@@ -420,7 +420,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-endpoint"><code>endpoint</code></a></td>
+    <td><a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-endpoint_type"><code>endpoint_type</code></a></td>
     <td><a href="#parameter-endpoint_id"><code>endpoint_id</code></a></td>
     <td>Create a new AI Search endpoint.</td>
 </tr>
@@ -597,14 +597,46 @@ Create a new AI Search endpoint.
 
 ```sql
 INSERT INTO databricks_workspace.aisearch.endpoints (
-endpoint,
+endpoint_type,
+budget_policy_id,
+create_time,
+creator,
+custom_tags,
+effective_budget_policy_id,
+endpoint_status,
+id,
+index_count,
+last_updated_user,
+name,
+replica_count,
+scaling_info,
+target_qps,
+throughput_info,
+update_time,
+usage_policy_id,
 workspace_id,
 deployment_name,
 workspace_domain,
 endpoint_id
 )
 SELECT 
-'{{ endpoint }}' /* required */,
+'{{ endpoint_type }}' /* required */,
+'{{ budget_policy_id }}',
+'{{ create_time }}',
+'{{ creator }}',
+'{{ custom_tags }}',
+'{{ effective_budget_policy_id }}',
+'{{ endpoint_status }}',
+'{{ id }}',
+{{ index_count }},
+'{{ last_updated_user }}',
+'{{ name }}',
+{{ replica_count }},
+'{{ scaling_info }}',
+{{ target_qps }},
+'{{ throughput_info }}',
+'{{ update_time }}',
+'{{ usage_policy_id }}',
 '{{ workspace_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
@@ -644,42 +676,89 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the endpoints resource.
-    - name: endpoint
+    - name: endpoint_type
+      value: "{{ endpoint_type }}"
       description: |
-        The Endpoint resource to create. Fields other than \`\`endpoint.name\`\` carry the desired configuration; \`\`endpoint.name\`\` is server-assigned from \`\`parent\`\` and \`\`endpoint_id\`\`.
+        Type of endpoint. Required on create and immutable thereafter.
+    - name: budget_policy_id
+      value: "{{ budget_policy_id }}"
+      description: |
+        The user-selected budget policy id for the endpoint.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time the endpoint was created.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        Creator of the endpoint
+    - name: custom_tags
+      description: |
+        The custom tags assigned to the endpoint
       value:
-        endpoint_type: "{{ endpoint_type }}"
-        budget_policy_id: "{{ budget_policy_id }}"
-        create_time: "{{ create_time }}"
-        creator: "{{ creator }}"
-        custom_tags:
-          - key: "{{ key }}"
-            value: "{{ value }}"
-        effective_budget_policy_id: "{{ effective_budget_policy_id }}"
-        endpoint_status:
-          message: "{{ message }}"
-          state: "{{ state }}"
-        id: "{{ id }}"
-        index_count: {{ index_count }}
-        last_updated_user: "{{ last_updated_user }}"
-        name: "{{ name }}"
-        replica_count: {{ replica_count }}
-        scaling_info:
-          requested_target_qps: {{ requested_target_qps }}
-          state: "{{ state }}"
-        target_qps: {{ target_qps }}
-        throughput_info:
-          change_request_message: "{{ change_request_message }}"
-          change_request_state: "{{ change_request_state }}"
-          current_concurrency: {{ current_concurrency }}
-          current_concurrency_utilization_percentage: {{ current_concurrency_utilization_percentage }}
-          current_num_replicas: {{ current_num_replicas }}
-          maximum_concurrency_allowed: {{ maximum_concurrency_allowed }}
-          minimal_concurrency_allowed: {{ minimal_concurrency_allowed }}
-          requested_concurrency: {{ requested_concurrency }}
-          requested_num_replicas: {{ requested_num_replicas }}
-        update_time: "{{ update_time }}"
-        usage_policy_id: "{{ usage_policy_id }}"
+        - key: "{{ key }}"
+          value: "{{ value }}"
+    - name: effective_budget_policy_id
+      value: "{{ effective_budget_policy_id }}"
+      description: |
+        The budget policy id applied to the endpoint
+    - name: endpoint_status
+      description: |
+        Current status of the endpoint
+      value:
+        message: "{{ message }}"
+        state: "{{ state }}"
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique identifier of the endpoint
+    - name: index_count
+      value: {{ index_count }}
+      description: |
+        Number of indexes on the endpoint
+    - name: last_updated_user
+      value: "{{ last_updated_user }}"
+      description: |
+        User who last updated the endpoint
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Name of the AI Search endpoint. Server-assigned full resource path (\`\`workspaces/{workspace}/endpoints/{endpoint}\`\`) on output. On create, the user-supplied short name is conveyed via \`\`CreateEndpointRequest.endpoint_id\`\`; the server composes the full \`\`name\`\` and returns it on the response.
+    - name: replica_count
+      value: {{ replica_count }}
+      description: |
+        The client-supplied desired number of replicas for the endpoint, applied at create/update time. Mutually exclusive with \`\`target_qps\`\`.
+    - name: scaling_info
+      description: |
+        Scaling information for the endpoint
+      value:
+        requested_target_qps: {{ requested_target_qps }}
+        state: "{{ state }}"
+    - name: target_qps
+      value: {{ target_qps }}
+      description: |
+        Target QPS for the endpoint. Mutually exclusive with \`\`replica_count\`\`. Best-effort; the system does not guarantee this QPS will be achieved.
+    - name: throughput_info
+      description: |
+        Throughput information for the endpoint
+      value:
+        change_request_message: "{{ change_request_message }}"
+        change_request_state: "{{ change_request_state }}"
+        current_concurrency: {{ current_concurrency }}
+        current_concurrency_utilization_percentage: {{ current_concurrency_utilization_percentage }}
+        current_num_replicas: {{ current_num_replicas }}
+        maximum_concurrency_allowed: {{ maximum_concurrency_allowed }}
+        minimal_concurrency_allowed: {{ minimal_concurrency_allowed }}
+        requested_concurrency: {{ requested_concurrency }}
+        requested_num_replicas: {{ requested_num_replicas }}
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time the endpoint was last updated.
+    - name: usage_policy_id
+      value: "{{ usage_policy_id }}"
+      description: |
+        The usage policy id applied to the endpoint.
     - name: endpoint_id
       value: "{{ endpoint_id }}"
       description: The user-supplied short name for the Endpoint, per AIP-133. The server composes the full \`\`Endpoint.name\`\` as \`\`{parent}/endpoints/{endpoint_id}\`\`. AIP-133 does not list \`\`endpoint_id\`\` as a fields-may-be-required entry, so we annotate it OPTIONAL on the wire; the server still rejects empty values with INVALID_PARAMETER_VALUE.

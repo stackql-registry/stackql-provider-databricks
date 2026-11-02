@@ -124,14 +124,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-example"><code>example</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-question"><code>question</code></a>, <a href="#parameter-guidelines"><code>guidelines</code></a></td>
     <td></td>
     <td>Creates an example for a Supervisor Agent.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-example"><code>example</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-question"><code>question</code></a>, <a href="#parameter-guidelines"><code>guidelines</code></a></td>
     <td></td>
     <td>Updates an example in a Supervisor Agent.</td>
 </tr>
@@ -260,13 +260,19 @@ Creates an example for a Supervisor Agent.
 
 ```sql
 INSERT INTO databricks_workspace.supervisoragents.examples (
-example,
+question,
+guidelines,
+example_id,
+name,
 supervisor_agent_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ example }}' /* required */,
+'{{ question }}' /* required */,
+'{{ guidelines }}' /* required */,
+'{{ example_id }}',
+'{{ name }}',
 '{{ supervisor_agent_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -292,15 +298,23 @@ question
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the examples resource.
-    - name: example
+    - name: question
+      value: "{{ question }}"
       description: |
-        The example to create under the parent Supervisor Agent.
+        The example question.
+    - name: guidelines
       value:
-        question: "{{ question }}"
-        guidelines:
-          - "{{ guidelines }}"
-        example_id: "{{ example_id }}"
-        name: "{{ name }}"
+        - "{{ guidelines }}"
+      description: |
+        Guidelines for answering the question.
+    - name: example_id
+      value: "{{ example_id }}"
+      description: |
+        The universally unique identifier (UUID) of the example.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Full resource name: supervisor-agents/{supervisor_agent_id}/examples/{example_id}
 `}</CodeBlock>
 
 </TabItem>
@@ -322,14 +336,18 @@ Updates an example in a Supervisor Agent.
 ```sql
 UPDATE databricks_workspace.supervisoragents.examples
 SET 
-example = '{{ example }}'
+question = '{{ question }}',
+guidelines = '{{ guidelines }}',
+example_id = '{{ example_id }}',
+name = '{{ name }}'
 WHERE 
 supervisor_agent_id = '{{ supervisor_agent_id }}' --required
 AND example_id = '{{ example_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND example = '{{ example }}' --required
+AND question = '{{ question }}' --required
+AND guidelines = '{{ guidelines }}' --required
 RETURNING
 name,
 example_id,

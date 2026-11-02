@@ -442,7 +442,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-endpoint_id"><code>endpoint_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-index"><code>index</code></a></td>
+    <td><a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-endpoint_id"><code>endpoint_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-primary_key"><code>primary_key</code></a>, <a href="#parameter-index_type"><code>index_type</code></a></td>
     <td><a href="#parameter-index_id"><code>index_id</code></a></td>
     <td>Create a new AI Search index.</td>
 </tr>
@@ -623,7 +623,15 @@ Create a new AI Search index.
 
 ```sql
 INSERT INTO databricks_workspace.aisearch.indexes (
-index,
+primary_key,
+index_type,
+creator,
+delta_sync_index_spec,
+direct_access_index_spec,
+endpoint,
+index_subtype,
+name,
+status,
 workspace_id,
 endpoint_id,
 deployment_name,
@@ -631,7 +639,15 @@ workspace_domain,
 index_id
 )
 SELECT 
-'{{ index }}' /* required */,
+'{{ primary_key }}' /* required */,
+'{{ index_type }}' /* required */,
+'{{ creator }}',
+'{{ delta_sync_index_spec }}',
+'{{ direct_access_index_spec }}',
+'{{ endpoint }}',
+'{{ index_subtype }}',
+'{{ name }}',
+'{{ status }}',
 '{{ workspace_id }}',
 '{{ endpoint_id }}',
 '{{ deployment_name }}',
@@ -667,44 +683,67 @@ status
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the indexes resource.
-    - name: index
+    - name: primary_key
+      value: "{{ primary_key }}"
       description: |
-        The Index resource to create. Fields other than \`\`index.name\`\` carry the desired configuration; \`\`index.name\`\` is server-assigned from \`\`parent\`\` and \`\`index_id\`\`.
+        Primary key of the index. Set on create and immutable thereafter.
+    - name: index_type
+      value: "{{ index_type }}"
+      description: |
+        Type of index. Required on create and immutable thereafter.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        Creator of the index.
+    - name: delta_sync_index_spec
+      description: |
+        Specification for a Delta Sync index. Set when \`\`index_type\`\` is \`\`DELTA_SYNC\`\`.
       value:
-        primary_key: "{{ primary_key }}"
-        index_type: "{{ index_type }}"
-        creator: "{{ creator }}"
-        delta_sync_index_spec:
-          pipeline_type: "{{ pipeline_type }}"
-          columns_to_sync:
-            - "{{ columns_to_sync }}"
-          embedding_source_columns:
-            - embedding_model_endpoint: "{{ embedding_model_endpoint }}"
-              model_endpoint_name_for_query: "{{ model_endpoint_name_for_query }}"
-              name: "{{ name }}"
-          embedding_vector_columns:
-            - embedding_dimension: {{ embedding_dimension }}
-              name: "{{ name }}"
-          embedding_writeback_table: "{{ embedding_writeback_table }}"
-          pipeline_id: "{{ pipeline_id }}"
-          source_table: "{{ source_table }}"
-        direct_access_index_spec:
-          embedding_source_columns:
-            - embedding_model_endpoint: "{{ embedding_model_endpoint }}"
-              model_endpoint_name_for_query: "{{ model_endpoint_name_for_query }}"
-              name: "{{ name }}"
-          embedding_vector_columns:
-            - embedding_dimension: {{ embedding_dimension }}
-              name: "{{ name }}"
-          schema_json: "{{ schema_json }}"
-        endpoint: "{{ endpoint }}"
-        index_subtype: "{{ index_subtype }}"
-        name: "{{ name }}"
-        status:
-          index_url: "{{ index_url }}"
-          indexed_row_count: {{ indexed_row_count }}
-          message: "{{ message }}"
-          ready: {{ ready }}
+        pipeline_type: "{{ pipeline_type }}"
+        columns_to_sync:
+          - "{{ columns_to_sync }}"
+        embedding_source_columns:
+          - embedding_model_endpoint: "{{ embedding_model_endpoint }}"
+            model_endpoint_name_for_query: "{{ model_endpoint_name_for_query }}"
+            name: "{{ name }}"
+        embedding_vector_columns:
+          - embedding_dimension: {{ embedding_dimension }}
+            name: "{{ name }}"
+        embedding_writeback_table: "{{ embedding_writeback_table }}"
+        pipeline_id: "{{ pipeline_id }}"
+        source_table: "{{ source_table }}"
+    - name: direct_access_index_spec
+      description: |
+        Specification for a Direct Access index. Set when \`\`index_type\`\` is \`\`DIRECT_ACCESS\`\`.
+      value:
+        embedding_source_columns:
+          - embedding_model_endpoint: "{{ embedding_model_endpoint }}"
+            model_endpoint_name_for_query: "{{ model_endpoint_name_for_query }}"
+            name: "{{ name }}"
+        embedding_vector_columns:
+          - embedding_dimension: {{ embedding_dimension }}
+            name: "{{ name }}"
+        schema_json: "{{ schema_json }}"
+    - name: endpoint
+      value: "{{ endpoint }}"
+      description: |
+        Name of the endpoint associated with the index. Ignored on create — the endpoint is taken from \`\`CreateIndexRequest.parent\`\`; populated only on output.
+    - name: index_subtype
+      value: "{{ index_subtype }}"
+      description: |
+        The subtype of the index. Set on create and immutable thereafter.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Name of the AI Search index. Server-assigned full resource path (\`\`workspaces/{workspace}/endpoints/{endpoint}/indexes/{index}\`\`) on output, where \`\`{index}\`\` is the index's Unity Catalog table name. On create, the user-supplied UC table name is conveyed via \`\`CreateIndexRequest.index_id\`\`; the server composes the full \`\`name\`\` and returns it on the response.
+    - name: status
+      description: |
+        Current status of the index.
+      value:
+        index_url: "{{ index_url }}"
+        indexed_row_count: {{ indexed_row_count }}
+        message: "{{ message }}"
+        ready: {{ ready }}
     - name: index_id
       value: "{{ index_id }}"
       description: The user-supplied Unity Catalog table name for the Index, per AIP-133. The server composes the full \`\`Index.name\`\` as \`\`{parent}/indexes/{index_id}\`\`. AIP-133 does not list \`\`index_id\`\` as a fields-may-be-required entry, so we annotate it OPTIONAL on the wire; the server still rejects empty values with INVALID_PARAMETER_VALUE.

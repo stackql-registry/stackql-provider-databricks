@@ -309,14 +309,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-materialization_set"><code>materialization_set</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-request_id"><code>request_id</code></a></td>
     <td>Create a materialization set.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-materialization_set_id"><code>materialization_set_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-materialization_set"><code>materialization_set</code></a></td>
+    <td><a href="#parameter-materialization_set_id"><code>materialization_set_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-request_id"><code>request_id</code></a></td>
     <td>Update the materialization set's state to match the supplied materialization set. Changes are applied</td>
 </tr>
@@ -417,13 +417,15 @@ Create a materialization set.
 
 ```sql
 INSERT INTO databricks_workspace.ml.feature_materialization_sets (
-materialization_set,
+materialization_set_id,
+materialized_features,
 deployment_name,
 workspace_domain,
 request_id
 )
 SELECT 
-'{{ materialization_set }}' /* required */,
+'{{ materialization_set_id }}',
+'{{ materialized_features }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
 '{{ request_id }}'
@@ -441,58 +443,60 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the feature_materialization_sets resource.
-    - name: materialization_set
+    - name: materialization_set_id
+      value: "{{ materialization_set_id }}"
       description: |
-        The materialization set to create. Supply materialization_set_id to choose the identifier; leave it unset to have one assigned.
+        Server-assigned unique identifier for the materialization set.
+    - name: materialized_features
+      description: |
+        The materialized features in this set. Order is not significant. Updating the set with a materialized feature removed from this set will cause it to be deleted.
       value:
-        materialization_set_id: "{{ materialization_set_id }}"
-        materialized_features:
-          - feature_name: "{{ feature_name }}"
-            budget_policy_id: "{{ budget_policy_id }}"
-            cron_schedule: "{{ cron_schedule }}"
-            cron_schedule_trigger:
-              cron_expression: "{{ cron_expression }}"
-              mode: "{{ mode }}"
-              timezone_id: "{{ timezone_id }}"
-            is_online: {{ is_online }}
-            job_id: {{ job_id }}
-            last_materialization_time: "{{ last_materialization_time }}"
-            latest_backfill_operation: "{{ latest_backfill_operation }}"
-            materialization_set_id: "{{ materialization_set_id }}"
-            materialized_feature_id: "{{ materialized_feature_id }}"
-            notifications:
-              on_failure:
-                destination_ids:
-                  - "{{ destination_ids }}"
-                email_addresses:
-                  - "{{ email_addresses }}"
-                final_attempt_only: {{ final_attempt_only }}
-              on_success:
-                destination_ids:
-                  - "{{ destination_ids }}"
-                email_addresses:
-                  - "{{ email_addresses }}"
-            offline_store_config:
-              catalog_name: "{{ catalog_name }}"
-              schema_name: "{{ schema_name }}"
-              table_name_prefix: "{{ table_name_prefix }}"
-            online_store_config:
-              catalog_name: "{{ catalog_name }}"
-              schema_name: "{{ schema_name }}"
-              table_name_prefix: "{{ table_name_prefix }}"
-              online_store_name: "{{ online_store_name }}"
-            pipeline_id: "{{ pipeline_id }}"
-            pipeline_schedule_state: "{{ pipeline_schedule_state }}"
-            streaming_mode:
-              freshness_target: "{{ freshness_target }}"
-              mode: "{{ mode }}"
-              shuffle_partitions: {{ shuffle_partitions }}
-            table_name: "{{ table_name }}"
-            table_trigger:
-              condition: "{{ condition }}"
-              min_time_between_triggers: "{{ min_time_between_triggers }}"
-              wait_after_last_change: "{{ wait_after_last_change }}"
-            tags: "{{ tags }}"
+        - feature_name: "{{ feature_name }}"
+          budget_policy_id: "{{ budget_policy_id }}"
+          cron_schedule: "{{ cron_schedule }}"
+          cron_schedule_trigger:
+            cron_expression: "{{ cron_expression }}"
+            mode: "{{ mode }}"
+            timezone_id: "{{ timezone_id }}"
+          is_online: {{ is_online }}
+          job_id: {{ job_id }}
+          last_materialization_time: "{{ last_materialization_time }}"
+          latest_backfill_operation: "{{ latest_backfill_operation }}"
+          materialization_set_id: "{{ materialization_set_id }}"
+          materialized_feature_id: "{{ materialized_feature_id }}"
+          notifications:
+            on_failure:
+              destination_ids:
+                - "{{ destination_ids }}"
+              email_addresses:
+                - "{{ email_addresses }}"
+              final_attempt_only: {{ final_attempt_only }}
+            on_success:
+              destination_ids:
+                - "{{ destination_ids }}"
+              email_addresses:
+                - "{{ email_addresses }}"
+          offline_store_config:
+            catalog_name: "{{ catalog_name }}"
+            schema_name: "{{ schema_name }}"
+            table_name_prefix: "{{ table_name_prefix }}"
+          online_store_config:
+            catalog_name: "{{ catalog_name }}"
+            schema_name: "{{ schema_name }}"
+            table_name_prefix: "{{ table_name_prefix }}"
+            online_store_name: "{{ online_store_name }}"
+          pipeline_id: "{{ pipeline_id }}"
+          pipeline_schedule_state: "{{ pipeline_schedule_state }}"
+          streaming_mode:
+            freshness_target: "{{ freshness_target }}"
+            mode: "{{ mode }}"
+            shuffle_partitions: {{ shuffle_partitions }}
+          table_name: "{{ table_name }}"
+          table_trigger:
+            condition: "{{ condition }}"
+            min_time_between_triggers: "{{ min_time_between_triggers }}"
+            wait_after_last_change: "{{ wait_after_last_change }}"
+          tags: "{{ tags }}"
     - name: request_id
       value: "{{ request_id }}"
       description: Idempotency token for the request. A second request carrying a token that has already been used returns the operation the first one created, whatever state it reached, and creates no second set. The token is not checked against the rest of the request, so reusing one for a different set returns the original operation rather than an error. Omit it and each request creates its own set.
@@ -518,13 +522,13 @@ Update the materialization set's state to match the supplied materialization set
 ```sql
 UPDATE databricks_workspace.ml.feature_materialization_sets
 SET 
-materialization_set = '{{ materialization_set }}'
+materialization_set_id = '{{ materialization_set_id }}',
+materialized_features = '{{ materialized_features }}'
 WHERE 
 materialization_set_id = '{{ materialization_set_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND materialization_set = '{{ materialization_set }}' --required
 AND request_id = '{{ request_id}}';
 ```
 </TabItem>

@@ -144,14 +144,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-service_principal"><code>service_principal</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-account_sp_status"><code>account_sp_status</code></a></td>
     <td></td>
     <td>Creates a local service principal in the Databricks account and returns the created service principal.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-service_principal"><code>service_principal</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-account_sp_status"><code>account_sp_status</code></a></td>
     <td></td>
     <td>Updates an existing service principal in the Databricks account. Only the fields named in the update</td>
 </tr>
@@ -290,12 +290,22 @@ Creates a local service principal in the Databricks account and returns the crea
 
 ```sql
 INSERT INTO databricks_account.iamv2.service_principals (
-service_principal,
+display_name,
+account_sp_status,
+account_id,
+application_id,
+external_id,
+service_principal_id,
 account_id,
 account_host
 )
 SELECT 
-'{{ service_principal }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ account_sp_status }}' /* required */,
+'{{ account_id }}',
+'{{ application_id }}',
+'{{ external_id }}',
+'{{ service_principal_id }}',
 '{{ account_id }}',
 '{{ account_host }}'
 RETURNING
@@ -319,16 +329,30 @@ account_sp_status
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the service_principals resource.
-    - name: service_principal
+    - name: display_name
+      value: "{{ display_name }}"
       description: |
-        Required. Service principal to be created in Databricks
-      value:
-        display_name: "{{ display_name }}"
-        account_sp_status: "{{ account_sp_status }}"
-        account_id: "{{ account_id }}"
-        application_id: "{{ application_id }}"
-        external_id: "{{ external_id }}"
-        service_principal_id: "{{ service_principal_id }}"
+        Display name of the service principal.
+    - name: account_sp_status
+      value: "{{ account_sp_status }}"
+      description: |
+        The activity status of a service principal in a Databricks account.
+    - name: account_id
+      value: "{{ account_id }}"
+      description: |
+        The parent account ID for the service principal in Databricks.
+    - name: application_id
+      value: "{{ application_id }}"
+      description: |
+        Application ID of the service principal. Set at creation time and cannot be changed afterwards; when omitted, the server generates one.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        ExternalId of the service principal in the customer's IdP.
+    - name: service_principal_id
+      value: "{{ service_principal_id }}"
+      description: |
+        Internal service principal ID of the service principal in Databricks.
 `}</CodeBlock>
 
 </TabItem>
@@ -350,13 +374,19 @@ Updates an existing service principal in the Databricks account. Only the fields
 ```sql
 UPDATE databricks_account.iamv2.service_principals
 SET 
-service_principal = '{{ service_principal }}'
+display_name = '{{ display_name }}',
+account_sp_status = '{{ account_sp_status }}',
+account_id = '{{ account_id }}',
+application_id = '{{ application_id }}',
+external_id = '{{ external_id }}',
+service_principal_id = '{{ service_principal_id }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND service_principal_id = '{{ service_principal_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND account_host = '{{ account_host }}' --required
-AND service_principal = '{{ service_principal }}' --required
+AND display_name = '{{ display_name }}' --required
+AND account_sp_status = '{{ account_sp_status }}' --required
 RETURNING
 account_id,
 application_id,

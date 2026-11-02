@@ -332,14 +332,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-deployment"><code>deployment</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new deployment in the workspace.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-deployment"><code>deployment</code></a></td>
+    <td><a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a deployment.</td>
 </tr>
@@ -503,12 +503,42 @@ Creates a new deployment in the workspace.
 
 ```sql
 INSERT INTO databricks_workspace.bundledeployments.deployments (
-deployment,
+create_time,
+created_by,
+deployment_mode,
+destroy_time,
+destroyed_by,
+display_name,
+git_info,
+initial_parent_path,
+last_successful_version_id,
+last_version_id,
+name,
+status,
+target_name,
+update_time,
+updated_by,
+workspace_info,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ deployment }}' /* required */,
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ deployment_mode }}',
+'{{ destroy_time }}',
+'{{ destroyed_by }}',
+'{{ display_name }}',
+'{{ git_info }}',
+'{{ initial_parent_path }}',
+'{{ last_successful_version_id }}',
+'{{ last_version_id }}',
+'{{ name }}',
+'{{ status }}',
+'{{ target_name }}',
+'{{ update_time }}',
+'{{ updated_by }}',
+'{{ workspace_info }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -542,34 +572,78 @@ workspace_info
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the deployments resource.
-    - name: deployment
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The deployment to create. \`\`initial_parent_path\`\` is required. \`\`display_name\`\`, \`\`target_name\`\`, \`\`deployment_mode\`\`, and \`\`workspace_info\`\` may be set; every other field is assigned by the service and ignored on input.
+        When the deployment was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        The user who created the deployment (email or principal name). Empty if authoritative deployment metadata does not identify a creator or the principal cannot be resolved.
+    - name: deployment_mode
+      value: "{{ deployment_mode }}"
+      description: |
+        Bundle target deployment mode (development or production).
+    - name: destroy_time
+      value: "{{ destroy_time }}"
+      description: |
+        When deletion was recorded. Unset if deletion has not been recorded. This response metadata does not determine the deployment's lifecycle status.
+    - name: destroyed_by
+      value: "{{ destroyed_by }}"
+      description: |
+        The user who destroyed the deployment (email or principal name). Unset if the deployment has not been destroyed.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        Human-readable name for the deployment, up to 256 characters.
+    - name: git_info
+      description: |
+        Git provenance of the deployment's source, derived from the latest version.
       value:
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        deployment_mode: "{{ deployment_mode }}"
-        destroy_time: "{{ destroy_time }}"
-        destroyed_by: "{{ destroyed_by }}"
-        display_name: "{{ display_name }}"
-        git_info:
-          branch: "{{ branch }}"
-          commit: "{{ commit }}"
-          origin_url: "{{ origin_url }}"
-        initial_parent_path: "{{ initial_parent_path }}"
-        last_successful_version_id: "{{ last_successful_version_id }}"
-        last_version_id: "{{ last_version_id }}"
-        name: "{{ name }}"
-        status: "{{ status }}"
-        target_name: "{{ target_name }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
-        workspace_info:
-          bundle_root_path: "{{ bundle_root_path }}"
-          file_path: "{{ file_path }}"
-          git_folder_path: "{{ git_folder_path }}"
-          root_path: "{{ root_path }}"
-          source_linked: {{ source_linked }}
+        branch: "{{ branch }}"
+        commit: "{{ commit }}"
+        origin_url: "{{ origin_url }}"
+    - name: initial_parent_path
+      value: "{{ initial_parent_path }}"
+      description: |
+        The workspace path of the existing folder where the deployment is initially created. Must be absolute and canonical, with single separators, no \`\`.\`\` or \`\`..\`\` segments, and no trailing slash unless the path is \`\`/\`\`. It may contain at most 24 path segments, excluding an optional leading \`\`/Workspace\`\` segment. The complete path may contain up to 1,024 characters, and each segment may contain up to 511 characters. This field is input only and is not returned in create, get, or list responses.
+    - name: last_successful_version_id
+      value: "{{ last_successful_version_id }}"
+      description: |
+        The version_id of the most recent version that completed successfully. Unset until a version has completed successfully. Unlike last_version_id, it is not advanced when a version fails, so it always points at the last known-good deployment state (or is unset if there has never been one).
+    - name: last_version_id
+      value: "{{ last_version_id }}"
+      description: |
+        The version_id of the most recent deployment version.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name of the deployment. Format: deployments/{deployment_id}
+    - name: status
+      value: "{{ status }}"
+      description: |
+        Current status of the deployment.
+    - name: target_name
+      value: "{{ target_name }}"
+      description: |
+        The bundle target name associated with this deployment.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        When the deployment was last updated.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        The user who most recently updated the deployment (email or principal name). Empty if authoritative deployment metadata does not identify a modifier or the principal cannot be resolved.
+    - name: workspace_info
+      description: |
+        Workspace location of the deployment.
+      value:
+        bundle_root_path: "{{ bundle_root_path }}"
+        file_path: "{{ file_path }}"
+        git_folder_path: "{{ git_folder_path }}"
+        root_path: "{{ root_path }}"
+        source_linked: {{ source_linked }}
 `}</CodeBlock>
 
 </TabItem>
@@ -591,13 +665,27 @@ Updates a deployment.
 ```sql
 UPDATE databricks_workspace.bundledeployments.deployments
 SET 
-deployment = '{{ deployment }}'
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+deployment_mode = '{{ deployment_mode }}',
+destroy_time = '{{ destroy_time }}',
+destroyed_by = '{{ destroyed_by }}',
+display_name = '{{ display_name }}',
+git_info = '{{ git_info }}',
+initial_parent_path = '{{ initial_parent_path }}',
+last_successful_version_id = '{{ last_successful_version_id }}',
+last_version_id = '{{ last_version_id }}',
+name = '{{ name }}',
+status = '{{ status }}',
+target_name = '{{ target_name }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}',
+workspace_info = '{{ workspace_info }}'
 WHERE 
 deployment_id = '{{ deployment_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND deployment = '{{ deployment }}' --required
 RETURNING
 name,
 last_successful_version_id,

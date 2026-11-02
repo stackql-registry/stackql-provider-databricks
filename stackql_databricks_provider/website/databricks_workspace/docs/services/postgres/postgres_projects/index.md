@@ -670,14 +670,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-project"><code>project</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new Lakebase Autoscaling Postgres database project, which contains branches and compute</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-project"><code>project</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the specified database project.</td>
 </tr>
@@ -831,13 +831,33 @@ Creates a new Lakebase Autoscaling Postgres database project, which contains bra
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_projects (
-project,
+create_time,
+delete_time,
+initial_branch_spec,
+initial_endpoint_spec,
+name,
+project_id,
+purge_time,
+spec,
+status,
+uid,
+update_time,
 project_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ project }}' /* required */,
+'{{ create_time }}',
+'{{ delete_time }}',
+'{{ initial_branch_spec }}',
+'{{ initial_endpoint_spec }}',
+'{{ name }}',
+'{{ project_id }}',
+'{{ purge_time }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ uid }}',
+'{{ update_time }}',
 '{{ project_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -858,65 +878,92 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_projects resource.
-    - name: project
+    - name: create_time
+      value: "{{ create_time }}"
+    - name: delete_time
+      value: "{{ delete_time }}"
       description: |
-        The Project to create.
+        A timestamp indicating when the project was soft-deleted. Empty if the project is not deleted, otherwise set to a timestamp in the past.
+    - name: initial_branch_spec
+      description: |
+        Configuration for the initial default branch created as part of project creation. Allows overriding branch protection. These settings only apply at creation time and do not affect resources created after project creation.
       value:
-        create_time: "{{ create_time }}"
-        delete_time: "{{ delete_time }}"
-        initial_branch_spec:
-          is_protected: {{ is_protected }}
-        initial_endpoint_spec:
+        is_protected: {{ is_protected }}
+    - name: initial_endpoint_spec
+      description: |
+        Configuration settings for the initial Read/Write endpoint created inside the initial branch for a newly created project. If omitted, the initial endpoint created will have default settings, without high availability configured. This field does not apply to any endpoints created after project creation. Use spec.default_endpoint_settings to configure default settings for endpoints created after project creation.
+      value:
+        autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
+        autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
+        group:
+          min: {{ min }}
+          max: {{ max }}
+          enable_readable_secondaries: {{ enable_readable_secondaries }}
+        no_suspension: {{ no_suspension }}
+        suspend_timeout_duration: "{{ suspend_timeout_duration }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The full resource path of the project. Format: projects/{project_id}
+    - name: project_id
+      value: "{{ project_id }}"
+      description: |
+        The part of the name, chosen by the user when the resource was created.
+    - name: purge_time
+      value: "{{ purge_time }}"
+      description: |
+        A timestamp indicating when the project is scheduled for permanent deletion. Empty if the project is not deleted, otherwise set to a timestamp in the future.
+    - name: spec
+      description: |
+        The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings.
+      value:
+        budget_policy_id: "{{ budget_policy_id }}"
+        custom_tags:
+          - key: "{{ key }}"
+            value: "{{ value }}"
+        default_branch: "{{ default_branch }}"
+        default_endpoint_settings:
           autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
           autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
-          group:
-            min: {{ min }}
-            max: {{ max }}
-            enable_readable_secondaries: {{ enable_readable_secondaries }}
           no_suspension: {{ no_suspension }}
+          pg_settings: "{{ pg_settings }}"
           suspend_timeout_duration: "{{ suspend_timeout_duration }}"
-        name: "{{ name }}"
+        display_name: "{{ display_name }}"
+        enable_pg_native_login: {{ enable_pg_native_login }}
+        history_retention_duration: "{{ history_retention_duration }}"
+        pg_version: {{ pg_version }}
+    - name: status
+      description: |
+        The current status of a Project.
+      value:
+        branch_logical_size_limit_bytes: {{ branch_logical_size_limit_bytes }}
+        budget_policy_id: "{{ budget_policy_id }}"
+        compute_last_active_time: "{{ compute_last_active_time }}"
+        custom_tags:
+          - key: "{{ key }}"
+            value: "{{ value }}"
+        default_branch: "{{ default_branch }}"
+        default_endpoint_settings:
+          autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
+          autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
+          no_suspension: {{ no_suspension }}
+          pg_settings: "{{ pg_settings }}"
+          suspend_timeout_duration: "{{ suspend_timeout_duration }}"
+        display_name: "{{ display_name }}"
+        enable_pg_native_login: {{ enable_pg_native_login }}
+        history_retention_duration: "{{ history_retention_duration }}"
+        owner: "{{ owner }}"
+        pg_version: {{ pg_version }}
         project_id: "{{ project_id }}"
-        purge_time: "{{ purge_time }}"
-        spec:
-          budget_policy_id: "{{ budget_policy_id }}"
-          custom_tags:
-            - key: "{{ key }}"
-              value: "{{ value }}"
-          default_branch: "{{ default_branch }}"
-          default_endpoint_settings:
-            autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
-            autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
-            no_suspension: {{ no_suspension }}
-            pg_settings: "{{ pg_settings }}"
-            suspend_timeout_duration: "{{ suspend_timeout_duration }}"
-          display_name: "{{ display_name }}"
-          enable_pg_native_login: {{ enable_pg_native_login }}
-          history_retention_duration: "{{ history_retention_duration }}"
-          pg_version: {{ pg_version }}
-        status:
-          branch_logical_size_limit_bytes: {{ branch_logical_size_limit_bytes }}
-          budget_policy_id: "{{ budget_policy_id }}"
-          compute_last_active_time: "{{ compute_last_active_time }}"
-          custom_tags:
-            - key: "{{ key }}"
-              value: "{{ value }}"
-          default_branch: "{{ default_branch }}"
-          default_endpoint_settings:
-            autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
-            autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
-            no_suspension: {{ no_suspension }}
-            pg_settings: "{{ pg_settings }}"
-            suspend_timeout_duration: "{{ suspend_timeout_duration }}"
-          display_name: "{{ display_name }}"
-          enable_pg_native_login: {{ enable_pg_native_login }}
-          history_retention_duration: "{{ history_retention_duration }}"
-          owner: "{{ owner }}"
-          pg_version: {{ pg_version }}
-          project_id: "{{ project_id }}"
-          synthetic_storage_size_bytes: {{ synthetic_storage_size_bytes }}
-        uid: "{{ uid }}"
-        update_time: "{{ update_time }}"
+        synthetic_storage_size_bytes: {{ synthetic_storage_size_bytes }}
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        System-generated unique ID for the project.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the project was last updated.
 `}</CodeBlock>
 
 </TabItem>
@@ -938,13 +985,22 @@ Updates the specified database project.
 ```sql
 UPDATE databricks_workspace.postgres.postgres_projects
 SET 
-project = '{{ project }}'
+create_time = '{{ create_time }}',
+delete_time = '{{ delete_time }}',
+initial_branch_spec = '{{ initial_branch_spec }}',
+initial_endpoint_spec = '{{ initial_endpoint_spec }}',
+name = '{{ name }}',
+project_id = '{{ project_id }}',
+purge_time = '{{ purge_time }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+uid = '{{ uid }}',
+update_time = '{{ update_time }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND project = '{{ project }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

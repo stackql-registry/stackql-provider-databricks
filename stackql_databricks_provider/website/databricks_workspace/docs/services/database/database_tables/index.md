@@ -86,7 +86,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-table"><code>table</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Create a Database Table. Useful for registering pre-existing PG tables in UC. See</td>
 </tr>
@@ -173,12 +173,16 @@ Create a Database Table. Useful for registering pre-existing PG tables in UC. Se
 
 ```sql
 INSERT INTO databricks_workspace.database.database_tables (
-table,
+name,
+database_instance_name,
+logical_database_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ table }}' /* required */,
+'{{ name }}' /* required */,
+'{{ database_instance_name }}',
+'{{ logical_database_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -199,11 +203,16 @@ logical_database_name
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the database_tables resource.
-    - name: table
-      value:
-        name: "{{ name }}"
-        database_instance_name: "{{ database_instance_name }}"
-        logical_database_name: "{{ logical_database_name }}"
+    - name: name
+      value: "{{ name }}"
+    - name: database_instance_name
+      value: "{{ database_instance_name }}"
+      description: |
+        Name of the target database instance. This is required when creating database tables in standard catalogs. This is optional when creating database tables in registered catalogs. If this field is specified when creating database tables in registered catalogs, the database instance name MUST match that of the registered catalog (or the request will be rejected).
+    - name: logical_database_name
+      value: "{{ logical_database_name }}"
+      description: |
+        Target Postgres database object (logical database) name for this table. When creating a table in a standard catalog, this field is required. In this scenario, specifying this field will allow targeting an arbitrary postgres database. Registration of database tables via /database/tables is currently only supported in standard catalogs.
 `}</CodeBlock>
 
 </TabItem>

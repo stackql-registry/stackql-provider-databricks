@@ -366,7 +366,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-version_id"><code>version_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-version"><code>version</code></a></td>
+    <td><a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-version_id"><code>version_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cli_version"><code>cli_version</code></a>, <a href="#parameter-version_type"><code>version_type</code></a></td>
     <td></td>
     <td>Creates a new version under a deployment.</td>
 </tr>
@@ -516,14 +516,46 @@ Creates a new version under a deployment.
 
 ```sql
 INSERT INTO databricks_workspace.bundledeployments.versions (
-version,
+cli_version,
+version_type,
+complete_time,
+completed_by,
+completion_reason,
+create_time,
+created_by,
+deployment_mode,
+display_name,
+git_info,
+name,
+operations,
+previous_version_id,
+status,
+target_name,
+version_id,
+workspace_info,
 deployment_id,
 version_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ version }}' /* required */,
+'{{ cli_version }}' /* required */,
+'{{ version_type }}' /* required */,
+'{{ complete_time }}',
+'{{ completed_by }}',
+'{{ completion_reason }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ deployment_mode }}',
+'{{ display_name }}',
+'{{ git_info }}',
+'{{ name }}',
+'{{ operations }}',
+'{{ previous_version_id }}',
+'{{ status }}',
+'{{ target_name }}',
+'{{ version_id }}',
+'{{ workspace_info }}',
 '{{ deployment_id }}',
 '{{ version_id }}',
 '{{ deployment_name }}',
@@ -566,37 +598,84 @@ workspace_info
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the versions resource.
-    - name: version
+    - name: cli_version
+      value: "{{ cli_version }}"
       description: |
-        The version to create.
+        CLI version used to initiate the version.
+    - name: version_type
+      value: "{{ version_type }}"
+      description: |
+        Type of version (deploy or destroy).
+    - name: complete_time
+      value: "{{ complete_time }}"
+      description: |
+        When the version completed. Unset while the version is in progress.
+    - name: completed_by
+      value: "{{ completed_by }}"
+      description: |
+        The user who completed the version (email or principal name). May differ from \`\`created_by\`\` when another user force-completes the version.
+    - name: completion_reason
+      value: "{{ completion_reason }}"
+      description: |
+        Why the version was completed. Unset while in progress. Set when status transitions to COMPLETED.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        When the version was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        The user who created the version (email or principal name).
+    - name: deployment_mode
+      value: "{{ deployment_mode }}"
+      description: |
+        Bundle target deployment mode (development or production), captured at the time of this version.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        Display name for the deployment, captured at the time of this version. Up to 256 characters. When present, creating the version updates the deployment display name. An empty value clears it; an absent value leaves the current deployment display name unchanged.
+    - name: git_info
+      description: |
+        Git provenance of the source, captured at the time of this version.
       value:
-        cli_version: "{{ cli_version }}"
-        version_type: "{{ version_type }}"
-        complete_time: "{{ complete_time }}"
-        completed_by: "{{ completed_by }}"
-        completion_reason: "{{ completion_reason }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        deployment_mode: "{{ deployment_mode }}"
-        display_name: "{{ display_name }}"
-        git_info:
-          branch: "{{ branch }}"
-          commit: "{{ commit }}"
-          origin_url: "{{ origin_url }}"
-        name: "{{ name }}"
-        operations:
-          - resource_key: "{{ resource_key }}"
-            action_type: "{{ action_type }}"
-        previous_version_id: "{{ previous_version_id }}"
-        status: "{{ status }}"
-        target_name: "{{ target_name }}"
-        version_id: "{{ version_id }}"
-        workspace_info:
-          bundle_root_path: "{{ bundle_root_path }}"
-          file_path: "{{ file_path }}"
-          git_folder_path: "{{ git_folder_path }}"
-          root_path: "{{ root_path }}"
-          source_linked: {{ source_linked }}
+        branch: "{{ branch }}"
+        commit: "{{ commit }}"
+        origin_url: "{{ origin_url }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name of the version. Format: deployments/{deployment_id}/versions/{version_id}
+    - name: operations
+      description: |
+        The full operation plan for this version: one PENDING operation per entry, recorded in the same transaction. Input only -- supplied on create and never returned by create/get/list; read the recorded operations via ListOperations.
+      value:
+        - resource_key: "{{ resource_key }}"
+          action_type: "{{ action_type }}"
+    - name: previous_version_id
+      value: "{{ previous_version_id }}"
+      description: |
+        The version_id this version was created on top of — the deployment's most recent version at creation time. Leave unset when creating the first version (the deployment has no prior versions). Set by the client on creation and immutable thereafter. Acts as an optimistic-concurrency precondition: the server requires it to equal the deployment's current most-recent version (and to be unset when the deployment has no versions) and returns \`\`INVALID_PARAMETER_VALUE\`\` on mismatch, so a deploy racing against a concurrent deploy is rejected rather than silently overwriting it.
+    - name: status
+      value: "{{ status }}"
+      description: |
+        Status of the version: IN_PROGRESS or COMPLETED.
+    - name: target_name
+      value: "{{ target_name }}"
+      description: |
+        Target name of the deployment, captured at the time of this version.
+    - name: version_id
+      value: "{{ version_id }}"
+      description: |
+        Version identifier within the parent deployment, assigned by the client on creation. A numeric string (base-10, fits in a signed 64-bit integer) that is greater than or equal to 1. Version IDs are strictly increasing within a deployment but are not required to start at 1 or to be contiguous.
+    - name: workspace_info
+      description: |
+        Workspace location of the deployment, captured at the time of this version.
+      value:
+        bundle_root_path: "{{ bundle_root_path }}"
+        file_path: "{{ file_path }}"
+        git_folder_path: "{{ git_folder_path }}"
+        root_path: "{{ root_path }}"
+        source_linked: {{ source_linked }}
 `}</CodeBlock>
 
 </TabItem>

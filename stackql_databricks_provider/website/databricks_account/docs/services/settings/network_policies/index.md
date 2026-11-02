@@ -1152,14 +1152,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create_network_policy_rpc"><CopyableCode code="create_network_policy_rpc" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-network_policy"><code>network_policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a new network policy to manage which network destinations can be accessed from the Databricks</td>
 </tr>
 <tr>
     <td><a href="#update_network_policy_rpc"><CopyableCode code="update_network_policy_rpc" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_policy_id"><code>network_policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-network_policy"><code>network_policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_policy_id"><code>network_policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates a network policy. This allows you to modify the configuration of a network policy.</td>
 </tr>
@@ -1272,12 +1272,20 @@ Creates a new network policy to manage which network destinations can be accesse
 
 ```sql
 INSERT INTO databricks_account.settings.network_policies (
-network_policy,
+account_id,
+egress,
+ingress,
+ingress_dry_run,
+network_policy_id,
 account_id,
 account_host
 )
 SELECT 
-'{{ network_policy }}' /* required */,
+'{{ account_id }}',
+'{{ egress }}',
+'{{ ingress }}',
+'{{ ingress_dry_run }}',
+'{{ network_policy_id }}',
 '{{ account_id }}',
 '{{ account_host }}'
 RETURNING
@@ -1300,263 +1308,432 @@ ingress_dry_run
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the network_policies resource.
-    - name: network_policy
+    - name: account_id
+      value: "{{ account_id }}"
+    - name: egress
       description: |
-        Network policy configuration details.
+        The network policies applying for egress traffic.
       value:
-        account_id: "{{ account_id }}"
-        egress:
-          network_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allowed_databricks_destinations:
-              - workspace_ids: "{{ workspace_ids }}"
-            allowed_internet_destinations:
-              - destination: "{{ destination }}"
-                internet_destination_type: "{{ internet_destination_type }}"
-            allowed_storage_destinations:
-              - azure_storage_account: "{{ azure_storage_account }}"
-                azure_storage_service: "{{ azure_storage_service }}"
-                bucket_name: "{{ bucket_name }}"
-                region: "{{ region }}"
-                storage_destination_type: "{{ storage_destination_type }}"
-            blocked_internet_destinations:
-              - destination: "{{ destination }}"
-                internet_destination_type: "{{ internet_destination_type }}"
-            policy_enforcement:
-              dry_run_mode_product_filter:
-                - "{{ dry_run_mode_product_filter }}"
-              enforcement_mode: "{{ enforcement_mode }}"
-        ingress:
-          cross_workspace_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allow_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+        network_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allowed_databricks_destinations:
+            - workspace_ids: "{{ workspace_ids }}"
+          allowed_internet_destinations:
+            - destination: "{{ destination }}"
+              internet_destination_type: "{{ internet_destination_type }}"
+          allowed_storage_destinations:
+            - azure_storage_account: "{{ azure_storage_account }}"
+              azure_storage_service: "{{ azure_storage_service }}"
+              bucket_name: "{{ bucket_name }}"
+              region: "{{ region }}"
+              storage_destination_type: "{{ storage_destination_type }}"
+          blocked_internet_destinations:
+            - destination: "{{ destination }}"
+              internet_destination_type: "{{ internet_destination_type }}"
+          policy_enforcement:
+            dry_run_mode_product_filter:
+              - "{{ dry_run_mode_product_filter }}"
+            enforcement_mode: "{{ enforcement_mode }}"
+    - name: ingress
+      description: |
+        The network policies applying for ingress traffic.
+      value:
+        cross_workspace_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allow_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_source_workspaces: {{ all_source_workspaces }}
-                  selected_workspaces: "{{ selected_workspaces }}"
-            deny_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                account_ui:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_source_workspaces: {{ all_source_workspaces }}
-                  selected_workspaces: "{{ selected_workspaces }}"
-          private_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allow_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_private_access: {{ all_private_access }}
-                  all_registered_endpoints: {{ all_registered_endpoints }}
-                  azure_workspace_private_link: {{ azure_workspace_private_link }}
-                  endpoints: "{{ endpoints }}"
-            deny_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                lakebase_runtime:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_private_access: {{ all_private_access }}
-                  all_registered_endpoints: {{ all_registered_endpoints }}
-                  azure_workspace_private_link: {{ azure_workspace_private_link }}
-                  endpoints: "{{ endpoints }}"
-          public_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allow_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_ip_ranges: {{ all_ip_ranges }}
-                  excluded_ip_ranges: "{{ excluded_ip_ranges }}"
-                  included_ip_ranges: "{{ included_ip_ranges }}"
-            deny_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+              label: "{{ label }}"
+              origin:
+                all_source_workspaces: {{ all_source_workspaces }}
+                selected_workspaces:
+                  workspace_ids: "{{ workspace_ids }}"
+          deny_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_ip_ranges: {{ all_ip_ranges }}
-                  excluded_ip_ranges: "{{ excluded_ip_ranges }}"
-                  included_ip_ranges: "{{ included_ip_ranges }}"
-        ingress_dry_run:
-          cross_workspace_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allow_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                account_ui:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_source_workspaces: {{ all_source_workspaces }}
-                  selected_workspaces: "{{ selected_workspaces }}"
-            deny_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_source_workspaces: {{ all_source_workspaces }}
-                  selected_workspaces: "{{ selected_workspaces }}"
-          private_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allow_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                lakebase_runtime:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_private_access: {{ all_private_access }}
-                  all_registered_endpoints: {{ all_registered_endpoints }}
-                  azure_workspace_private_link: {{ azure_workspace_private_link }}
-                  endpoints: "{{ endpoints }}"
-            deny_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_private_access: {{ all_private_access }}
-                  all_registered_endpoints: {{ all_registered_endpoints }}
-                  azure_workspace_private_link: {{ azure_workspace_private_link }}
-                  endpoints: "{{ endpoints }}"
-          public_access:
-            restriction_mode: "{{ restriction_mode }}"
-            allow_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+              label: "{{ label }}"
+              origin:
+                all_source_workspaces: {{ all_source_workspaces }}
+                selected_workspaces:
+                  workspace_ids: "{{ workspace_ids }}"
+        private_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allow_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_ip_ranges: {{ all_ip_ranges }}
-                  excluded_ip_ranges: "{{ excluded_ip_ranges }}"
-                  included_ip_ranges: "{{ included_ip_ranges }}"
-            deny_rules:
-              - authentication:
-                  identities: "{{ identities }}"
-                  identity_type: "{{ identity_type }}"
-                destination:
-                  account_api: "{{ account_api }}"
-                  account_databricks_one: "{{ account_databricks_one }}"
-                  account_ui: "{{ account_ui }}"
+                account_ui:
                   all_destinations: {{ all_destinations }}
-                  apps_runtime: "{{ apps_runtime }}"
-                  lakebase_runtime: "{{ lakebase_runtime }}"
-                  workspace_api: "{{ workspace_api }}"
-                  workspace_ui: "{{ workspace_ui }}"
-                label: "{{ label }}"
-                origin:
-                  all_ip_ranges: {{ all_ip_ranges }}
-                  excluded_ip_ranges: "{{ excluded_ip_ranges }}"
-                  included_ip_ranges: "{{ included_ip_ranges }}"
-        network_policy_id: "{{ network_policy_id }}"
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_private_access: {{ all_private_access }}
+                all_registered_endpoints: {{ all_registered_endpoints }}
+                azure_workspace_private_link: {{ azure_workspace_private_link }}
+                endpoints:
+                  endpoint_ids: "{{ endpoint_ids }}"
+          deny_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_private_access: {{ all_private_access }}
+                all_registered_endpoints: {{ all_registered_endpoints }}
+                azure_workspace_private_link: {{ azure_workspace_private_link }}
+                endpoints:
+                  endpoint_ids: "{{ endpoint_ids }}"
+        public_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allow_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_ip_ranges: {{ all_ip_ranges }}
+                excluded_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+                included_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+          deny_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_ip_ranges: {{ all_ip_ranges }}
+                excluded_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+                included_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+    - name: ingress_dry_run
+      description: |
+        The ingress policy for dry run mode. Dry run will always run even if the request is allowed by the ingress policy. When this field is set, the policy will be evaluated and emit logs only without blocking requests.
+      value:
+        cross_workspace_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allow_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_source_workspaces: {{ all_source_workspaces }}
+                selected_workspaces:
+                  workspace_ids: "{{ workspace_ids }}"
+          deny_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_source_workspaces: {{ all_source_workspaces }}
+                selected_workspaces:
+                  workspace_ids: "{{ workspace_ids }}"
+        private_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allow_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_private_access: {{ all_private_access }}
+                all_registered_endpoints: {{ all_registered_endpoints }}
+                azure_workspace_private_link: {{ azure_workspace_private_link }}
+                endpoints:
+                  endpoint_ids: "{{ endpoint_ids }}"
+          deny_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_private_access: {{ all_private_access }}
+                all_registered_endpoints: {{ all_registered_endpoints }}
+                azure_workspace_private_link: {{ azure_workspace_private_link }}
+                endpoints:
+                  endpoint_ids: "{{ endpoint_ids }}"
+        public_access:
+          restriction_mode: "{{ restriction_mode }}"
+          allow_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_ip_ranges: {{ all_ip_ranges }}
+                excluded_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+                included_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+          deny_rules:
+            - authentication:
+                identities:
+                  - principal_id: {{ principal_id }}
+                    principal_type: "{{ principal_type }}"
+                identity_type: "{{ identity_type }}"
+              destination:
+                account_api:
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                account_databricks_one:
+                  all_destinations: {{ all_destinations }}
+                account_ui:
+                  all_destinations: {{ all_destinations }}
+                all_destinations: {{ all_destinations }}
+                apps_runtime:
+                  all_destinations: {{ all_destinations }}
+                lakebase_runtime:
+                  all_destinations: {{ all_destinations }}
+                workspace_api:
+                  excluded_scopes: "{{ excluded_scopes }}"
+                  scope_qualifier: "{{ scope_qualifier }}"
+                  scopes: "{{ scopes }}"
+                workspace_ui:
+                  all_destinations: {{ all_destinations }}
+              label: "{{ label }}"
+              origin:
+                all_ip_ranges: {{ all_ip_ranges }}
+                excluded_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+                included_ip_ranges:
+                  ip_ranges: "{{ ip_ranges }}"
+    - name: network_policy_id
+      value: "{{ network_policy_id }}"
+      description: |
+        The unique identifier for the network policy.
 `}</CodeBlock>
 
 </TabItem>
@@ -1578,12 +1755,15 @@ Updates a network policy. This allows you to modify the configuration of a netwo
 ```sql
 REPLACE databricks_account.settings.network_policies
 SET 
-network_policy = '{{ network_policy }}'
+account_id = '{{ account_id }}',
+egress = '{{ egress }}',
+ingress = '{{ ingress }}',
+ingress_dry_run = '{{ ingress_dry_run }}',
+network_policy_id = '{{ network_policy_id }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND network_policy_id = '{{ network_policy_id }}' --required
 AND account_host = '{{ account_host }}' --required
-AND network_policy = '{{ network_policy }}' --required
 RETURNING
 account_id,
 network_policy_id,

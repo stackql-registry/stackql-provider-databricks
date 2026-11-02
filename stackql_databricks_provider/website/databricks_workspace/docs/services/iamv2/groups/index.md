@@ -124,14 +124,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a local group in the Databricks account that parents the calling workspace and returns the</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates an existing group in the Databricks account that parents the calling workspace. Only the</td>
 </tr>
@@ -266,12 +266,18 @@ Creates a local group in the Databricks account that parents the calling workspa
 
 ```sql
 INSERT INTO databricks_workspace.iamv2.groups (
-group,
+account_id,
+external_id,
+group_id,
+group_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ group }}' /* required */,
+'{{ account_id }}',
+'{{ external_id }}',
+'{{ group_id }}',
+'{{ group_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -293,14 +299,22 @@ group_name
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the groups resource.
-    - name: group
+    - name: account_id
+      value: "{{ account_id }}"
       description: |
-        Required. Group to be created in Databricks
-      value:
-        account_id: "{{ account_id }}"
-        external_id: "{{ external_id }}"
-        group_id: "{{ group_id }}"
-        group_name: "{{ group_name }}"
+        The parent account ID for group in Databricks.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        ExternalId of the group in the customer's IdP.
+    - name: group_id
+      value: "{{ group_id }}"
+      description: |
+        Internal group ID of the group in Databricks.
+    - name: group_name
+      value: "{{ group_name }}"
+      description: |
+        Display name of the group.
 `}</CodeBlock>
 
 </TabItem>
@@ -322,13 +336,15 @@ Updates an existing group in the Databricks account that parents the calling wor
 ```sql
 UPDATE databricks_workspace.iamv2.groups
 SET 
-group = '{{ group }}'
+account_id = '{{ account_id }}',
+external_id = '{{ external_id }}',
+group_id = '{{ group_id }}',
+group_name = '{{ group_name }}'
 WHERE 
 group_id = '{{ group_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND group = '{{ group }}' --required
 RETURNING
 account_id,
 external_id,

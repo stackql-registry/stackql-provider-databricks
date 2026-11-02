@@ -512,14 +512,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-endpoint_id"><code>endpoint_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-endpoint"><code>endpoint</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-endpoint_id"><code>endpoint_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-replace_existing"><code>replace_existing</code></a></td>
     <td>Creates a new compute endpoint in the branch.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-endpoint_id"><code>endpoint_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-endpoint"><code>endpoint</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-endpoint_id"><code>endpoint_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the specified compute endpoint. You can update autoscaling limits, suspend timeout, or</td>
 </tr>
@@ -668,7 +668,14 @@ Creates a new compute endpoint in the branch.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_endpoints (
-endpoint,
+create_time,
+endpoint_id,
+name,
+parent,
+spec,
+status,
+uid,
+update_time,
 project_id,
 branch_id,
 endpoint_id,
@@ -677,7 +684,14 @@ workspace_domain,
 replace_existing
 )
 SELECT 
-'{{ endpoint }}' /* required */,
+'{{ create_time }}',
+'{{ endpoint_id }}',
+'{{ name }}',
+'{{ parent }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ uid }}',
+'{{ update_time }}',
 '{{ project_id }}',
 '{{ branch_id }}',
 '{{ endpoint_id }}',
@@ -707,50 +721,68 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_endpoints resource.
-    - name: endpoint
+    - name: create_time
+      value: "{{ create_time }}"
+    - name: endpoint_id
+      value: "{{ endpoint_id }}"
       description: |
-        The Endpoint to create.
+        The part of the name, chosen by the user when the resource was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The full resource path of the endpoint. Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
+    - name: parent
+      value: "{{ parent }}"
+      description: |
+        The branch containing this endpoint (API resource hierarchy). Format: projects/{project_id}/branches/{branch_id}
+    - name: spec
+      description: |
+        The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state.
       value:
-        create_time: "{{ create_time }}"
+        endpoint_type: "{{ endpoint_type }}"
+        autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
+        autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
+        disabled: {{ disabled }}
+        group:
+          min: {{ min }}
+          max: {{ max }}
+          enable_readable_secondaries: {{ enable_readable_secondaries }}
+        no_suspension: {{ no_suspension }}
+        settings:
+          pg_settings: "{{ pg_settings }}"
+        suspend_timeout_duration: "{{ suspend_timeout_duration }}"
+    - name: status
+      description: |
+        Current operational status of the compute endpoint.
+      value:
+        autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
+        autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
+        current_state: "{{ current_state }}"
+        disabled: {{ disabled }}
         endpoint_id: "{{ endpoint_id }}"
-        name: "{{ name }}"
-        parent: "{{ parent }}"
-        spec:
-          endpoint_type: "{{ endpoint_type }}"
-          autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
-          autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
-          disabled: {{ disabled }}
-          group:
-            min: {{ min }}
-            max: {{ max }}
-            enable_readable_secondaries: {{ enable_readable_secondaries }}
-          no_suspension: {{ no_suspension }}
-          settings:
-            pg_settings: "{{ pg_settings }}"
-          suspend_timeout_duration: "{{ suspend_timeout_duration }}"
-        status:
-          autoscaling_limit_max_cu: {{ autoscaling_limit_max_cu }}
-          autoscaling_limit_min_cu: {{ autoscaling_limit_min_cu }}
-          current_state: "{{ current_state }}"
-          disabled: {{ disabled }}
-          endpoint_id: "{{ endpoint_id }}"
-          endpoint_type: "{{ endpoint_type }}"
-          group:
-            min: {{ min }}
-            max: {{ max }}
-            enable_readable_secondaries: {{ enable_readable_secondaries }}
-          hosts:
-            host: "{{ host }}"
-            read_only_host: "{{ read_only_host }}"
-            read_only_pooled_host: "{{ read_only_pooled_host }}"
-            read_write_pooled_host: "{{ read_write_pooled_host }}"
-          last_active_time: "{{ last_active_time }}"
-          pending_state: "{{ pending_state }}"
-          settings:
-            pg_settings: "{{ pg_settings }}"
-          suspend_timeout_duration: "{{ suspend_timeout_duration }}"
-        uid: "{{ uid }}"
-        update_time: "{{ update_time }}"
+        endpoint_type: "{{ endpoint_type }}"
+        group:
+          min: {{ min }}
+          max: {{ max }}
+          enable_readable_secondaries: {{ enable_readable_secondaries }}
+        hosts:
+          host: "{{ host }}"
+          read_only_host: "{{ read_only_host }}"
+          read_only_pooled_host: "{{ read_only_pooled_host }}"
+          read_write_pooled_host: "{{ read_write_pooled_host }}"
+        last_active_time: "{{ last_active_time }}"
+        pending_state: "{{ pending_state }}"
+        settings:
+          pg_settings: "{{ pg_settings }}"
+        suspend_timeout_duration: "{{ suspend_timeout_duration }}"
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        System-generated unique ID for the endpoint.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the compute endpoint was last updated.
     - name: replace_existing
       value: {{ replace_existing }}
       description: If true, update the endpoint if it already exists instead of returning an error.
@@ -776,15 +808,21 @@ Updates the specified compute endpoint. You can update autoscaling limits, suspe
 ```sql
 UPDATE databricks_workspace.postgres.postgres_endpoints
 SET 
-endpoint = '{{ endpoint }}'
+create_time = '{{ create_time }}',
+endpoint_id = '{{ endpoint_id }}',
+name = '{{ name }}',
+parent = '{{ parent }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+uid = '{{ uid }}',
+update_time = '{{ update_time }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND branch_id = '{{ branch_id }}' --required
 AND endpoint_id = '{{ endpoint_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND endpoint = '{{ endpoint }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

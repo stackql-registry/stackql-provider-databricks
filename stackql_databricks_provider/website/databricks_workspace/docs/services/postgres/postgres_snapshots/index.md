@@ -262,7 +262,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-snapshot_id"><code>snapshot_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-snapshot"><code>snapshot</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-snapshot_id"><code>snapshot_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a snapshot, an immutable point-in-time copy of a branch's data, within the project.</td>
 </tr>
@@ -390,14 +390,24 @@ Creates a snapshot, an immutable point-in-time copy of a branch's data, within t
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_snapshots (
-snapshot,
+create_time,
+name,
+snapshot_id,
+spec,
+status,
+uid,
 project_id,
 snapshot_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ snapshot }}' /* required */,
+'{{ create_time }}',
+'{{ name }}',
+'{{ snapshot_id }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ uid }}',
 '{{ project_id }}',
 '{{ snapshot_id }}',
 '{{ deployment_name }}',
@@ -422,27 +432,41 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_snapshots resource.
-    - name: snapshot
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The snapshot to create.
+        When the snapshot was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the snapshot. Format: projects/{project_id}/snapshots/{snapshot_id}
+    - name: snapshot_id
+      value: "{{ snapshot_id }}"
+      description: |
+        The user-chosen ID; the final segment of \`\`name\`\`.
+    - name: spec
+      description: |
+        Client-provided configuration of the snapshot.
       value:
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        snapshot_id: "{{ snapshot_id }}"
-        spec:
-          source_branch: "{{ source_branch }}"
-          expire_time: "{{ expire_time }}"
-          no_expiry: {{ no_expiry }}
-          source_branch_lsn: "{{ source_branch_lsn }}"
-          source_branch_time: "{{ source_branch_time }}"
-          ttl: "{{ ttl }}"
-        status:
-          diff_size_bytes: {{ diff_size_bytes }}
-          expire_time: "{{ expire_time }}"
-          full_size_bytes: {{ full_size_bytes }}
-          no_expiry: {{ no_expiry }}
-          source_branch: "{{ source_branch }}"
-        uid: "{{ uid }}"
+        source_branch: "{{ source_branch }}"
+        expire_time: "{{ expire_time }}"
+        no_expiry: {{ no_expiry }}
+        source_branch_lsn: "{{ source_branch_lsn }}"
+        source_branch_time: "{{ source_branch_time }}"
+        ttl: "{{ ttl }}"
+    - name: status
+      description: |
+        Server-observed state of the snapshot.
+      value:
+        diff_size_bytes: {{ diff_size_bytes }}
+        expire_time: "{{ expire_time }}"
+        full_size_bytes: {{ full_size_bytes }}
+        no_expiry: {{ no_expiry }}
+        source_branch: "{{ source_branch }}"
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        Unique system-generated ID for the snapshot.
 `}</CodeBlock>
 
 </TabItem>

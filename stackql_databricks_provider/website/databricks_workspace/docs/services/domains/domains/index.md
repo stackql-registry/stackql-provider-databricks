@@ -238,14 +238,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-domain"><code>domain</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td><a href="#parameter-domain_id"><code>domain_id</code></a></td>
     <td>Create a domain. If ``domain_id`` is omitted, the server generates one.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-domain_id"><code>domain_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-domain"><code>domain</code></a></td>
+    <td><a href="#parameter-domain_id"><code>domain_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Update a domain. ``update_mask`` selects which fields to modify; the domain is identified by its</td>
 </tr>
@@ -401,13 +401,37 @@ Create a domain. If ``domain_id`` is omitted, the server generates one.
 
 ```sql
 INSERT INTO databricks_workspace.domains.domains (
-domain,
+tag_key,
+business_owner_ids,
+create_time,
+description,
+domain_id,
+draft,
+effective_draft,
+icon,
+name,
+parent_domain_id,
+subtitle,
+technical_owner_ids,
+update_time,
 deployment_name,
 workspace_domain,
 domain_id
 )
 SELECT 
-'{{ domain }}' /* required */,
+'{{ tag_key }}' /* required */,
+'{{ business_owner_ids }}',
+'{{ create_time }}',
+'{{ description }}',
+'{{ domain_id }}',
+{{ draft }},
+{{ effective_draft }},
+'{{ icon }}',
+'{{ name }}',
+'{{ parent_domain_id }}',
+'{{ subtitle }}',
+'{{ technical_owner_ids }}',
+'{{ update_time }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
 '{{ domain_id }}'
@@ -439,25 +463,60 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the domains resource.
-    - name: domain
+    - name: tag_key
+      value: "{{ tag_key }}"
+    - name: business_owner_ids
       value:
-        tag_key: "{{ tag_key }}"
-        business_owner_ids:
-          - {{ business_owner_ids }}
-        create_time: "{{ create_time }}"
-        description: "{{ description }}"
-        domain_id: "{{ domain_id }}"
-        draft: {{ draft }}
-        effective_draft: {{ effective_draft }}
-        icon:
-          color: "{{ color }}"
-          name: "{{ name }}"
+        - {{ business_owner_ids }}
+      description: |
+        Principal IDs of the business owners (users, groups, or service principals).
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Timestamp when the domain was created.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Full description (max 4096 chars)
+    - name: domain_id
+      value: "{{ domain_id }}"
+      description: |
+        Unique identifier for the domain. If omitted at Create, the server generates one.
+    - name: draft
+      value: {{ draft }}
+      description: |
+        Whether to mark the domain as a draft. If omitted on Create, the server applies a default; the resolved value is returned in \`\`effective_draft\`\`.
+    - name: effective_draft
+      value: {{ effective_draft }}
+      description: |
+        Resolved draft state of the domain.
+    - name: icon
+      description: |
+        Icon to display for the domain.
+      value:
+        color: "{{ color }}"
         name: "{{ name }}"
-        parent_domain_id: "{{ parent_domain_id }}"
-        subtitle: "{{ subtitle }}"
-        technical_owner_ids:
-          - {{ technical_owner_ids }}
-        update_time: "{{ update_time }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Full resource name of the domain. The primary identifier for this resource. Format: \`\`domains/{domain_id}\`\` Identifies the domain on get, update, and delete. Not an input on create — to choose the id, set \`\`CreateDomainRequest.domain_id\`\`.
+    - name: parent_domain_id
+      value: "{{ parent_domain_id }}"
+      description: |
+        Domain ID of the parent. If absent, this is a top-level domain. If present, this domain is a subdomain of the specified parent.
+    - name: subtitle
+      value: "{{ subtitle }}"
+      description: |
+        Short description (max 280 chars)
+    - name: technical_owner_ids
+      value:
+        - {{ technical_owner_ids }}
+      description: |
+        Principal IDs of the technical owners (users, groups, or service principals).
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Timestamp when the domain was last updated.
     - name: domain_id
       value: "{{ domain_id }}"
       description: Client-supplied resource ID for the new domain. If omitted, the server generates one.
@@ -483,13 +542,25 @@ Update a domain. ``update_mask`` selects which fields to modify; the domain is i
 ```sql
 UPDATE databricks_workspace.domains.domains
 SET 
-domain = '{{ domain }}'
+tag_key = '{{ tag_key }}',
+business_owner_ids = '{{ business_owner_ids }}',
+create_time = '{{ create_time }}',
+description = '{{ description }}',
+domain_id = '{{ domain_id }}',
+draft = {{ draft }},
+effective_draft = {{ effective_draft }},
+icon = '{{ icon }}',
+name = '{{ name }}',
+parent_domain_id = '{{ parent_domain_id }}',
+subtitle = '{{ subtitle }}',
+technical_owner_ids = '{{ technical_owner_ids }}',
+update_time = '{{ update_time }}'
 WHERE 
 domain_id = '{{ domain_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND domain = '{{ domain }}' --required
+AND tag_key = '{{ tag_key }}' --required
 RETURNING
 name,
 domain_id,

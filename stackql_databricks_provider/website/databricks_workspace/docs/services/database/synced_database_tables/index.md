@@ -766,14 +766,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-synced_table"><code>synced_table</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Create a Synced Database Table.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-synced_table"><code>synced_table</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>This API is currently unimplemented, but exposed for Terraform support.</td>
 </tr>
@@ -914,12 +914,26 @@ Create a Synced Database Table.
 
 ```sql
 INSERT INTO databricks_workspace.database.synced_database_tables (
-synced_table,
+name,
+data_synchronization_status,
+database_instance_name,
+effective_database_instance_name,
+effective_logical_database_name,
+logical_database_name,
+spec,
+unity_catalog_provisioning_state,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ synced_table }}' /* required */,
+'{{ name }}' /* required */,
+'{{ data_synchronization_status }}',
+'{{ database_instance_name }}',
+'{{ effective_database_instance_name }}',
+'{{ effective_logical_database_name }}',
+'{{ logical_database_name }}',
+'{{ spec }}',
+'{{ unity_catalog_provisioning_state }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -945,72 +959,92 @@ unity_catalog_provisioning_state
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the synced_database_tables resource.
-    - name: synced_table
+    - name: name
+      value: "{{ name }}"
+    - name: data_synchronization_status
+      description: |
+        Synced Table data synchronization status
       value:
-        name: "{{ name }}"
-        data_synchronization_status:
-          continuous_update_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              provisioning_phase: "{{ provisioning_phase }}"
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          detailed_state: "{{ detailed_state }}"
-          failed_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          last_sync:
-            delta_table_sync_info:
-              delta_commit_timestamp: "{{ delta_commit_timestamp }}"
-              delta_commit_version: {{ delta_commit_version }}
-            sync_end_timestamp: "{{ sync_end_timestamp }}"
-            sync_start_timestamp: "{{ sync_start_timestamp }}"
-          message: "{{ message }}"
-          pipeline_id: "{{ pipeline_id }}"
-          provisioning_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              provisioning_phase: "{{ provisioning_phase }}"
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-          triggered_update_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-            triggered_update_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              provisioning_phase: "{{ provisioning_phase }}"
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-        database_instance_name: "{{ database_instance_name }}"
-        effective_database_instance_name: "{{ effective_database_instance_name }}"
-        effective_logical_database_name: "{{ effective_logical_database_name }}"
-        logical_database_name: "{{ logical_database_name }}"
-        spec:
-          accelerated_sync: {{ accelerated_sync }}
-          create_database_objects_if_missing: {{ create_database_objects_if_missing }}
-          existing_pipeline_id: "{{ existing_pipeline_id }}"
-          new_pipeline_spec:
-            budget_policy_id: "{{ budget_policy_id }}"
-            storage_catalog: "{{ storage_catalog }}"
-            storage_schema: "{{ storage_schema }}"
-          primary_key_columns:
-            - "{{ primary_key_columns }}"
-          scheduling_policy: "{{ scheduling_policy }}"
-          source_table_full_name: "{{ source_table_full_name }}"
-          timeseries_key: "{{ timeseries_key }}"
-          type_overrides:
-            - column_name: "{{ column_name }}"
-              pg_type: "{{ pg_type }}"
-              size: {{ size }}
-        unity_catalog_provisioning_state: "{{ unity_catalog_provisioning_state }}"
+        continuous_update_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            provisioning_phase: "{{ provisioning_phase }}"
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        detailed_state: "{{ detailed_state }}"
+        failed_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        last_sync:
+          delta_table_sync_info:
+            delta_commit_timestamp: "{{ delta_commit_timestamp }}"
+            delta_commit_version: {{ delta_commit_version }}
+          sync_end_timestamp: "{{ sync_end_timestamp }}"
+          sync_start_timestamp: "{{ sync_start_timestamp }}"
+        message: "{{ message }}"
+        pipeline_id: "{{ pipeline_id }}"
+        provisioning_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            provisioning_phase: "{{ provisioning_phase }}"
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+        triggered_update_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+          triggered_update_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            provisioning_phase: "{{ provisioning_phase }}"
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+    - name: database_instance_name
+      value: "{{ database_instance_name }}"
+      description: |
+        Name of the target database instance. This is required when creating synced database tables in standard catalogs. This is optional when creating synced database tables in registered catalogs. If this field is specified when creating synced database tables in registered catalogs, the database instance name MUST match that of the registered catalog (or the request will be rejected).
+    - name: effective_database_instance_name
+      value: "{{ effective_database_instance_name }}"
+      description: |
+        The name of the database instance that this table is registered to. This field is always returned, and for tables inside database catalogs is inferred database instance associated with the catalog. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_logical_database_name
+      value: "{{ effective_logical_database_name }}"
+      description: |
+        The name of the logical database that this table is registered to. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: logical_database_name
+      value: "{{ logical_database_name }}"
+      description: |
+        Target Postgres database object (logical database) name for this table. When creating a synced table in a registered Postgres catalog, the target Postgres database name is inferred to be that of the registered catalog. If this field is specified in this scenario, the Postgres database name MUST match that of the registered catalog (or the request will be rejected). When creating a synced table in a standard catalog, this field is required. In this scenario, specifying this field will allow targeting an arbitrary postgres database. Note that this has implications for the \`\`create_database_objects_is_missing\`\` field in \`\`spec\`\`.
+    - name: spec
+      description: |
+        Specification of a synced database table.
+      value:
+        accelerated_sync: {{ accelerated_sync }}
+        create_database_objects_if_missing: {{ create_database_objects_if_missing }}
+        existing_pipeline_id: "{{ existing_pipeline_id }}"
+        new_pipeline_spec:
+          budget_policy_id: "{{ budget_policy_id }}"
+          storage_catalog: "{{ storage_catalog }}"
+          storage_schema: "{{ storage_schema }}"
+        primary_key_columns:
+          - "{{ primary_key_columns }}"
+        scheduling_policy: "{{ scheduling_policy }}"
+        source_table_full_name: "{{ source_table_full_name }}"
+        timeseries_key: "{{ timeseries_key }}"
+        type_overrides:
+          - column_name: "{{ column_name }}"
+            pg_type: "{{ pg_type }}"
+            size: {{ size }}
+    - name: unity_catalog_provisioning_state
+      value: "{{ unity_catalog_provisioning_state }}"
+      description: |
+        The provisioning state of the synced table entity in Unity Catalog. This is distinct from the state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it runs asynchronously).
 `}</CodeBlock>
 
 </TabItem>
@@ -1032,13 +1066,20 @@ This API is currently unimplemented, but exposed for Terraform support.
 ```sql
 UPDATE databricks_workspace.database.synced_database_tables
 SET 
-synced_table = '{{ synced_table }}'
+name = '{{ name }}',
+data_synchronization_status = '{{ data_synchronization_status }}',
+database_instance_name = '{{ database_instance_name }}',
+effective_database_instance_name = '{{ effective_database_instance_name }}',
+effective_logical_database_name = '{{ effective_logical_database_name }}',
+logical_database_name = '{{ logical_database_name }}',
+spec = '{{ spec }}',
+unity_catalog_provisioning_state = '{{ unity_catalog_provisioning_state }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND synced_table = '{{ synced_table }}' --required
+AND name = '{{ name }}' --required
 RETURNING
 name,
 database_instance_name,

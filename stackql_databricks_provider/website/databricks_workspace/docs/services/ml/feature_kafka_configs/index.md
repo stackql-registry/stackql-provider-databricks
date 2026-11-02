@@ -758,14 +758,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-kafka_config"><code>kafka_config</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-bootstrap_servers"><code>bootstrap_servers</code></a>, <a href="#parameter-subscription_mode"><code>subscription_mode</code></a>, <a href="#parameter-auth_config"><code>auth_config</code></a></td>
     <td></td>
     <td>Create a Kafka config. During PrPr, Kafka configs can be read and used when creating features under</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-kafka_config"><code>kafka_config</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-bootstrap_servers"><code>bootstrap_servers</code></a>, <a href="#parameter-subscription_mode"><code>subscription_mode</code></a>, <a href="#parameter-auth_config"><code>auth_config</code></a></td>
     <td></td>
     <td>Update a Kafka config. During PrPr, Kafka configs can be read and used when creating features under</td>
 </tr>
@@ -897,12 +897,28 @@ Create a Kafka config. During PrPr, Kafka configs can be read and used when crea
 
 ```sql
 INSERT INTO databricks_workspace.ml.feature_kafka_configs (
-kafka_config,
+name,
+bootstrap_servers,
+subscription_mode,
+auth_config,
+backfill_source,
+extra_options,
+ingestion_config,
+key_schema,
+value_schema,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ kafka_config }}' /* required */,
+'{{ name }}' /* required */,
+'{{ bootstrap_servers }}' /* required */,
+'{{ subscription_mode }}' /* required */,
+'{{ auth_config }}' /* required */,
+'{{ backfill_source }}',
+'{{ extra_options }}',
+'{{ ingestion_config }}',
+'{{ key_schema }}',
+'{{ value_schema }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -929,29 +945,61 @@ value_schema
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the feature_kafka_configs resource.
-    - name: kafka_config
+    - name: name
+      value: "{{ name }}"
+    - name: bootstrap_servers
+      value: "{{ bootstrap_servers }}"
+      description: |
+        A comma-separated list of host/port pairs pointing to Kafka cluster.
+    - name: subscription_mode
+      description: |
+        Options to configure which Kafka topics to pull data from.
       value:
-        name: "{{ name }}"
-        bootstrap_servers: "{{ bootstrap_servers }}"
-        subscription_mode:
-          assign: "{{ assign }}"
-          subscribe: "{{ subscribe }}"
-          subscribe_pattern: "{{ subscribe_pattern }}"
-        auth_config:
-          mtls_config:
-            keystore_location: "{{ keystore_location }}"
-            keystore_password_ref:
-              scope: "{{ scope }}"
-              key: "{{ key }}"
-            key_password_ref:
-              scope: "{{ scope }}"
-              key: "{{ key }}"
-            truststore_location: "{{ truststore_location }}"
-            truststore_password_ref:
-              scope: "{{ scope }}"
-              key: "{{ key }}"
-            disable_hostname_verification: {{ disable_hostname_verification }}
-          uc_service_credential_name: "{{ uc_service_credential_name }}"
+        assign: "{{ assign }}"
+        subscribe: "{{ subscribe }}"
+        subscribe_pattern: "{{ subscribe_pattern }}"
+    - name: auth_config
+      description: |
+        Authentication configuration for connection to topics.
+      value:
+        mtls_config:
+          keystore_location: "{{ keystore_location }}"
+          keystore_password_ref:
+            scope: "{{ scope }}"
+            key: "{{ key }}"
+          key_password_ref:
+            scope: "{{ scope }}"
+            key: "{{ key }}"
+          truststore_location: "{{ truststore_location }}"
+          truststore_password_ref:
+            scope: "{{ scope }}"
+            key: "{{ key }}"
+          disable_hostname_verification: {{ disable_hostname_verification }}
+        uc_service_credential_name: "{{ uc_service_credential_name }}"
+    - name: backfill_source
+      description: |
+        A user-provided and managed source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Kafka config. In the future, a separate table will be maintained by Databricks for forward filling data. The schema for this source must match exactly that of the key and value schemas specified for this Kafka config.
+      value:
+        delta_table_name: "{{ delta_table_name }}"
+        delta_table_source:
+          full_name: "{{ full_name }}"
+          dataframe_schema: "{{ dataframe_schema }}"
+          entity_columns:
+            - "{{ entity_columns }}"
+          filter_condition: "{{ filter_condition }}"
+          timeseries_column: "{{ timeseries_column }}"
+          transformation_sql: "{{ transformation_sql }}"
+    - name: extra_options
+      value: "{{ extra_options }}"
+      description: |
+        Catch-all for miscellaneous options. Keys should be source options or Kafka consumer options (kafka.*)
+    - name: ingestion_config
+      description: |
+        Configuration for ingesting Kafka data into a Databricks-managed Delta table.
+      value:
+        ingestion_destination:
+          delta_table_name: "{{ delta_table_name }}"
+        backfill_job_id: {{ backfill_job_id }}
         backfill_source:
           delta_table_name: "{{ delta_table_name }}"
           delta_table_source:
@@ -962,39 +1010,30 @@ value_schema
             filter_condition: "{{ filter_condition }}"
             timeseries_column: "{{ timeseries_column }}"
             transformation_sql: "{{ transformation_sql }}"
-        extra_options: "{{ extra_options }}"
-        ingestion_config:
-          ingestion_destination:
-            delta_table_name: "{{ delta_table_name }}"
-          backfill_job_id: {{ backfill_job_id }}
-          backfill_source:
-            delta_table_name: "{{ delta_table_name }}"
-            delta_table_source:
-              full_name: "{{ full_name }}"
-              dataframe_schema: "{{ dataframe_schema }}"
-              entity_columns:
-                - "{{ entity_columns }}"
-              filter_condition: "{{ filter_condition }}"
-              timeseries_column: "{{ timeseries_column }}"
-              transformation_sql: "{{ transformation_sql }}"
-          budget_policy_id: "{{ budget_policy_id }}"
-          deduplication_columns:
-            - "{{ deduplication_columns }}"
-          ingestion_job_id: {{ ingestion_job_id }}
-          ingestion_pipeline_id: "{{ ingestion_pipeline_id }}"
-          tags: "{{ tags }}"
-        key_schema:
-          avro_schema: "{{ avro_schema }}"
-          json_schema: "{{ json_schema }}"
-          proto_schema:
-            schema_text: "{{ schema_text }}"
-            message_name: "{{ message_name }}"
-        value_schema:
-          avro_schema: "{{ avro_schema }}"
-          json_schema: "{{ json_schema }}"
-          proto_schema:
-            schema_text: "{{ schema_text }}"
-            message_name: "{{ message_name }}"
+        budget_policy_id: "{{ budget_policy_id }}"
+        deduplication_columns:
+          - "{{ deduplication_columns }}"
+        ingestion_job_id: {{ ingestion_job_id }}
+        ingestion_pipeline_id: "{{ ingestion_pipeline_id }}"
+        tags: "{{ tags }}"
+    - name: key_schema
+      description: |
+        Schema configuration for extracting message keys from topics. At least one of key_schema and value_schema must be provided.
+      value:
+        avro_schema: "{{ avro_schema }}"
+        json_schema: "{{ json_schema }}"
+        proto_schema:
+          schema_text: "{{ schema_text }}"
+          message_name: "{{ message_name }}"
+    - name: value_schema
+      description: |
+        Schema configuration for extracting message values from topics. At least one of key_schema and value_schema must be provided.
+      value:
+        avro_schema: "{{ avro_schema }}"
+        json_schema: "{{ json_schema }}"
+        proto_schema:
+          schema_text: "{{ schema_text }}"
+          message_name: "{{ message_name }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -1016,13 +1055,24 @@ Update a Kafka config. During PrPr, Kafka configs can be read and used when crea
 ```sql
 UPDATE databricks_workspace.ml.feature_kafka_configs
 SET 
-kafka_config = '{{ kafka_config }}'
+name = '{{ name }}',
+bootstrap_servers = '{{ bootstrap_servers }}',
+subscription_mode = '{{ subscription_mode }}',
+auth_config = '{{ auth_config }}',
+backfill_source = '{{ backfill_source }}',
+extra_options = '{{ extra_options }}',
+ingestion_config = '{{ ingestion_config }}',
+key_schema = '{{ key_schema }}',
+value_schema = '{{ value_schema }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND kafka_config = '{{ kafka_config }}' --required
+AND name = '{{ name }}' --required
+AND bootstrap_servers = '{{ bootstrap_servers }}' --required
+AND subscription_mode = '{{ subscription_mode }}' --required
+AND auth_config = '{{ auth_config }}' --required
 RETURNING
 name,
 auth_config,

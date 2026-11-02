@@ -81,7 +81,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update_workspace_network_option_rpc"><CopyableCode code="update_workspace_network_option_rpc" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-workspace_network_option"><code>workspace_network_option</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates the network option for a workspace. This operation associates the workspace with the specified</td>
 </tr>
@@ -160,12 +160,12 @@ Updates the network option for a workspace. This operation associates the worksp
 ```sql
 REPLACE databricks_account.settings.workspace_network_configuration
 SET 
-workspace_network_option = '{{ workspace_network_option }}'
+network_policy_id = '{{ network_policy_id }}',
+workspace_id = {{ workspace_id }}
 WHERE 
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
 AND account_host = '{{ account_host }}' --required
-AND workspace_network_option = '{{ workspace_network_option }}' --required
 RETURNING
 network_policy_id,
 workspace_id;

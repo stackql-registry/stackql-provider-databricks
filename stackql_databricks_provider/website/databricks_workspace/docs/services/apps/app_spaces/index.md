@@ -702,14 +702,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-space"><code>space</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Creates a new app space.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-space"><code>space</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Updates an app space. The update process is asynchronous and the status of the update can be checked</td>
 </tr>
@@ -857,12 +857,44 @@ Creates a new app space.
 
 ```sql
 INSERT INTO databricks_workspace.apps.app_spaces (
-space,
+name,
+assume_group_id,
+create_time,
+creator,
+description,
+effective_usage_policy_id,
+effective_user_api_scopes,
+id,
+resources,
+service_principal_client_id,
+service_principal_id,
+service_principal_name,
+status,
+update_time,
+updater,
+usage_policy_id,
+user_api_scopes,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ space }}' /* required */,
+'{{ name }}' /* required */,
+'{{ assume_group_id }}',
+'{{ create_time }}',
+'{{ creator }}',
+'{{ description }}',
+'{{ effective_usage_policy_id }}',
+'{{ effective_user_api_scopes }}',
+'{{ id }}',
+'{{ resources }}',
+'{{ service_principal_client_id }}',
+{{ service_principal_id }},
+'{{ service_principal_name }}',
+'{{ status }}',
+'{{ update_time }}',
+'{{ updater }}',
+'{{ usage_policy_id }}',
+'{{ user_api_scopes }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 ;
@@ -879,67 +911,114 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the app_spaces resource.
-    - name: space
+    - name: name
+      value: "{{ name }}"
+    - name: assume_group_id
+      value: "{{ assume_group_id }}"
+      description: |
+        The group whose permissions users assume via Role Authorization for apps in this space. When set, user tokens assume the role of this group instead of doing regular obo token downscoping. Set only at space creation.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The creation time of the app space. Formatted timestamp in ISO 6801.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The email of the user that created the app space.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        The description of the app space.
+    - name: effective_usage_policy_id
+      value: "{{ effective_usage_policy_id }}"
+      description: |
+        The effective usage policy ID used by apps in the space.
+    - name: effective_user_api_scopes
       value:
-        name: "{{ name }}"
-        assume_group_id: "{{ assume_group_id }}"
-        create_time: "{{ create_time }}"
-        creator: "{{ creator }}"
-        description: "{{ description }}"
-        effective_usage_policy_id: "{{ effective_usage_policy_id }}"
-        effective_user_api_scopes:
-          - "{{ effective_user_api_scopes }}"
-        id: "{{ id }}"
-        resources:
-          - name: "{{ name }}"
-            app:
-              name: "{{ name }}"
-              permission: "{{ permission }}"
-            database:
-              instance_name: "{{ instance_name }}"
-              database_name: "{{ database_name }}"
-              permission: "{{ permission }}"
-            description: "{{ description }}"
-            experiment:
-              experiment_id: "{{ experiment_id }}"
-              permission: "{{ permission }}"
-            genie_space:
-              name: "{{ name }}"
-              space_id: "{{ space_id }}"
-              permission: "{{ permission }}"
-            job:
-              id: "{{ id }}"
-              permission: "{{ permission }}"
-            postgres:
-              branch: "{{ branch }}"
-              database: "{{ database }}"
-              permission: "{{ permission }}"
-            secret:
-              scope: "{{ scope }}"
-              key: "{{ key }}"
-              permission: "{{ permission }}"
-            serving_endpoint:
-              name: "{{ name }}"
-              permission: "{{ permission }}"
-            sql_warehouse:
-              id: "{{ id }}"
-              permission: "{{ permission }}"
-            uc_securable:
-              securable_full_name: "{{ securable_full_name }}"
-              securable_type: "{{ securable_type }}"
-              permission: "{{ permission }}"
-              securable_kind: "{{ securable_kind }}"
-        service_principal_client_id: "{{ service_principal_client_id }}"
-        service_principal_id: {{ service_principal_id }}
-        service_principal_name: "{{ service_principal_name }}"
-        status:
-          message: "{{ message }}"
-          state: "{{ state }}"
-        update_time: "{{ update_time }}"
-        updater: "{{ updater }}"
-        usage_policy_id: "{{ usage_policy_id }}"
-        user_api_scopes:
-          - "{{ user_api_scopes }}"
+        - "{{ effective_user_api_scopes }}"
+      description: |
+        The effective api scopes granted to the user access token.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        The unique identifier of the app space.
+    - name: resources
+      description: |
+        Resources for the app space. Resources configured at the space level are available to all apps in the space.
+      value:
+        - name: "{{ name }}"
+          app:
+            name: "{{ name }}"
+            permission: "{{ permission }}"
+          database:
+            instance_name: "{{ instance_name }}"
+            database_name: "{{ database_name }}"
+            permission: "{{ permission }}"
+          description: "{{ description }}"
+          experiment:
+            experiment_id: "{{ experiment_id }}"
+            permission: "{{ permission }}"
+          genie_space:
+            name: "{{ name }}"
+            space_id: "{{ space_id }}"
+            permission: "{{ permission }}"
+          job:
+            id: "{{ id }}"
+            permission: "{{ permission }}"
+          postgres:
+            branch: "{{ branch }}"
+            database: "{{ database }}"
+            permission: "{{ permission }}"
+          secret:
+            scope: "{{ scope }}"
+            key: "{{ key }}"
+            permission: "{{ permission }}"
+          serving_endpoint:
+            name: "{{ name }}"
+            permission: "{{ permission }}"
+          sql_warehouse:
+            id: "{{ id }}"
+            permission: "{{ permission }}"
+          uc_securable:
+            securable_full_name: "{{ securable_full_name }}"
+            securable_type: "{{ securable_type }}"
+            permission: "{{ permission }}"
+            securable_kind: "{{ securable_kind }}"
+    - name: service_principal_client_id
+      value: "{{ service_principal_client_id }}"
+      description: |
+        The service principal client ID for the app space.
+    - name: service_principal_id
+      value: {{ service_principal_id }}
+      description: |
+        The service principal ID for the app space.
+    - name: service_principal_name
+      value: "{{ service_principal_name }}"
+      description: |
+        The service principal name for the app space.
+    - name: status
+      description: |
+        The status of the app space.
+      value:
+        message: "{{ message }}"
+        state: "{{ state }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The update time of the app space. Formatted timestamp in ISO 6801.
+    - name: updater
+      value: "{{ updater }}"
+      description: |
+        The email of the user that last updated the app space.
+    - name: usage_policy_id
+      value: "{{ usage_policy_id }}"
+      description: |
+        The usage policy ID for managing cost at the space level.
+    - name: user_api_scopes
+      value:
+        - "{{ user_api_scopes }}"
+      description: |
+        OAuth scopes for apps in the space.
 `}</CodeBlock>
 
 </TabItem>
@@ -961,13 +1040,29 @@ Updates an app space. The update process is asynchronous and the status of the u
 ```sql
 UPDATE databricks_workspace.apps.app_spaces
 SET 
-space = '{{ space }}'
+name = '{{ name }}',
+assume_group_id = '{{ assume_group_id }}',
+create_time = '{{ create_time }}',
+creator = '{{ creator }}',
+description = '{{ description }}',
+effective_usage_policy_id = '{{ effective_usage_policy_id }}',
+effective_user_api_scopes = '{{ effective_user_api_scopes }}',
+id = '{{ id }}',
+resources = '{{ resources }}',
+service_principal_client_id = '{{ service_principal_client_id }}',
+service_principal_id = {{ service_principal_id }},
+service_principal_name = '{{ service_principal_name }}',
+status = '{{ status }}',
+update_time = '{{ update_time }}',
+updater = '{{ updater }}',
+usage_policy_id = '{{ usage_policy_id }}',
+user_api_scopes = '{{ user_api_scopes }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND space = '{{ space }}' --required;
+AND name = '{{ name }}' --required;
 ```
 </TabItem>
 </Tabs>

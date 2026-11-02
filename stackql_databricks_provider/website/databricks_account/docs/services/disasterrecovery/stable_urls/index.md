@@ -144,7 +144,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-stable_url_id"><code>stable_url_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-stable_url"><code>stable_url</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-stable_url_id"><code>stable_url_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-initial_workspace_id"><code>initial_workspace_id</code></a></td>
     <td><a href="#parameter-validate_only"><code>validate_only</code></a></td>
     <td>Create a new stable URL.</td>
 </tr>
@@ -270,14 +270,24 @@ Create a new stable URL.
 
 ```sql
 INSERT INTO databricks_account.disasterrecovery.stable_urls (
-stable_url,
+initial_workspace_id,
+effective_workspace_id,
+failover_group_name,
+name,
+stable_workspace_id,
+url,
 account_id,
 stable_url_id,
 account_host,
 validate_only
 )
 SELECT 
-'{{ stable_url }}' /* required */,
+'{{ initial_workspace_id }}' /* required */,
+'{{ effective_workspace_id }}',
+'{{ failover_group_name }}',
+'{{ name }}',
+'{{ stable_workspace_id }}',
+'{{ url }}',
 '{{ account_id }}',
 '{{ stable_url_id }}',
 '{{ account_host }}',
@@ -306,16 +316,30 @@ url
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the stable_urls resource.
-    - name: stable_url
+    - name: initial_workspace_id
+      value: "{{ initial_workspace_id }}"
       description: |
-        The stable URL to create.
-      value:
-        initial_workspace_id: "{{ initial_workspace_id }}"
-        effective_workspace_id: "{{ effective_workspace_id }}"
-        failover_group_name: "{{ failover_group_name }}"
-        name: "{{ name }}"
-        stable_workspace_id: "{{ stable_workspace_id }}"
-        url: "{{ url }}"
+        The workspace this stable URL is initially bound to. Used only in Create requests to associate the stable URL with a workspace. Not returned in responses.
+    - name: effective_workspace_id
+      value: "{{ effective_workspace_id }}"
+      description: |
+        The workspace this stable URL currently routes to. Set to \`\`initial_workspace_id\`\` at creation, advanced to the failover group's primary while attached (including across a failover), and preserved when the stable URL is detached from its failover group. Read this to see where an unattached stable URL points: after a failover followed by a detach it reflects the post-failover primary, not \`\`initial_workspace_id\`\`.
+    - name: failover_group_name
+      value: "{{ failover_group_name }}"
+      description: |
+        Fully qualified resource name of the FailoverGroup this stable URL is currently linked to, in the format \`\`accounts/{account_id}/failover-groups/{failover_group_id}\`\`. Empty when the stable URL is not attached to any failover group.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Fully qualified resource name. Format: accounts/{account_id}/stable-urls/{stable_url_id}.
+    - name: stable_workspace_id
+      value: "{{ stable_workspace_id }}"
+      description: |
+        The stable workspace ID for this stable URL. Generated on creation and immutable thereafter; identifies the URL across failovers and is the same value embedded in the \`\`url\`\` (as the \`\`w=\`\` query parameter for SPOG URLs, or in the \`\`conn-<id>\`\` hostname for Private-Link URLs).
+    - name: url
+      value: "{{ url }}"
+      description: |
+        The stable URL endpoint. Generated on creation and immutable thereafter. For non-Private-Link workspaces this is \`\`https://<spog_host>/?w=<connection_id>\`\`. For Private-Link workspaces this is the per-connection hostname.
     - name: validate_only
       value: {{ validate_only }}
       description: When true, validates the request without creating the stable URL.

@@ -332,7 +332,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-synced_table_id"><code>synced_table_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-synced_table"><code>synced_table</code></a></td>
+    <td><a href="#parameter-synced_table_id"><code>synced_table_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a Synced Table.</td>
 </tr>
@@ -427,13 +427,23 @@ Create a Synced Table.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_synced_tables (
-synced_table,
+create_time,
+name,
+spec,
+status,
+synced_table_id,
+uid,
 synced_table_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ synced_table }}' /* required */,
+'{{ create_time }}',
+'{{ name }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ synced_table_id }}',
+'{{ uid }}',
 '{{ synced_table_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -454,58 +464,72 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_synced_tables resource.
-    - name: synced_table
+    - name: create_time
+      value: "{{ create_time }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The Full resource name of the synced table in Postgres where (catalog, schema, table) are the UC entity names. Format "synced_tables/{catalog}.{schema}.{table}" For the corresponding source table in the Unity catalog look for the "source_table_full_name" attribute.
+    - name: spec
+      description: |
+        Configuration details of the synced table, such as the source table, scheduling policy, etc.
       value:
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        spec:
-          accelerated_sync: {{ accelerated_sync }}
-          branch: "{{ branch }}"
-          create_database_objects_if_missing: {{ create_database_objects_if_missing }}
-          existing_pipeline_id: "{{ existing_pipeline_id }}"
-          extra_columns:
-            - column_name: "{{ column_name }}"
-              column_type: "{{ column_type }}"
-              compute: "{{ compute }}"
-              maintenance: "{{ maintenance }}"
-          new_pipeline_spec:
-            budget_policy_id: "{{ budget_policy_id }}"
-            pipeline_channel: "{{ pipeline_channel }}"
-            storage_catalog: "{{ storage_catalog }}"
-            storage_schema: "{{ storage_schema }}"
-          postgres_database: "{{ postgres_database }}"
-          primary_key_columns:
-            - "{{ primary_key_columns }}"
-          scheduling_policy: "{{ scheduling_policy }}"
-          source_table_full_name: "{{ source_table_full_name }}"
-          timeseries_key: "{{ timeseries_key }}"
-          type_overrides:
-            - column_name: "{{ column_name }}"
-              pg_type: "{{ pg_type }}"
-              size: {{ size }}
-        status:
-          detailed_state: "{{ detailed_state }}"
-          last_processed_commit_version: {{ last_processed_commit_version }}
-          last_sync:
-            delta_table_sync_info:
-              delta_commit_time: "{{ delta_commit_time }}"
-              delta_commit_version: {{ delta_commit_version }}
-            sync_end_time: "{{ sync_end_time }}"
-            sync_start_time: "{{ sync_start_time }}"
-          last_sync_time: "{{ last_sync_time }}"
-          message: "{{ message }}"
-          ongoing_sync_progress:
-            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-            latest_version_currently_processing: {{ latest_version_currently_processing }}
-            sync_progress_completion: {{ sync_progress_completion }}
-            synced_row_count: {{ synced_row_count }}
-            total_row_count: {{ total_row_count }}
-          pipeline_id: "{{ pipeline_id }}"
-          project: "{{ project }}"
-          provisioning_phase: "{{ provisioning_phase }}"
-          unity_catalog_provisioning_state: "{{ unity_catalog_provisioning_state }}"
-        synced_table_id: "{{ synced_table_id }}"
-        uid: "{{ uid }}"
+        accelerated_sync: {{ accelerated_sync }}
+        branch: "{{ branch }}"
+        create_database_objects_if_missing: {{ create_database_objects_if_missing }}
+        existing_pipeline_id: "{{ existing_pipeline_id }}"
+        extra_columns:
+          - column_name: "{{ column_name }}"
+            column_type: "{{ column_type }}"
+            compute: "{{ compute }}"
+            maintenance: "{{ maintenance }}"
+        new_pipeline_spec:
+          budget_policy_id: "{{ budget_policy_id }}"
+          pipeline_channel: "{{ pipeline_channel }}"
+          storage_catalog: "{{ storage_catalog }}"
+          storage_schema: "{{ storage_schema }}"
+        postgres_database: "{{ postgres_database }}"
+        primary_key_columns:
+          - "{{ primary_key_columns }}"
+        scheduling_policy: "{{ scheduling_policy }}"
+        source_table_full_name: "{{ source_table_full_name }}"
+        timeseries_key: "{{ timeseries_key }}"
+        type_overrides:
+          - column_name: "{{ column_name }}"
+            pg_type: "{{ pg_type }}"
+            size: {{ size }}
+    - name: status
+      description: |
+        Synced Table data synchronization status.
+      value:
+        detailed_state: "{{ detailed_state }}"
+        last_processed_commit_version: {{ last_processed_commit_version }}
+        last_sync:
+          delta_table_sync_info:
+            delta_commit_time: "{{ delta_commit_time }}"
+            delta_commit_version: {{ delta_commit_version }}
+          sync_end_time: "{{ sync_end_time }}"
+          sync_start_time: "{{ sync_start_time }}"
+        last_sync_time: "{{ last_sync_time }}"
+        message: "{{ message }}"
+        ongoing_sync_progress:
+          estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+          latest_version_currently_processing: {{ latest_version_currently_processing }}
+          sync_progress_completion: {{ sync_progress_completion }}
+          synced_row_count: {{ synced_row_count }}
+          total_row_count: {{ total_row_count }}
+        pipeline_id: "{{ pipeline_id }}"
+        project: "{{ project }}"
+        provisioning_phase: "{{ provisioning_phase }}"
+        unity_catalog_provisioning_state: "{{ unity_catalog_provisioning_state }}"
+    - name: synced_table_id
+      value: "{{ synced_table_id }}"
+      description: |
+        The part of the name, chosen by the user when the resource was created.
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        The Unity Catalog table ID for this synced table.
 `}</CodeBlock>
 
 </TabItem>

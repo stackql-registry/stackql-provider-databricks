@@ -124,14 +124,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-default_warehouse_override"><code>default_warehouse_override</code></a></td>
+    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-type"><code>type</code></a></td>
     <td></td>
     <td>Creates a new default warehouse override for a user. Users can create their own override. Admins can</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-default_warehouse_override"><code>default_warehouse_override</code></a></td>
+    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-type"><code>type</code></a></td>
     <td><a href="#parameter-allow_missing"><code>allow_missing</code></a></td>
     <td>Updates an existing default warehouse override for a user. Users can update their own override. Admins</td>
 </tr>
@@ -258,13 +258,19 @@ Creates a new default warehouse override for a user. Users can create their own 
 
 ```sql
 INSERT INTO databricks_workspace.sql.default_warehouse_overrides (
-default_warehouse_override,
+type,
+default_warehouse_override_id,
+name,
+warehouse_id,
 default_warehouse_override_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ default_warehouse_override }}' /* required */,
+'{{ type }}' /* required */,
+'{{ default_warehouse_override_id }}',
+'{{ name }}',
+'{{ warehouse_id }}',
 '{{ default_warehouse_override_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -290,14 +296,22 @@ type
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the default_warehouse_overrides resource.
-    - name: default_warehouse_override
+    - name: type
+      value: "{{ type }}"
       description: |
-        Required. The default warehouse override to create.
-      value:
-        type: "{{ type }}"
-        default_warehouse_override_id: "{{ default_warehouse_override_id }}"
-        name: "{{ name }}"
-        warehouse_id: "{{ warehouse_id }}"
+        The type of override behavior.
+    - name: default_warehouse_override_id
+      value: "{{ default_warehouse_override_id }}"
+      description: |
+        The ID component of the resource name (user ID).
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}
+    - name: warehouse_id
+      value: "{{ warehouse_id }}"
+      description: |
+        The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED type.
 `}</CodeBlock>
 
 </TabItem>
@@ -319,13 +333,16 @@ Updates an existing default warehouse override for a user. Users can update thei
 ```sql
 UPDATE databricks_workspace.sql.default_warehouse_overrides
 SET 
-default_warehouse_override = '{{ default_warehouse_override }}'
+type = '{{ type }}',
+default_warehouse_override_id = '{{ default_warehouse_override_id }}',
+name = '{{ name }}',
+warehouse_id = '{{ warehouse_id }}'
 WHERE 
 default_warehouse_override_id = '{{ default_warehouse_override_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND default_warehouse_override = '{{ default_warehouse_override }}' --required
+AND type = '{{ type }}' --required
 AND allow_missing = {{ allow_missing}}
 RETURNING
 name,

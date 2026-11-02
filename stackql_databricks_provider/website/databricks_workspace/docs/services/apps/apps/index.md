@@ -1900,14 +1900,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-app"><code>app</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td><a href="#parameter-no_compute"><code>no_compute</code></a></td>
     <td>Creates a new app.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-app"><code>app</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Updates the app with the supplied name. This is a full replacement: fields omitted from the request</td>
 </tr>
@@ -2113,13 +2113,83 @@ Creates a new app.
 
 ```sql
 INSERT INTO databricks_workspace.apps.apps (
-app,
+name,
+active_deployment,
+app_status,
+budget_policy_id,
+compute_max_instances,
+compute_min_instances,
+compute_size,
+compute_status,
+create_time,
+creator,
+default_git_source,
+default_source_code_path,
+description,
+effective_budget_policy_id,
+effective_usage_policy_id,
+effective_user_api_scopes,
+forward_user_access_token,
+git_repository,
+git_source,
+id,
+oauth2_app_client_id,
+oauth2_app_integration_id,
+pending_deployment,
+resources,
+service_principal_client_id,
+service_principal_id,
+service_principal_name,
+source_code_path,
+space,
+telemetry_export_destinations,
+thumbnail_url,
+update_time,
+updater,
+url,
+usage_policy_id,
+user_api_scopes,
 deployment_name,
 workspace_domain,
 no_compute
 )
 SELECT 
-'{{ app }}' /* required */,
+'{{ name }}' /* required */,
+'{{ active_deployment }}',
+'{{ app_status }}',
+'{{ budget_policy_id }}',
+{{ compute_max_instances }},
+{{ compute_min_instances }},
+'{{ compute_size }}',
+'{{ compute_status }}',
+'{{ create_time }}',
+'{{ creator }}',
+'{{ default_git_source }}',
+'{{ default_source_code_path }}',
+'{{ description }}',
+'{{ effective_budget_policy_id }}',
+'{{ effective_usage_policy_id }}',
+'{{ effective_user_api_scopes }}',
+{{ forward_user_access_token }},
+'{{ git_repository }}',
+'{{ git_source }}',
+'{{ id }}',
+'{{ oauth2_app_client_id }}',
+'{{ oauth2_app_integration_id }}',
+'{{ pending_deployment }}',
+'{{ resources }}',
+'{{ service_principal_client_id }}',
+{{ service_principal_id }},
+'{{ service_principal_name }}',
+'{{ source_code_path }}',
+'{{ space }}',
+'{{ telemetry_export_destinations }}',
+'{{ thumbnail_url }}',
+'{{ update_time }}',
+'{{ updater }}',
+'{{ url }}',
+'{{ usage_policy_id }}',
+'{{ user_api_scopes }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
 '{{ no_compute }}'
@@ -2174,78 +2244,23 @@ user_api_scopes
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the apps resource.
-    - name: app
+    - name: name
+      value: "{{ name }}"
+    - name: active_deployment
+      description: |
+        The active deployment of the app. A deployment is considered active when it has been deployed to the app compute.
       value:
-        name: "{{ name }}"
-        active_deployment:
-          command:
-            - "{{ command }}"
-          create_time: "{{ create_time }}"
-          creator: "{{ creator }}"
-          deployment_artifacts:
-            source_code_path: "{{ source_code_path }}"
-          deployment_id: "{{ deployment_id }}"
-          env_vars:
-            - name: "{{ name }}"
-              value: "{{ value }}"
-              value_from: "{{ value_from }}"
-          git_source:
-            branch: "{{ branch }}"
-            commit: "{{ commit }}"
-            git_repository:
-              url: "{{ url }}"
-              provider: "{{ provider }}"
-              auto_deploy: {{ auto_deploy }}
-              caller_credential_id: {{ caller_credential_id }}
-            resolved_commit: "{{ resolved_commit }}"
-            source_code_path: "{{ source_code_path }}"
-            tag: "{{ tag }}"
-          health_check:
-            path: "{{ path }}"
-            timeout: "{{ timeout }}"
-          mode: "{{ mode }}"
-          source_code_path: "{{ source_code_path }}"
-          status:
-            message: "{{ message }}"
-            state: "{{ state }}"
-          update_time: "{{ update_time }}"
-        app_status:
-          message: "{{ message }}"
-          running_instances: {{ running_instances }}
-          state: "{{ state }}"
-        budget_policy_id: "{{ budget_policy_id }}"
-        compute_max_instances: {{ compute_max_instances }}
-        compute_min_instances: {{ compute_min_instances }}
-        compute_size: "{{ compute_size }}"
-        compute_status:
-          active_instances: {{ active_instances }}
-          message: "{{ message }}"
-          state: "{{ state }}"
+        command:
+          - "{{ command }}"
         create_time: "{{ create_time }}"
         creator: "{{ creator }}"
-        default_git_source:
-          branch: "{{ branch }}"
-          commit: "{{ commit }}"
-          git_repository:
-            url: "{{ url }}"
-            provider: "{{ provider }}"
-            auto_deploy: {{ auto_deploy }}
-            caller_credential_id: {{ caller_credential_id }}
-          resolved_commit: "{{ resolved_commit }}"
+        deployment_artifacts:
           source_code_path: "{{ source_code_path }}"
-          tag: "{{ tag }}"
-        default_source_code_path: "{{ default_source_code_path }}"
-        description: "{{ description }}"
-        effective_budget_policy_id: "{{ effective_budget_policy_id }}"
-        effective_usage_policy_id: "{{ effective_usage_policy_id }}"
-        effective_user_api_scopes:
-          - "{{ effective_user_api_scopes }}"
-        forward_user_access_token: {{ forward_user_access_token }}
-        git_repository:
-          url: "{{ url }}"
-          provider: "{{ provider }}"
-          auto_deploy: {{ auto_deploy }}
-          caller_credential_id: {{ caller_credential_id }}
+        deployment_id: "{{ deployment_id }}"
+        env_vars:
+          - name: "{{ name }}"
+            value: "{{ value }}"
+            value_from: "{{ value_from }}"
         git_source:
           branch: "{{ branch }}"
           commit: "{{ commit }}"
@@ -2257,97 +2272,250 @@ user_api_scopes
           resolved_commit: "{{ resolved_commit }}"
           source_code_path: "{{ source_code_path }}"
           tag: "{{ tag }}"
-        id: "{{ id }}"
-        oauth2_app_client_id: "{{ oauth2_app_client_id }}"
-        oauth2_app_integration_id: "{{ oauth2_app_integration_id }}"
-        pending_deployment:
-          command:
-            - "{{ command }}"
-          create_time: "{{ create_time }}"
-          creator: "{{ creator }}"
-          deployment_artifacts:
-            source_code_path: "{{ source_code_path }}"
-          deployment_id: "{{ deployment_id }}"
-          env_vars:
-            - name: "{{ name }}"
-              value: "{{ value }}"
-              value_from: "{{ value_from }}"
-          git_source:
-            branch: "{{ branch }}"
-            commit: "{{ commit }}"
-            git_repository:
-              url: "{{ url }}"
-              provider: "{{ provider }}"
-              auto_deploy: {{ auto_deploy }}
-              caller_credential_id: {{ caller_credential_id }}
-            resolved_commit: "{{ resolved_commit }}"
-            source_code_path: "{{ source_code_path }}"
-            tag: "{{ tag }}"
-          health_check:
-            path: "{{ path }}"
-            timeout: "{{ timeout }}"
-          mode: "{{ mode }}"
-          source_code_path: "{{ source_code_path }}"
-          status:
-            message: "{{ message }}"
-            state: "{{ state }}"
-          update_time: "{{ update_time }}"
-        resources:
-          - name: "{{ name }}"
-            app:
-              name: "{{ name }}"
-              permission: "{{ permission }}"
-            database:
-              instance_name: "{{ instance_name }}"
-              database_name: "{{ database_name }}"
-              permission: "{{ permission }}"
-            description: "{{ description }}"
-            experiment:
-              experiment_id: "{{ experiment_id }}"
-              permission: "{{ permission }}"
-            genie_space:
-              name: "{{ name }}"
-              space_id: "{{ space_id }}"
-              permission: "{{ permission }}"
-            job:
-              id: "{{ id }}"
-              permission: "{{ permission }}"
-            postgres:
-              branch: "{{ branch }}"
-              database: "{{ database }}"
-              permission: "{{ permission }}"
-            secret:
-              scope: "{{ scope }}"
-              key: "{{ key }}"
-              permission: "{{ permission }}"
-            serving_endpoint:
-              name: "{{ name }}"
-              permission: "{{ permission }}"
-            sql_warehouse:
-              id: "{{ id }}"
-              permission: "{{ permission }}"
-            uc_securable:
-              securable_full_name: "{{ securable_full_name }}"
-              securable_type: "{{ securable_type }}"
-              permission: "{{ permission }}"
-              securable_kind: "{{ securable_kind }}"
-        service_principal_client_id: "{{ service_principal_client_id }}"
-        service_principal_id: {{ service_principal_id }}
-        service_principal_name: "{{ service_principal_name }}"
+        health_check:
+          path: "{{ path }}"
+          timeout: "{{ timeout }}"
+        mode: "{{ mode }}"
         source_code_path: "{{ source_code_path }}"
-        space: "{{ space }}"
-        telemetry_export_destinations:
-          - unity_catalog:
-              logs_table: "{{ logs_table }}"
-              metrics_table: "{{ metrics_table }}"
-              traces_table: "{{ traces_table }}"
-        thumbnail_url: "{{ thumbnail_url }}"
+        status:
+          message: "{{ message }}"
+          state: "{{ state }}"
         update_time: "{{ update_time }}"
-        updater: "{{ updater }}"
+    - name: app_status
+      value:
+        message: "{{ message }}"
+        running_instances: {{ running_instances }}
+        state: "{{ state }}"
+    - name: budget_policy_id
+      value: "{{ budget_policy_id }}"
+    - name: compute_max_instances
+      value: {{ compute_max_instances }}
+      description: |
+        Maximum number of app instances the app is configured to run. Must be set together with \`\`compute_min_instances\`\`.
+    - name: compute_min_instances
+      value: {{ compute_min_instances }}
+      description: |
+        Minimum number of app instances the app is configured to run. Must be set together with \`\`compute_max_instances\`\`.
+    - name: compute_size
+      value: "{{ compute_size }}"
+      description: |
+        Create a collection of name/value pairs.
+        Example enumeration:
+        >>> class Color(Enum):
+        ...     RED = 1
+        ...     BLUE = 2
+        ...     GREEN = 3
+        Access them by:
+        - attribute access:
+        >>> Color.RED
+        <Color.RED: 1>
+        - value lookup:
+        >>> Color(1)
+        <Color.RED: 1>
+        - name lookup:
+        >>> Color['RED']
+        <Color.RED: 1>
+        Enumerations can be iterated over, and know how many members they have:
+        >>> len(Color)
+        3
+        >>> list(Color)
+        [<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]
+        Methods can be added to enumerations, and members can have their own
+        attributes -- see the documentation for details.
+    - name: compute_status
+      value:
+        active_instances: {{ active_instances }}
+        message: "{{ message }}"
+        state: "{{ state }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The creation time of the app. Formatted timestamp in ISO 6801.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The email of the user that created the app.
+    - name: default_git_source
+      description: |
+        The Git source of the app's most recent active deployment, including the repository configuration and the resolved reference. Populated by the system after a Git-based deployment and used as the default reference when automatic deployments are enabled.
+      value:
+        branch: "{{ branch }}"
+        commit: "{{ commit }}"
+        git_repository:
+          url: "{{ url }}"
+          provider: "{{ provider }}"
+          auto_deploy: {{ auto_deploy }}
+          caller_credential_id: {{ caller_credential_id }}
+        resolved_commit: "{{ resolved_commit }}"
+        source_code_path: "{{ source_code_path }}"
+        tag: "{{ tag }}"
+    - name: default_source_code_path
+      value: "{{ default_source_code_path }}"
+      description: |
+        The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        The description of the app.
+    - name: effective_budget_policy_id
+      value: "{{ effective_budget_policy_id }}"
+    - name: effective_usage_policy_id
+      value: "{{ effective_usage_policy_id }}"
+    - name: effective_user_api_scopes
+      value:
+        - "{{ effective_user_api_scopes }}"
+      description: |
+        The effective api scopes granted to the user access token.
+    - name: forward_user_access_token
+      value: {{ forward_user_access_token }}
+      description: |
+        Forward the user's access token to the app. Requires stopping and starting app compute to take effect.
+    - name: git_repository
+      description: |
+        Git repository configuration for app deployments. When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit).
+      value:
         url: "{{ url }}"
-        usage_policy_id: "{{ usage_policy_id }}"
-        user_api_scopes:
-          - "{{ user_api_scopes }}"
+        provider: "{{ provider }}"
+        auto_deploy: {{ auto_deploy }}
+        caller_credential_id: {{ caller_credential_id }}
+    - name: git_source
+      description: |
+        The Git source to deploy from, specifying the reference to check out (branch, tag, or commit) and an optional path to the app source code within the repository configured in git_repository.
+      value:
+        branch: "{{ branch }}"
+        commit: "{{ commit }}"
+        git_repository:
+          url: "{{ url }}"
+          provider: "{{ provider }}"
+          auto_deploy: {{ auto_deploy }}
+          caller_credential_id: {{ caller_credential_id }}
+        resolved_commit: "{{ resolved_commit }}"
+        source_code_path: "{{ source_code_path }}"
+        tag: "{{ tag }}"
+    - name: id
+      value: "{{ id }}"
+      description: |
+        The unique identifier of the app.
+    - name: oauth2_app_client_id
+      value: "{{ oauth2_app_client_id }}"
+    - name: oauth2_app_integration_id
+      value: "{{ oauth2_app_integration_id }}"
+    - name: pending_deployment
+      description: |
+        The pending deployment of the app. A deployment is considered pending when it is being prepared for deployment to the app compute.
+      value:
+        command:
+          - "{{ command }}"
+        create_time: "{{ create_time }}"
+        creator: "{{ creator }}"
+        deployment_artifacts:
+          source_code_path: "{{ source_code_path }}"
+        deployment_id: "{{ deployment_id }}"
+        env_vars:
+          - name: "{{ name }}"
+            value: "{{ value }}"
+            value_from: "{{ value_from }}"
+        git_source:
+          branch: "{{ branch }}"
+          commit: "{{ commit }}"
+          git_repository:
+            url: "{{ url }}"
+            provider: "{{ provider }}"
+            auto_deploy: {{ auto_deploy }}
+            caller_credential_id: {{ caller_credential_id }}
+          resolved_commit: "{{ resolved_commit }}"
+          source_code_path: "{{ source_code_path }}"
+          tag: "{{ tag }}"
+        health_check:
+          path: "{{ path }}"
+          timeout: "{{ timeout }}"
+        mode: "{{ mode }}"
+        source_code_path: "{{ source_code_path }}"
+        status:
+          message: "{{ message }}"
+          state: "{{ state }}"
+        update_time: "{{ update_time }}"
+    - name: resources
+      description: |
+        Resources for the app.
+      value:
+        - name: "{{ name }}"
+          app:
+            name: "{{ name }}"
+            permission: "{{ permission }}"
+          database:
+            instance_name: "{{ instance_name }}"
+            database_name: "{{ database_name }}"
+            permission: "{{ permission }}"
+          description: "{{ description }}"
+          experiment:
+            experiment_id: "{{ experiment_id }}"
+            permission: "{{ permission }}"
+          genie_space:
+            name: "{{ name }}"
+            space_id: "{{ space_id }}"
+            permission: "{{ permission }}"
+          job:
+            id: "{{ id }}"
+            permission: "{{ permission }}"
+          postgres:
+            branch: "{{ branch }}"
+            database: "{{ database }}"
+            permission: "{{ permission }}"
+          secret:
+            scope: "{{ scope }}"
+            key: "{{ key }}"
+            permission: "{{ permission }}"
+          serving_endpoint:
+            name: "{{ name }}"
+            permission: "{{ permission }}"
+          sql_warehouse:
+            id: "{{ id }}"
+            permission: "{{ permission }}"
+          uc_securable:
+            securable_full_name: "{{ securable_full_name }}"
+            securable_type: "{{ securable_type }}"
+            permission: "{{ permission }}"
+            securable_kind: "{{ securable_kind }}"
+    - name: service_principal_client_id
+      value: "{{ service_principal_client_id }}"
+    - name: service_principal_id
+      value: {{ service_principal_id }}
+    - name: service_principal_name
+      value: "{{ service_principal_name }}"
+    - name: source_code_path
+      value: "{{ source_code_path }}"
+    - name: space
+      value: "{{ space }}"
+      description: |
+        Name of the space this app belongs to.
+    - name: telemetry_export_destinations
+      value:
+        - unity_catalog:
+            logs_table: "{{ logs_table }}"
+            metrics_table: "{{ metrics_table }}"
+            traces_table: "{{ traces_table }}"
+    - name: thumbnail_url
+      value: "{{ thumbnail_url }}"
+      description: |
+        The URL of the thumbnail image for the app.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The update time of the app. Formatted timestamp in ISO 6801.
+    - name: updater
+      value: "{{ updater }}"
+      description: |
+        The email of the user that last updated the app.
+    - name: url
+      value: "{{ url }}"
+      description: |
+        The URL of the app once it is deployed.
+    - name: usage_policy_id
+      value: "{{ usage_policy_id }}"
+    - name: user_api_scopes
+      value:
+        - "{{ user_api_scopes }}"
     - name: no_compute
       value: {{ no_compute }}
       description: If true, the app will not be started after creation.
@@ -2373,12 +2541,47 @@ Updates the app with the supplied name. This is a full replacement: fields omitt
 ```sql
 UPDATE databricks_workspace.apps.apps
 SET 
-app = '{{ app }}'
+name = '{{ name }}',
+active_deployment = '{{ active_deployment }}',
+app_status = '{{ app_status }}',
+budget_policy_id = '{{ budget_policy_id }}',
+compute_max_instances = {{ compute_max_instances }},
+compute_min_instances = {{ compute_min_instances }},
+compute_size = '{{ compute_size }}',
+compute_status = '{{ compute_status }}',
+create_time = '{{ create_time }}',
+creator = '{{ creator }}',
+default_git_source = '{{ default_git_source }}',
+default_source_code_path = '{{ default_source_code_path }}',
+description = '{{ description }}',
+effective_budget_policy_id = '{{ effective_budget_policy_id }}',
+effective_usage_policy_id = '{{ effective_usage_policy_id }}',
+effective_user_api_scopes = '{{ effective_user_api_scopes }}',
+forward_user_access_token = {{ forward_user_access_token }},
+git_repository = '{{ git_repository }}',
+git_source = '{{ git_source }}',
+id = '{{ id }}',
+oauth2_app_client_id = '{{ oauth2_app_client_id }}',
+oauth2_app_integration_id = '{{ oauth2_app_integration_id }}',
+pending_deployment = '{{ pending_deployment }}',
+resources = '{{ resources }}',
+service_principal_client_id = '{{ service_principal_client_id }}',
+service_principal_id = {{ service_principal_id }},
+service_principal_name = '{{ service_principal_name }}',
+source_code_path = '{{ source_code_path }}',
+space = '{{ space }}',
+telemetry_export_destinations = '{{ telemetry_export_destinations }}',
+thumbnail_url = '{{ thumbnail_url }}',
+update_time = '{{ update_time }}',
+updater = '{{ updater }}',
+url = '{{ url }}',
+usage_policy_id = '{{ usage_policy_id }}',
+user_api_scopes = '{{ user_api_scopes }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND app = '{{ app }}' --required
+AND name = '{{ name }}' --required
 RETURNING
 id,
 name,

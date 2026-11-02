@@ -144,14 +144,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-workspace_assignment"><code>workspace_assignment</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
     <td></td>
     <td>Creates a workspace assignment for a principal. Entitlements are granted one at a time rather than</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-workspace_assignment"><code>workspace_assignment</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
     <td></td>
     <td>Updates the entitlements of a directly assigned principal in a workspace. Changes are applied one at a</td>
 </tr>
@@ -284,15 +284,25 @@ Creates a workspace assignment for a principal. Entitlements are granted one at 
 
 ```sql
 INSERT INTO databricks_account.iamv2.workspace_assignments (
-workspace_assignment,
+principal_id,
+account_id,
+effective_entitlements,
+entitlements,
+principal_type,
+workspace_id,
 account_id,
 workspace_id,
 account_host
 )
 SELECT 
-'{{ workspace_assignment }}' /* required */,
+{{ principal_id }} /* required */,
 '{{ account_id }}',
-'{{ workspace_id }}',
+'{{ effective_entitlements }}',
+'{{ entitlements }}',
+'{{ principal_type }}',
+{{ workspace_id }},
+'{{ account_id }}',
+{{ workspace_id }},
 '{{ account_host }}'
 RETURNING
 account_id,
@@ -318,18 +328,32 @@ principal_type
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the workspace_assignments resource.
-    - name: workspace_assignment
+    - name: principal_id
+      value: {{ principal_id }}
       description: |
-        Required. Workspace assignment to be created in Databricks.
+        The internal ID of the principal (user/sp/group) in Databricks.
+    - name: account_id
+      value: "{{ account_id }}"
+      description: |
+        The account ID parent of the workspace where the principal is assigned
+    - name: effective_entitlements
       value:
-        principal_id: {{ principal_id }}
-        account_id: "{{ account_id }}"
-        effective_entitlements:
-          - "{{ effective_entitlements }}"
-        entitlements:
-          - "{{ entitlements }}"
-        principal_type: "{{ principal_type }}"
-        workspace_id: {{ workspace_id }}
+        - "{{ effective_entitlements }}"
+      description: |
+        Every entitlement the principal holds in this workspace, whether granted directly or through group membership. Get responses populate this field. List responses leave it empty.
+    - name: entitlements
+      value:
+        - "{{ entitlements }}"
+      description: |
+        Entitlements granted directly to the principal on this workspace. This is the only client-settable field. Create and update manage exactly this set, including entitlements the principal also holds through a group. List responses leave this field empty. Get a single principal to read its entitlements.
+    - name: principal_type
+      value: "{{ principal_type }}"
+      description: |
+        The type of the principal (user/service principal/group) that is assigned.
+    - name: workspace_id
+      value: {{ workspace_id }}
+      description: |
+        The workspace ID where the principal is assigned.
 `}</CodeBlock>
 
 </TabItem>
@@ -351,14 +375,19 @@ Updates the entitlements of a directly assigned principal in a workspace. Change
 ```sql
 UPDATE databricks_account.iamv2.workspace_assignments
 SET 
-workspace_assignment = '{{ workspace_assignment }}'
+principal_id = {{ principal_id }},
+account_id = '{{ account_id }}',
+effective_entitlements = '{{ effective_entitlements }}',
+entitlements = '{{ entitlements }}',
+principal_type = '{{ principal_type }}',
+workspace_id = {{ workspace_id }}
 WHERE 
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
 AND principal_id = '{{ principal_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND account_host = '{{ account_host }}' --required
-AND workspace_assignment = '{{ workspace_assignment }}' --required
+AND principal_id = '{{ principal_id }}' --required
 RETURNING
 account_id,
 principal_id,

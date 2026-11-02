@@ -176,7 +176,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-identity_visibility_filter"><code>identity_visibility_filter</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-principal_type"><code>principal_type</code></a></td>
     <td><a href="#parameter-identity_visibility_filter_id"><code>identity_visibility_filter_id</code></a></td>
     <td>Creates a group visibility filter in the account. Requires account admin privileges. Set</td>
 </tr>
@@ -300,13 +300,21 @@ Creates a group visibility filter in the account. Requires account admin privile
 
 ```sql
 INSERT INTO databricks_account.iamv2.identity_visibility_filters (
-identity_visibility_filter,
+principal_type,
+exact,
+name,
+prefix,
+regex,
 account_id,
 account_host,
 identity_visibility_filter_id
 )
 SELECT 
-'{{ identity_visibility_filter }}' /* required */,
+'{{ principal_type }}' /* required */,
+'{{ exact }}',
+'{{ name }}',
+'{{ prefix }}',
+'{{ regex }}',
 '{{ account_id }}',
 '{{ account_host }}',
 '{{ identity_visibility_filter_id }}'
@@ -330,18 +338,29 @@ regex
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the identity_visibility_filters resource.
-    - name: identity_visibility_filter
+    - name: principal_type
+      value: "{{ principal_type }}"
       description: |
-        Required. The filter to create. Set \`\`principal_type\`\` to \`\`GROUP\`\` and specify exactly one of \`\`exact\`\`, \`\`prefix\`\`, or \`\`regex\`\`. The server assigns the resource name; any supplied \`\`name\`\` is ignored.
+        The type of principal this rule applies to. Set to \`\`GROUP\`\` when creating a filter. Other principal types are not supported for creation.
+    - name: exact
+      description: |
+        Exact match on the group's external ID from the identity provider.
       value:
-        principal_type: "{{ principal_type }}"
-        exact:
-          external_id: "{{ external_id }}"
-        name: "{{ name }}"
-        prefix:
-          display_name_prefix: "{{ display_name_prefix }}"
-        regex:
-          display_name_regex: "{{ display_name_regex }}"
+        external_id: "{{ external_id }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the identity-visibility filter. Format: accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}
+    - name: prefix
+      description: |
+        Case-sensitive starts-with match on the group's display name.
+      value:
+        display_name_prefix: "{{ display_name_prefix }}"
+    - name: regex
+      description: |
+        Full, case-sensitive RE2 match on the identity's display name.
+      value:
+        display_name_regex: "{{ display_name_regex }}"
     - name: identity_visibility_filter_id
       value: "{{ identity_visibility_filter_id }}"
       description: Optional. The ID to use for the filter, which becomes the final component of its resource name. If not specified or empty, the server generates one. Must not contain \`\`/\`\`.

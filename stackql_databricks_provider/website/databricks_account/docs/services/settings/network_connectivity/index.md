@@ -542,7 +542,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create_network_connectivity_configuration"><CopyableCode code="create_network_connectivity_configuration" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-network_connectivity_config"><code>network_connectivity_config</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-region"><code>region</code></a></td>
     <td></td>
     <td>Creates a network connectivity configuration (NCC), which provides stable Azure service subnets when</td>
 </tr>
@@ -659,12 +659,14 @@ Creates a network connectivity configuration (NCC), which provides stable Azure 
 
 ```sql
 INSERT INTO databricks_account.settings.network_connectivity (
-network_connectivity_config,
+name,
+region,
 account_id,
 account_host
 )
 SELECT 
-'{{ network_connectivity_config }}' /* required */,
+'{{ name }}' /* required */,
+'{{ region }}' /* required */,
 '{{ account_id }}',
 '{{ account_host }}'
 RETURNING
@@ -689,12 +691,14 @@ updated_time
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the network_connectivity resource.
-    - name: network_connectivity_config
+    - name: name
+      value: "{{ name }}"
       description: |
-        Properties of the new network connectivity configuration.
-      value:
-        name: "{{ name }}"
-        region: "{{ region }}"
+        The name of the network connectivity configuration. The name can contain alphanumeric characters, hyphens, and underscores. The length must be between 3 and 30 characters. The name must match the regular expression ^[0-9a-zA-Z-_]{3,30}$
+    - name: region
+      value: "{{ region }}"
+      description: |
+        The region for the network connectivity configuration. Only workspaces in the same region can be attached to the network connectivity configuration.
 `}</CodeBlock>
 
 </TabItem>

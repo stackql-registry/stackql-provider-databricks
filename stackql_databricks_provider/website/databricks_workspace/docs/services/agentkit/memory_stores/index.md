@@ -198,14 +198,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-managed_memory_store"><code>managed_memory_store</code></a></td>
+    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a memory store in the caller's workspace.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-managed_memory_store"><code>managed_memory_store</code></a></td>
+    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a memory store's description and metadata.</td>
 </tr>
@@ -337,13 +337,29 @@ Creates a memory store in the caller's workspace.
 
 ```sql
 INSERT INTO databricks_workspace.agentkit.memory_stores (
-managed_memory_store,
+create_time,
+creator_user_id,
+description,
+display_name,
+name,
+owner_user_id,
+storage_backend,
+update_time,
+workspace_id,
 managed_memory_store_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ managed_memory_store }}' /* required */,
+'{{ create_time }}',
+'{{ creator_user_id }}',
+'{{ description }}',
+'{{ display_name }}',
+'{{ name }}',
+'{{ owner_user_id }}',
+'{{ storage_backend }}',
+'{{ update_time }}',
+{{ workspace_id }},
 '{{ managed_memory_store_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -374,21 +390,44 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the memory_stores resource.
-    - name: managed_memory_store
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The memory store to create.
+        Time when the store was created.
+    - name: creator_user_id
+      value: "{{ creator_user_id }}"
+      description: |
+        Workspace-local user ID of the authenticated principal that created the store. This is immutable server-set attribution and does not grant access; authorization is evaluated from the authenticated request context.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Human-readable description of the memory store.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        Deprecated compatibility alias for the caller-provided memory store ID. Canonical clients provide the ID through \`\`CreateMemoryStoreRequest.managed_memory_store_id\`\` and use \`\`name\`\` as the resource identifier.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name in the form \`\`memory-stores/{managed_memory_store_id}\`\`.
+    - name: owner_user_id
+      value: "{{ owner_user_id }}"
+      description: |
+        Deprecated alias for \`\`creator_user_id\`\`. This identifies the original creator, not a transferable owner. Use \`\`creator_user_id\`\` instead.
+    - name: storage_backend
+      description: |
+        Service-managed storage backing this memory store.
       value:
-        create_time: "{{ create_time }}"
-        creator_user_id: "{{ creator_user_id }}"
-        description: "{{ description }}"
-        display_name: "{{ display_name }}"
-        name: "{{ name }}"
-        owner_user_id: "{{ owner_user_id }}"
-        storage_backend:
-          backend_id: "{{ backend_id }}"
-          backend_type: "{{ backend_type }}"
-        update_time: "{{ update_time }}"
-        workspace_id: {{ workspace_id }}
+        backend_id: "{{ backend_id }}"
+        backend_type: "{{ backend_type }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time when the store was last updated.
+    - name: workspace_id
+      value: {{ workspace_id }}
+      description: |
+        Workspace that owns the memory store.
 `}</CodeBlock>
 
 </TabItem>
@@ -410,13 +449,20 @@ Updates a memory store's description and metadata.
 ```sql
 UPDATE databricks_workspace.agentkit.memory_stores
 SET 
-managed_memory_store = '{{ managed_memory_store }}'
+create_time = '{{ create_time }}',
+creator_user_id = '{{ creator_user_id }}',
+description = '{{ description }}',
+display_name = '{{ display_name }}',
+name = '{{ name }}',
+owner_user_id = '{{ owner_user_id }}',
+storage_backend = '{{ storage_backend }}',
+update_time = '{{ update_time }}',
+workspace_id = {{ workspace_id }}
 WHERE 
 managed_memory_store_id = '{{ managed_memory_store_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND managed_memory_store = '{{ managed_memory_store }}' --required
 RETURNING
 name,
 creator_user_id,

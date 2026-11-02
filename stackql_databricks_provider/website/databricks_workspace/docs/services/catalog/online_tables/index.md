@@ -299,7 +299,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-table"><code>table</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a new Online Table.</td>
 </tr>
@@ -388,12 +388,20 @@ Create a new Online Table.
 
 ```sql
 INSERT INTO databricks_workspace.catalog.online_tables (
-table,
+name,
+spec,
+status,
+table_serving_url,
+unity_catalog_provisioning_state,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ table }}' /* required */,
+'{{ name }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ table_serving_url }}',
+'{{ unity_catalog_provisioning_state }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -416,53 +424,64 @@ unity_catalog_provisioning_state
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the online_tables resource.
-    - name: table
+    - name: name
+      value: "{{ name }}"
       description: |
-        Specification of the online table to be created.
+        Full three-part (catalog, schema, table) name of the table.
+    - name: spec
+      description: |
+        Specification of the online table.
       value:
-        name: "{{ name }}"
-        spec:
-          perform_full_copy: {{ perform_full_copy }}
-          pipeline_id: "{{ pipeline_id }}"
-          primary_key_columns:
-            - "{{ primary_key_columns }}"
-          run_continuously: "{{ run_continuously }}"
-          run_triggered: "{{ run_triggered }}"
-          source_table_full_name: "{{ source_table_full_name }}"
-          timeseries_key: "{{ timeseries_key }}"
-        status:
-          continuous_update_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          detailed_state: "{{ detailed_state }}"
-          failed_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          message: "{{ message }}"
-          provisioning_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-          triggered_update_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-            triggered_update_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-        table_serving_url: "{{ table_serving_url }}"
-        unity_catalog_provisioning_state: "{{ unity_catalog_provisioning_state }}"
+        perform_full_copy: {{ perform_full_copy }}
+        pipeline_id: "{{ pipeline_id }}"
+        primary_key_columns:
+          - "{{ primary_key_columns }}"
+        run_continuously: "{{ run_continuously }}"
+        run_triggered: "{{ run_triggered }}"
+        source_table_full_name: "{{ source_table_full_name }}"
+        timeseries_key: "{{ timeseries_key }}"
+    - name: status
+      description: |
+        Online Table data synchronization status
+      value:
+        continuous_update_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        detailed_state: "{{ detailed_state }}"
+        failed_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        message: "{{ message }}"
+        provisioning_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+        triggered_update_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+          triggered_update_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+    - name: table_serving_url
+      value: "{{ table_serving_url }}"
+      description: |
+        Data serving REST API URL for this table
+    - name: unity_catalog_provisioning_state
+      value: "{{ unity_catalog_provisioning_state }}"
+      description: |
+        The provisioning state of the online table entity in Unity Catalog. This is distinct from the state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it runs asynchronously).
 `}</CodeBlock>
 
 </TabItem>

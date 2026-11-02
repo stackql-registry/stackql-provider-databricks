@@ -117,14 +117,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-catalog_config"><code>catalog_config</code></a></td>
+    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create Data Classification configuration for a catalog.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-catalog_config"><code>catalog_config</code></a></td>
+    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update the Data Classification configuration for a catalog.</td>
 </tr>
@@ -217,13 +217,19 @@ Create Data Classification configuration for a catalog.
 
 ```sql
 INSERT INTO databricks_workspace.dataclassification.catalog_configs (
-catalog_config,
+auto_tag_configs,
+excluded_schemas,
+included_schemas,
+name,
 catalog_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ catalog_config }}' /* required */,
+'{{ auto_tag_configs }}',
+'{{ excluded_schemas }}',
+'{{ included_schemas }}',
+'{{ name }}',
 '{{ catalog_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -249,20 +255,28 @@ included_schemas
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the catalog_configs resource.
-    - name: catalog_config
+    - name: auto_tag_configs
       description: |
-        The configuration to create.
+        List of auto-tagging configurations for this catalog. Empty list means no auto-tagging is enabled.
       value:
-        auto_tag_configs:
-          - classification_tag: "{{ classification_tag }}"
-            auto_tagging_mode: "{{ auto_tagging_mode }}"
-        excluded_schemas:
-          names:
-            - "{{ names }}"
-        included_schemas:
-          names:
-            - "{{ names }}"
-        name: "{{ name }}"
+        - classification_tag: "{{ classification_tag }}"
+          auto_tagging_mode: "{{ auto_tagging_mode }}"
+    - name: excluded_schemas
+      description: |
+        Schemas to exclude from the scan, each named relative to the parent catalog. If specified, all schemas except the specified ones will be scanned. Mutually exclusive with \`\`included_schemas\`\`: only one may be set per request. If neither \`\`included_schemas\`\` nor \`\`excluded_schemas\`\` is set, all schemas are scanned.
+      value:
+        names:
+          - "{{ names }}"
+    - name: included_schemas
+      description: |
+        Schemas to include in the scan, each named relative to the parent catalog. If specified, only listed schemas will be scanned. Mutually exclusive with \`\`excluded_schemas\`\`: only one may be set per request. If neither \`\`included_schemas\`\` nor \`\`excluded_schemas\`\` is set, all schemas are scanned.
+      value:
+        names:
+          - "{{ names }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name in the format: catalogs/{catalog_name}/config.
 `}</CodeBlock>
 
 </TabItem>
@@ -284,13 +298,15 @@ Update the Data Classification configuration for a catalog.
 ```sql
 UPDATE databricks_workspace.dataclassification.catalog_configs
 SET 
-catalog_config = '{{ catalog_config }}'
+auto_tag_configs = '{{ auto_tag_configs }}',
+excluded_schemas = '{{ excluded_schemas }}',
+included_schemas = '{{ included_schemas }}',
+name = '{{ name }}'
 WHERE 
 catalog_name = '{{ catalog_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND catalog_config = '{{ catalog_config }}' --required
 RETURNING
 name,
 auto_tag_configs,

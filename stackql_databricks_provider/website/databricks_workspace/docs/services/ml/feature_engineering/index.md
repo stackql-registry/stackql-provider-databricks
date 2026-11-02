@@ -1648,14 +1648,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature"><code>feature</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-source"><code>source</code></a>, <a href="#parameter-function"><code>function</code></a></td>
     <td></td>
     <td>Create a Feature.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature"><code>feature</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-source"><code>source</code></a>, <a href="#parameter-function"><code>function</code></a></td>
     <td></td>
     <td>Update a Feature.</td>
 </tr>
@@ -1825,12 +1825,40 @@ Create a Feature.
 
 ```sql
 INSERT INTO databricks_workspace.ml.feature_engineering (
-feature,
+full_name,
+source,
+function,
+catalog_name,
+created_at,
+created_by,
+description,
+entities,
+filter_condition,
+inputs,
+lineage_context,
+name,
+schema_name,
+time_window,
+timeseries_column,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ feature }}' /* required */,
+'{{ full_name }}' /* required */,
+'{{ source }}' /* required */,
+'{{ function }}' /* required */,
+'{{ catalog_name }}',
+'{{ created_at }}',
+'{{ created_by }}',
+'{{ description }}',
+'{{ entities }}',
+'{{ filter_condition }}',
+'{{ inputs }}',
+'{{ lineage_context }}',
+'{{ name }}',
+'{{ schema_name }}',
+'{{ time_window }}',
+'{{ timeseries_column }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -1863,166 +1891,199 @@ timeseries_column
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the feature_engineering resource.
-    - name: feature
+    - name: full_name
+      value: "{{ full_name }}"
+    - name: source
       description: |
-        Feature to create.
+        The data source of the feature.
       value:
-        full_name: "{{ full_name }}"
-        source:
-          delta_table_source:
-            full_name: "{{ full_name }}"
-            dataframe_schema: "{{ dataframe_schema }}"
-            entity_columns:
-              - "{{ entity_columns }}"
-            filter_condition: "{{ filter_condition }}"
-            timeseries_column: "{{ timeseries_column }}"
-            transformation_sql: "{{ transformation_sql }}"
-          feature_view_source:
-            feature_references:
-              - feature: "{{ feature }}"
-          kafka_source:
-            name: "{{ name }}"
-            entity_column_identifiers:
-              - variant_expr_path: "{{ variant_expr_path }}"
-            filter_condition: "{{ filter_condition }}"
-            timeseries_column_identifier:
-              variant_expr_path: "{{ variant_expr_path }}"
-          lateness:
-            settling_delay: "{{ settling_delay }}"
-          request_source:
-            dataframe_schema: "{{ dataframe_schema }}"
-            flat_schema:
-              fields:
-                - name: "{{ name }}"
-                  data_type: "{{ data_type }}"
-          sdp_source:
-            dataframe_schema: "{{ dataframe_schema }}"
-            filter_condition: "{{ filter_condition }}"
-            input_tables:
-              - "{{ input_tables }}"
-            output_table: "{{ output_table }}"
-            pipeline_id: "{{ pipeline_id }}"
-            pipeline_state: "{{ pipeline_state }}"
-            transformation_sql: "{{ transformation_sql }}"
-          stream_source:
-            full_name: "{{ full_name }}"
-            dataframe_schema: "{{ dataframe_schema }}"
-            filter_condition: "{{ filter_condition }}"
-            transformation_sql: "{{ transformation_sql }}"
-        function:
-          aggregation_function:
-            approx_count_distinct:
-              input: "{{ input }}"
-              relative_error: {{ relative_error }}
-              relative_sd: {{ relative_sd }}
-            approx_percentile:
-              input: "{{ input }}"
-              percentile: {{ percentile }}
-              accuracy: {{ accuracy }}
-              relative_error: {{ relative_error }}
-            avg:
-              input: "{{ input }}"
-            count_function:
-              input: "{{ input }}"
-            first:
-              input: "{{ input }}"
-            first_distinct:
-              input: "{{ input }}"
-              n: {{ n }}
-            first_n:
-              input: "{{ input }}"
-              n: {{ n }}
-            last:
-              input: "{{ input }}"
-            last_distinct:
-              input: "{{ input }}"
-              n: {{ n }}
-            last_n:
-              input: "{{ input }}"
-              n: {{ n }}
-            max:
-              input: "{{ input }}"
-            min:
-              input: "{{ input }}"
-            stddev_pop:
-              input: "{{ input }}"
-            stddev_samp:
-              input: "{{ input }}"
-            sum:
-              input: "{{ input }}"
-            time_window:
-              continuous:
-                window_duration: "{{ window_duration }}"
-                offset: "{{ offset }}"
-              rolling:
-                delay: "{{ delay }}"
-                window_duration: "{{ window_duration }}"
-              sawtooth:
-                delay: "{{ delay }}"
-                window_duration: "{{ window_duration }}"
-              sliding:
-                slide_duration: "{{ slide_duration }}"
-                delay: "{{ delay }}"
-                offset: "{{ offset }}"
-                window_duration: "{{ window_duration }}"
-              start_time: "{{ start_time }}"
-              tumbling:
-                window_duration: "{{ window_duration }}"
-                delay: "{{ delay }}"
-                offset: "{{ offset }}"
-            var_pop:
-              input: "{{ input }}"
-            var_samp:
-              input: "{{ input }}"
-          column_selection:
-            column: "{{ column }}"
-          custom_udf:
-            function_path: "{{ function_path }}"
-            input_bindings:
-              - parameter: "{{ parameter }}"
-                column: "{{ column }}"
-          extra_parameters:
-            - key: "{{ key }}"
-              value: "{{ value }}"
-          function_type: "{{ function_type }}"
-        catalog_name: "{{ catalog_name }}"
-        created_at: "{{ created_at }}"
-        created_by: "{{ created_by }}"
-        description: "{{ description }}"
-        entities:
-          - name: "{{ name }}"
-        filter_condition: "{{ filter_condition }}"
-        inputs:
-          - "{{ inputs }}"
-        lineage_context:
-          job_context:
-            job_id: {{ job_id }}
-            job_run_id: {{ job_run_id }}
-          notebook_id: {{ notebook_id }}
-        name: "{{ name }}"
-        schema_name: "{{ schema_name }}"
-        time_window:
-          continuous:
-            window_duration: "{{ window_duration }}"
-            offset: "{{ offset }}"
-          rolling:
-            delay: "{{ delay }}"
-            window_duration: "{{ window_duration }}"
-          sawtooth:
-            delay: "{{ delay }}"
-            window_duration: "{{ window_duration }}"
-          sliding:
-            slide_duration: "{{ slide_duration }}"
-            delay: "{{ delay }}"
-            offset: "{{ offset }}"
-            window_duration: "{{ window_duration }}"
-          start_time: "{{ start_time }}"
-          tumbling:
-            window_duration: "{{ window_duration }}"
-            delay: "{{ delay }}"
-            offset: "{{ offset }}"
-        timeseries_column:
+        delta_table_source:
+          full_name: "{{ full_name }}"
+          dataframe_schema: "{{ dataframe_schema }}"
+          entity_columns:
+            - "{{ entity_columns }}"
+          filter_condition: "{{ filter_condition }}"
+          timeseries_column: "{{ timeseries_column }}"
+          transformation_sql: "{{ transformation_sql }}"
+        feature_view_source:
+          feature_references:
+            - feature: "{{ feature }}"
+        kafka_source:
           name: "{{ name }}"
+          entity_column_identifiers:
+            - variant_expr_path: "{{ variant_expr_path }}"
+          filter_condition: "{{ filter_condition }}"
+          timeseries_column_identifier:
+            variant_expr_path: "{{ variant_expr_path }}"
+        lateness:
+          settling_delay: "{{ settling_delay }}"
+        request_source:
+          dataframe_schema: "{{ dataframe_schema }}"
+          flat_schema:
+            fields:
+              - name: "{{ name }}"
+                data_type: "{{ data_type }}"
+        sdp_source:
+          dataframe_schema: "{{ dataframe_schema }}"
+          filter_condition: "{{ filter_condition }}"
+          input_tables:
+            - "{{ input_tables }}"
+          output_table: "{{ output_table }}"
+          pipeline_id: "{{ pipeline_id }}"
+          pipeline_state: "{{ pipeline_state }}"
+          transformation_sql: "{{ transformation_sql }}"
+        stream_source:
+          full_name: "{{ full_name }}"
+          dataframe_schema: "{{ dataframe_schema }}"
+          filter_condition: "{{ filter_condition }}"
+          transformation_sql: "{{ transformation_sql }}"
+    - name: function
+      description: |
+        The function by which the feature is computed.
+      value:
+        aggregation_function:
+          approx_count_distinct:
+            input: "{{ input }}"
+            relative_error: {{ relative_error }}
+            relative_sd: {{ relative_sd }}
+          approx_percentile:
+            input: "{{ input }}"
+            percentile: {{ percentile }}
+            accuracy: {{ accuracy }}
+            relative_error: {{ relative_error }}
+          avg:
+            input: "{{ input }}"
+          count_function:
+            input: "{{ input }}"
+          first:
+            input: "{{ input }}"
+          first_distinct:
+            input: "{{ input }}"
+            n: {{ n }}
+          first_n:
+            input: "{{ input }}"
+            n: {{ n }}
+          last:
+            input: "{{ input }}"
+          last_distinct:
+            input: "{{ input }}"
+            n: {{ n }}
+          last_n:
+            input: "{{ input }}"
+            n: {{ n }}
+          max:
+            input: "{{ input }}"
+          min:
+            input: "{{ input }}"
+          stddev_pop:
+            input: "{{ input }}"
+          stddev_samp:
+            input: "{{ input }}"
+          sum:
+            input: "{{ input }}"
+          time_window:
+            continuous:
+              window_duration: "{{ window_duration }}"
+              offset: "{{ offset }}"
+            rolling:
+              delay: "{{ delay }}"
+              window_duration: "{{ window_duration }}"
+            sawtooth:
+              delay: "{{ delay }}"
+              window_duration: "{{ window_duration }}"
+            sliding:
+              slide_duration: "{{ slide_duration }}"
+              delay: "{{ delay }}"
+              offset: "{{ offset }}"
+              window_duration: "{{ window_duration }}"
+            start_time: "{{ start_time }}"
+            tumbling:
+              window_duration: "{{ window_duration }}"
+              delay: "{{ delay }}"
+              offset: "{{ offset }}"
+          var_pop:
+            input: "{{ input }}"
+          var_samp:
+            input: "{{ input }}"
+        column_selection:
+          column: "{{ column }}"
+        custom_udf:
+          function_path: "{{ function_path }}"
+          input_bindings:
+            - parameter: "{{ parameter }}"
+              column: "{{ column }}"
+        extra_parameters:
+          - key: "{{ key }}"
+            value: "{{ value }}"
+        function_type: "{{ function_type }}"
+    - name: catalog_name
+      value: "{{ catalog_name }}"
+      description: |
+        Name of parent catalog.
+    - name: created_at
+      value: "{{ created_at }}"
+      description: |
+        Time at which this feature was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Username of the feature creator.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        The description of the feature.
+    - name: entities
+      description: |
+        The entity columns for the feature, used as aggregation keys and for query-time lookup. Optional since entities are not set for RequestSource features or on-demand calculated features.
+      value:
+        - name: "{{ name }}"
+    - name: filter_condition
+      value: "{{ filter_condition }}"
+    - name: inputs
+      value:
+        - "{{ inputs }}"
+    - name: lineage_context
+      description: |
+        Lineage context information for this feature. WARNING: This field is primarily intended for internal use by Databricks systems and is automatically populated when features are created through Databricks notebooks or jobs. Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior. This field will be set by feature-engineering client and should be left unset by SDK and terraform users.
+      value:
+        job_context:
+          job_id: {{ job_id }}
+          job_run_id: {{ job_run_id }}
+        notebook_id: {{ notebook_id }}
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Name of the feature, extracted from the full three-part name (catalog.schema.name).
+    - name: schema_name
+      value: "{{ schema_name }}"
+      description: |
+        Name of parent schema relative to its parent catalog.
+    - name: time_window
+      value:
+        continuous:
+          window_duration: "{{ window_duration }}"
+          offset: "{{ offset }}"
+        rolling:
+          delay: "{{ delay }}"
+          window_duration: "{{ window_duration }}"
+        sawtooth:
+          delay: "{{ delay }}"
+          window_duration: "{{ window_duration }}"
+        sliding:
+          slide_duration: "{{ slide_duration }}"
+          delay: "{{ delay }}"
+          offset: "{{ offset }}"
+          window_duration: "{{ window_duration }}"
+        start_time: "{{ start_time }}"
+        tumbling:
+          window_duration: "{{ window_duration }}"
+          delay: "{{ delay }}"
+          offset: "{{ offset }}"
+    - name: timeseries_column
+      description: |
+        Column recording time, used for point-in-time joins, backfills, and aggregations. Optional since a timeseries column is not set for RequestSource features or on-demand calculated features.
+      value:
+        name: "{{ name }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -2044,13 +2105,29 @@ Update a Feature.
 ```sql
 UPDATE databricks_workspace.ml.feature_engineering
 SET 
-feature = '{{ feature }}'
+full_name = '{{ full_name }}',
+source = '{{ source }}',
+function = '{{ function }}',
+catalog_name = '{{ catalog_name }}',
+created_at = '{{ created_at }}',
+created_by = '{{ created_by }}',
+description = '{{ description }}',
+entities = '{{ entities }}',
+filter_condition = '{{ filter_condition }}',
+inputs = '{{ inputs }}',
+lineage_context = '{{ lineage_context }}',
+name = '{{ name }}',
+schema_name = '{{ schema_name }}',
+time_window = '{{ time_window }}',
+timeseries_column = '{{ timeseries_column }}'
 WHERE 
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND feature = '{{ feature }}' --required
+AND full_name = '{{ full_name }}' --required
+AND source = '{{ source }}' --required
+AND function = '{{ function }}' --required
 RETURNING
 name,
 catalog_name,

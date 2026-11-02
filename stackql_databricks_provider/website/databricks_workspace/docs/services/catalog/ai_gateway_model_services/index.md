@@ -438,14 +438,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-model_service_id"><code>model_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-model_service"><code>model_service</code></a></td>
+    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-model_service_id"><code>model_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a model service in a Unity Catalog schema. A model service is a governed AI Gateway endpoint</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-model_service"><code>model_service</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Updates a model service. Only the fields named in ``update_mask`` are changed; the resource name is</td>
 </tr>
@@ -608,14 +608,34 @@ Creates a model service in a Unity Catalog schema. A model service is a governed
 
 ```sql
 INSERT INTO databricks_workspace.catalog.ai_gateway_model_services (
-model_service,
+comment,
+config,
+create_time,
+created_by,
+effective_owner,
+etag,
+metastore_id,
+name,
+supported_api_types,
+update_time,
+updated_by,
 parent,
 model_service_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ model_service }}' /* required */,
+'{{ comment }}',
+'{{ config }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ effective_owner }}',
+'{{ etag }}',
+'{{ metastore_id }}',
+'{{ name }}',
+'{{ supported_api_types }}',
+'{{ update_time }}',
+'{{ updated_by }}',
 '{{ parent }}',
 '{{ model_service_id }}',
 '{{ deployment_name }}',
@@ -652,24 +672,43 @@ updated_by
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the ai_gateway_model_services resource.
-    - name: model_service
+    - name: comment
+      value: "{{ comment }}"
       description: |
-        The model service to create. Do not set \`\`name\`\`; the server derives it from \`\`parent\`\` and \`\`model_service_id\`\`.
+        User-provided description.
+    - name: config
+      description: |
+        Destinations, routing, rate limits, and payload logging configuration. Required on Create. On Update, provide this field when \`\`update_mask\`\` contains \`\`config\`\` or one of its subpaths.
       value:
-        comment: "{{ comment }}"
-        config:
-          inference_table:
-            parent: "{{ parent }}"
-            is_deleted: {{ is_deleted }}
-            table: "{{ table }}"
-            table_name_prefix: "{{ table_name_prefix }}"
-          rate_limits:
-            - key: "{{ key }}"
-              renewal_period: "{{ renewal_period }}"
-              principal: "{{ principal }}"
-              requests: {{ requests }}
-              tokens: {{ tokens }}
-          routing:
+        inference_table:
+          parent: "{{ parent }}"
+          is_deleted: {{ is_deleted }}
+          table: "{{ table }}"
+          table_name_prefix: "{{ table_name_prefix }}"
+        rate_limits:
+          - key: "{{ key }}"
+            renewal_period: "{{ renewal_period }}"
+            principal: "{{ principal }}"
+            requests: {{ requests }}
+            tokens: {{ tokens }}
+        routing:
+          destinations:
+            - name: "{{ name }}"
+              destination_type: "{{ destination_type }}"
+              external_model_config:
+                model_provider_service: "{{ model_provider_service }}"
+                target:
+                  model: "{{ model }}"
+                  endpoint_route: "{{ endpoint_route }}"
+                  native_api_types: "{{ native_api_types }}"
+              is_deleted: {{ is_deleted }}
+              pay_per_token_config:
+                model: "{{ model }}"
+              provisioned_throughput_config:
+                model_serving_endpoint: "{{ model_serving_endpoint }}"
+                model: "{{ model }}"
+              traffic_percentage: {{ traffic_percentage }}
+          fallback:
             destinations:
               - name: "{{ name }}"
                 destination_type: "{{ destination_type }}"
@@ -683,30 +722,43 @@ updated_by
                   model_serving_endpoint: "{{ model_serving_endpoint }}"
                   model: "{{ model }}"
                 traffic_percentage: {{ traffic_percentage }}
-            fallback:
-              destinations:
-                - name: "{{ name }}"
-                  destination_type: "{{ destination_type }}"
-                  external_model_config:
-                    model_provider_service: "{{ model_provider_service }}"
-                    target: "{{ target }}"
-                  is_deleted: {{ is_deleted }}
-                  pay_per_token_config:
-                    model: "{{ model }}"
-                  provisioned_throughput_config:
-                    model_serving_endpoint: "{{ model_serving_endpoint }}"
-                    model: "{{ model }}"
-                  traffic_percentage: {{ traffic_percentage }}
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        effective_owner: "{{ effective_owner }}"
-        etag: "{{ etag }}"
-        metastore_id: "{{ metastore_id }}"
-        name: "{{ name }}"
-        supported_api_types:
-          - "{{ supported_api_types }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time the model service was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Creator identity.
+    - name: effective_owner
+      value: "{{ effective_owner }}"
+      description: |
+        Owner of the model service.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        Optimistic concurrency token returned on every read. To make an Update or Delete conditional, pass the last-read value in that request's \`\`etag\`\` field. In REST responses, this value is a base64 string; URL-encode it when setting the \`\`etag\`\` query parameter.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Metastore hosting the model service.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name of the model service. Format: \`\`model-services/{catalog}.{schema}.{model_service}\`\`. Each \`\`{...}\`\` component is capped at 255 characters individually. Server-derived on Create from \`\`parent\`\` + \`\`model_service_id\`\`; required and immutable on Update/Get/Delete.
+    - name: supported_api_types
+      value:
+        - "{{ supported_api_types }}"
+      description: |
+        API types supported across this service's destinations, such as \`\`openai/v1/chat/completions\`\`, \`\`openai/v1/embeddings\`\`, and \`\`mlflow/v1/chat/completions\`\`. Derived from the backing models and providers at read time.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time the model service was last modified.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Identity of the last updater.
 `}</CodeBlock>
 
 </TabItem>
@@ -728,13 +780,22 @@ Updates a model service. Only the fields named in ``update_mask`` are changed; t
 ```sql
 UPDATE databricks_workspace.catalog.ai_gateway_model_services
 SET 
-model_service = '{{ model_service }}'
+comment = '{{ comment }}',
+config = '{{ config }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+effective_owner = '{{ effective_owner }}',
+etag = '{{ etag }}',
+metastore_id = '{{ metastore_id }}',
+name = '{{ name }}',
+supported_api_types = '{{ supported_api_types }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND model_service = '{{ model_service }}' --required
 AND etag = '{{ etag}}'
 RETURNING
 name,

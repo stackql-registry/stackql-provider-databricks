@@ -91,7 +91,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-workspace_identity_detail"><code>workspace_identity_detail</code></a></td>
+    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a workspace identity detail for a principal.</td>
 </tr>
@@ -177,13 +177,15 @@ Updates a workspace identity detail for a principal.
 ```sql
 UPDATE databricks_workspace.iamv2.workspace_identity_details
 SET 
-workspace_identity_detail = '{{ workspace_identity_detail }}'
+assignment_type = '{{ assignment_type }}',
+principal_id = {{ principal_id }},
+principal_type = '{{ principal_type }}',
+workspace_identity_status = '{{ workspace_identity_status }}'
 WHERE 
 principal_id = '{{ principal_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND workspace_identity_detail = '{{ workspace_identity_detail }}' --required
 RETURNING
 principal_id,
 assignment_type,

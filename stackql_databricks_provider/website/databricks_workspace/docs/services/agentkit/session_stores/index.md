@@ -144,14 +144,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-session_store"><code>session_store</code></a></td>
+    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a session store.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-session_store"><code>session_store</code></a></td>
+    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a session store's description and metadata.</td>
 </tr>
@@ -277,13 +277,23 @@ Creates a session store.
 
 ```sql
 INSERT INTO databricks_workspace.agentkit.session_stores (
-session_store,
+create_time,
+creator_user_id,
+description,
+metadata,
+name,
+update_time,
 session_store_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ session_store }}' /* required */,
+'{{ create_time }}',
+'{{ creator_user_id }}',
+'{{ description }}',
+'{{ metadata }}',
+'{{ name }}',
+'{{ update_time }}',
 '{{ session_store_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -311,16 +321,30 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the session_stores resource.
-    - name: session_store
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The session store to create.
-      value:
-        create_time: "{{ create_time }}"
-        creator_user_id: "{{ creator_user_id }}"
-        description: "{{ description }}"
-        metadata: "{{ metadata }}"
-        name: "{{ name }}"
-        update_time: "{{ update_time }}"
+        Time when the store was created.
+    - name: creator_user_id
+      value: "{{ creator_user_id }}"
+      description: |
+        Workspace-local user ID of the authenticated principal that created the store. This is immutable server-set attribution and does not grant access; authorization is evaluated from the authenticated request context.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Human-readable description of the session store.
+    - name: metadata
+      value: "{{ metadata }}"
+      description: |
+        Mutable caller-defined string labels.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name in the form \`\`session-stores/{session_store_id}\`\`.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time when the store was last updated.
 `}</CodeBlock>
 
 </TabItem>
@@ -342,13 +366,17 @@ Updates a session store's description and metadata.
 ```sql
 UPDATE databricks_workspace.agentkit.session_stores
 SET 
-session_store = '{{ session_store }}'
+create_time = '{{ create_time }}',
+creator_user_id = '{{ creator_user_id }}',
+description = '{{ description }}',
+metadata = '{{ metadata }}',
+name = '{{ name }}',
+update_time = '{{ update_time }}'
 WHERE 
 session_store_id = '{{ session_store_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND session_store = '{{ session_store }}' --required
 RETURNING
 name,
 creator_user_id,

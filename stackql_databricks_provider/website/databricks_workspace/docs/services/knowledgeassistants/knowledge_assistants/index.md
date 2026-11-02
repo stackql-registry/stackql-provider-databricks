@@ -194,14 +194,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-knowledge_assistant"><code>knowledge_assistant</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-description"><code>description</code></a></td>
     <td></td>
     <td>Creates a Knowledge Assistant.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-knowledge_assistant"><code>knowledge_assistant</code></a></td>
+    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-description"><code>description</code></a></td>
     <td></td>
     <td>Updates a Knowledge Assistant.</td>
 </tr>
@@ -337,12 +337,32 @@ Creates a Knowledge Assistant.
 
 ```sql
 INSERT INTO databricks_workspace.knowledgeassistants.knowledge_assistants (
-knowledge_assistant,
+display_name,
+description,
+create_time,
+creator,
+endpoint_name,
+error_info,
+experiment_id,
+id,
+instructions,
+name,
+state,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ knowledge_assistant }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ description }}' /* required */,
+'{{ create_time }}',
+'{{ creator }}',
+'{{ endpoint_name }}',
+'{{ error_info }}',
+'{{ experiment_id }}',
+'{{ id }}',
+'{{ instructions }}',
+'{{ name }}',
+'{{ state }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -371,21 +391,50 @@ state
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the knowledge_assistants resource.
-    - name: knowledge_assistant
+    - name: display_name
+      value: "{{ display_name }}"
       description: |
-        The Knowledge Assistant to create.
-      value:
-        display_name: "{{ display_name }}"
-        description: "{{ description }}"
-        create_time: "{{ create_time }}"
-        creator: "{{ creator }}"
-        endpoint_name: "{{ endpoint_name }}"
-        error_info: "{{ error_info }}"
-        experiment_id: "{{ experiment_id }}"
-        id: "{{ id }}"
-        instructions: "{{ instructions }}"
-        name: "{{ name }}"
-        state: "{{ state }}"
+        The display name of the Knowledge Assistant, unique at workspace level. Required when creating a Knowledge Assistant. When updating a Knowledge Assistant, optional unless included in update_mask.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Description of what this agent can do (user-facing). Required when creating a Knowledge Assistant. When updating a Knowledge Assistant, optional unless included in update_mask.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Creation timestamp.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The creator of the Knowledge Assistant.
+    - name: endpoint_name
+      value: "{{ endpoint_name }}"
+      description: |
+        The name of the knowledge assistant agent endpoint.
+    - name: error_info
+      value: "{{ error_info }}"
+      description: |
+        Error details when the Knowledge Assistant is in FAILED state.
+    - name: experiment_id
+      value: "{{ experiment_id }}"
+      description: |
+        The MLflow experiment ID.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Deprecated: use knowledge_assistant_id instead.
+    - name: instructions
+      value: "{{ instructions }}"
+      description: |
+        Additional global instructions on how the agent should generate answers. Optional on create and update. When updating a Knowledge Assistant, include this field in update_mask to modify it.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the Knowledge Assistant. Format: knowledge-assistants/{knowledge_assistant_id}
+    - name: state
+      value: "{{ state }}"
+      description: |
+        State of the Knowledge Assistant. Not returned in List responses.
 `}</CodeBlock>
 
 </TabItem>
@@ -407,13 +456,24 @@ Updates a Knowledge Assistant.
 ```sql
 UPDATE databricks_workspace.knowledgeassistants.knowledge_assistants
 SET 
-knowledge_assistant = '{{ knowledge_assistant }}'
+display_name = '{{ display_name }}',
+description = '{{ description }}',
+create_time = '{{ create_time }}',
+creator = '{{ creator }}',
+endpoint_name = '{{ endpoint_name }}',
+error_info = '{{ error_info }}',
+experiment_id = '{{ experiment_id }}',
+id = '{{ id }}',
+instructions = '{{ instructions }}',
+name = '{{ name }}',
+state = '{{ state }}'
 WHERE 
 knowledge_assistant_id = '{{ knowledge_assistant_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND knowledge_assistant = '{{ knowledge_assistant }}' --required
+AND display_name = '{{ display_name }}' --required
+AND description = '{{ description }}' --required
 RETURNING
 id,
 name,

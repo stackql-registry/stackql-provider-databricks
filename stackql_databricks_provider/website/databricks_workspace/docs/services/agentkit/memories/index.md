@@ -128,14 +128,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-managed_memory_entry"><code>managed_memory_entry</code></a></td>
+    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-actor_id"><code>actor_id</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td><a href="#parameter-managed_memory_entry_id"><code>managed_memory_entry_id</code></a></td>
     <td>Creates a memory entry using exclusive-create semantics. Callers may choose the entry ID; the service</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-managed_memory_entry_id"><code>managed_memory_entry_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-managed_memory_entry"><code>managed_memory_entry</code></a></td>
+    <td><a href="#parameter-managed_memory_store_id"><code>managed_memory_store_id</code></a>, <a href="#parameter-managed_memory_entry_id"><code>managed_memory_entry_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-actor_id"><code>actor_id</code></a>, <a href="#parameter-path"><code>path</code></a></td>
     <td></td>
     <td>Updates selected mutable fields on a memory entry. Identity fields are immutable.</td>
 </tr>
@@ -303,14 +303,30 @@ Creates a memory entry using exclusive-create semantics. Callers may choose the 
 
 ```sql
 INSERT INTO databricks_workspace.agentkit.memories (
-managed_memory_entry,
+actor_id,
+path,
+content,
+create_time,
+description,
+name,
+session_id,
+source_type,
+update_time,
 managed_memory_store_id,
 deployment_name,
 workspace_domain,
 managed_memory_entry_id
 )
 SELECT 
-'{{ managed_memory_entry }}' /* required */,
+'{{ actor_id }}' /* required */,
+'{{ path }}' /* required */,
+'{{ content }}',
+'{{ create_time }}',
+'{{ description }}',
+'{{ name }}',
+'{{ session_id }}',
+'{{ source_type }}',
+'{{ update_time }}',
 '{{ managed_memory_store_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
@@ -342,19 +358,42 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the memories resource.
-    - name: managed_memory_entry
+    - name: actor_id
+      value: "{{ actor_id }}"
       description: |
-        The memory entry to create.
-      value:
-        actor_id: "{{ actor_id }}"
-        path: "{{ path }}"
-        content: "{{ content }}"
-        create_time: "{{ create_time }}"
-        description: "{{ description }}"
-        name: "{{ name }}"
-        session_id: "{{ session_id }}"
-        source_type: "{{ source_type }}"
-        update_time: "{{ update_time }}"
+        Customer-provided identifier for the actor whose memory this entry represents.
+    - name: path
+      value: "{{ path }}"
+      description: |
+        Absolute, case-sensitive path identifying the entry within its actor and optional session. Paths must begin with \`\`/\`\` and must not contain empty, \`\`.\`\` or \`\`..\`\` segments.
+    - name: content
+      value: "{{ content }}"
+      description: |
+        Optional free-form memory content.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time when the entry was created.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Human-readable description of the memory entry.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name in the form \`\`memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}\`\`. Required for updates; assigned by the service on creation.
+    - name: session_id
+      value: "{{ session_id }}"
+      description: |
+        Optional identifier for the session associated with this memory entry. When omitted, the entry applies across the actor's sessions.
+    - name: source_type
+      value: "{{ source_type }}"
+      description: |
+        Which writer created this entry. Caller sets this on Create; immutable after creation.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time when the entry was last updated.
     - name: managed_memory_entry_id
       value: "{{ managed_memory_entry_id }}"
       description: Optional caller-selected memory entry ID. The service generates an ID when omitted.
@@ -380,14 +419,23 @@ Updates selected mutable fields on a memory entry. Identity fields are immutable
 ```sql
 UPDATE databricks_workspace.agentkit.memories
 SET 
-managed_memory_entry = '{{ managed_memory_entry }}'
+actor_id = '{{ actor_id }}',
+path = '{{ path }}',
+content = '{{ content }}',
+create_time = '{{ create_time }}',
+description = '{{ description }}',
+name = '{{ name }}',
+session_id = '{{ session_id }}',
+source_type = '{{ source_type }}',
+update_time = '{{ update_time }}'
 WHERE 
 managed_memory_store_id = '{{ managed_memory_store_id }}' --required
 AND managed_memory_entry_id = '{{ managed_memory_entry_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND managed_memory_entry = '{{ managed_memory_entry }}' --required
+AND actor_id = '{{ actor_id }}' --required
+AND path = '{{ path }}' --required
 RETURNING
 name,
 actor_id,

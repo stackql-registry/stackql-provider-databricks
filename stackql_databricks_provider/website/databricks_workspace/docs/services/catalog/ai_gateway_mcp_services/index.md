@@ -306,14 +306,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-mcp_service_id"><code>mcp_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-mcp_service"><code>mcp_service</code></a></td>
+    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-mcp_service_id"><code>mcp_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates an MCP service in a Unity Catalog schema. An MCP (Model Context Protocol) service is a</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-mcp_service"><code>mcp_service</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Updates an MCP service. Only the fields named in ``update_mask`` are changed; the resource name is</td>
 </tr>
@@ -474,14 +474,32 @@ Creates an MCP service in a Unity Catalog schema. An MCP (Model Context Protocol
 
 ```sql
 INSERT INTO databricks_workspace.catalog.ai_gateway_mcp_services (
-mcp_service,
+comment,
+config,
+create_time,
+created_by,
+effective_owner,
+etag,
+metastore_id,
+name,
+update_time,
+updated_by,
 parent,
 mcp_service_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ mcp_service }}' /* required */,
+'{{ comment }}',
+'{{ config }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ effective_owner }}',
+'{{ etag }}',
+'{{ metastore_id }}',
+'{{ name }}',
+'{{ update_time }}',
+'{{ updated_by }}',
 '{{ parent }}',
 '{{ mcp_service_id }}',
 '{{ deployment_name }}',
@@ -517,32 +535,58 @@ updated_by
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the ai_gateway_mcp_services resource.
-    - name: mcp_service
+    - name: comment
+      value: "{{ comment }}"
       description: |
-        The MCP service to create. Do not set \`\`name\`\`; the server derives it from \`\`parent\`\` and \`\`mcp_service_id\`\`. \`\`source_connection\`\` is required.
+        User-provided description.
+    - name: config
+      description: |
+        Connection, tool selectors, and rate limits. Required on Create. On Update, provide this field when \`\`update_mask\`\` contains \`\`config\`\` or one of its subpaths.
       value:
-        comment: "{{ comment }}"
-        config:
-          include_tool_selectors:
-            - "{{ include_tool_selectors }}"
-          rate_limits:
-            - key: "{{ key }}"
-              renewal_period: "{{ renewal_period }}"
-              principal: "{{ principal }}"
-              requests: {{ requests }}
-              tokens: {{ tokens }}
-          source_connection:
-            name: "{{ name }}"
-            is_deleted: {{ is_deleted }}
-            options: "{{ options }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        effective_owner: "{{ effective_owner }}"
-        etag: "{{ etag }}"
-        metastore_id: "{{ metastore_id }}"
-        name: "{{ name }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+        include_tool_selectors:
+          - "{{ include_tool_selectors }}"
+        rate_limits:
+          - key: "{{ key }}"
+            renewal_period: "{{ renewal_period }}"
+            principal: "{{ principal }}"
+            requests: {{ requests }}
+            tokens: {{ tokens }}
+        source_connection:
+          name: "{{ name }}"
+          is_deleted: {{ is_deleted }}
+          options: "{{ options }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time the MCP service was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Creator identity.
+    - name: effective_owner
+      value: "{{ effective_owner }}"
+      description: |
+        Owner of the MCP service.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        Optimistic concurrency token returned on every read. To make an Update or Delete conditional, pass the last-read value in that request's \`\`etag\`\` field. In REST responses, this value is a base64 string; URL-encode it when setting the \`\`etag\`\` query parameter.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Metastore hosting the MCP service.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name of the MCP service. Format: \`\`mcp-services/{catalog}.{schema}.{mcp_service}\`\`. Each \`\`{...}\`\` component is capped at 255 characters individually. Server-derived on Create from \`\`parent\`\` + \`\`mcp_service_id\`\`; required and immutable on Update/Get/Delete.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time the MCP service was last modified.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Identity of the last updater.
 `}</CodeBlock>
 
 </TabItem>
@@ -564,13 +608,21 @@ Updates an MCP service. Only the fields named in ``update_mask`` are changed; th
 ```sql
 UPDATE databricks_workspace.catalog.ai_gateway_mcp_services
 SET 
-mcp_service = '{{ mcp_service }}'
+comment = '{{ comment }}',
+config = '{{ config }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+effective_owner = '{{ effective_owner }}',
+etag = '{{ etag }}',
+metastore_id = '{{ metastore_id }}',
+name = '{{ name }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND mcp_service = '{{ mcp_service }}' --required
 AND etag = '{{ etag}}'
 RETURNING
 name,

@@ -134,7 +134,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-snapshot_schedule"><code>snapshot_schedule</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Sets the snapshot schedule for a branch. The ``schedule`` field is replaced wholesale; an empty</td>
 </tr>
@@ -224,14 +224,14 @@ Sets the snapshot schedule for a branch. The ``schedule`` field is replaced whol
 ```sql
 UPDATE databricks_workspace.postgres.postgres_snapshot_schedules
 SET 
-snapshot_schedule = '{{ snapshot_schedule }}'
+name = '{{ name }}',
+schedule = '{{ schedule }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND branch_id = '{{ branch_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND snapshot_schedule = '{{ snapshot_schedule }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

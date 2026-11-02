@@ -124,14 +124,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_assignment"><code>tag_assignment</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_id"><code>entity_id</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Create a tag assignment</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_id"><code>entity_id</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_assignment"><code>tag_assignment</code></a></td>
+    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_id"><code>entity_id</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_id"><code>entity_id</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Update a tag assignment</td>
 </tr>
@@ -267,12 +267,18 @@ Create a tag assignment
 
 ```sql
 INSERT INTO databricks_workspace.tags.workspace_entity_tag_assignments (
-tag_assignment,
+entity_type,
+entity_id,
+tag_key,
+tag_value,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ tag_assignment }}' /* required */,
+'{{ entity_type }}' /* required */,
+'{{ entity_id }}' /* required */,
+'{{ tag_key }}' /* required */,
+'{{ tag_value }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -294,12 +300,20 @@ tag_value
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the workspace_entity_tag_assignments resource.
-    - name: tag_assignment
-      value:
-        entity_type: "{{ entity_type }}"
-        entity_id: "{{ entity_id }}"
-        tag_key: "{{ tag_key }}"
-        tag_value: "{{ tag_value }}"
+    - name: entity_type
+      value: "{{ entity_type }}"
+    - name: entity_id
+      value: "{{ entity_id }}"
+      description: |
+        The identifier of the entity to which the tag is assigned. For apps, the entity_id is the app name
+    - name: tag_key
+      value: "{{ tag_key }}"
+      description: |
+        The key of the tag. The characters , . : / - = and leading/trailing spaces are not allowed
+    - name: tag_value
+      value: "{{ tag_value }}"
+      description: |
+        The value of the tag
 `}</CodeBlock>
 
 </TabItem>
@@ -321,7 +335,10 @@ Update a tag assignment
 ```sql
 UPDATE databricks_workspace.tags.workspace_entity_tag_assignments
 SET 
-tag_assignment = '{{ tag_assignment }}'
+entity_type = '{{ entity_type }}',
+entity_id = '{{ entity_id }}',
+tag_key = '{{ tag_key }}',
+tag_value = '{{ tag_value }}'
 WHERE 
 entity_type = '{{ entity_type }}' --required
 AND entity_id = '{{ entity_id }}' --required
@@ -329,7 +346,9 @@ AND tag_key = '{{ tag_key }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND tag_assignment = '{{ tag_assignment }}' --required
+AND entity_type = '{{ entity_type }}' --required
+AND entity_id = '{{ entity_id }}' --required
+AND tag_key = '{{ tag_key }}' --required
 RETURNING
 entity_id,
 entity_type,

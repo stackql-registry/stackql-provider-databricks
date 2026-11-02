@@ -161,7 +161,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#private_access_replace"><CopyableCode code="private_access_replace" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-customer_facing_private_access_settings"><code>customer_facing_private_access_settings</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing private access settings object, which specifies how your workspace is accessed</td>
 </tr>
@@ -352,12 +352,17 @@ Updates an existing private access settings object, which specifies how your wor
 ```sql
 REPLACE databricks_account.provisioning.private_access
 SET 
-customer_facing_private_access_settings = '{{ customer_facing_private_access_settings }}'
+account_id = '{{ account_id }}',
+allowed_vpc_endpoint_ids = '{{ allowed_vpc_endpoint_ids }}',
+private_access_level = '{{ private_access_level }}',
+private_access_settings_id = '{{ private_access_settings_id }}',
+private_access_settings_name = '{{ private_access_settings_name }}',
+public_access_enabled = {{ public_access_enabled }},
+region = '{{ region }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND private_access_settings_id = '{{ private_access_settings_id }}' --required
 AND account_host = '{{ account_host }}' --required
-AND customer_facing_private_access_settings = '{{ customer_facing_private_access_settings }}' --required
 RETURNING
 account_id,
 private_access_settings_id,

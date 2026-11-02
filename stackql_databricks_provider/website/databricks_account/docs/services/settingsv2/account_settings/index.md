@@ -549,7 +549,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#patch_public_account_setting"><CopyableCode code="patch_public_account_setting" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-setting"><code>setting</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Patch a setting value at account level. See :method:settingsv2/listaccountsettingsmetadata for list of</td>
 </tr>
@@ -682,12 +682,35 @@ Patch a setting value at account level. See :method:settingsv2/listaccountsettin
 ```sql
 UPDATE databricks_account.settingsv2.account_settings
 SET 
-setting = '{{ setting }}'
+aibi_dashboard_embedding_access_policy = '{{ aibi_dashboard_embedding_access_policy }}',
+aibi_dashboard_embedding_approved_domains = '{{ aibi_dashboard_embedding_approved_domains }}',
+allowed_apps_user_api_scopes = '{{ allowed_apps_user_api_scopes }}',
+automatic_cluster_update_workspace = '{{ automatic_cluster_update_workspace }}',
+boolean_val = '{{ boolean_val }}',
+collaboration_platform_connectivity = '{{ collaboration_platform_connectivity }}',
+effective_aibi_dashboard_embedding_access_policy = '{{ effective_aibi_dashboard_embedding_access_policy }}',
+effective_aibi_dashboard_embedding_approved_domains = '{{ effective_aibi_dashboard_embedding_approved_domains }}',
+effective_allowed_apps_user_api_scopes = '{{ effective_allowed_apps_user_api_scopes }}',
+effective_automatic_cluster_update_workspace = '{{ effective_automatic_cluster_update_workspace }}',
+effective_boolean_val = '{{ effective_boolean_val }}',
+effective_collaboration_platform_connectivity = '{{ effective_collaboration_platform_connectivity }}',
+effective_integer_val = '{{ effective_integer_val }}',
+effective_operational_email_custom_recipient = '{{ effective_operational_email_custom_recipient }}',
+effective_personal_compute = '{{ effective_personal_compute }}',
+effective_restrict_workspace_admins = '{{ effective_restrict_workspace_admins }}',
+effective_string_val = '{{ effective_string_val }}',
+effective_workspace_label = '{{ effective_workspace_label }}',
+integer_val = '{{ integer_val }}',
+name = '{{ name }}',
+operational_email_custom_recipient = '{{ operational_email_custom_recipient }}',
+personal_compute = '{{ personal_compute }}',
+restrict_workspace_admins = '{{ restrict_workspace_admins }}',
+string_val = '{{ string_val }}',
+workspace_label = '{{ workspace_label }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND name = '{{ name }}' --required
 AND account_host = '{{ account_host }}' --required
-AND setting = '{{ setting }}' --required
 RETURNING
 name,
 aibi_dashboard_embedding_access_policy,

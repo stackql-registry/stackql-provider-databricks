@@ -376,14 +376,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-template"><code>template</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-git_repo"><code>git_repo</code></a>, <a href="#parameter-path"><code>path</code></a>, <a href="#parameter-manifest"><code>manifest</code></a>, <a href="#parameter-git_provider"><code>git_provider</code></a></td>
     <td></td>
     <td>Creates a custom template.</td>
 </tr>
 <tr>
     <td><a href="#replace"><CopyableCode code="replace" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-template"><code>template</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-git_repo"><code>git_repo</code></a>, <a href="#parameter-path"><code>path</code></a>, <a href="#parameter-manifest"><code>manifest</code></a>, <a href="#parameter-git_provider"><code>git_provider</code></a></td>
     <td></td>
     <td>Updates the custom template with the specified name. Note that the template name cannot be updated.</td>
 </tr>
@@ -506,12 +506,24 @@ Creates a custom template.
 
 ```sql
 INSERT INTO databricks_workspace.apps.apps_settings (
-template,
+name,
+git_repo,
+path,
+manifest,
+git_provider,
+creator,
+description,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ template }}' /* required */,
+'{{ name }}' /* required */,
+'{{ git_repo }}' /* required */,
+'{{ path }}' /* required */,
+'{{ manifest }}' /* required */,
+'{{ git_provider }}' /* required */,
+'{{ creator }}',
+'{{ description }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -536,34 +548,49 @@ path
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the apps_settings resource.
-    - name: template
+    - name: name
+      value: "{{ name }}"
+    - name: git_repo
+      value: "{{ git_repo }}"
+      description: |
+        The Git repository URL that the template resides in.
+    - name: path
+      value: "{{ path }}"
+      description: |
+        The path to the template within the Git repository.
+    - name: manifest
+      description: |
+        The manifest of the template. It defines fields and default values when installing the template.
       value:
+        version: {{ version }}
         name: "{{ name }}"
-        git_repo: "{{ git_repo }}"
-        path: "{{ path }}"
-        manifest:
-          version: {{ version }}
-          name: "{{ name }}"
-          description: "{{ description }}"
-          resource_specs:
-            - name: "{{ name }}"
-              description: "{{ description }}"
-              experiment_spec:
-                permission: "{{ permission }}"
-              job_spec:
-                permission: "{{ permission }}"
-              secret_spec:
-                permission: "{{ permission }}"
-              serving_endpoint_spec:
-                permission: "{{ permission }}"
-              sql_warehouse_spec:
-                permission: "{{ permission }}"
-              uc_securable_spec:
-                securable_type: "{{ securable_type }}"
-                permission: "{{ permission }}"
-        git_provider: "{{ git_provider }}"
-        creator: "{{ creator }}"
         description: "{{ description }}"
+        resource_specs:
+          - name: "{{ name }}"
+            description: "{{ description }}"
+            experiment_spec:
+              permission: "{{ permission }}"
+            job_spec:
+              permission: "{{ permission }}"
+            secret_spec:
+              permission: "{{ permission }}"
+            serving_endpoint_spec:
+              permission: "{{ permission }}"
+            sql_warehouse_spec:
+              permission: "{{ permission }}"
+            uc_securable_spec:
+              securable_type: "{{ securable_type }}"
+              permission: "{{ permission }}"
+    - name: git_provider
+      value: "{{ git_provider }}"
+      description: |
+        The Git provider of the template.
+    - name: creator
+      value: "{{ creator }}"
+    - name: description
+      value: "{{ description }}"
+      description: |
+        The description of the template.
 `}</CodeBlock>
 
 </TabItem>
@@ -585,12 +612,22 @@ Updates the custom template with the specified name. Note that the template name
 ```sql
 REPLACE databricks_workspace.apps.apps_settings
 SET 
-template = '{{ template }}'
+name = '{{ name }}',
+git_repo = '{{ git_repo }}',
+path = '{{ path }}',
+manifest = '{{ manifest }}',
+git_provider = '{{ git_provider }}',
+creator = '{{ creator }}',
+description = '{{ description }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND template = '{{ template }}' --required
+AND name = '{{ name }}' --required
+AND git_repo = '{{ git_repo }}' --required
+AND path = '{{ path }}' --required
+AND manifest = '{{ manifest }}' --required
+AND git_provider = '{{ git_provider }}' --required
 RETURNING
 name,
 creator,

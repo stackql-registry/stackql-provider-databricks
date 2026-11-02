@@ -188,7 +188,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a federation policy for an OIDC_FEDERATION recipient for sharing data from Databricks to</td>
 </tr>
@@ -316,13 +316,23 @@ Create a federation policy for an OIDC_FEDERATION recipient for sharing data fro
 
 ```sql
 INSERT INTO databricks_workspace.sharing.recipient_federation_policies (
-policy,
+comment,
+create_time,
+id,
+name,
+oidc_policy,
+update_time,
 recipient_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ policy }}' /* required */,
+'{{ comment }}',
+'{{ create_time }}',
+'{{ id }}',
+'{{ name }}',
+'{{ oidc_policy }}',
+'{{ update_time }}',
 '{{ recipient_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -350,21 +360,33 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the recipient_federation_policies resource.
-    - name: policy
+    - name: comment
+      value: "{{ comment }}"
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        Name of the policy. This is the name of the policy to be created.
+        System-generated timestamp indicating when the policy was created.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique, immutable system-generated identifier for the federation policy.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Name of the federation policy. A recipient can have multiple policies with different names. The name must contain only lowercase alphanumeric characters, numbers, and hyphens.
+    - name: oidc_policy
+      description: |
+        Specifies the policy to use for validating OIDC claims in the federated tokens.
       value:
-        comment: "{{ comment }}"
-        create_time: "{{ create_time }}"
-        id: "{{ id }}"
-        name: "{{ name }}"
-        oidc_policy:
-          issuer: "{{ issuer }}"
-          subject_claim: "{{ subject_claim }}"
-          subject: "{{ subject }}"
-          audiences:
-            - "{{ audiences }}"
-        update_time: "{{ update_time }}"
+        issuer: "{{ issuer }}"
+        subject_claim: "{{ subject_claim }}"
+        subject: "{{ subject }}"
+        audiences:
+          - "{{ audiences }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        System-generated timestamp indicating when the policy was last updated.
 `}</CodeBlock>
 
 </TabItem>

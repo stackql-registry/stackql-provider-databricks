@@ -204,14 +204,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-skill_id"><code>skill_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-skill"><code>skill</code></a></td>
+    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-skill_id"><code>skill_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a skill in a Unity Catalog schema and provisions its managed bundle storage. Specify its name</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-skill"><code>skill</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Updates a skill. Only fields named in ``update_mask`` are changed; currently only ``comment`` is</td>
 </tr>
@@ -372,14 +372,36 @@ Creates a skill in a Unity Catalog schema and provisions its managed bundle stor
 
 ```sql
 INSERT INTO databricks_workspace.catalog.ai_gateway_skills (
-skill,
+bundle_name,
+comment,
+create_time,
+created_by,
+description,
+effective_owner,
+etag,
+finalize_time,
+metastore_id,
+name,
+update_time,
+updated_by,
 parent,
 skill_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ skill }}' /* required */,
+'{{ bundle_name }}',
+'{{ comment }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ description }}',
+'{{ effective_owner }}',
+'{{ etag }}',
+'{{ finalize_time }}',
+'{{ metastore_id }}',
+'{{ name }}',
+'{{ update_time }}',
+'{{ updated_by }}',
 '{{ parent }}',
 '{{ skill_id }}',
 '{{ deployment_name }}',
@@ -417,22 +439,54 @@ updated_by
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the ai_gateway_skills resource.
-    - name: skill
+    - name: bundle_name
+      value: "{{ bundle_name }}"
       description: |
-        The skill to create. \`\`comment\`\` is the only accepted client input and may be omitted. Do not set \`\`name\`\`; the server derives it from \`\`parent\`\` and \`\`skill_id\`\`.
-      value:
-        bundle_name: "{{ bundle_name }}"
-        comment: "{{ comment }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        description: "{{ description }}"
-        effective_owner: "{{ effective_owner }}"
-        etag: "{{ etag }}"
-        finalize_time: "{{ finalize_time }}"
-        metastore_id: "{{ metastore_id }}"
-        name: "{{ name }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+        Name from the most recently successfully finalized SKILL.md. It may differ from the final component of the Skill resource name. Unset until FinalizeSkill succeeds.
+    - name: comment
+      value: "{{ comment }}"
+      description: |
+        User-provided comment for the skill. Free-text, user-editable via UpdateSkill (listed in its \`\`update_mask\`\`). DISTINCT from \`\`description\`\`, which is the server-parsed, OUTPUT_ONLY SKILL.md frontmatter value: \`\`comment\`\` is the customer's own annotation and is preserved across bundle re-uploads. When \`\`comment\`\` is in the update mask, omitting it clears the field, while an explicitly empty string is retained.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time the skill was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Creator identity.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Description from the most recently successfully finalized SKILL.md. Unset until FinalizeSkill succeeds.
+    - name: effective_owner
+      value: "{{ effective_owner }}"
+      description: |
+        Owner of the skill.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        Optimistic concurrency token returned on every read. To make an Update or Delete conditional, pass the last-read value in that request's \`\`etag\`\` field. In REST responses, this value is a base64 string; URL-encode it when setting the \`\`etag\`\` query parameter.
+    - name: finalize_time
+      value: "{{ finalize_time }}"
+      description: |
+        Time of the most recent successful FinalizeSkill. Unset until one succeeds.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Metastore hosting the skill.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name of the skill. Format: \`\`skills/{catalog}.{schema}.{skill}\`\`. Each \`\`{...}\`\` component is capped at 255 characters individually. Server-derived on Create from \`\`parent\`\` + \`\`skill_id\`\`; required and immutable on Update/Get/Delete.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time of the most recent Skill metadata mutation. Uploading bundle files alone does not change this value.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Identity of the last updater.
 `}</CodeBlock>
 
 </TabItem>
@@ -454,13 +508,23 @@ Updates a skill. Only fields named in ``update_mask`` are changed; currently onl
 ```sql
 UPDATE databricks_workspace.catalog.ai_gateway_skills
 SET 
-skill = '{{ skill }}'
+bundle_name = '{{ bundle_name }}',
+comment = '{{ comment }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+description = '{{ description }}',
+effective_owner = '{{ effective_owner }}',
+etag = '{{ etag }}',
+finalize_time = '{{ finalize_time }}',
+metastore_id = '{{ metastore_id }}',
+name = '{{ name }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND skill = '{{ skill }}' --required
 AND etag = '{{ etag}}'
 RETURNING
 name,

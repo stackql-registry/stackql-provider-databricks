@@ -161,7 +161,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-rule_id"><code>rule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-auto_approval_rule"><code>auto_approval_rule</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-rule_id"><code>rule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update a auto-approval rule by rule ID</td>
 </tr>
@@ -356,13 +356,18 @@ Update a auto-approval rule by rule ID
 ```sql
 UPDATE databricks_workspace.cleanrooms.auto_approval_rules
 SET 
-auto_approval_rule = '{{ auto_approval_rule }}'
+author_collaborator_alias = '{{ author_collaborator_alias }}',
+author_scope = '{{ author_scope }}',
+clean_room_name = '{{ clean_room_name }}',
+created_at = {{ created_at }},
+rule_id = '{{ rule_id }}',
+rule_owner_collaborator_alias = '{{ rule_owner_collaborator_alias }}',
+runner_collaborator_alias = '{{ runner_collaborator_alias }}'
 WHERE 
 clean_room_name = '{{ clean_room_name }}' --required
 AND rule_id = '{{ rule_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND auto_approval_rule = '{{ auto_approval_rule }}' --required
 RETURNING
 rule_id,
 clean_room_name,

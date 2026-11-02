@@ -154,14 +154,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_assignment"><code>tag_assignment</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Creates a tag assignment for an Unity Catalog entity.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_assignment"><code>tag_assignment</code></a></td>
+    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Updates an existing tag assignment for an Unity Catalog entity.</td>
 </tr>
@@ -303,12 +303,24 @@ Creates a tag assignment for an Unity Catalog entity.
 
 ```sql
 INSERT INTO databricks_workspace.catalog.entity_tag_assignments (
-tag_assignment,
+entity_name,
+tag_key,
+entity_type,
+source_type,
+tag_value,
+update_time,
+updated_by,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ tag_assignment }}' /* required */,
+'{{ entity_name }}' /* required */,
+'{{ tag_key }}' /* required */,
+'{{ entity_type }}' /* required */,
+'{{ source_type }}',
+'{{ tag_value }}',
+'{{ update_time }}',
+'{{ updated_by }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -333,17 +345,34 @@ updated_by
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the entity_tag_assignments resource.
-    - name: tag_assignment
+    - name: entity_name
+      value: "{{ entity_name }}"
       description: |
-        Represents a tag assignment to an entity
-      value:
-        entity_name: "{{ entity_name }}"
-        tag_key: "{{ tag_key }}"
-        entity_type: "{{ entity_type }}"
-        source_type: "{{ source_type }}"
-        tag_value: "{{ tag_value }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+        The fully qualified name of the entity to which the tag is assigned
+    - name: tag_key
+      value: "{{ tag_key }}"
+      description: |
+        The key of the tag
+    - name: entity_type
+      value: "{{ entity_type }}"
+      description: |
+        The type of the entity to which the tag is assigned.
+    - name: source_type
+      value: "{{ source_type }}"
+      description: |
+        The source type of the tag assignment, e.g., user-assigned or system-assigned
+    - name: tag_value
+      value: "{{ tag_value }}"
+      description: |
+        The value of the tag
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The timestamp when the tag assignment was last updated
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        The user or principal who updated the tag assignment
 `}</CodeBlock>
 
 </TabItem>
@@ -365,7 +394,13 @@ Updates an existing tag assignment for an Unity Catalog entity.
 ```sql
 UPDATE databricks_workspace.catalog.entity_tag_assignments
 SET 
-tag_assignment = '{{ tag_assignment }}'
+entity_name = '{{ entity_name }}',
+tag_key = '{{ tag_key }}',
+entity_type = '{{ entity_type }}',
+source_type = '{{ source_type }}',
+tag_value = '{{ tag_value }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 entity_type = '{{ entity_type }}' --required
 AND entity_name = '{{ entity_name }}' --required
@@ -373,7 +408,9 @@ AND tag_key = '{{ tag_key }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND tag_assignment = '{{ tag_assignment }}' --required
+AND entity_name = '{{ entity_name }}' --required
+AND tag_key = '{{ tag_key }}' --required
+AND entity_type = '{{ entity_type }}' --required
 RETURNING
 entity_name,
 entity_type,

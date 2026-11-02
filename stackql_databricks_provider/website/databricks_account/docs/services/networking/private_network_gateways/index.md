@@ -342,14 +342,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ncc_id"><code>ncc_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-private_network_gateway"><code>private_network_gateway</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ncc_id"><code>ncc_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-traffic_mode"><code>traffic_mode</code></a></td>
     <td><a href="#parameter-request_id"><code>request_id</code></a></td>
     <td>Creates a private network gateway.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ncc_id"><code>ncc_id</code></a>, <a href="#parameter-gateway_id"><code>gateway_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-private_network_gateway"><code>private_network_gateway</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ncc_id"><code>ncc_id</code></a>, <a href="#parameter-gateway_id"><code>gateway_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-traffic_mode"><code>traffic_mode</code></a></td>
     <td></td>
     <td>Updates a private network gateway.</td>
 </tr>
@@ -493,14 +493,36 @@ Creates a private network gateway.
 
 ```sql
 INSERT INTO databricks_account.networking.private_network_gateways (
-private_network_gateway,
+display_name,
+traffic_mode,
+aws_cloud_connection,
+azure_cloud_connection,
+bandwidth_tier_gigabits_per_second,
+create_time,
+destinations,
+error_message,
+name,
+private_dns_resolvers,
+state,
+update_time,
 account_id,
 ncc_id,
 account_host,
 request_id
 )
 SELECT 
-'{{ private_network_gateway }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ traffic_mode }}' /* required */,
+'{{ aws_cloud_connection }}',
+'{{ azure_cloud_connection }}',
+{{ bandwidth_tier_gigabits_per_second }},
+'{{ create_time }}',
+'{{ destinations }}',
+'{{ error_message }}',
+'{{ name }}',
+'{{ private_dns_resolvers }}',
+'{{ state }}',
+'{{ update_time }}',
 '{{ account_id }}',
 '{{ ncc_id }}',
 '{{ account_host }}',
@@ -522,34 +544,66 @@ SELECT
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the private_network_gateways resource.
-    - name: private_network_gateway
+    - name: display_name
+      value: "{{ display_name }}"
       description: |
-        The gateway to create.
+        The human-readable name of the gateway.
+    - name: traffic_mode
+      value: "{{ traffic_mode }}"
+      description: |
+        The traffic routed through this gateway.
+    - name: aws_cloud_connection
+      description: |
+        The AWS connection used by the gateway.
       value:
-        display_name: "{{ display_name }}"
-        traffic_mode: "{{ traffic_mode }}"
-        aws_cloud_connection:
-          gateway_subnets:
-            - subnet_id: "{{ subnet_id }}"
-          cross_account_role:
-            role_arn: "{{ role_arn }}"
-          security_group_ids:
-            - "{{ security_group_ids }}"
-        azure_cloud_connection:
-          gateway_subnet:
-            resource_id: "{{ resource_id }}"
-        bandwidth_tier_gigabits_per_second: {{ bandwidth_tier_gigabits_per_second }}
-        create_time: "{{ create_time }}"
-        destinations:
-          - destination_type: "{{ destination_type }}"
-            value: "{{ value }}"
-        error_message: "{{ error_message }}"
-        name: "{{ name }}"
-        private_dns_resolvers:
-          - resolver_type: "{{ resolver_type }}"
-            value: "{{ value }}"
-        state: "{{ state }}"
-        update_time: "{{ update_time }}"
+        gateway_subnets:
+          - subnet_id: "{{ subnet_id }}"
+        cross_account_role:
+          role_arn: "{{ role_arn }}"
+        security_group_ids:
+          - "{{ security_group_ids }}"
+    - name: azure_cloud_connection
+      description: |
+        The Azure connection used by the gateway.
+      value:
+        gateway_subnet:
+          resource_id: "{{ resource_id }}"
+    - name: bandwidth_tier_gigabits_per_second
+      value: {{ bandwidth_tier_gigabits_per_second }}
+      description: |
+        The provisioned bandwidth tier for an Azure gateway, in gigabits per second. Required when creating an Azure gateway.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The time when the gateway was created.
+    - name: destinations
+      description: |
+        The destinations routed through this gateway.
+      value:
+        - destination_type: "{{ destination_type }}"
+          value: "{{ value }}"
+    - name: error_message
+      value: "{{ error_message }}"
+      description: |
+        The failure reason when the gateway is in the FAILED state.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The canonical resource name of the gateway, in the form \`\`accounts/{account_id}/network-connectivity-configs/{ncc_id}/private-network-gateways/{gateway_id}\`\`.
+    - name: private_dns_resolvers
+      description: |
+        The DNS resolvers used for private name resolution.
+      value:
+        - resolver_type: "{{ resolver_type }}"
+          value: "{{ value }}"
+    - name: state
+      value: "{{ state }}"
+      description: |
+        The current lifecycle state of the gateway.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The time when the gateway was last updated.
     - name: request_id
       value: "{{ request_id }}"
       description: A unique identifier for this request. The request is idempotent when this is provided.
@@ -575,14 +629,26 @@ Updates a private network gateway.
 ```sql
 UPDATE databricks_account.networking.private_network_gateways
 SET 
-private_network_gateway = '{{ private_network_gateway }}'
+display_name = '{{ display_name }}',
+traffic_mode = '{{ traffic_mode }}',
+aws_cloud_connection = '{{ aws_cloud_connection }}',
+azure_cloud_connection = '{{ azure_cloud_connection }}',
+bandwidth_tier_gigabits_per_second = {{ bandwidth_tier_gigabits_per_second }},
+create_time = '{{ create_time }}',
+destinations = '{{ destinations }}',
+error_message = '{{ error_message }}',
+name = '{{ name }}',
+private_dns_resolvers = '{{ private_dns_resolvers }}',
+state = '{{ state }}',
+update_time = '{{ update_time }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND ncc_id = '{{ ncc_id }}' --required
 AND gateway_id = '{{ gateway_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND account_host = '{{ account_host }}' --required
-AND private_network_gateway = '{{ private_network_gateway }}' --required
+AND display_name = '{{ display_name }}' --required
+AND traffic_mode = '{{ traffic_mode }}' --required
 RETURNING
 name,
 display_name,

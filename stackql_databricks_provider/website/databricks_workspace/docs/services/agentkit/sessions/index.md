@@ -174,14 +174,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-session"><code>session</code></a></td>
+    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-actor_id"><code>actor_id</code></a></td>
     <td><a href="#parameter-session_id"><code>session_id</code></a></td>
     <td>Creates a session within a session store.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-session_id"><code>session_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-session"><code>session</code></a></td>
+    <td><a href="#parameter-session_store_id"><code>session_store_id</code></a>, <a href="#parameter-session_id"><code>session_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-actor_id"><code>actor_id</code></a></td>
     <td></td>
     <td>Updates a session's mutable fields.</td>
 </tr>
@@ -351,14 +351,30 @@ Creates a session within a session store.
 
 ```sql
 INSERT INTO databricks_workspace.agentkit.sessions (
-session,
+actor_id,
+create_time,
+last_activity_time,
+metadata,
+name,
+parent_session_id,
+root_session_id,
+session_id,
+update_time,
 session_store_id,
 deployment_name,
 workspace_domain,
 session_id
 )
 SELECT 
-'{{ session }}' /* required */,
+'{{ actor_id }}' /* required */,
+'{{ create_time }}',
+'{{ last_activity_time }}',
+'{{ metadata }}',
+'{{ name }}',
+'{{ parent_session_id }}',
+'{{ root_session_id }}',
+'{{ session_id }}',
+'{{ update_time }}',
 '{{ session_store_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
@@ -390,19 +406,42 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the sessions resource.
-    - name: session
+    - name: actor_id
+      value: "{{ actor_id }}"
       description: |
-        The session to create. \`\`actor_id\`\` is required. A session with \`\`parent_session_id\`\` is a child and must use its parent's \`\`actor_id\`\`. Independent forks are created only through \`\`ForkSession\`\`.
-      value:
-        actor_id: "{{ actor_id }}"
-        create_time: "{{ create_time }}"
-        last_activity_time: "{{ last_activity_time }}"
-        metadata: "{{ metadata }}"
-        name: "{{ name }}"
-        parent_session_id: "{{ parent_session_id }}"
-        root_session_id: "{{ root_session_id }}"
-        session_id: "{{ session_id }}"
-        update_time: "{{ update_time }}"
+        Opaque caller-provided identifier for the application actor associated with the session. This is application data and has no Databricks authentication or authorization semantics. Use the same value as the Managed Memory Entry \`\`actor_id\`\` when storing memories associated with this actor. Every session must set it. A child session must use the same value as its parent.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time when the session was created.
+    - name: last_activity_time
+      value: "{{ last_activity_time }}"
+      description: |
+        Time when the session's item history was last mutated.
+    - name: metadata
+      value: "{{ metadata }}"
+      description: |
+        Mutable caller-defined string labels.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name in the form \`\`session-stores/{session_store_id}/sessions/{session_id}\`\`.
+    - name: parent_session_id
+      value: "{{ parent_session_id }}"
+      description: |
+        Immediate parent session ID. Set only at creation for child sessions, immutable thereafter, and restricted to the same store.
+    - name: root_session_id
+      value: "{{ root_session_id }}"
+      description: |
+        Top-level session ID in the spawn tree. This equals \`\`session_id\`\` for a root or fork and is inherited transitively by child sessions.
+    - name: session_id
+      value: "{{ session_id }}"
+      description: |
+        Unique session ID. The service generates a UUID unless the caller supplies \`\`CreateSessionRequest.session_id\`\`.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time when session resource fields last changed.
     - name: session_id
       value: "{{ session_id }}"
       description: Optional caller-selected session ID. The service generates a UUID when this field is omitted. The ID must be unique; a collision returns \`\`ALREADY_EXISTS\`\`.
@@ -428,14 +467,22 @@ Updates a session's mutable fields.
 ```sql
 UPDATE databricks_workspace.agentkit.sessions
 SET 
-session = '{{ session }}'
+actor_id = '{{ actor_id }}',
+create_time = '{{ create_time }}',
+last_activity_time = '{{ last_activity_time }}',
+metadata = '{{ metadata }}',
+name = '{{ name }}',
+parent_session_id = '{{ parent_session_id }}',
+root_session_id = '{{ root_session_id }}',
+session_id = '{{ session_id }}',
+update_time = '{{ update_time }}'
 WHERE 
 session_store_id = '{{ session_store_id }}' --required
 AND session_id = '{{ session_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND session = '{{ session }}' --required
+AND actor_id = '{{ actor_id }}' --required
 RETURNING
 name,
 actor_id,

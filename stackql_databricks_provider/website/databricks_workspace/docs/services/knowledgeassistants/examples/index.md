@@ -144,14 +144,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-example"><code>example</code></a></td>
+    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-question"><code>question</code></a></td>
     <td></td>
     <td>Creates an example for a Knowledge Assistant.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-example"><code>example</code></a></td>
+    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-example_id"><code>example_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-question"><code>question</code></a></td>
     <td></td>
     <td>Updates an example in a Knowledge Assistant.</td>
 </tr>
@@ -284,13 +284,23 @@ Creates an example for a Knowledge Assistant.
 
 ```sql
 INSERT INTO databricks_workspace.knowledgeassistants.examples (
-example,
+question,
+create_time,
+example_id,
+guidelines,
+name,
+update_time,
 knowledge_assistant_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ example }}' /* required */,
+'{{ question }}' /* required */,
+'{{ create_time }}',
+'{{ example_id }}',
+'{{ guidelines }}',
+'{{ name }}',
+'{{ update_time }}',
 '{{ knowledge_assistant_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -318,17 +328,31 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the examples resource.
-    - name: example
+    - name: question
+      value: "{{ question }}"
       description: |
-        The example to create under the parent Knowledge Assistant.
+        The example question.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Timestamp when this example was created.
+    - name: example_id
+      value: "{{ example_id }}"
+      description: |
+        The universally unique identifier (UUID) of the example.
+    - name: guidelines
       value:
-        question: "{{ question }}"
-        create_time: "{{ create_time }}"
-        example_id: "{{ example_id }}"
-        guidelines:
-          - "{{ guidelines }}"
-        name: "{{ name }}"
-        update_time: "{{ update_time }}"
+        - "{{ guidelines }}"
+      description: |
+        Guidelines for answering the question. Optional — examples may be created with just a question; the front-end form does not require guidelines.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Full resource name: knowledge-assistants/{knowledge_assistant_id}/examples/{example_id}
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Timestamp when this example was last updated.
 `}</CodeBlock>
 
 </TabItem>
@@ -350,14 +374,19 @@ Updates an example in a Knowledge Assistant.
 ```sql
 UPDATE databricks_workspace.knowledgeassistants.examples
 SET 
-example = '{{ example }}'
+question = '{{ question }}',
+create_time = '{{ create_time }}',
+example_id = '{{ example_id }}',
+guidelines = '{{ guidelines }}',
+name = '{{ name }}',
+update_time = '{{ update_time }}'
 WHERE 
 knowledge_assistant_id = '{{ knowledge_assistant_id }}' --required
 AND example_id = '{{ example_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND example = '{{ example }}' --required
+AND question = '{{ question }}' --required
 RETURNING
 name,
 example_id,

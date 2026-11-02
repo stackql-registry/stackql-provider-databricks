@@ -191,21 +191,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-dashboard"><code>dashboard</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-dataset_catalog"><code>dataset_catalog</code></a>, <a href="#parameter-dataset_schema"><code>dataset_schema</code></a></td>
     <td>Create a draft dashboard.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-dashboard"><code>dashboard</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-dataset_catalog"><code>dataset_catalog</code></a>, <a href="#parameter-dataset_schema"><code>dataset_schema</code></a></td>
     <td>Update a draft dashboard.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-dashboard"><code>dashboard</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-dataset_catalog"><code>dataset_catalog</code></a>, <a href="#parameter-dataset_schema"><code>dataset_schema</code></a></td>
     <td>Update a draft dashboard.</td>
 </tr>
@@ -385,14 +385,32 @@ Create a draft dashboard.
 
 ```sql
 INSERT INTO databricks_workspace.dashboards.lakeview (
-dashboard,
+create_time,
+dashboard_id,
+display_name,
+etag,
+lifecycle_state,
+parent_path,
+path,
+serialized_dashboard,
+update_time,
+warehouse_id,
 deployment_name,
 workspace_domain,
 dataset_catalog,
 dataset_schema
 )
 SELECT 
-'{{ dashboard }}' /* required */,
+'{{ create_time }}',
+'{{ dashboard_id }}',
+'{{ display_name }}',
+'{{ etag }}',
+'{{ lifecycle_state }}',
+'{{ parent_path }}',
+'{{ path }}',
+'{{ serialized_dashboard }}',
+'{{ update_time }}',
+'{{ warehouse_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
 '{{ dataset_catalog }}',
@@ -428,19 +446,41 @@ update_time
     - name: etag
       value: "{{ etag }}"
       description: |
-        The etag for the dashboard. Optionally, it can be provided to verify that the dashboard has not been modified from its last retrieval.
-    - name: dashboard
-      value:
-        create_time: "{{ create_time }}"
-        dashboard_id: "{{ dashboard_id }}"
-        display_name: "{{ display_name }}"
-        etag: "{{ etag }}"
-        lifecycle_state: "{{ lifecycle_state }}"
-        parent_path: "{{ parent_path }}"
-        path: "{{ path }}"
-        serialized_dashboard: "{{ serialized_dashboard }}"
-        update_time: "{{ update_time }}"
-        warehouse_id: "{{ warehouse_id }}"
+        The etag for the dashboard. Can be optionally provided on updates to ensure that the dashboard has not been modified since the last read. This field is excluded in List Dashboards responses.
+    - name: create_time
+      value: "{{ create_time }}"
+    - name: dashboard_id
+      value: "{{ dashboard_id }}"
+      description: |
+        UUID identifying the dashboard.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        The display name of the dashboard.
+    - name: lifecycle_state
+      value: "{{ lifecycle_state }}"
+      description: |
+        The state of the dashboard resource. Used for tracking trashed status.
+    - name: parent_path
+      value: "{{ parent_path }}"
+      description: |
+        The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash. This field is excluded in List Dashboards responses.
+    - name: path
+      value: "{{ path }}"
+      description: |
+        The workspace path of the dashboard asset, including the file name. Exported dashboards always have the file extension \`\`.lvdash.json\`\`. This field is excluded in List Dashboards responses.
+    - name: serialized_dashboard
+      value: "{{ serialized_dashboard }}"
+      description: |
+        The contents of the dashboard in serialized string form. This field is excluded in List Dashboards responses. Use the \`get dashboard API <https://docs.databricks.com/api/workspace/lakeview/get>\`__ to retrieve an example response, which includes the \`\`serialized_dashboard\`\` field. This field provides the structure of the JSON string that represents the dashboard's layout and components.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The timestamp of when the dashboard was last updated by the user. This field is excluded in List Dashboards responses.
+    - name: warehouse_id
+      value: "{{ warehouse_id }}"
+      description: |
+        The warehouse ID used to run the dashboard.
     - name: dataset_catalog
       value: "{{ dataset_catalog }}"
       description: Sets the default catalog for all datasets in this dashboard. Does not impact table references that use fully qualified catalog names (ex: samples.nyctaxi.trips). Leave blank to keep each dataset’s existing configuration.
@@ -470,12 +510,20 @@ Update a draft dashboard.
 ```sql
 UPDATE databricks_workspace.dashboards.lakeview
 SET 
-dashboard = '{{ dashboard }}'
+create_time = '{{ create_time }}',
+dashboard_id = '{{ dashboard_id }}',
+display_name = '{{ display_name }}',
+etag = '{{ etag }}',
+lifecycle_state = '{{ lifecycle_state }}',
+parent_path = '{{ parent_path }}',
+path = '{{ path }}',
+serialized_dashboard = '{{ serialized_dashboard }}',
+update_time = '{{ update_time }}',
+warehouse_id = '{{ warehouse_id }}'
 WHERE 
 dashboard_id = '{{ dashboard_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND dashboard = '{{ dashboard }}' --required
 AND dataset_catalog = '{{ dataset_catalog}}'
 AND dataset_schema = '{{ dataset_schema}}'
 RETURNING
@@ -509,12 +557,20 @@ Update a draft dashboard.
 ```sql
 REPLACE databricks_workspace.dashboards.lakeview
 SET 
-dashboard = '{{ dashboard }}'
+create_time = '{{ create_time }}',
+dashboard_id = '{{ dashboard_id }}',
+display_name = '{{ display_name }}',
+etag = '{{ etag }}',
+lifecycle_state = '{{ lifecycle_state }}',
+parent_path = '{{ parent_path }}',
+path = '{{ path }}',
+serialized_dashboard = '{{ serialized_dashboard }}',
+update_time = '{{ update_time }}',
+warehouse_id = '{{ warehouse_id }}'
 WHERE 
 dashboard_id = '{{ dashboard_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND dashboard = '{{ dashboard }}' --required
 AND dataset_catalog = '{{ dataset_catalog}}'
 AND dataset_schema = '{{ dataset_schema}}'
 RETURNING

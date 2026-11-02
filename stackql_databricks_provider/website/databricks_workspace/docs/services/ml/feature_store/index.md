@@ -161,14 +161,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-online_store"><code>online_store</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-capacity"><code>capacity</code></a></td>
     <td></td>
     <td>Create an Online Feature Store.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-online_store"><code>online_store</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-capacity"><code>capacity</code></a></td>
     <td></td>
     <td>Update an Online Feature Store.</td>
 </tr>
@@ -336,12 +336,24 @@ Create an Online Feature Store.
 
 ```sql
 INSERT INTO databricks_workspace.ml.feature_store (
-online_store,
+name,
+capacity,
+creation_time,
+creator,
+read_replica_count,
+state,
+usage_policy_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ online_store }}' /* required */,
+'{{ name }}' /* required */,
+'{{ capacity }}' /* required */,
+'{{ creation_time }}',
+'{{ creator }}',
+{{ read_replica_count }},
+'{{ state }}',
+'{{ usage_policy_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -379,17 +391,34 @@ state
         budget_policy_id: "{{ budget_policy_id }}"
         full_feature_name: "{{ full_feature_name }}"
         tags: "{{ tags }}"
-    - name: online_store
+    - name: name
+      value: "{{ name }}"
       description: |
-        Online store to create.
-      value:
-        name: "{{ name }}"
-        capacity: "{{ capacity }}"
-        creation_time: "{{ creation_time }}"
-        creator: "{{ creator }}"
-        read_replica_count: {{ read_replica_count }}
-        state: "{{ state }}"
-        usage_policy_id: "{{ usage_policy_id }}"
+        The name of the online store. This is the unique identifier for the online store.
+    - name: capacity
+      value: "{{ capacity }}"
+      description: |
+        The capacity of the online store. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
+    - name: creation_time
+      value: "{{ creation_time }}"
+      description: |
+        The timestamp when the online store was created.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The email of the creator of the online store.
+    - name: read_replica_count
+      value: {{ read_replica_count }}
+      description: |
+        The number of read replicas for the online store. Defaults to 0.
+    - name: state
+      value: "{{ state }}"
+      description: |
+        The current state of the online store.
+    - name: usage_policy_id
+      value: "{{ usage_policy_id }}"
+      description: |
+        The usage policy applied to the online store to track billing.
 `}</CodeBlock>
 
 </TabItem>
@@ -411,13 +440,20 @@ Update an Online Feature Store.
 ```sql
 UPDATE databricks_workspace.ml.feature_store
 SET 
-online_store = '{{ online_store }}'
+name = '{{ name }}',
+capacity = '{{ capacity }}',
+creation_time = '{{ creation_time }}',
+creator = '{{ creator }}',
+read_replica_count = {{ read_replica_count }},
+state = '{{ state }}',
+usage_policy_id = '{{ usage_policy_id }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND online_store = '{{ online_store }}' --required
+AND name = '{{ name }}' --required
+AND capacity = '{{ capacity }}' --required
 RETURNING
 name,
 usage_policy_id,

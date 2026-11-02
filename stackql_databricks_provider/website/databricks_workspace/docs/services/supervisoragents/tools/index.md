@@ -288,14 +288,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-tool_id"><code>tool_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tool"><code>tool</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-tool_id"><code>tool_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tool_type"><code>tool_type</code></a></td>
     <td></td>
     <td>Creates a Tool under a Supervisor Agent. Specify one of "genie_space", "knowledge_assistant",</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-tool_id"><code>tool_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tool"><code>tool</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-tool_id"><code>tool_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tool_type"><code>tool_type</code></a></td>
     <td></td>
     <td>Updates a Tool. Only the ``description`` field can be updated. To change immutable fields such as tool</td>
 </tr>
@@ -438,14 +438,34 @@ Creates a Tool under a Supervisor Agent. Specify one of "genie_space", "knowledg
 
 ```sql
 INSERT INTO databricks_workspace.supervisoragents.tools (
-tool,
+tool_type,
+app,
+description,
+genie_space,
+id,
+knowledge_assistant,
+name,
+tool_id,
+uc_connection,
+uc_function,
+volume,
 supervisor_agent_id,
 tool_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ tool }}' /* required */,
+'{{ tool_type }}' /* required */,
+'{{ app }}',
+'{{ description }}',
+'{{ genie_space }}',
+'{{ id }}',
+'{{ knowledge_assistant }}',
+'{{ name }}',
+'{{ tool_id }}',
+'{{ uc_connection }}',
+'{{ uc_function }}',
+'{{ volume }}',
 '{{ supervisor_agent_id }}',
 '{{ tool_id }}',
 '{{ deployment_name }}',
@@ -482,26 +502,47 @@ volume
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the tools resource.
-    - name: tool
+    - name: tool_type
+      value: "{{ tool_type }}"
+    - name: app
+      description: |
+        Databricks app. Supported app: custom mcp, custom agent.
       value:
-        tool_type: "{{ tool_type }}"
-        app:
-          name: "{{ name }}"
-        description: "{{ description }}"
-        genie_space:
-          id: "{{ id }}"
-        id: "{{ id }}"
-        knowledge_assistant:
-          knowledge_assistant_id: "{{ knowledge_assistant_id }}"
-          serving_endpoint_name: "{{ serving_endpoint_name }}"
         name: "{{ name }}"
-        tool_id: "{{ tool_id }}"
-        uc_connection:
-          name: "{{ name }}"
-        uc_function:
-          name: "{{ name }}"
-        volume:
-          name: "{{ name }}"
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Description of what this tool does (user-facing).
+    - name: genie_space
+      value:
+        id: "{{ id }}"
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Deprecated: Use tool_id instead.
+    - name: knowledge_assistant
+      value:
+        knowledge_assistant_id: "{{ knowledge_assistant_id }}"
+        serving_endpoint_name: "{{ serving_endpoint_name }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Full resource name: supervisor-agents/{supervisor_agent_id}/tools/{tool_id}
+    - name: tool_id
+      value: "{{ tool_id }}"
+      description: |
+        User specified id of the Tool.
+    - name: uc_connection
+      description: |
+        Databricks UC connection. Supported connection: external mcp server.
+      value:
+        name: "{{ name }}"
+    - name: uc_function
+      value:
+        name: "{{ name }}"
+    - name: volume
+      value:
+        name: "{{ name }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -523,14 +564,24 @@ Updates a Tool. Only the ``description`` field can be updated. To change immutab
 ```sql
 UPDATE databricks_workspace.supervisoragents.tools
 SET 
-tool = '{{ tool }}'
+tool_type = '{{ tool_type }}',
+app = '{{ app }}',
+description = '{{ description }}',
+genie_space = '{{ genie_space }}',
+id = '{{ id }}',
+knowledge_assistant = '{{ knowledge_assistant }}',
+name = '{{ name }}',
+tool_id = '{{ tool_id }}',
+uc_connection = '{{ uc_connection }}',
+uc_function = '{{ uc_function }}',
+volume = '{{ volume }}'
 WHERE 
 supervisor_agent_id = '{{ supervisor_agent_id }}' --required
 AND tool_id = '{{ tool_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND tool = '{{ tool }}' --required
+AND tool_type = '{{ tool_type }}' --required
 RETURNING
 id,
 name,

@@ -151,7 +151,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-experiment"><code>experiment</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-issue"><code>issue</code></a></td>
+    <td><a href="#parameter-experiment"><code>experiment</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-title"><code>title</code></a>, <a href="#parameter-severity"><code>severity</code></a></td>
     <td><a href="#parameter-issue_id"><code>issue_id</code></a></td>
     <td>Creates an issue in an experiment.</td>
 </tr>
@@ -274,14 +274,44 @@ Creates an issue in an experiment.
 
 ```sql
 INSERT INTO databricks_workspace.ml.experiment_issues (
-issue,
+title,
+severity,
+categories,
+create_time,
+created_by,
+description,
+issue_id,
+last_seen_time,
+last_updated_by,
+metadata,
+name,
+source_id,
+source_type,
+status,
+tags,
+update_time,
 experiment,
 deployment_name,
 workspace_domain,
 issue_id
 )
 SELECT 
-'{{ issue }}' /* required */,
+'{{ title }}' /* required */,
+'{{ severity }}' /* required */,
+'{{ categories }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ description }}',
+'{{ issue_id }}',
+'{{ last_seen_time }}',
+'{{ last_updated_by }}',
+'{{ metadata }}',
+'{{ name }}',
+'{{ source_id }}',
+'{{ source_type }}',
+'{{ status }}',
+'{{ tags }}',
+'{{ update_time }}',
 '{{ experiment }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
@@ -320,27 +350,71 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the experiment_issues resource.
-    - name: issue
+    - name: title
+      value: "{{ title }}"
       description: |
-        Output-only fields are ignored.
+        Non-empty, at most 250 UTF-8 bytes.
+    - name: severity
+      value: "{{ severity }}"
+      description: |
+        Cannot be cleared: an Issue without a severity would match no severity filter.
+    - name: categories
       value:
-        title: "{{ title }}"
-        severity: "{{ severity }}"
-        categories:
-          - "{{ categories }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        description: "{{ description }}"
-        issue_id: "{{ issue_id }}"
-        last_seen_time: "{{ last_seen_time }}"
-        last_updated_by: "{{ last_updated_by }}"
-        metadata: "{{ metadata }}"
-        name: "{{ name }}"
-        source_id: "{{ source_id }}"
-        source_type: "{{ source_type }}"
-        status: "{{ status }}"
-        tags: "{{ tags }}"
-        update_time: "{{ update_time }}"
+        - "{{ categories }}"
+      description: |
+        At most 10 values of at most 64 UTF-8 bytes each, unique case-insensitively. Leading and trailing whitespace is trimmed.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        When the Issue was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        The email of the user whose request created the Issue. source_type tells whether issue detection created it.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Markdown, at most 32 KiB.
+    - name: issue_id
+      value: "{{ issue_id }}"
+      description: |
+        The last segment of \`\`name\`\`. Issue assessments on traces reference the Issue by this ID.
+    - name: last_seen_time
+      value: "{{ last_seen_time }}"
+      description: |
+        The request time of the latest trace the Issue affects. Required, and can't be cleared, unless source_type is MANUAL. A MANUAL Issue without one returns its create_time.
+    - name: last_updated_by
+      value: "{{ last_updated_by }}"
+      description: |
+        The email of the user whose request last updated the Issue.
+    - name: metadata
+      value: "{{ metadata }}"
+      description: |
+        Additional details about the Issue, such as how issue detection observed it. Not a stable contract: keys and values can change without notice, so clients must tolerate unknown and missing keys. At most 20 entries, with keys of at most 64 UTF-8 bytes.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        experiments/{experiment}/issues/{issue}
+    - name: source_id
+      value: "{{ source_id }}"
+      description: |
+        Set once at create. For ADHOC_RUN and SCHEDULED_RUN, the ID of the issue detection run in the same experiment that created the Issue. Absent for MANUAL.
+    - name: source_type
+      value: "{{ source_type }}"
+      description: |
+        Set once at create. Defaults to MANUAL.
+    - name: status
+      value: "{{ status }}"
+      description: |
+        Defaults to PENDING on create, and can't be cleared.
+    - name: tags
+      value: "{{ tags }}"
+      description: |
+        Caller-owned; the server never writes system values here. At most 10 entries. Keys match ^[A-Za-z0-9_.:/-]+$ and are at most 128 UTF-8 bytes; values are at most 256 UTF-8 bytes.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        When the Issue was last updated.
     - name: issue_id
       value: "{{ issue_id }}"
       description: Optional client-chosen ID: iss- followed by 32 lowercase hex digits. A retry with the same ID fails with ALREADY_EXISTS rather than making a duplicate. The server generates one if unset.

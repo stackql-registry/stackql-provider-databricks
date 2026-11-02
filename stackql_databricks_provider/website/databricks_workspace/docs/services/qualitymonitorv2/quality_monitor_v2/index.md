@@ -274,14 +274,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-quality_monitor"><code>quality_monitor</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). Create a quality</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-quality_monitor"><code>quality_monitor</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). (Unimplemented)</td>
 </tr>
@@ -404,12 +404,18 @@ Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monito
 
 ```sql
 INSERT INTO databricks_workspace.qualitymonitorv2.quality_monitor_v2 (
-quality_monitor,
+object_type,
+object_id,
+anomaly_detection_config,
+validity_check_configurations,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ quality_monitor }}' /* required */,
+'{{ object_type }}' /* required */,
+'{{ object_id }}' /* required */,
+'{{ anomaly_detection_config }}',
+'{{ validity_check_configurations }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -431,29 +437,35 @@ validity_check_configurations
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the quality_monitor_v2 resource.
-    - name: quality_monitor
+    - name: object_type
+      value: "{{ object_type }}"
+    - name: object_id
+      value: "{{ object_id }}"
+      description: |
+        The uuid of the request object. For example, schema id.
+    - name: anomaly_detection_config
       value:
-        object_type: "{{ object_type }}"
-        object_id: "{{ object_id }}"
-        anomaly_detection_config:
-          excluded_table_full_names:
-            - "{{ excluded_table_full_names }}"
-          last_run_id: "{{ last_run_id }}"
-          latest_run_status: "{{ latest_run_status }}"
-        validity_check_configurations:
-          - name: "{{ name }}"
-            percent_null_validity_check:
-              column_names:
-                - "{{ column_names }}"
-              upper_bound: {{ upper_bound }}
-            range_validity_check:
-              column_names:
-                - "{{ column_names }}"
-              lower_bound: {{ lower_bound }}
-              upper_bound: {{ upper_bound }}
-            uniqueness_validity_check:
-              column_names:
-                - "{{ column_names }}"
+        excluded_table_full_names:
+          - "{{ excluded_table_full_names }}"
+        last_run_id: "{{ last_run_id }}"
+        latest_run_status: "{{ latest_run_status }}"
+    - name: validity_check_configurations
+      description: |
+        Validity check configurations for anomaly detection.
+      value:
+        - name: "{{ name }}"
+          percent_null_validity_check:
+            column_names:
+              - "{{ column_names }}"
+            upper_bound: {{ upper_bound }}
+          range_validity_check:
+            column_names:
+              - "{{ column_names }}"
+            lower_bound: {{ lower_bound }}
+            upper_bound: {{ upper_bound }}
+          uniqueness_validity_check:
+            column_names:
+              - "{{ column_names }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -475,13 +487,17 @@ Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monito
 ```sql
 REPLACE databricks_workspace.qualitymonitorv2.quality_monitor_v2
 SET 
-quality_monitor = '{{ quality_monitor }}'
+object_type = '{{ object_type }}',
+object_id = '{{ object_id }}',
+anomaly_detection_config = '{{ anomaly_detection_config }}',
+validity_check_configurations = '{{ validity_check_configurations }}'
 WHERE 
 object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND quality_monitor = '{{ quality_monitor }}' --required
+AND object_type = '{{ object_type }}' --required
+AND object_id = '{{ object_id }}' --required
 RETURNING
 object_id,
 anomaly_detection_config,

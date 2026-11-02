@@ -129,7 +129,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#patch_public_account_user_preference"><CopyableCode code="patch_public_account_user_preference" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-setting"><code>setting</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Update a user preference for a specific user. User preferences are personal settings that allow</td>
 </tr>
@@ -218,13 +218,17 @@ Update a user preference for a specific user. User preferences are personal sett
 ```sql
 UPDATE databricks_account.settingsv2.account_user_preferences
 SET 
-setting = '{{ setting }}'
+boolean_val = '{{ boolean_val }}',
+effective_boolean_val = '{{ effective_boolean_val }}',
+effective_string_val = '{{ effective_string_val }}',
+name = '{{ name }}',
+string_val = '{{ string_val }}',
+user_id = '{{ user_id }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND user_id = '{{ user_id }}' --required
 AND name = '{{ name }}' --required
 AND account_host = '{{ account_host }}' --required
-AND setting = '{{ setting }}' --required
 RETURNING
 name,
 user_id,

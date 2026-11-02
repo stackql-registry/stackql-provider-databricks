@@ -266,14 +266,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-knowledge_source"><code>knowledge_source</code></a></td>
+    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-description"><code>description</code></a>, <a href="#parameter-source_type"><code>source_type</code></a></td>
     <td></td>
     <td>Creates a Knowledge Source under a Knowledge Assistant.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-knowledge_source_id"><code>knowledge_source_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-knowledge_source"><code>knowledge_source</code></a></td>
+    <td><a href="#parameter-knowledge_assistant_id"><code>knowledge_assistant_id</code></a>, <a href="#parameter-knowledge_source_id"><code>knowledge_source_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a>, <a href="#parameter-description"><code>description</code></a>, <a href="#parameter-source_type"><code>source_type</code></a></td>
     <td></td>
     <td>Updates a Knowledge Source.</td>
 </tr>
@@ -423,13 +423,33 @@ Creates a Knowledge Source under a Knowledge Assistant.
 
 ```sql
 INSERT INTO databricks_workspace.knowledgeassistants.knowledge_sources (
-knowledge_source,
+display_name,
+description,
+source_type,
+create_time,
+file_table,
+files,
+id,
+index,
+knowledge_cutoff_time,
+name,
+state,
 knowledge_assistant_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ knowledge_source }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ description }}' /* required */,
+'{{ source_type }}' /* required */,
+'{{ create_time }}',
+'{{ file_table }}',
+'{{ files }}',
+'{{ id }}',
+'{{ index }}',
+'{{ knowledge_cutoff_time }}',
+'{{ name }}',
+'{{ state }}',
 '{{ knowledge_assistant_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -462,30 +482,76 @@ state
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the knowledge_sources resource.
-    - name: knowledge_source
+    - name: display_name
+      value: "{{ display_name }}"
       description: |
-        KnowledgeSource represents a source of knowledge for the KnowledgeAssistant. Used in
-        create/update requests and returned in Get/List responses. Note: REQUIRED annotations below
-        represent create-time requirements. For updates, required fields are determined by the update
-        mask.
+        Human-readable display name of the knowledge source. Required when creating a Knowledge Source. When updating a Knowledge Source, optional unless included in update_mask.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Description of the knowledge source. Required when creating a Knowledge Source. When updating a Knowledge Source, optional unless included in update_mask.
+    - name: source_type
+      value: "{{ source_type }}"
+      description: |
+        The type of the source: "index", "files", or "file_table". Required when creating a Knowledge Source. When updating a Knowledge Source, this field is ignored.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Timestamp when this knowledge source was created.
+    - name: file_table
+      description: |
+        FileTableSpec specifies a file table source configuration.
       value:
-        display_name: "{{ display_name }}"
-        description: "{{ description }}"
-        source_type: "{{ source_type }}"
-        create_time: "{{ create_time }}"
-        file_table:
-          table_name: "{{ table_name }}"
-          file_col: "{{ file_col }}"
-        files:
-          path: "{{ path }}"
-        id: "{{ id }}"
-        index:
-          index_name: "{{ index_name }}"
-          text_col: "{{ text_col }}"
-          doc_uri_col: "{{ doc_uri_col }}"
-        knowledge_cutoff_time: "{{ knowledge_cutoff_time }}"
-        name: "{{ name }}"
-        state: "{{ state }}"
+        table_name: "{{ table_name }}"
+        file_col: "{{ file_col }}"
+    - name: files
+      description: |
+        FilesSpec specifies a files source configuration.
+      value:
+        path: "{{ path }}"
+    - name: id
+      value: "{{ id }}"
+    - name: index
+      description: |
+        IndexSpec specifies a vector search index source configuration.
+      value:
+        index_name: "{{ index_name }}"
+        text_col: "{{ text_col }}"
+        doc_uri_col: "{{ doc_uri_col }}"
+    - name: knowledge_cutoff_time
+      value: "{{ knowledge_cutoff_time }}"
+      description: |
+        Timestamp representing the cutoff before which content in this knowledge source is being ingested.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Full resource name: knowledge-assistants/{knowledge_assistant_id}/knowledge-sources/{knowledge_source_id}
+    - name: state
+      value: "{{ state }}"
+      description: |
+        Create a collection of name/value pairs.
+        Example enumeration:
+        >>> class Color(Enum):
+        ...     RED = 1
+        ...     BLUE = 2
+        ...     GREEN = 3
+        Access them by:
+        - attribute access:
+        >>> Color.RED
+        <Color.RED: 1>
+        - value lookup:
+        >>> Color(1)
+        <Color.RED: 1>
+        - name lookup:
+        >>> Color['RED']
+        <Color.RED: 1>
+        Enumerations can be iterated over, and know how many members they have:
+        >>> len(Color)
+        3
+        >>> list(Color)
+        [<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]
+        Methods can be added to enumerations, and members can have their own
+        attributes -- see the documentation for details.
 `}</CodeBlock>
 
 </TabItem>
@@ -507,14 +573,26 @@ Updates a Knowledge Source.
 ```sql
 UPDATE databricks_workspace.knowledgeassistants.knowledge_sources
 SET 
-knowledge_source = '{{ knowledge_source }}'
+display_name = '{{ display_name }}',
+description = '{{ description }}',
+source_type = '{{ source_type }}',
+create_time = '{{ create_time }}',
+file_table = '{{ file_table }}',
+files = '{{ files }}',
+id = '{{ id }}',
+index = '{{ index }}',
+knowledge_cutoff_time = '{{ knowledge_cutoff_time }}',
+name = '{{ name }}',
+state = '{{ state }}'
 WHERE 
 knowledge_assistant_id = '{{ knowledge_assistant_id }}' --required
 AND knowledge_source_id = '{{ knowledge_source_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND knowledge_source = '{{ knowledge_source }}' --required
+AND display_name = '{{ display_name }}' --required
+AND description = '{{ description }}' --required
+AND source_type = '{{ source_type }}' --required
 RETURNING
 id,
 name,

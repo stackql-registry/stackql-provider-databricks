@@ -224,14 +224,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-external_metadata"><code>external_metadata</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-system_type"><code>system_type</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Creates a new external metadata object in the parent metastore if the caller is a metastore admin or</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-external_metadata"><code>external_metadata</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-system_type"><code>system_type</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Updates the external metadata object that matches the supplied name. The caller can only update either</td>
 </tr>
@@ -373,12 +373,38 @@ Creates a new external metadata object in the parent metastore if the caller is 
 
 ```sql
 INSERT INTO databricks_workspace.catalog.external_metadata (
-external_metadata,
+name,
+system_type,
+entity_type,
+columns,
+create_time,
+created_by,
+description,
+id,
+metastore_id,
+owner,
+properties,
+update_time,
+updated_by,
+url,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ external_metadata }}' /* required */,
+'{{ name }}' /* required */,
+'{{ system_type }}' /* required */,
+'{{ entity_type }}' /* required */,
+'{{ columns }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ description }}',
+'{{ id }}',
+'{{ metastore_id }}',
+'{{ owner }}',
+'{{ properties }}',
+'{{ update_time }}',
+'{{ updated_by }}',
+'{{ url }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -410,23 +436,61 @@ url
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the external_metadata resource.
-    - name: external_metadata
+    - name: name
+      value: "{{ name }}"
+    - name: system_type
+      value: "{{ system_type }}"
+      description: |
+        Type of external system.
+    - name: entity_type
+      value: "{{ entity_type }}"
+      description: |
+        Type of entity within the external system.
+    - name: columns
       value:
-        name: "{{ name }}"
-        system_type: "{{ system_type }}"
-        entity_type: "{{ entity_type }}"
-        columns:
-          - "{{ columns }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        description: "{{ description }}"
-        id: "{{ id }}"
-        metastore_id: "{{ metastore_id }}"
-        owner: "{{ owner }}"
-        properties: "{{ properties }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
-        url: "{{ url }}"
+        - "{{ columns }}"
+      description: |
+        List of columns associated with the external metadata object.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time at which this external metadata object was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Username of external metadata object creator.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        User-provided free-form text description.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique identifier of the external metadata object.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Unique identifier of parent metastore.
+    - name: owner
+      value: "{{ owner }}"
+      description: |
+        Owner of the external metadata object.
+    - name: properties
+      value: "{{ properties }}"
+      description: |
+        A map of key-value properties attached to the external metadata object.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time at which this external metadata object was last modified.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Username of user who last modified external metadata object.
+    - name: url
+      value: "{{ url }}"
+      description: |
+        URL associated with the external metadata object.
 `}</CodeBlock>
 
 </TabItem>
@@ -448,13 +512,28 @@ Updates the external metadata object that matches the supplied name. The caller 
 ```sql
 UPDATE databricks_workspace.catalog.external_metadata
 SET 
-external_metadata = '{{ external_metadata }}'
+name = '{{ name }}',
+system_type = '{{ system_type }}',
+entity_type = '{{ entity_type }}',
+columns = '{{ columns }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+description = '{{ description }}',
+id = '{{ id }}',
+metastore_id = '{{ metastore_id }}',
+owner = '{{ owner }}',
+properties = '{{ properties }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}',
+url = '{{ url }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND external_metadata = '{{ external_metadata }}' --required
+AND name = '{{ name }}' --required
+AND system_type = '{{ system_type }}' --required
+AND entity_type = '{{ entity_type }}' --required
 RETURNING
 id,
 name,

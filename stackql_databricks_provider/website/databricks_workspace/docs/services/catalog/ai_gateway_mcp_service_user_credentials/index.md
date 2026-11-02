@@ -88,7 +88,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-login"><code>login</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Logs the caller in to an MCP service: creates their per-user OAuth credential, or re-authenticates it</td>
 </tr>
@@ -174,13 +174,13 @@ Logs the caller in to an MCP service: creates their per-user OAuth credential, o
 
 ```sql
 INSERT INTO databricks_workspace.catalog.ai_gateway_mcp_service_user_credentials (
-login,
+options,
 full_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ login }}' /* required */,
+'{{ options }}',
 '{{ full_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -204,11 +204,10 @@ provisioning_info
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the ai_gateway_mcp_service_user_credentials resource.
-    - name: login
+    - name: options
+      value: "{{ options }}"
       description: |
-        Login input for an MCP service user credential. Carries the OAuth exchange fields as a flat map.
-      value:
-        options: "{{ options }}"
+        OAuth exchange fields: \`\`pkce_verifier\`\`, \`\`authorization_code\`\`, and \`\`oauth_redirect_uri\`\`.
 `}</CodeBlock>
 
 </TabItem>

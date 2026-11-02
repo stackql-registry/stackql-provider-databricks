@@ -198,7 +198,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-schedule"><code>schedule</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cron_schedule"><code>cron_schedule</code></a></td>
     <td></td>
     <td>Create dashboard schedule.</td>
 </tr>
@@ -337,13 +337,29 @@ Create dashboard schedule.
 
 ```sql
 INSERT INTO databricks_workspace.dashboards.lakeview_schedules (
-schedule,
+cron_schedule,
+create_time,
+dashboard_id,
+display_name,
+etag,
+pause_status,
+schedule_id,
+update_time,
+warehouse_id,
 dashboard_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ schedule }}' /* required */,
+'{{ cron_schedule }}' /* required */,
+'{{ create_time }}',
+'{{ dashboard_id }}',
+'{{ display_name }}',
+'{{ etag }}',
+'{{ pause_status }}',
+'{{ schedule_id }}',
+'{{ update_time }}',
+'{{ warehouse_id }}',
 '{{ dashboard_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -374,21 +390,42 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the lakeview_schedules resource.
-    - name: schedule
-      description: |
-        The schedule to create. A dashboard is limited to 10 schedules.
+    - name: cron_schedule
       value:
-        cron_schedule:
-          quartz_cron_expression: "{{ quartz_cron_expression }}"
-          timezone_id: "{{ timezone_id }}"
-        create_time: "{{ create_time }}"
-        dashboard_id: "{{ dashboard_id }}"
-        display_name: "{{ display_name }}"
-        etag: "{{ etag }}"
-        pause_status: "{{ pause_status }}"
-        schedule_id: "{{ schedule_id }}"
-        update_time: "{{ update_time }}"
-        warehouse_id: "{{ warehouse_id }}"
+        quartz_cron_expression: "{{ quartz_cron_expression }}"
+        timezone_id: "{{ timezone_id }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        A timestamp indicating when the schedule was created.
+    - name: dashboard_id
+      value: "{{ dashboard_id }}"
+      description: |
+        UUID identifying the dashboard to which the schedule belongs.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        The display name for schedule.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        The etag for the schedule. Must be left empty on create, must be provided on updates to ensure that the schedule has not been modified since the last read, and can be optionally provided on delete.
+    - name: pause_status
+      value: "{{ pause_status }}"
+      description: |
+        The status indicates whether this schedule is paused or not.
+    - name: schedule_id
+      value: "{{ schedule_id }}"
+      description: |
+        UUID identifying the schedule.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the schedule was last updated.
+    - name: warehouse_id
+      value: "{{ warehouse_id }}"
+      description: |
+        The warehouse id to run the dashboard with for the schedule.
 `}</CodeBlock>
 
 </TabItem>

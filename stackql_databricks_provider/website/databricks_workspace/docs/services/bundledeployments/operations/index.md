@@ -228,7 +228,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-version_id"><code>version_id</code></a>, <a href="#parameter-resource_key"><code>resource_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-operation"><code>operation</code></a></td>
+    <td><a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-version_id"><code>version_id</code></a>, <a href="#parameter-resource_key"><code>resource_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a resource operation's mutable fields.</td>
 </tr>
@@ -373,7 +373,18 @@ Updates a resource operation's mutable fields.
 ```sql
 UPDATE databricks_workspace.bundledeployments.operations
 SET 
-operation = '{{ operation }}'
+action_type = '{{ action_type }}',
+create_time = '{{ create_time }}',
+dashboard_metadata = '{{ dashboard_metadata }}',
+error_message = '{{ error_message }}',
+name = '{{ name }}',
+resource_id = '{{ resource_id }}',
+resource_key = '{{ resource_key }}',
+resource_type = '{{ resource_type }}',
+sequence_id = {{ sequence_id }},
+state = '{{ state }}',
+status = '{{ status }}',
+update_time = '{{ update_time }}'
 WHERE 
 deployment_id = '{{ deployment_id }}' --required
 AND version_id = '{{ version_id }}' --required
@@ -381,7 +392,6 @@ AND resource_key = '{{ resource_key }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND operation = '{{ operation }}' --required
 RETURNING
 name,
 resource_id,

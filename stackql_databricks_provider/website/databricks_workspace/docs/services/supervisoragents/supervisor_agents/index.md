@@ -184,14 +184,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-supervisor_agent"><code>supervisor_agent</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a></td>
     <td></td>
     <td>Creates a new Supervisor Agent.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-supervisor_agent"><code>supervisor_agent</code></a></td>
+    <td><a href="#parameter-supervisor_agent_id"><code>supervisor_agent_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-display_name"><code>display_name</code></a></td>
     <td></td>
     <td>Updates a Supervisor Agent. The fields that are required depend on the paths specified in</td>
 </tr>
@@ -325,12 +325,30 @@ Creates a new Supervisor Agent.
 
 ```sql
 INSERT INTO databricks_workspace.supervisoragents.supervisor_agents (
-supervisor_agent,
+display_name,
+create_time,
+creator,
+description,
+endpoint_name,
+experiment_id,
+id,
+instructions,
+name,
+supervisor_agent_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ supervisor_agent }}' /* required */,
+'{{ display_name }}' /* required */,
+'{{ create_time }}',
+'{{ creator }}',
+'{{ description }}',
+'{{ endpoint_name }}',
+'{{ experiment_id }}',
+'{{ id }}',
+'{{ instructions }}',
+'{{ name }}',
+'{{ supervisor_agent_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -358,20 +376,44 @@ instructions
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the supervisor_agents resource.
-    - name: supervisor_agent
+    - name: display_name
+      value: "{{ display_name }}"
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The Supervisor Agent to create.
-      value:
-        display_name: "{{ display_name }}"
-        create_time: "{{ create_time }}"
-        creator: "{{ creator }}"
-        description: "{{ description }}"
-        endpoint_name: "{{ endpoint_name }}"
-        experiment_id: "{{ experiment_id }}"
-        id: "{{ id }}"
-        instructions: "{{ instructions }}"
-        name: "{{ name }}"
-        supervisor_agent_id: "{{ supervisor_agent_id }}"
+        Creation timestamp.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The creator of the Supervisor Agent.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Description of what this agent can do (user-facing).
+    - name: endpoint_name
+      value: "{{ endpoint_name }}"
+      description: |
+        The name of the supervisor agent's serving endpoint.
+    - name: experiment_id
+      value: "{{ experiment_id }}"
+      description: |
+        The MLflow experiment ID.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Deprecated: Use supervisor_agent_id instead.
+    - name: instructions
+      value: "{{ instructions }}"
+      description: |
+        Optional natural-language instructions for the supervisor agent.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the SupervisorAgent. Format: supervisor-agents/{supervisor_agent_id}
+    - name: supervisor_agent_id
+      value: "{{ supervisor_agent_id }}"
+      description: |
+        The universally unique identifier (UUID) of the Supervisor Agent.
 `}</CodeBlock>
 
 </TabItem>
@@ -393,13 +435,22 @@ Updates a Supervisor Agent. The fields that are required depend on the paths spe
 ```sql
 UPDATE databricks_workspace.supervisoragents.supervisor_agents
 SET 
-supervisor_agent = '{{ supervisor_agent }}'
+display_name = '{{ display_name }}',
+create_time = '{{ create_time }}',
+creator = '{{ creator }}',
+description = '{{ description }}',
+endpoint_name = '{{ endpoint_name }}',
+experiment_id = '{{ experiment_id }}',
+id = '{{ id }}',
+instructions = '{{ instructions }}',
+name = '{{ name }}',
+supervisor_agent_id = '{{ supervisor_agent_id }}'
 WHERE 
 supervisor_agent_id = '{{ supervisor_agent_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND supervisor_agent = '{{ supervisor_agent }}' --required
+AND display_name = '{{ display_name }}' --required
 RETURNING
 id,
 name,

@@ -168,14 +168,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-user"><code>user</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-username"><code>username</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-account_user_status"><code>account_user_status</code></a></td>
     <td></td>
     <td>Creates a local user in the Databricks account and returns the created user. A local user is one that</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-user"><code>user</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-username"><code>username</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-account_user_status"><code>account_user_status</code></a></td>
     <td></td>
     <td>Updates an existing user in the Databricks account and returns the updated user. Only the fields named</td>
 </tr>
@@ -314,12 +314,22 @@ Creates a local user in the Databricks account and returns the created user. A l
 
 ```sql
 INSERT INTO databricks_account.iamv2.users (
-user,
+username,
+full_name,
+account_user_status,
+account_id,
+external_id,
+user_id,
 account_id,
 account_host
 )
 SELECT 
-'{{ user }}' /* required */,
+'{{ username }}' /* required */,
+'{{ full_name }}' /* required */,
+'{{ account_user_status }}' /* required */,
+'{{ account_id }}',
+'{{ external_id }}',
+'{{ user_id }}',
 '{{ account_id }}',
 '{{ account_host }}'
 RETURNING
@@ -343,18 +353,30 @@ username
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the users resource.
-    - name: user
+    - name: username
+      value: "{{ username }}"
       description: |
-        Required. User to be created in Databricks
+        Username/email of the user.
+    - name: full_name
       value:
-        username: "{{ username }}"
-        full_name:
-          family_name: "{{ family_name }}"
-          given_name: "{{ given_name }}"
-        account_user_status: "{{ account_user_status }}"
-        account_id: "{{ account_id }}"
-        external_id: "{{ external_id }}"
-        user_id: "{{ user_id }}"
+        family_name: "{{ family_name }}"
+        given_name: "{{ given_name }}"
+    - name: account_user_status
+      value: "{{ account_user_status }}"
+      description: |
+        The activity status of a user in a Databricks account.
+    - name: account_id
+      value: "{{ account_id }}"
+      description: |
+        The accountId parent of the user in Databricks.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        ExternalId of the user in the customer's IdP.
+    - name: user_id
+      value: "{{ user_id }}"
+      description: |
+        Internal userId of the user in Databricks.
 `}</CodeBlock>
 
 </TabItem>
@@ -376,13 +398,20 @@ Updates an existing user in the Databricks account and returns the updated user.
 ```sql
 UPDATE databricks_account.iamv2.users
 SET 
-user = '{{ user }}'
+username = '{{ username }}',
+full_name = '{{ full_name }}',
+account_user_status = '{{ account_user_status }}',
+account_id = '{{ account_id }}',
+external_id = '{{ external_id }}',
+user_id = '{{ user_id }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND user_id = '{{ user_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND account_host = '{{ account_host }}' --required
-AND user = '{{ user }}' --required
+AND username = '{{ username }}' --required
+AND full_name = '{{ full_name }}' --required
+AND account_user_status = '{{ account_user_status }}' --required
 RETURNING
 account_id,
 external_id,

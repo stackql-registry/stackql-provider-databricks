@@ -908,14 +908,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-model_provider_service_id"><code>model_provider_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-model_provider_service"><code>model_provider_service</code></a></td>
+    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-model_provider_service_id"><code>model_provider_service_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a model provider service in a Unity Catalog schema. A model provider service stores</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-model_provider_service"><code>model_provider_service</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Updates a model provider service. Only the fields named in ``update_mask`` are changed; the resource</td>
 </tr>
@@ -1076,14 +1076,32 @@ Creates a model provider service in a Unity Catalog schema. A model provider ser
 
 ```sql
 INSERT INTO databricks_workspace.catalog.ai_gateway_model_provider_services (
-model_provider_service,
+comment,
+config,
+create_time,
+created_by,
+effective_owner,
+etag,
+metastore_id,
+name,
+update_time,
+updated_by,
 parent,
 model_provider_service_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ model_provider_service }}' /* required */,
+'{{ comment }}',
+'{{ config }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ effective_owner }}',
+'{{ etag }}',
+'{{ metastore_id }}',
+'{{ name }}',
+'{{ update_time }}',
+'{{ updated_by }}',
 '{{ parent }}',
 '{{ model_provider_service_id }}',
 '{{ deployment_name }}',
@@ -1119,113 +1137,155 @@ updated_by
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the ai_gateway_model_provider_services resource.
-    - name: model_provider_service
+    - name: comment
+      value: "{{ comment }}"
       description: |
-        The model provider service to create. Do not set \`\`name\`\`; the server derives it from \`\`parent\`\` and \`\`model_provider_service_id\`\`.
+        User-provided description.
+    - name: config
+      description: |
+        Provider authentication, exposed models, request-forwarding controls, rate limits, and payload logging. Required on Create. On Update, it is required only when \`\`config\`\` or one of its subpaths appears in \`\`update_mask\`\`.
       value:
-        comment: "{{ comment }}"
-        config:
-          allow_all_targets: {{ allow_all_targets }}
-          amazon_bedrock:
-            direct:
-              aws_access_key:
-                access_key_id: "{{ access_key_id }}"
-                secret_access_key: "{{ secret_access_key }}"
-              region: "{{ region }}"
-              service_credential:
+        allow_all_targets: {{ allow_all_targets }}
+        amazon_bedrock:
+          direct:
+            aws_access_key:
+              access_key_id: "{{ access_key_id }}"
+              secret_access_key:
+                plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
+            region: "{{ region }}"
+            service_credential:
+              name: "{{ name }}"
+        anthropic:
+          direct:
+            api_key:
+              plaintext: "{{ plaintext }}"
+              secret_reference:
                 name: "{{ name }}"
-          anthropic:
-            direct:
-              api_key:
-                plaintext: "{{ plaintext }}"
-                secret_reference: "{{ secret_reference }}"
-            relayed: "{{ relayed }}"
-          azure_openai:
-            direct:
-              api_key:
-                plaintext: "{{ plaintext }}"
-                secret_reference: "{{ secret_reference }}"
-              base_url: "{{ base_url }}"
-              entra_service_principal:
-                client_id: "{{ client_id }}"
-                client_secret: "{{ client_secret }}"
-                tenant_id: "{{ tenant_id }}"
-              service_credential:
+          relayed: "{{ relayed }}"
+        azure_openai:
+          direct:
+            api_key:
+              plaintext: "{{ plaintext }}"
+              secret_reference:
                 name: "{{ name }}"
-          bedrock_mantle:
-            direct:
-              aws_access_key:
-                access_key_id: "{{ access_key_id }}"
-                secret_access_key: "{{ secret_access_key }}"
-              region: "{{ region }}"
-              service_credential:
+            base_url: "{{ base_url }}"
+            entra_service_principal:
+              client_id: "{{ client_id }}"
+              client_secret:
+                plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
+              tenant_id: "{{ tenant_id }}"
+            service_credential:
+              name: "{{ name }}"
+        bedrock_mantle:
+          direct:
+            aws_access_key:
+              access_key_id: "{{ access_key_id }}"
+              secret_access_key:
+                plaintext: "{{ plaintext }}"
+                secret_reference: "{{ secret_reference }}"
+            region: "{{ region }}"
+            service_credential:
+              name: "{{ name }}"
+        custom:
+          direct:
+            api_key:
+              plaintext: "{{ plaintext }}"
+              secret_reference:
                 name: "{{ name }}"
-          custom:
-            direct:
-              api_key:
+            base_url: "{{ base_url }}"
+            header_auth:
+              api_key_name: "{{ api_key_name }}"
+              api_key_value:
                 plaintext: "{{ plaintext }}"
                 secret_reference: "{{ secret_reference }}"
-              base_url: "{{ base_url }}"
-              header_auth:
-                api_key_name: "{{ api_key_name }}"
-                api_key_value: "{{ api_key_value }}"
-          forward_headers: {{ forward_headers }}
-          forward_query_parameters: {{ forward_query_parameters }}
-          forward_unmanaged_paths: {{ forward_unmanaged_paths }}
-          gemini_enterprise:
-            direct:
-              api_key:
-                plaintext: "{{ plaintext }}"
-                secret_reference: "{{ secret_reference }}"
-              project_id: "{{ project_id }}"
-              region: "{{ region }}"
-              service_credential:
+        forward_headers: {{ forward_headers }}
+        forward_query_parameters: {{ forward_query_parameters }}
+        forward_unmanaged_paths: {{ forward_unmanaged_paths }}
+        gemini_enterprise:
+          direct:
+            api_key:
+              plaintext: "{{ plaintext }}"
+              secret_reference:
                 name: "{{ name }}"
-          inference_table:
-            parent: "{{ parent }}"
-            is_deleted: {{ is_deleted }}
-            table: "{{ table }}"
-            table_name_prefix: "{{ table_name_prefix }}"
-          microsoft_foundry:
-            direct:
-              api_key:
-                plaintext: "{{ plaintext }}"
-                secret_reference: "{{ secret_reference }}"
-              base_url: "{{ base_url }}"
-              entra_service_principal:
-                client_id: "{{ client_id }}"
-                client_secret: "{{ client_secret }}"
-                tenant_id: "{{ tenant_id }}"
-              service_credential:
+            project_id: "{{ project_id }}"
+            region: "{{ region }}"
+            service_credential:
+              name: "{{ name }}"
+        inference_table:
+          parent: "{{ parent }}"
+          is_deleted: {{ is_deleted }}
+          table: "{{ table }}"
+          table_name_prefix: "{{ table_name_prefix }}"
+        microsoft_foundry:
+          direct:
+            api_key:
+              plaintext: "{{ plaintext }}"
+              secret_reference:
                 name: "{{ name }}"
-          openai:
-            direct:
-              api_key:
+            base_url: "{{ base_url }}"
+            entra_service_principal:
+              client_id: "{{ client_id }}"
+              client_secret:
                 plaintext: "{{ plaintext }}"
                 secret_reference: "{{ secret_reference }}"
-              base_url: "{{ base_url }}"
-              organization: "{{ organization }}"
-          pricing:
-            default_discount_basis_points: {{ default_discount_basis_points }}
-          provider_type: "{{ provider_type }}"
-          rate_limits:
-            - key: "{{ key }}"
-              renewal_period: "{{ renewal_period }}"
-              principal: "{{ principal }}"
-              requests: {{ requests }}
-              tokens: {{ tokens }}
-          targets:
-            - model: "{{ model }}"
-              endpoint_route: "{{ endpoint_route }}"
-              native_api_types: "{{ native_api_types }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        effective_owner: "{{ effective_owner }}"
-        etag: "{{ etag }}"
-        metastore_id: "{{ metastore_id }}"
-        name: "{{ name }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+              tenant_id: "{{ tenant_id }}"
+            service_credential:
+              name: "{{ name }}"
+        openai:
+          direct:
+            api_key:
+              plaintext: "{{ plaintext }}"
+              secret_reference:
+                name: "{{ name }}"
+            base_url: "{{ base_url }}"
+            organization: "{{ organization }}"
+        pricing:
+          default_discount_basis_points: {{ default_discount_basis_points }}
+        provider_type: "{{ provider_type }}"
+        rate_limits:
+          - key: "{{ key }}"
+            renewal_period: "{{ renewal_period }}"
+            principal: "{{ principal }}"
+            requests: {{ requests }}
+            tokens: {{ tokens }}
+        targets:
+          - model: "{{ model }}"
+            endpoint_route: "{{ endpoint_route }}"
+            native_api_types: "{{ native_api_types }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time the provider service was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Creator identity.
+    - name: effective_owner
+      value: "{{ effective_owner }}"
+      description: |
+        Owner of the model provider service.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        Optimistic concurrency token returned on every read. To make an Update or Delete conditional, pass the last-read value in that request's \`\`etag\`\` field. In REST responses, this value is a base64 string; URL-encode it when setting the \`\`etag\`\` query parameter.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Metastore hosting the provider service.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name of the provider service. Format: \`\`model-provider-services/{catalog}.{schema}.{model_provider_service}\`\`. Each \`\`{...}\`\` component is capped at 255 characters individually. Server-derived on Create from \`\`parent\`\` + \`\`model_provider_service_id\`\`; required and immutable on Update/Get/Delete.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time the provider service was last modified.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Identity of the last updater.
 `}</CodeBlock>
 
 </TabItem>
@@ -1247,13 +1307,21 @@ Updates a model provider service. Only the fields named in ``update_mask`` are c
 ```sql
 UPDATE databricks_workspace.catalog.ai_gateway_model_provider_services
 SET 
-model_provider_service = '{{ model_provider_service }}'
+comment = '{{ comment }}',
+config = '{{ config }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+effective_owner = '{{ effective_owner }}',
+etag = '{{ etag }}',
+metastore_id = '{{ metastore_id }}',
+name = '{{ name }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND model_provider_service = '{{ model_provider_service }}' --required
 AND etag = '{{ etag}}'
 RETURNING
 name,

@@ -226,7 +226,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-subscription"><code>subscription</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-subscriber"><code>subscriber</code></a></td>
     <td></td>
     <td>Create schedule subscription.</td>
 </tr>
@@ -372,14 +372,30 @@ Create schedule subscription.
 
 ```sql
 INSERT INTO databricks_workspace.dashboards.lakeview_subscriptions (
-subscription,
+subscriber,
+create_time,
+created_by_user_id,
+dashboard_id,
+etag,
+schedule_id,
+skip_notify,
+subscription_id,
+update_time,
 dashboard_id,
 schedule_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ subscription }}' /* required */,
+'{{ subscriber }}' /* required */,
+'{{ create_time }}',
+{{ created_by_user_id }},
+'{{ dashboard_id }}',
+'{{ etag }}',
+'{{ schedule_id }}',
+{{ skip_notify }},
+'{{ subscription_id }}',
+'{{ update_time }}',
 '{{ dashboard_id }}',
 '{{ schedule_id }}',
 '{{ deployment_name }}',
@@ -414,23 +430,44 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the lakeview_subscriptions resource.
-    - name: subscription
-      description: |
-        The subscription to create. A schedule is limited to 100 subscriptions.
+    - name: subscriber
       value:
-        subscriber:
-          destination_subscriber:
-            destination_id: "{{ destination_id }}"
-          user_subscriber:
-            user_id: {{ user_id }}
-        create_time: "{{ create_time }}"
-        created_by_user_id: {{ created_by_user_id }}
-        dashboard_id: "{{ dashboard_id }}"
-        etag: "{{ etag }}"
-        schedule_id: "{{ schedule_id }}"
-        skip_notify: {{ skip_notify }}
-        subscription_id: "{{ subscription_id }}"
-        update_time: "{{ update_time }}"
+        destination_subscriber:
+          destination_id: "{{ destination_id }}"
+        user_subscriber:
+          user_id: {{ user_id }}
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        A timestamp indicating when the subscription was created.
+    - name: created_by_user_id
+      value: {{ created_by_user_id }}
+      description: |
+        UserId of the user who adds subscribers (users or notification destinations) to the dashboard's schedule.
+    - name: dashboard_id
+      value: "{{ dashboard_id }}"
+      description: |
+        UUID identifying the dashboard to which the subscription belongs.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        The etag for the subscription. Must be left empty on create, can be optionally provided on delete to ensure that the subscription has not been deleted since the last read.
+    - name: schedule_id
+      value: "{{ schedule_id }}"
+      description: |
+        UUID identifying the schedule to which the subscription belongs.
+    - name: skip_notify
+      value: {{ skip_notify }}
+      description: |
+        Controls whether notifications are sent to the subscriber for scheduled dashboard refreshes. If not defined, defaults to false in the backend to match the current behavior (refresh and notify)
+    - name: subscription_id
+      value: "{{ subscription_id }}"
+      description: |
+        UUID identifying the subscription.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the subscription was last updated.
 `}</CodeBlock>
 
 </TabItem>

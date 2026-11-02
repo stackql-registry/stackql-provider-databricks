@@ -144,7 +144,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-direct_group_member"><code>direct_group_member</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
     <td></td>
     <td>Creates a group membership (assigns a principal to a group).</td>
 </tr>
@@ -272,15 +272,25 @@ Creates a group membership (assigns a principal to a group).
 
 ```sql
 INSERT INTO databricks_account.iamv2.direct_group_members (
-direct_group_member,
+principal_id,
+display_name,
+external_id,
+group_id,
+membership_source,
+principal_type,
 account_id,
 group_id,
 account_host
 )
 SELECT 
-'{{ direct_group_member }}' /* required */,
+{{ principal_id }} /* required */,
+'{{ display_name }}',
+'{{ external_id }}',
+{{ group_id }},
+'{{ membership_source }}',
+'{{ principal_type }}',
 '{{ account_id }}',
-'{{ group_id }}',
+{{ group_id }},
 '{{ account_host }}'
 RETURNING
 external_id,
@@ -306,16 +316,30 @@ principal_type
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the direct_group_members resource.
-    - name: direct_group_member
+    - name: principal_id
+      value: {{ principal_id }}
       description: |
-        Required. The direct group member to be added to the group.
-      value:
-        principal_id: {{ principal_id }}
-        display_name: "{{ display_name }}"
-        external_id: "{{ external_id }}"
-        group_id: {{ group_id }}
-        membership_source: "{{ membership_source }}"
-        principal_type: "{{ principal_type }}"
+        Internal ID of the principal in Databricks.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        Display name of the principal.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        The external ID of the principal in the customer's IdP.
+    - name: group_id
+      value: {{ group_id }}
+      description: |
+        The internal ID of the group this member belongs to.
+    - name: membership_source
+      value: "{{ membership_source }}"
+      description: |
+        The source of group membership (internal or from identity provider).
+    - name: principal_type
+      value: "{{ principal_type }}"
+      description: |
+        The type of the principal (user/service principal/group).
 `}</CodeBlock>
 
 </TabItem>

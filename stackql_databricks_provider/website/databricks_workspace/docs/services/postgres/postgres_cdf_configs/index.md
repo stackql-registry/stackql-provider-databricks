@@ -144,7 +144,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project"><code>project</code></a>, <a href="#parameter-branch"><code>branch</code></a>, <a href="#parameter-database"><code>database</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-cdf_config"><code>cdf_config</code></a></td>
+    <td><a href="#parameter-project"><code>project</code></a>, <a href="#parameter-branch"><code>branch</code></a>, <a href="#parameter-database"><code>database</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-catalog"><code>catalog</code></a>, <a href="#parameter-schema"><code>schema</code></a>, <a href="#parameter-postgres_schema"><code>postgres_schema</code></a></td>
     <td><a href="#parameter-cdf_config_id"><code>cdf_config_id</code></a></td>
     <td>Create a CDF configuration that materializes the change data feed for all tables in a Postgres schema</td>
 </tr>
@@ -296,7 +296,12 @@ Create a CDF configuration that materializes the change data feed for all tables
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_cdf_configs (
-cdf_config,
+catalog,
+schema,
+postgres_schema,
+cdf_config_id,
+create_time,
+name,
 project,
 branch,
 database,
@@ -305,7 +310,12 @@ workspace_domain,
 cdf_config_id
 )
 SELECT 
-'{{ cdf_config }}' /* required */,
+'{{ catalog }}' /* required */,
+'{{ schema }}' /* required */,
+'{{ postgres_schema }}' /* required */,
+'{{ cdf_config_id }}',
+'{{ create_time }}',
+'{{ name }}',
 '{{ project }}',
 '{{ branch }}',
 '{{ database }}',
@@ -335,16 +345,30 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_cdf_configs resource.
-    - name: cdf_config
+    - name: catalog
+      value: "{{ catalog }}"
       description: |
-        The CdfConfig to create. The catalog, schema, and postgres_schema fields are required; service_principal is optional. All other fields are output only and ignored on input.
-      value:
-        catalog: "{{ catalog }}"
-        schema: "{{ schema }}"
-        postgres_schema: "{{ postgres_schema }}"
-        cdf_config_id: "{{ cdf_config_id }}"
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
+        The Unity Catalog catalog that replicated tables are written into. Set at creation; the CdfConfig is immutable.
+    - name: schema
+      value: "{{ schema }}"
+      description: |
+        The Unity Catalog schema that replicated tables are written into. Set at creation; the CdfConfig is immutable.
+    - name: postgres_schema
+      value: "{{ postgres_schema }}"
+      description: |
+        The Postgres schema this CdfConfig replicates from. Unique within the parent database. Set at creation; the CdfConfig is immutable.
+    - name: cdf_config_id
+      value: "{{ cdf_config_id }}"
+      description: |
+        The user-specified id; equals the final segment of \`\`name\`\`. Defaults to the Postgres schema name for configs without an explicit id.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        When the CdfConfig was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The full resource name of the CdfConfig. Format: projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
     - name: cdf_config_id
       value: "{{ cdf_config_id }}"
       description: The user-specified id for the CdfConfig, forming the final segment of its resource name. Must match the pattern \`\`[a-z][a-z0-9_]{0,62}\`\`. Defaults to the Postgres schema name when omitted.

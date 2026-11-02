@@ -159,7 +159,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update_destinations"><CopyableCode code="update_destinations" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-access_request_destinations"><code>access_request_destinations</code></a></td>
+    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-securable"><code>securable</code></a></td>
     <td></td>
     <td>Updates the access request destinations for the given securable. The caller must be a metastore admin,</td>
 </tr>
@@ -307,12 +307,17 @@ Updates the access request destinations for the given securable. The caller must
 ```sql
 UPDATE databricks_workspace.catalog.rfa
 SET 
-access_request_destinations = '{{ access_request_destinations }}'
+securable = '{{ securable }}',
+are_any_destinations_hidden = {{ are_any_destinations_hidden }},
+destination_source_securable = '{{ destination_source_securable }}',
+destinations = '{{ destinations }}',
+full_name = '{{ full_name }}',
+securable_type = '{{ securable_type }}'
 WHERE 
 update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND access_request_destinations = '{{ access_request_destinations }}' --required
+AND securable = '{{ securable }}' --required
 RETURNING
 full_name,
 are_any_destinations_hidden,

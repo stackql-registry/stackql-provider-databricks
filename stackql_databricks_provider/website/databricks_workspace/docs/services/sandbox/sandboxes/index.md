@@ -234,14 +234,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-sandbox_id"><code>sandbox_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-sandbox"><code>sandbox</code></a></td>
+    <td><a href="#parameter-sandbox_id"><code>sandbox_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates a new Sandbox.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-sandbox_id"><code>sandbox_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-sandbox"><code>sandbox</code></a></td>
+    <td><a href="#parameter-sandbox_id"><code>sandbox_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates mutable fields on an existing Sandbox. Allowlisted update_mask paths today: display_name,</td>
 </tr>
@@ -383,13 +383,25 @@ Creates a new Sandbox.
 
 ```sql
 INSERT INTO databricks_workspace.sandbox.sandboxes (
-sandbox,
+create_time,
+display_name,
+metadata,
+name,
+spec,
+status,
+update_time,
 sandbox_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ sandbox }}' /* required */,
+'{{ create_time }}',
+'{{ display_name }}',
+'{{ metadata }}',
+'{{ name }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ sandbox_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -418,23 +430,40 @@ update_time
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the sandboxes resource.
-    - name: sandbox
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The sandbox to create.
+        Output only. The creation time of the sandbox.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        Human-readable display label for the sandbox. At most 256 characters.
+    - name: metadata
+      description: |
+        Metadata associated with the sandbox.
       value:
-        create_time: "{{ create_time }}"
-        display_name: "{{ display_name }}"
-        metadata:
-          custom_tags: "{{ custom_tags }}"
-        name: "{{ name }}"
-        spec:
-          compute:
-            inactivity_timeout: "{{ inactivity_timeout }}"
-          environment:
-            image_uri: "{{ image_uri }}"
-        status:
-          state: "{{ state }}"
-        update_time: "{{ update_time }}"
+        custom_tags: "{{ custom_tags }}"
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The sandbox resource name, in the form \`\`sandboxes/{sandbox_id}\`\`. Derived from \`\`sandbox_id\`\`; any value supplied in a create or update request body is ignored.
+    - name: spec
+      description: |
+        The desired configuration of the sandbox, supplied by the caller at creation time.
+      value:
+        compute:
+          inactivity_timeout: "{{ inactivity_timeout }}"
+        environment:
+          image_uri: "{{ image_uri }}"
+    - name: status
+      description: |
+        The observed runtime state of the sandbox, populated by the server.
+      value:
+        state: "{{ state }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Output only. The last update time of the sandbox metadata and spec.
 `}</CodeBlock>
 
 </TabItem>
@@ -456,13 +485,18 @@ Updates mutable fields on an existing Sandbox. Allowlisted update_mask paths tod
 ```sql
 UPDATE databricks_workspace.sandbox.sandboxes
 SET 
-sandbox = '{{ sandbox }}'
+create_time = '{{ create_time }}',
+display_name = '{{ display_name }}',
+metadata = '{{ metadata }}',
+name = '{{ name }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+update_time = '{{ update_time }}'
 WHERE 
 sandbox_id = '{{ sandbox_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND sandbox = '{{ sandbox }}' --required
 RETURNING
 name,
 display_name,

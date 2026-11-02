@@ -712,14 +712,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-monitor"><code>monitor</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Create a data quality monitor on a Unity Catalog object. The caller must provide either</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-monitor"><code>monitor</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Update a data quality monitor on Unity Catalog object.</td>
 </tr>
@@ -847,12 +847,18 @@ Create a data quality monitor on a Unity Catalog object. The caller must provide
 
 ```sql
 INSERT INTO databricks_workspace.dataquality.data_quality (
-monitor,
+object_type,
+object_id,
+anomaly_detection_config,
+data_profiling_config,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ monitor }}' /* required */,
+'{{ object_type }}' /* required */,
+'{{ object_id }}' /* required */,
+'{{ anomaly_detection_config }}',
+'{{ data_profiling_config }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -874,84 +880,92 @@ object_type
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the data_quality resource.
-    - name: monitor
+    - name: object_type
+      value: "{{ object_type }}"
       description: |
-        The monitor to create.
+        The type of the monitored object. Can be one of the following: \`\`schema\`\` or \`\`table\`\`.
+    - name: object_id
+      value: "{{ object_id }}"
+      description: |
+        The UUID of the request object. It is \`\`schema_id\`\` for \`\`schema\`\`, and \`\`table_id\`\` for \`\`table\`\`. Find the \`\`schema_id\`\` from either: 1. The \`schema_id <https://docs.databricks.com/api/workspace/schemas/get#schema_id>\`__ of the \`\`Schemas\`\` resource. 2. In \`Catalog Explorer <https://docs.databricks.com/aws/en/catalog-explorer/>\`__ > select the \`\`schema\`\` > go to the \`\`Details\`\` tab > the \`\`Schema ID\`\` field. Find the \`\`table_id\`\` from either: 1. The \`table_id <https://docs.databricks.com/api/workspace/tables/get#table_id>\`__ of the \`\`Tables\`\` resource. 2. In \`Catalog Explorer <https://docs.databricks.com/aws/en/catalog-explorer/>\`__ > select the \`\`table\`\` > go to the \`\`Details\`\` tab > the \`\`Table ID\`\` field.
+    - name: anomaly_detection_config
+      description: |
+        Anomaly Detection Configuration, applicable to \`\`schema\`\` object types.
       value:
-        object_type: "{{ object_type }}"
-        object_id: "{{ object_id }}"
-        anomaly_detection_config:
-          excluded_table_full_names:
-            - "{{ excluded_table_full_names }}"
-          notification_settings:
-            on_failure:
-              destination_ids:
-                - "{{ destination_ids }}"
-              destination_user_ids:
-                - {{ destination_user_ids }}
-              email_addresses:
-                - "{{ email_addresses }}"
-            on_unhealthy_table:
-              destination_ids:
-                - "{{ destination_ids }}"
-              destination_user_ids:
-                - {{ destination_user_ids }}
-              email_addresses:
-                - "{{ email_addresses }}"
-        data_profiling_config:
-          output_schema_id: "{{ output_schema_id }}"
-          assets_dir: "{{ assets_dir }}"
-          baseline_table_name: "{{ baseline_table_name }}"
-          custom_metrics:
-            - name: "{{ name }}"
-              definition: "{{ definition }}"
-              input_columns: "{{ input_columns }}"
-              output_data_type: "{{ output_data_type }}"
-              type: "{{ type }}"
-          dashboard_id: "{{ dashboard_id }}"
-          drift_metrics_table_name: "{{ drift_metrics_table_name }}"
-          effective_warehouse_id: "{{ effective_warehouse_id }}"
-          inference_log:
-            problem_type: "{{ problem_type }}"
-            timestamp_column: "{{ timestamp_column }}"
-            granularities:
-              - "{{ granularities }}"
-            prediction_column: "{{ prediction_column }}"
-            model_id_column: "{{ model_id_column }}"
-            label_column: "{{ label_column }}"
-          latest_monitor_failure_message: "{{ latest_monitor_failure_message }}"
-          monitor_version: {{ monitor_version }}
-          monitored_table_name: "{{ monitored_table_name }}"
-          notification_settings:
-            on_failure:
-              destination_ids:
-                - "{{ destination_ids }}"
-              destination_user_ids:
-                - {{ destination_user_ids }}
-              email_addresses:
-                - "{{ email_addresses }}"
-            on_unhealthy_table:
-              destination_ids:
-                - "{{ destination_ids }}"
-              destination_user_ids:
-                - {{ destination_user_ids }}
-              email_addresses:
-                - "{{ email_addresses }}"
-          profile_metrics_table_name: "{{ profile_metrics_table_name }}"
-          schedule:
-            quartz_cron_expression: "{{ quartz_cron_expression }}"
-            timezone_id: "{{ timezone_id }}"
-            pause_status: "{{ pause_status }}"
-          skip_builtin_dashboard: {{ skip_builtin_dashboard }}
-          slicing_exprs:
-            - "{{ slicing_exprs }}"
-          snapshot: "{{ snapshot }}"
-          status: "{{ status }}"
-          time_series:
-            timestamp_column: "{{ timestamp_column }}"
-            granularities:
-              - "{{ granularities }}"
-          warehouse_id: "{{ warehouse_id }}"
+        excluded_table_full_names:
+          - "{{ excluded_table_full_names }}"
+        notification_settings:
+          on_failure:
+            destination_ids:
+              - "{{ destination_ids }}"
+            destination_user_ids:
+              - {{ destination_user_ids }}
+            email_addresses:
+              - "{{ email_addresses }}"
+          on_unhealthy_table:
+            destination_ids:
+              - "{{ destination_ids }}"
+            destination_user_ids:
+              - {{ destination_user_ids }}
+            email_addresses:
+              - "{{ email_addresses }}"
+    - name: data_profiling_config
+      description: |
+        Data Profiling Configuration, applicable to \`\`table\`\` object types. Exactly one \`\`Analysis Configuration\`\` must be present.
+      value:
+        output_schema_id: "{{ output_schema_id }}"
+        assets_dir: "{{ assets_dir }}"
+        baseline_table_name: "{{ baseline_table_name }}"
+        custom_metrics:
+          - name: "{{ name }}"
+            definition: "{{ definition }}"
+            input_columns: "{{ input_columns }}"
+            output_data_type: "{{ output_data_type }}"
+            type: "{{ type }}"
+        dashboard_id: "{{ dashboard_id }}"
+        drift_metrics_table_name: "{{ drift_metrics_table_name }}"
+        effective_warehouse_id: "{{ effective_warehouse_id }}"
+        inference_log:
+          problem_type: "{{ problem_type }}"
+          timestamp_column: "{{ timestamp_column }}"
+          granularities:
+            - "{{ granularities }}"
+          prediction_column: "{{ prediction_column }}"
+          model_id_column: "{{ model_id_column }}"
+          label_column: "{{ label_column }}"
+        latest_monitor_failure_message: "{{ latest_monitor_failure_message }}"
+        monitor_version: {{ monitor_version }}
+        monitored_table_name: "{{ monitored_table_name }}"
+        notification_settings:
+          on_failure:
+            destination_ids:
+              - "{{ destination_ids }}"
+            destination_user_ids:
+              - {{ destination_user_ids }}
+            email_addresses:
+              - "{{ email_addresses }}"
+          on_unhealthy_table:
+            destination_ids:
+              - "{{ destination_ids }}"
+            destination_user_ids:
+              - {{ destination_user_ids }}
+            email_addresses:
+              - "{{ email_addresses }}"
+        profile_metrics_table_name: "{{ profile_metrics_table_name }}"
+        schedule:
+          quartz_cron_expression: "{{ quartz_cron_expression }}"
+          timezone_id: "{{ timezone_id }}"
+          pause_status: "{{ pause_status }}"
+        skip_builtin_dashboard: {{ skip_builtin_dashboard }}
+        slicing_exprs:
+          - "{{ slicing_exprs }}"
+        snapshot: "{{ snapshot }}"
+        status: "{{ status }}"
+        time_series:
+          timestamp_column: "{{ timestamp_column }}"
+          granularities:
+            - "{{ granularities }}"
+        warehouse_id: "{{ warehouse_id }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -973,14 +987,18 @@ Update a data quality monitor on Unity Catalog object.
 ```sql
 UPDATE databricks_workspace.dataquality.data_quality
 SET 
-monitor = '{{ monitor }}'
+object_type = '{{ object_type }}',
+object_id = '{{ object_id }}',
+anomaly_detection_config = '{{ anomaly_detection_config }}',
+data_profiling_config = '{{ data_profiling_config }}'
 WHERE 
 object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND monitor = '{{ monitor }}' --required
+AND object_type = '{{ object_type }}' --required
+AND object_id = '{{ object_id }}' --required
 RETURNING
 object_id,
 anomaly_detection_config,

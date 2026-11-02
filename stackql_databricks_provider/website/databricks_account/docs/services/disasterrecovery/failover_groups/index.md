@@ -368,14 +368,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-failover_group"><code>failover_group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-regions"><code>regions</code></a>, <a href="#parameter-workspace_sets"><code>workspace_sets</code></a>, <a href="#parameter-initial_primary_region"><code>initial_primary_region</code></a></td>
     <td><a href="#parameter-validate_only"><code>validate_only</code></a></td>
     <td>Create a new failover group.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-failover_group"><code>failover_group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-regions"><code>regions</code></a>, <a href="#parameter-workspace_sets"><code>workspace_sets</code></a>, <a href="#parameter-initial_primary_region"><code>initial_primary_region</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Update a failover group.</td>
 </tr>
@@ -532,14 +532,38 @@ Create a new failover group.
 
 ```sql
 INSERT INTO databricks_account.disasterrecovery.failover_groups (
-failover_group,
+regions,
+workspace_sets,
+initial_primary_region,
+create_time,
+effective_primary_region,
+etag,
+has_replication_point_blocking_errors,
+initial_replication_progress,
+name,
+replication_point,
+state,
+unity_catalog_assets,
+update_time,
 account_id,
 failover_group_id,
 account_host,
 validate_only
 )
 SELECT 
-'{{ failover_group }}' /* required */,
+'{{ regions }}' /* required */,
+'{{ workspace_sets }}' /* required */,
+'{{ initial_primary_region }}' /* required */,
+'{{ create_time }}',
+'{{ effective_primary_region }}',
+'{{ etag }}',
+{{ has_replication_point_blocking_errors }},
+'{{ initial_replication_progress }}',
+'{{ name }}',
+'{{ replication_point }}',
+'{{ state }}',
+'{{ unity_catalog_assets }}',
+'{{ update_time }}',
 '{{ account_id }}',
 '{{ failover_group_id }}',
 '{{ account_host }}',
@@ -575,35 +599,70 @@ workspace_sets
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the failover_groups resource.
-    - name: failover_group
-      description: |
-        The failover group to create.
+    - name: regions
       value:
-        regions:
-          - "{{ regions }}"
-        workspace_sets:
+        - "{{ regions }}"
+      description: |
+        List of all regions participating in this failover group.
+    - name: workspace_sets
+      description: |
+        Workspace sets, each containing workspaces that replicate to each other.
+      value:
+        - name: "{{ name }}"
+          workspace_ids: "{{ workspace_ids }}"
+          replicate_workspace_assets: {{ replicate_workspace_assets }}
+          stable_url_names: "{{ stable_url_names }}"
+    - name: initial_primary_region
+      value: "{{ initial_primary_region }}"
+      description: |
+        Initial primary region. Used only in Create requests to set the starting primary region. Not returned in responses.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time at which this failover group was created.
+    - name: effective_primary_region
+      value: "{{ effective_primary_region }}"
+      description: |
+        Current effective primary region. Replication flows FROM workspaces in this region. Changes after a successful failover.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        Opaque version string for optimistic locking. Server-generated and returned in responses.
+    - name: has_replication_point_blocking_errors
+      value: {{ has_replication_point_blocking_errors }}
+      description: |
+        True if errors currently block the replication point.
+    - name: initial_replication_progress
+      description: |
+        Initial replication progress of all in-scope assets. Set only when the FailoverGroup is in INITIAL_REPLICATION state.
+      value:
+        completed: {{ completed }}
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Fully qualified resource name in the format accounts/{account_id}/failover-groups/{failover_group_id}.
+    - name: replication_point
+      value: "{{ replication_point }}"
+      description: |
+        The latest point in time to which data has been replicated.
+    - name: state
+      value: "{{ state }}"
+      description: |
+        Aggregate state of the failover group.
+    - name: unity_catalog_assets
+      description: |
+        Unity Catalog replication configuration.
+      value:
+        catalogs:
           - name: "{{ name }}"
-            workspace_ids: "{{ workspace_ids }}"
-            replicate_workspace_assets: {{ replicate_workspace_assets }}
-            stable_url_names: "{{ stable_url_names }}"
-        initial_primary_region: "{{ initial_primary_region }}"
-        create_time: "{{ create_time }}"
-        effective_primary_region: "{{ effective_primary_region }}"
-        etag: "{{ etag }}"
-        has_replication_point_blocking_errors: {{ has_replication_point_blocking_errors }}
-        initial_replication_progress:
-          completed: {{ completed }}
-        name: "{{ name }}"
-        replication_point: "{{ replication_point }}"
-        state: "{{ state }}"
-        unity_catalog_assets:
-          catalogs:
-            - name: "{{ name }}"
-          data_replication_workspace_set: "{{ data_replication_workspace_set }}"
-          location_mappings:
-            - name: "{{ name }}"
-              uri_by_region: "{{ uri_by_region }}"
-        update_time: "{{ update_time }}"
+        data_replication_workspace_set: "{{ data_replication_workspace_set }}"
+        location_mappings:
+          - name: "{{ name }}"
+            uri_by_region: "{{ uri_by_region }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time at which this failover group was last modified.
     - name: validate_only
       value: {{ validate_only }}
       description: When true, validates the request without creating the failover group.
@@ -629,13 +688,27 @@ Update a failover group.
 ```sql
 UPDATE databricks_account.disasterrecovery.failover_groups
 SET 
-failover_group = '{{ failover_group }}'
+regions = '{{ regions }}',
+workspace_sets = '{{ workspace_sets }}',
+initial_primary_region = '{{ initial_primary_region }}',
+create_time = '{{ create_time }}',
+effective_primary_region = '{{ effective_primary_region }}',
+etag = '{{ etag }}',
+has_replication_point_blocking_errors = {{ has_replication_point_blocking_errors }},
+initial_replication_progress = '{{ initial_replication_progress }}',
+name = '{{ name }}',
+replication_point = '{{ replication_point }}',
+state = '{{ state }}',
+unity_catalog_assets = '{{ unity_catalog_assets }}',
+update_time = '{{ update_time }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND failover_group_id = '{{ failover_group_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND account_host = '{{ account_host }}' --required
-AND failover_group = '{{ failover_group }}' --required
+AND regions = '{{ regions }}' --required
+AND workspace_sets = '{{ workspace_sets }}' --required
+AND initial_primary_region = '{{ initial_primary_region }}' --required
 AND etag = '{{ etag}}'
 RETURNING
 name,

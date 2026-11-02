@@ -212,7 +212,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-database_instance_role"><code>database_instance_role</code></a></td>
+    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td><a href="#parameter-database_instance_name"><code>database_instance_name</code></a></td>
     <td>Create a role for a Database Instance.</td>
 </tr>
@@ -355,14 +355,24 @@ Create a role for a Database Instance.
 
 ```sql
 INSERT INTO databricks_workspace.database.database_instance_roles (
-database_instance_role,
+name,
+attributes,
+effective_attributes,
+identity_type,
+instance_name,
+membership_role,
 instance_name,
 deployment_name,
 workspace_domain,
 database_instance_name
 )
 SELECT 
-'{{ database_instance_role }}' /* required */,
+'{{ name }}' /* required */,
+'{{ attributes }}',
+'{{ effective_attributes }}',
+'{{ identity_type }}',
+'{{ instance_name }}',
+'{{ membership_role }}',
 '{{ instance_name }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}',
@@ -391,22 +401,34 @@ membership_role
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the database_instance_roles resource.
-    - name: database_instance_role
+    - name: name
+      value: "{{ name }}"
       description: |
-        A DatabaseInstanceRole represents a Postgres role in a database instance.
+        The name of the role. This is the unique identifier for the role in an instance.
+    - name: attributes
+      description: |
+        The desired API-exposed Postgres role attribute to associate with the role. Optional.
       value:
-        name: "{{ name }}"
-        attributes:
-          bypassrls: {{ bypassrls }}
-          createdb: {{ createdb }}
-          createrole: {{ createrole }}
-        effective_attributes:
-          bypassrls: {{ bypassrls }}
-          createdb: {{ createdb }}
-          createrole: {{ createrole }}
-        identity_type: "{{ identity_type }}"
-        instance_name: "{{ instance_name }}"
-        membership_role: "{{ membership_role }}"
+        bypassrls: {{ bypassrls }}
+        createdb: {{ createdb }}
+        createrole: {{ createrole }}
+    - name: effective_attributes
+      description: |
+        The attributes that are applied to the role. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+      value:
+        bypassrls: {{ bypassrls }}
+        createdb: {{ createdb }}
+        createrole: {{ createrole }}
+    - name: identity_type
+      value: "{{ identity_type }}"
+      description: |
+        The type of the role.
+    - name: instance_name
+      value: "{{ instance_name }}"
+    - name: membership_role
+      value: "{{ membership_role }}"
+      description: |
+        An enum value for a standard role that this role is a member of.
     - name: database_instance_name
       value: "{{ database_instance_name }}"
 `}</CodeBlock>

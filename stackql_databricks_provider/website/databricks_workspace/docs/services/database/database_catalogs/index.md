@@ -134,14 +134,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-catalog"><code>catalog</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-database_instance_name"><code>database_instance_name</code></a>, <a href="#parameter-database_name"><code>database_name</code></a></td>
     <td></td>
     <td>Create a Database Catalog.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-database_catalog"><code>database_catalog</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-database_instance_name"><code>database_instance_name</code></a>, <a href="#parameter-database_name"><code>database_name</code></a></td>
     <td></td>
     <td>This API is currently unimplemented, but exposed for Terraform support.</td>
 </tr>
@@ -271,12 +271,20 @@ Create a Database Catalog.
 
 ```sql
 INSERT INTO databricks_workspace.database.database_catalogs (
-catalog,
+name,
+database_instance_name,
+database_name,
+create_database_if_not_exists,
+uid,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ catalog }}' /* required */,
+'{{ name }}' /* required */,
+'{{ database_instance_name }}' /* required */,
+'{{ database_name }}' /* required */,
+{{ create_database_if_not_exists }},
+'{{ uid }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -299,13 +307,20 @@ uid
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the database_catalogs resource.
-    - name: catalog
-      value:
-        name: "{{ name }}"
-        database_instance_name: "{{ database_instance_name }}"
-        database_name: "{{ database_name }}"
-        create_database_if_not_exists: {{ create_database_if_not_exists }}
-        uid: "{{ uid }}"
+    - name: name
+      value: "{{ name }}"
+    - name: database_instance_name
+      value: "{{ database_instance_name }}"
+      description: |
+        The name of the DatabaseInstance housing the database.
+    - name: database_name
+      value: "{{ database_name }}"
+      description: |
+        The name of the database (in an instance) associated with the catalog.
+    - name: create_database_if_not_exists
+      value: {{ create_database_if_not_exists }}
+    - name: uid
+      value: "{{ uid }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -327,13 +342,19 @@ This API is currently unimplemented, but exposed for Terraform support.
 ```sql
 UPDATE databricks_workspace.database.database_catalogs
 SET 
-database_catalog = '{{ database_catalog }}'
+name = '{{ name }}',
+database_instance_name = '{{ database_instance_name }}',
+database_name = '{{ database_name }}',
+create_database_if_not_exists = {{ create_database_if_not_exists }},
+uid = '{{ uid }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND database_catalog = '{{ database_catalog }}' --required
+AND name = '{{ name }}' --required
+AND database_instance_name = '{{ database_instance_name }}' --required
+AND database_name = '{{ database_name }}' --required
 RETURNING
 name,
 database_instance_name,

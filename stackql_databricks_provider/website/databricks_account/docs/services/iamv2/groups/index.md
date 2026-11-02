@@ -124,14 +124,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a local group in the Databricks account and returns the created group. A local group is one</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-group"><code>group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing group in the Databricks account. Only the fields named in the update mask are</td>
 </tr>
@@ -266,12 +266,18 @@ Creates a local group in the Databricks account and returns the created group. A
 
 ```sql
 INSERT INTO databricks_account.iamv2.groups (
-group,
+account_id,
+external_id,
+group_id,
+group_name,
 account_id,
 account_host
 )
 SELECT 
-'{{ group }}' /* required */,
+'{{ account_id }}',
+'{{ external_id }}',
+'{{ group_id }}',
+'{{ group_name }}',
 '{{ account_id }}',
 '{{ account_host }}'
 RETURNING
@@ -293,14 +299,22 @@ group_name
     - name: account_host
       value: "{{ account_host }}"
       description: Required parameter for the groups resource.
-    - name: group
+    - name: account_id
+      value: "{{ account_id }}"
       description: |
-        Required. Group to be created in Databricks
-      value:
-        account_id: "{{ account_id }}"
-        external_id: "{{ external_id }}"
-        group_id: "{{ group_id }}"
-        group_name: "{{ group_name }}"
+        The parent account ID for group in Databricks.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        ExternalId of the group in the customer's IdP.
+    - name: group_id
+      value: "{{ group_id }}"
+      description: |
+        Internal group ID of the group in Databricks.
+    - name: group_name
+      value: "{{ group_name }}"
+      description: |
+        Display name of the group.
 `}</CodeBlock>
 
 </TabItem>
@@ -322,13 +336,15 @@ Updates an existing group in the Databricks account. Only the fields named in th
 ```sql
 UPDATE databricks_account.iamv2.groups
 SET 
-group = '{{ group }}'
+account_id = '{{ account_id }}',
+external_id = '{{ external_id }}',
+group_id = '{{ group_id }}',
+group_name = '{{ group_name }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND group_id = '{{ group_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND account_host = '{{ account_host }}' --required
-AND group = '{{ group }}' --required
 RETURNING
 account_id,
 external_id,

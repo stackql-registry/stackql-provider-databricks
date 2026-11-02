@@ -140,7 +140,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-catalog_id"><code>catalog_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-catalog"><code>catalog</code></a></td>
+    <td><a href="#parameter-catalog_id"><code>catalog_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Register a Postgres database in the Unity Catalog.</td>
 </tr>
@@ -231,13 +231,25 @@ Register a Postgres database in the Unity Catalog.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_catalogs (
-catalog,
+catalog_id,
+create_time,
+name,
+spec,
+status,
+uid,
+update_time,
 catalog_id,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ catalog }}' /* required */,
+'{{ catalog_id }}',
+'{{ create_time }}',
+'{{ name }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ uid }}',
+'{{ update_time }}',
 '{{ catalog_id }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
@@ -258,21 +270,38 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_catalogs resource.
-    - name: catalog
+    - name: catalog_id
+      value: "{{ catalog_id }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        A timestamp indicating when the catalog was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The full resource path of the catalog. Format: "catalogs/{catalog_id}".
+    - name: spec
+      description: |
+        The desired state of the Catalog.
       value:
-        catalog_id: "{{ catalog_id }}"
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        spec:
-          postgres_database: "{{ postgres_database }}"
-          branch: "{{ branch }}"
-          create_database_if_missing: {{ create_database_if_missing }}
-        status:
-          branch: "{{ branch }}"
-          postgres_database: "{{ postgres_database }}"
-          project: "{{ project }}"
-        uid: "{{ uid }}"
-        update_time: "{{ update_time }}"
+        postgres_database: "{{ postgres_database }}"
+        branch: "{{ branch }}"
+        create_database_if_missing: {{ create_database_if_missing }}
+    - name: status
+      description: |
+        The observed state of the Catalog.
+      value:
+        branch: "{{ branch }}"
+        postgres_database: "{{ postgres_database }}"
+        project: "{{ project }}"
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        System-generated unique identifier for the catalog.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the catalog was last updated.
 `}</CodeBlock>
 
 </TabItem>

@@ -158,14 +158,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_policy"><code>tag_policy</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Creates a new tag policy, making the associated tag key governed. For Terraform usage, see the `Tag</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_policy"><code>tag_policy</code></a></td>
+    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Updates an existing tag policy for a single governed tag. For Terraform usage, see the `Tag Policy</td>
 </tr>
@@ -291,12 +291,22 @@ Creates a new tag policy, making the associated tag key governed. For Terraform 
 
 ```sql
 INSERT INTO databricks_workspace.tags.tag_policies (
-tag_policy,
+tag_key,
+create_time,
+description,
+id,
+update_time,
+values,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ tag_policy }}' /* required */,
+'{{ tag_key }}' /* required */,
+'{{ create_time }}',
+'{{ description }}',
+'{{ id }}',
+'{{ update_time }}',
+'{{ values }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -320,15 +330,23 @@ values
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the tag_policies resource.
-    - name: tag_policy
+    - name: tag_key
+      value: "{{ tag_key }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Timestamp when the tag policy was created
+    - name: description
+      value: "{{ description }}"
+    - name: id
+      value: "{{ id }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Timestamp when the tag policy was last updated
+    - name: values
       value:
-        tag_key: "{{ tag_key }}"
-        create_time: "{{ create_time }}"
-        description: "{{ description }}"
-        id: "{{ id }}"
-        update_time: "{{ update_time }}"
-        values:
-          - name: "{{ name }}"
+        - name: "{{ name }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -350,13 +368,18 @@ Updates an existing tag policy for a single governed tag. For Terraform usage, s
 ```sql
 UPDATE databricks_workspace.tags.tag_policies
 SET 
-tag_policy = '{{ tag_policy }}'
+tag_key = '{{ tag_key }}',
+create_time = '{{ create_time }}',
+description = '{{ description }}',
+id = '{{ id }}',
+update_time = '{{ update_time }}',
+values = '{{ values }}'
 WHERE 
 tag_key = '{{ tag_key }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND tag_policy = '{{ tag_policy }}' --required
+AND tag_key = '{{ tag_key }}' --required
 RETURNING
 id,
 create_time,

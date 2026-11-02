@@ -392,14 +392,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-branch"><code>branch</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-replace_existing"><code>replace_existing</code></a></td>
     <td>Creates a new database branch in the project.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-branch"><code>branch</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the specified database branch. You can set this branch as the project's default branch, or</td>
 </tr>
@@ -559,7 +559,14 @@ Creates a new database branch in the project.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_branches (
-branch,
+branch_id,
+create_time,
+name,
+parent,
+spec,
+status,
+uid,
+update_time,
 project_id,
 branch_id,
 deployment_name,
@@ -567,7 +574,14 @@ workspace_domain,
 replace_existing
 )
 SELECT 
-'{{ branch }}' /* required */,
+'{{ branch_id }}',
+'{{ create_time }}',
+'{{ name }}',
+'{{ parent }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ uid }}',
+'{{ update_time }}',
 '{{ project_id }}',
 '{{ branch_id }}',
 '{{ deployment_name }}',
@@ -593,40 +607,58 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_branches resource.
-    - name: branch
+    - name: branch_id
+      value: "{{ branch_id }}"
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The Branch to create.
+        A timestamp indicating when the branch was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The full resource path of the branch. Format: projects/{project_id}/branches/{branch_id}
+    - name: parent
+      value: "{{ parent }}"
+      description: |
+        The project containing this branch (API resource hierarchy). Format: projects/{project_id} Note: This field indicates where the branch exists in the resource hierarchy. For point-in-time branching from another branch, see \`\`status.source_branch\`\`.
+    - name: spec
+      description: |
+        The spec contains the branch configuration.
+      value:
+        expire_time: "{{ expire_time }}"
+        is_protected: {{ is_protected }}
+        no_expiry: {{ no_expiry }}
+        source_branch: "{{ source_branch }}"
+        source_branch_lsn: "{{ source_branch_lsn }}"
+        source_branch_time: "{{ source_branch_time }}"
+        source_snapshot: "{{ source_snapshot }}"
+        ttl: "{{ ttl }}"
+    - name: status
+      description: |
+        The current status of a Branch.
       value:
         branch_id: "{{ branch_id }}"
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        parent: "{{ parent }}"
-        spec:
-          expire_time: "{{ expire_time }}"
-          is_protected: {{ is_protected }}
-          no_expiry: {{ no_expiry }}
-          source_branch: "{{ source_branch }}"
-          source_branch_lsn: "{{ source_branch_lsn }}"
-          source_branch_time: "{{ source_branch_time }}"
-          source_snapshot: "{{ source_snapshot }}"
-          ttl: "{{ ttl }}"
-        status:
-          branch_id: "{{ branch_id }}"
-          current_state: "{{ current_state }}"
-          default: {{ default }}
-          delete_time: "{{ delete_time }}"
-          expire_time: "{{ expire_time }}"
-          is_protected: {{ is_protected }}
-          logical_size_bytes: {{ logical_size_bytes }}
-          pending_state: "{{ pending_state }}"
-          purge_time: "{{ purge_time }}"
-          source_branch: "{{ source_branch }}"
-          source_branch_lsn: "{{ source_branch_lsn }}"
-          source_branch_time: "{{ source_branch_time }}"
-          source_snapshot: "{{ source_snapshot }}"
-          state_change_time: "{{ state_change_time }}"
-        uid: "{{ uid }}"
-        update_time: "{{ update_time }}"
+        current_state: "{{ current_state }}"
+        default: {{ default }}
+        delete_time: "{{ delete_time }}"
+        expire_time: "{{ expire_time }}"
+        is_protected: {{ is_protected }}
+        logical_size_bytes: {{ logical_size_bytes }}
+        pending_state: "{{ pending_state }}"
+        purge_time: "{{ purge_time }}"
+        source_branch: "{{ source_branch }}"
+        source_branch_lsn: "{{ source_branch_lsn }}"
+        source_branch_time: "{{ source_branch_time }}"
+        source_snapshot: "{{ source_snapshot }}"
+        state_change_time: "{{ state_change_time }}"
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        System-generated unique ID for the branch.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the branch was last updated.
     - name: replace_existing
       value: {{ replace_existing }}
       description: If true, update the branch if it already exists instead of returning an error.
@@ -652,14 +684,20 @@ Updates the specified database branch. You can set this branch as the project's 
 ```sql
 UPDATE databricks_workspace.postgres.postgres_branches
 SET 
-branch = '{{ branch }}'
+branch_id = '{{ branch_id }}',
+create_time = '{{ create_time }}',
+name = '{{ name }}',
+parent = '{{ parent }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+uid = '{{ uid }}',
+update_time = '{{ update_time }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND branch_id = '{{ branch_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND branch = '{{ branch }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

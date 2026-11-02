@@ -333,14 +333,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-external_lineage_relationship"><code>external_lineage_relationship</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-source"><code>source</code></a>, <a href="#parameter-target"><code>target</code></a></td>
     <td></td>
     <td>Creates an external lineage relationship between a Databricks or external metadata object and another</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-external_lineage_relationship"><code>external_lineage_relationship</code></a></td>
+    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-source"><code>source</code></a>, <a href="#parameter-target"><code>target</code></a></td>
     <td></td>
     <td>Updates an external lineage relationship between a Databricks or external metadata object and another</td>
 </tr>
@@ -457,12 +457,20 @@ Creates an external lineage relationship between a Databricks or external metada
 
 ```sql
 INSERT INTO databricks_workspace.catalog.external_lineage (
-external_lineage_relationship,
+source,
+target,
+columns,
+id,
+properties,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ external_lineage_relationship }}' /* required */,
+'{{ source }}' /* required */,
+'{{ target }}' /* required */,
+'{{ columns }}',
+'{{ id }}',
+'{{ properties }}',
 '{{ deployment_name }}',
 '{{ workspace_domain }}'
 RETURNING
@@ -485,33 +493,44 @@ target
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the external_lineage resource.
-    - name: external_lineage_relationship
+    - name: source
       value:
-        source:
-          external_metadata:
-            name: "{{ name }}"
-          model_version:
-            name: "{{ name }}"
-            version: "{{ version }}"
-          path:
-            url: "{{ url }}"
-          table:
-            name: "{{ name }}"
-        target:
-          external_metadata:
-            name: "{{ name }}"
-          model_version:
-            name: "{{ name }}"
-            version: "{{ version }}"
-          path:
-            url: "{{ url }}"
-          table:
-            name: "{{ name }}"
-        columns:
-          - source: "{{ source }}"
-            target: "{{ target }}"
-        id: "{{ id }}"
-        properties: "{{ properties }}"
+        external_metadata:
+          name: "{{ name }}"
+        model_version:
+          name: "{{ name }}"
+          version: "{{ version }}"
+        path:
+          url: "{{ url }}"
+        table:
+          name: "{{ name }}"
+    - name: target
+      description: |
+        Target object of the external lineage relationship.
+      value:
+        external_metadata:
+          name: "{{ name }}"
+        model_version:
+          name: "{{ name }}"
+          version: "{{ version }}"
+        path:
+          url: "{{ url }}"
+        table:
+          name: "{{ name }}"
+    - name: columns
+      description: |
+        List of column relationships between source and target objects.
+      value:
+        - source: "{{ source }}"
+          target: "{{ target }}"
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique identifier of the external lineage relationship.
+    - name: properties
+      value: "{{ properties }}"
+      description: |
+        Key-value properties associated with the external lineage relationship.
 `}</CodeBlock>
 
 </TabItem>
@@ -533,12 +552,17 @@ Updates an external lineage relationship between a Databricks or external metada
 ```sql
 UPDATE databricks_workspace.catalog.external_lineage
 SET 
-external_lineage_relationship = '{{ external_lineage_relationship }}'
+source = '{{ source }}',
+target = '{{ target }}',
+columns = '{{ columns }}',
+id = '{{ id }}',
+properties = '{{ properties }}'
 WHERE 
 update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND external_lineage_relationship = '{{ external_lineage_relationship }}' --required
+AND source = '{{ source }}' --required
+AND target = '{{ target }}' --required
 RETURNING
 id,
 columns,

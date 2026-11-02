@@ -86,7 +86,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-default_workspace_base_environment"><code>default_workspace_base_environment</code></a></td>
+    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the default WorkspaceBaseEnvironment configuration for the workspace. Sets the specified base</td>
 </tr>
@@ -165,12 +165,13 @@ Updates the default WorkspaceBaseEnvironment configuration for the workspace. Se
 ```sql
 UPDATE databricks_workspace.environments.default_workspace_base_environment
 SET 
-default_workspace_base_environment = '{{ default_workspace_base_environment }}'
+cpu_workspace_base_environment = '{{ cpu_workspace_base_environment }}',
+gpu_workspace_base_environment = '{{ gpu_workspace_base_environment }}',
+name = '{{ name }}'
 WHERE 
 update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND default_workspace_base_environment = '{{ default_workspace_base_environment }}' --required
 RETURNING
 name,
 cpu_workspace_base_environment,

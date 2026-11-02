@@ -205,14 +205,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-data_api"><code>data_api</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Enable Data API for a database.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-data_api"><code>data_api</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update Data API configuration for a database.</td>
 </tr>
@@ -319,7 +319,12 @@ Enable Data API for a database.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_data_apis (
-data_api,
+create_time,
+name,
+parent,
+spec,
+status,
+update_time,
 project_id,
 branch_id,
 database_id,
@@ -327,7 +332,12 @@ deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ data_api }}' /* required */,
+'{{ create_time }}',
+'{{ name }}',
+'{{ parent }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ project_id }}',
 '{{ branch_id }}',
 '{{ database_id }}',
@@ -356,43 +366,57 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_data_apis resource.
-    - name: data_api
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The Data API configuration to create.
+        A timestamp indicating when the Data API was first enabled.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name: projects/{project_id}/branches/{branch_id}/databases/{database_id}/data-api
+    - name: parent
+      value: "{{ parent }}"
+      description: |
+        The database containing this Data API configuration. Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
+    - name: spec
+      description: |
+        The desired Data API configuration.
       value:
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        parent: "{{ parent }}"
-        spec:
-          db_aggregates_enabled: {{ db_aggregates_enabled }}
-          db_extra_search_path:
-            - "{{ db_extra_search_path }}"
-          db_max_rows: {{ db_max_rows }}
-          db_schemas:
-            - "{{ db_schemas }}"
-          jwt_cache_max_lifetime: "{{ jwt_cache_max_lifetime }}"
-          jwt_role_claim_key: "{{ jwt_role_claim_key }}"
-          openapi_mode: "{{ openapi_mode }}"
-          server_cors_allowed_origins:
-            - "{{ server_cors_allowed_origins }}"
-          server_timing_enabled: {{ server_timing_enabled }}
-        status:
-          available_schemas:
-            - "{{ available_schemas }}"
-          db_aggregates_enabled: {{ db_aggregates_enabled }}
-          db_extra_search_path:
-            - "{{ db_extra_search_path }}"
-          db_max_rows: {{ db_max_rows }}
-          db_schemas:
-            - "{{ db_schemas }}"
-          jwt_cache_max_lifetime: "{{ jwt_cache_max_lifetime }}"
-          jwt_role_claim_key: "{{ jwt_role_claim_key }}"
-          openapi_mode: "{{ openapi_mode }}"
-          server_cors_allowed_origins:
-            - "{{ server_cors_allowed_origins }}"
-          server_timing_enabled: {{ server_timing_enabled }}
-          url: "{{ url }}"
-        update_time: "{{ update_time }}"
+        db_aggregates_enabled: {{ db_aggregates_enabled }}
+        db_extra_search_path:
+          - "{{ db_extra_search_path }}"
+        db_max_rows: {{ db_max_rows }}
+        db_schemas:
+          - "{{ db_schemas }}"
+        jwt_cache_max_lifetime: "{{ jwt_cache_max_lifetime }}"
+        jwt_role_claim_key: "{{ jwt_role_claim_key }}"
+        openapi_mode: "{{ openapi_mode }}"
+        server_cors_allowed_origins:
+          - "{{ server_cors_allowed_origins }}"
+        server_timing_enabled: {{ server_timing_enabled }}
+    - name: status
+      description: |
+        The observed Data API state (read-only).
+      value:
+        available_schemas:
+          - "{{ available_schemas }}"
+        db_aggregates_enabled: {{ db_aggregates_enabled }}
+        db_extra_search_path:
+          - "{{ db_extra_search_path }}"
+        db_max_rows: {{ db_max_rows }}
+        db_schemas:
+          - "{{ db_schemas }}"
+        jwt_cache_max_lifetime: "{{ jwt_cache_max_lifetime }}"
+        jwt_role_claim_key: "{{ jwt_role_claim_key }}"
+        openapi_mode: "{{ openapi_mode }}"
+        server_cors_allowed_origins:
+          - "{{ server_cors_allowed_origins }}"
+        server_timing_enabled: {{ server_timing_enabled }}
+        url: "{{ url }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the Data API configuration was last updated.
 `}</CodeBlock>
 
 </TabItem>
@@ -414,15 +438,19 @@ Update Data API configuration for a database.
 ```sql
 UPDATE databricks_workspace.postgres.postgres_data_apis
 SET 
-data_api = '{{ data_api }}'
+create_time = '{{ create_time }}',
+name = '{{ name }}',
+parent = '{{ parent }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+update_time = '{{ update_time }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND branch_id = '{{ branch_id }}' --required
 AND database_id = '{{ database_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND data_api = '{{ data_api }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

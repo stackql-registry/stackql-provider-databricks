@@ -340,14 +340,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-role"><code>role</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-replace_existing"><code>replace_existing</code></a>, <a href="#parameter-role_id"><code>role_id</code></a></td>
     <td>Creates a new Postgres role in the branch.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-role_id"><code>role_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-role"><code>role</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-role_id"><code>role_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update a role for a branch.</td>
 </tr>
@@ -511,7 +511,13 @@ Creates a new Postgres role in the branch.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_roles (
-role,
+create_time,
+name,
+parent,
+role_id,
+spec,
+status,
+update_time,
 project_id,
 branch_id,
 deployment_name,
@@ -520,7 +526,13 @@ replace_existing,
 role_id
 )
 SELECT 
-'{{ role }}' /* required */,
+'{{ create_time }}',
+'{{ name }}',
+'{{ parent }}',
+'{{ role_id }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ project_id }}',
 '{{ branch_id }}',
 '{{ deployment_name }}',
@@ -547,36 +559,49 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_roles resource.
-    - name: role
+    - name: create_time
+      value: "{{ create_time }}"
+    - name: name
+      value: "{{ name }}"
       description: |
-        The desired specification of a Role.
+        Output only. The full resource path of the role. Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
+    - name: parent
+      value: "{{ parent }}"
+      description: |
+        The Branch where this Role exists. Format: projects/{project_id}/branches/{branch_id}
+    - name: role_id
+      value: "{{ role_id }}"
+      description: |
+        The part of the name, chosen by the user when the resource was created.
+    - name: spec
+      description: |
+        The spec contains the role configuration, including identity type, authentication method, and role attributes.
       value:
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        parent: "{{ parent }}"
+        attributes:
+          bypassrls: {{ bypassrls }}
+          createdb: {{ createdb }}
+          createrole: {{ createrole }}
+        auth_method: "{{ auth_method }}"
+        identity_type: "{{ identity_type }}"
+        membership_roles:
+          - "{{ membership_roles }}"
+        postgres_role: "{{ postgres_role }}"
+    - name: status
+      description: |
+        Current status of the role, including its identity type, authentication method, and role attributes.
+      value:
+        attributes:
+          bypassrls: {{ bypassrls }}
+          createdb: {{ createdb }}
+          createrole: {{ createrole }}
+        auth_method: "{{ auth_method }}"
+        identity_type: "{{ identity_type }}"
+        membership_roles:
+          - "{{ membership_roles }}"
+        postgres_role: "{{ postgres_role }}"
         role_id: "{{ role_id }}"
-        spec:
-          attributes:
-            bypassrls: {{ bypassrls }}
-            createdb: {{ createdb }}
-            createrole: {{ createrole }}
-          auth_method: "{{ auth_method }}"
-          identity_type: "{{ identity_type }}"
-          membership_roles:
-            - "{{ membership_roles }}"
-          postgres_role: "{{ postgres_role }}"
-        status:
-          attributes:
-            bypassrls: {{ bypassrls }}
-            createdb: {{ createdb }}
-            createrole: {{ createrole }}
-          auth_method: "{{ auth_method }}"
-          identity_type: "{{ identity_type }}"
-          membership_roles:
-            - "{{ membership_roles }}"
-          postgres_role: "{{ postgres_role }}"
-          role_id: "{{ role_id }}"
-        update_time: "{{ update_time }}"
+    - name: update_time
+      value: "{{ update_time }}"
     - name: replace_existing
       value: {{ replace_existing }}
       description: If true, update the role if it already exists instead of returning an error. When the role already exists, the provided \`\`role\`\` spec fully replaces the existing one: \`\`membership_roles\`\` is overwritten, not merged. Leaving \`\`membership_roles\`\` empty clears all of the role's existing memberships, including \`\`DATABRICKS_SUPERUSER\`\`. Always send the complete desired list of memberships when using this field.
@@ -606,15 +631,20 @@ Update a role for a branch.
 ```sql
 UPDATE databricks_workspace.postgres.postgres_roles
 SET 
-role = '{{ role }}'
+create_time = '{{ create_time }}',
+name = '{{ name }}',
+parent = '{{ parent }}',
+role_id = '{{ role_id }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+update_time = '{{ update_time }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND branch_id = '{{ branch_id }}' --required
 AND role_id = '{{ role_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND role = '{{ role }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

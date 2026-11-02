@@ -212,14 +212,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-database"><code>database</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-replace_existing"><code>replace_existing</code></a></td>
     <td>Create a Database.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-database"><code>database</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-branch_id"><code>branch_id</code></a>, <a href="#parameter-database_id"><code>database_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update a Database.</td>
 </tr>
@@ -371,7 +371,13 @@ Create a Database.
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_databases (
-database,
+create_time,
+database_id,
+name,
+parent,
+spec,
+status,
+update_time,
 project_id,
 branch_id,
 deployment_name,
@@ -380,7 +386,13 @@ database_id,
 replace_existing
 )
 SELECT 
-'{{ database }}' /* required */,
+'{{ create_time }}',
+'{{ database_id }}',
+'{{ name }}',
+'{{ parent }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ project_id }}',
 '{{ branch_id }}',
 '{{ deployment_name }}',
@@ -407,22 +419,39 @@ SELECT
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the postgres_databases resource.
-    - name: database
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The desired specification of a Database.
+        A timestamp indicating when the database was created.
+    - name: database_id
+      value: "{{ database_id }}"
+      description: |
+        The part of the name, chosen by the user when the resource was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the database. Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
+    - name: parent
+      value: "{{ parent }}"
+      description: |
+        The branch containing this database. Format: projects/{project_id}/branches/{branch_id}
+    - name: spec
+      description: |
+        The desired state of the Database.
       value:
-        create_time: "{{ create_time }}"
+        role: "{{ role }}"
+        postgres_database: "{{ postgres_database }}"
+    - name: status
+      description: |
+        The observed state of the Database.
+      value:
         database_id: "{{ database_id }}"
-        name: "{{ name }}"
-        parent: "{{ parent }}"
-        spec:
-          role: "{{ role }}"
-          postgres_database: "{{ postgres_database }}"
-        status:
-          database_id: "{{ database_id }}"
-          postgres_database: "{{ postgres_database }}"
-          role: "{{ role }}"
-        update_time: "{{ update_time }}"
+        postgres_database: "{{ postgres_database }}"
+        role: "{{ role }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the database was last updated.
     - name: database_id
       value: "{{ database_id }}"
       description: The ID to use for the Database, which will become the final component of the database's resource name. This ID becomes the database name in postgres. This value should be 4-63 characters, and only use characters available in DNS names, as defined by RFC-1123 If database_id is not specified in the request, it is generated automatically.
@@ -452,15 +481,20 @@ Update a Database.
 ```sql
 UPDATE databricks_workspace.postgres.postgres_databases
 SET 
-database = '{{ database }}'
+create_time = '{{ create_time }}',
+database_id = '{{ database_id }}',
+name = '{{ name }}',
+parent = '{{ parent }}',
+spec = '{{ spec }}',
+status = '{{ status }}',
+update_time = '{{ update_time }}'
 WHERE 
 project_id = '{{ project_id }}' --required
 AND branch_id = '{{ branch_id }}' --required
 AND database_id = '{{ database_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_domain = '{{ workspace_domain }}' --required
-AND database = '{{ database }}' --required;
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>

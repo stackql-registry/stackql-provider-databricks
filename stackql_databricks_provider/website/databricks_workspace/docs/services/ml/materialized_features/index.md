@@ -104,14 +104,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-feature_name"><code>feature_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature_tag"><code>feature_tag</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-feature_name"><code>feature_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-key"><code>key</code></a></td>
     <td></td>
     <td>Creates a FeatureTag.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-feature_name"><code>feature_name</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature_tag"><code>feature_tag</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-feature_name"><code>feature_name</code></a>, <a href="#parameter-key"><code>key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-key"><code>key</code></a></td>
     <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td>Updates a FeatureTag.</td>
 </tr>
@@ -243,14 +243,16 @@ Creates a FeatureTag.
 
 ```sql
 INSERT INTO databricks_workspace.ml.materialized_features (
-feature_tag,
+key,
+value,
 table_name,
 feature_name,
 deployment_name,
 workspace_domain
 )
 SELECT 
-'{{ feature_tag }}' /* required */,
+'{{ key }}' /* required */,
+'{{ value }}',
 '{{ table_name }}',
 '{{ feature_name }}',
 '{{ deployment_name }}',
@@ -278,12 +280,10 @@ value
     - name: workspace_domain
       value: "{{ workspace_domain }}"
       description: Required parameter for the materialized_features resource.
-    - name: feature_tag
-      description: |
-        Represents a tag on a feature in a feature table.
-      value:
-        key: "{{ key }}"
-        value: "{{ value }}"
+    - name: key
+      value: "{{ key }}"
+    - name: value
+      value: "{{ value }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -305,14 +305,15 @@ Updates a FeatureTag.
 ```sql
 UPDATE databricks_workspace.ml.materialized_features
 SET 
-feature_tag = '{{ feature_tag }}'
+key = '{{ key }}',
+value = '{{ value }}'
 WHERE 
 table_name = '{{ table_name }}' --required
 AND feature_name = '{{ feature_name }}' --required
 AND key = '{{ key }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
 AND workspace_domain = '{{ workspace_domain }}' --required
-AND feature_tag = '{{ feature_tag }}' --required
+AND key = '{{ key }}' --required
 AND update_mask = '{{ update_mask}}'
 RETURNING
 key,
