@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(r.value, '$.value') AS role
 FROM databricks_account.iam.account_service_principals sp,
      JSON_EACH(sp.roles) r
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   r.value->>'value' AS role
 FROM databricks_account.iam.account_service_principals sp,
      jsonb_array_elements(sp.roles::jsonb) AS r
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

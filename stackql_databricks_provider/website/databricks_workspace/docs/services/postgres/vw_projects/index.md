@@ -193,7 +193,6 @@ SELECT
   uid,
   update_time
 FROM databricks_workspace.postgres.postgres_projects
-WHERE deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -217,7 +216,6 @@ SELECT
   uid,
   update_time
 FROM databricks_workspace.postgres.postgres_projects
-WHERE deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

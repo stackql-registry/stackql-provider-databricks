@@ -70,7 +70,6 @@
                 JSON_EXTRACT(fp.oidc_policy, '$.jwks_uri') AS oidc_jwks_uri,
                 JSON_EXTRACT(fp.oidc_policy, '$.jwks_json') AS oidc_jwks_json
               FROM databricks_account.oauth2.account_federation_policy fp
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -90,7 +89,6 @@
                   fp.oidc_policy->>'jwks_uri' AS oidc_jwks_uri,
                   fp.oidc_policy->>'jwks_json' AS oidc_jwks_json
                 FROM databricks_account.oauth2.account_federation_policy fp
-                WHERE account_id = '{{ account_id }}'
 
     vw_custom_app_integrations:
       name: vw_custom_app_integrations
@@ -168,7 +166,6 @@
                 JSON_EXTRACT(c.token_access_policy, '$.absolute_session_lifetime_in_minutes') AS session_lifetime_minutes,
                 JSON_EXTRACT(c.token_access_policy, '$.enable_single_use_refresh_tokens') AS single_use_refresh_tokens
               FROM databricks_account.oauth2.custom_app_integration c
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -189,7 +186,6 @@
                   (c.token_access_policy->>'absolute_session_lifetime_in_minutes')::integer AS session_lifetime_minutes,
                   (c.token_access_policy->>'enable_single_use_refresh_tokens')::boolean AS single_use_refresh_tokens
                 FROM databricks_account.oauth2.custom_app_integration c
-                WHERE account_id = '{{ account_id }}'
 
     vw_published_app_integrations:
       name: vw_published_app_integrations
@@ -247,7 +243,6 @@
                 JSON_EXTRACT(p.token_access_policy, '$.absolute_session_lifetime_in_minutes') AS session_lifetime_minutes,
                 JSON_EXTRACT(p.token_access_policy, '$.enable_single_use_refresh_tokens') AS single_use_refresh_tokens
               FROM databricks_account.oauth2.published_app_integration p
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -263,4 +258,3 @@
                   (p.token_access_policy->>'absolute_session_lifetime_in_minutes')::integer AS session_lifetime_minutes,
                   (p.token_access_policy->>'enable_single_use_refresh_tokens')::boolean AS single_use_refresh_tokens
                 FROM databricks_account.oauth2.published_app_integration p
-                WHERE account_id = '{{ account_id }}'

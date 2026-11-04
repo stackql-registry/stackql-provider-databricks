@@ -194,7 +194,6 @@ SELECT
   JSON_EXTRACT(r.value, '$.updated_time') AS updated_time
 FROM databricks_account.settings.network_connectivity ncc,
      JSON_EACH(JSON_EXTRACT(ncc.egress_config, '$.target_rules.azure_private_endpoint_rules')) r
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -219,7 +218,6 @@ SELECT
   (r.value->>'updated_time')::bigint AS updated_time
 FROM databricks_account.settings.network_connectivity ncc,
      jsonb_array_elements((ncc.egress_config->'target_rules'->'azure_private_endpoint_rules')::jsonb) AS r
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

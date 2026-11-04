@@ -138,7 +138,6 @@ SELECT
   w.value AS workspace_id
 FROM databricks_account.billing.log_delivery ld,
      JSON_EACH(ld.workspace_ids_filter) w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -155,7 +154,6 @@ SELECT
   w.value AS workspace_id
 FROM databricks_account.billing.log_delivery ld,
      jsonb_array_elements(ld.workspace_ids_filter::jsonb) AS w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

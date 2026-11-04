@@ -291,7 +291,6 @@ SELECT
   JSON_EXTRACT(w.gke_config, '$.connectivity_type') AS gke_connectivity_type,
   JSON_EXTRACT(w.gke_config, '$.master_ip_range') AS gke_master_ip_range
 FROM databricks_account.provisioning.workspaces w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -329,7 +328,6 @@ SELECT
   w.gke_config->>'connectivity_type' AS gke_connectivity_type,
   w.gke_config->>'master_ip_range' AS gke_master_ip_range
 FROM databricks_account.provisioning.workspaces w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

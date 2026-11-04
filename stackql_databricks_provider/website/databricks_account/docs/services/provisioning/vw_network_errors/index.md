@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(e.value, '$.error_message') AS error_message
 FROM databricks_account.provisioning.networks n,
      JSON_EACH(n.error_messages) e
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   e.value->>'error_message' AS error_message
 FROM databricks_account.provisioning.networks n,
      jsonb_array_elements(n.error_messages::jsonb) AS e
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

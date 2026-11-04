@@ -146,7 +146,6 @@
                 JSON_EXTRACT(a.pending_deployment, '$.status.state') AS pending_deployment_state,
                 JSON_EXTRACT(a.pending_deployment, '$.status.message') AS pending_deployment_message
               FROM databricks_workspace.apps.apps a
-              WHERE deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -185,7 +184,6 @@
                   a.pending_deployment->'status'->>'state' AS pending_deployment_state,
                   a.pending_deployment->'status'->>'message' AS pending_deployment_message
                 FROM databricks_workspace.apps.apps a
-                WHERE deployment_name = '{{ deployment_name }}'
 
     vw_app_resources:
       name: vw_app_resources
@@ -314,7 +312,6 @@
                 JSON_EXTRACT(r.value, '$.uc_securable.permission') AS uc_securable_permission
               FROM databricks_workspace.apps.apps a,
                    JSON_EACH(a.resources) r
-              WHERE deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -356,4 +353,3 @@
                   r.value->'uc_securable'->>'permission' AS uc_securable_permission
                 FROM databricks_workspace.apps.apps a,
                      jsonb_array_elements(a.resources::jsonb) AS r
-                WHERE deployment_name = '{{ deployment_name }}'

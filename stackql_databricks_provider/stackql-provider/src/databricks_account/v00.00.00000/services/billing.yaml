@@ -2839,7 +2839,6 @@ components:
                 w.value AS binding_workspace_id
               FROM databricks_account.billing.budget_policy p,
                    JSON_EACH(p.binding_workspace_ids) w
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -2851,7 +2850,6 @@ components:
                   w.value AS binding_workspace_id
                 FROM databricks_account.billing.budget_policy p,
                      jsonb_array_elements(p.binding_workspace_ids::jsonb) AS w
-                WHERE account_id = '{{ account_id }}'
     vw_budgets:
       name: vw_budgets
       id: databricks_account.billing.vw_budgets
@@ -2925,7 +2923,6 @@ components:
                 JSON_EXTRACT(ac.value, '$.action_configurations') AS action_configurations
               FROM databricks_account.billing.budgets b,
                    JSON_EACH(b.alert_configurations) ac
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -2946,7 +2943,6 @@ components:
                   ac.value->'action_configurations' AS action_configurations
                 FROM databricks_account.billing.budgets b,
                      jsonb_array_elements(b.alert_configurations::jsonb) AS ac
-                WHERE account_id = '{{ account_id }}'
     vw_budget_alert_actions:
       name: vw_budget_alert_actions
       id: databricks_account.billing.vw_budget_alert_actions
@@ -2997,7 +2993,6 @@ components:
               FROM databricks_account.billing.budgets b,
                    JSON_EACH(b.alert_configurations) ac,
                    JSON_EACH(JSON_EXTRACT(ac.value, '$.action_configurations')) act
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3013,7 +3008,6 @@ components:
                 FROM databricks_account.billing.budgets b,
                      jsonb_array_elements(b.alert_configurations::jsonb) AS ac,
                      jsonb_array_elements((ac.value->'action_configurations')::jsonb) AS act
-                WHERE account_id = '{{ account_id }}'
     vw_log_delivery_configurations:
       name: vw_log_delivery_configurations
       id: databricks_account.billing.vw_log_delivery_configurations
@@ -3098,7 +3092,6 @@ components:
                 JSON_EXTRACT(ld.log_delivery_status, '$.last_successful_attempt_time') AS last_successful_attempt_time,
                 ld.workspace_ids_filter
               FROM databricks_account.billing.log_delivery ld
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3121,7 +3114,6 @@ components:
                   ld.log_delivery_status->>'last_successful_attempt_time' AS last_successful_attempt_time,
                   ld.workspace_ids_filter
                 FROM databricks_account.billing.log_delivery ld
-                WHERE account_id = '{{ account_id }}'
     vw_log_delivery_workspace_filter:
       name: vw_log_delivery_workspace_filter
       id: databricks_account.billing.vw_log_delivery_workspace_filter
@@ -3167,7 +3159,6 @@ components:
                 w.value AS workspace_id
               FROM databricks_account.billing.log_delivery ld,
                    JSON_EACH(ld.workspace_ids_filter) w
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3181,7 +3172,6 @@ components:
                   w.value AS workspace_id
                 FROM databricks_account.billing.log_delivery ld,
                      jsonb_array_elements(ld.workspace_ids_filter::jsonb) AS w
-                WHERE account_id = '{{ account_id }}'
     vw_budget_filter_tags:
       name: vw_budget_filter_tags
       id: databricks_account.billing.vw_budget_filter_tags
@@ -3223,7 +3213,6 @@ components:
                 JSON_EXTRACT(t.value, '$.value.values') AS tag_values
               FROM databricks_account.billing.budgets b,
                    JSON_EACH(JSON_EXTRACT(b.filter, '$.tags')) t
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3236,7 +3225,6 @@ components:
                   t.value->'value'->'values' AS tag_values
                 FROM databricks_account.billing.budgets b,
                      jsonb_array_elements((b.filter->'tags')::jsonb) AS t
-                WHERE account_id = '{{ account_id }}'
 x-stackQL-config:
   pagination:
     requestToken:

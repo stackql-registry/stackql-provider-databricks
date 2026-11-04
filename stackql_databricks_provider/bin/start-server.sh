@@ -121,12 +121,19 @@ cd "$BASE_DIR"
 nohup ./stackql --registry="${REG}" --pgsrv.port="${PORT}" srv > stackql-server.log 2>&1 &
 SERVER_PID=$!
 
-# Check if server started successfully
-sleep 2
-if ps -p $SERVER_PID > /dev/null; then
-  echo "StackQL server started successfully with PID: $SERVER_PID"
-  echo "Server log: $BASE_DIR/stackql-server.log"
-else
-  echo "Failed to start StackQL server. Check log file: $BASE_DIR/stackql-server.log"
-  exit 1
-fi
+# Wait for the server to accept connections (up to 60s): the process is alive
+# well before it listens, so a fixed sleep races the first client.
+for i in $(seq 1 60); do
+  if ! ps -p $SERVER_PID > /dev/null; then
+    echo "Failed to start StackQL server. Check log file: $BASE_DIR/stackql-server.log"
+    exit 1
+  fi
+  if (exec 3<>/dev/tcp/127.0.0.1/${PORT}) 2>/dev/null; then
+    echo "StackQL server started successfully with PID: $SERVER_PID (listening on port ${PORT} after ${i}s)"
+    echo "Server log: $BASE_DIR/stackql-server.log"
+    exit 0
+  fi
+  sleep 1
+done
+echo "StackQL server (PID $SERVER_PID) did not listen on port ${PORT} within 60s. Check log file: $BASE_DIR/stackql-server.log"
+exit 1

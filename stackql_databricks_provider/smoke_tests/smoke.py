@@ -64,6 +64,32 @@ PROVIDER_BY_SCOPE = {"account": "databricks_account", "workspace": "databricks_w
 # Named ANSI-less status labels keep output greppable in CI logs.
 PASS, EMPTY, FAIL, SKIP = "PASS", "EMPTY", "FAIL", "SKIP"
 
+# Views over APIs that exist only on some clouds. Databricks answers with an
+# HTML page (Azure) or 503 TEMPORARILY_UNAVAILABLE (GCP) rather than a clean
+# 404, so the harness skips them up front instead of reporting a failure.
+# Keys are "<scope>.<service>.<view>", values the clouds that lack the API.
+NOT_APPLICABLE_VIEWS = {
+    "account.provisioning.vw_networks": {"azure"},
+    "account.provisioning.vw_network_errors": {"azure"},
+    "account.provisioning.vw_network_warnings": {"azure"},
+    "account.provisioning.vw_credentials": {"azure", "gcp"},
+    "account.provisioning.vw_storage_configurations": {"azure"},
+    "account.provisioning.vw_vpc_endpoints": {"azure"},
+}
+
+# stackql exits 0 on planning, transport and HTTP errors and only writes them to
+# stderr, so an empty stdout is classified EMPTY only when stderr shows none of
+# these. The transport patterns (an unexpandable token URL, a server variable
+# that reached the host name unbound) matter because they carry no "error" word.
+ERROR_LINE_PATTERN = (
+    r"error|unsatisfied|cannot find|unauthorized|status code: [45]\d\d"
+    r"|no host in request url|invalid character|^parse \""
+)
+FATAL_STDERR_PATTERN = (
+    r"http response status code|cannot fetch token|unsatisfied required|unauthorized"
+    r"|no host in request url|invalid character|^parse \""
+)
+
 
 def load_dotenv(path, override=False):
     """Load KEY=VALUE pairs from a .env file.
@@ -168,7 +194,7 @@ class StackQLRunner:
         # so a mutation is only ok when nothing on stderr looks like one.
         stderr_error = next(
             (l for l in stderr.splitlines()
-             if re.search(r"error|unsatisfied|cannot find|unauthorized|status code: [45]\d\d", l, re.I)),
+             if re.search(ERROR_LINE_PATTERN, l, re.I)),
             "",
         )
         if output != "json":
@@ -176,7 +202,7 @@ class StackQLRunner:
             return ok, None, stdout if ok else (err_line or stderr_error or stderr or stdout)
         # An HTTP or token failure on stderr makes any rows on stdout suspect
         # (a COUNT(*) over a failed read still prints 0).
-        fatal = re.search(r"http response status code|cannot fetch token|unsatisfied required|unauthorized", stderr, re.I)
+        fatal = re.search(FATAL_STDERR_PATTERN, stderr, re.I | re.M)
         if stdout and not fatal:
             try:
                 rows = json.loads(stdout)
@@ -186,7 +212,7 @@ class StackQLRunner:
                 pass
         # No parseable JSON: an empty result set or a genuine error.
         blob = (stdout + "\n" + stderr).lower()
-        if proc.returncode == 0 and "error" not in blob and "cannot find" not in blob and "unauthorized" not in blob:
+        if proc.returncode == 0 and not fatal and "error" not in blob and "cannot find" not in blob and "unauthorized" not in blob:
             return True, [], ""
         return False, None, (err_line or stderr or stdout or f"exit code {proc.returncode}")
 
@@ -226,6 +252,10 @@ def run_view_test(runner, view, seeds):
     """Execute SELECT * against one view and classify the outcome."""
     provider = PROVIDER_BY_SCOPE[view["scope"]]
     fqn = f"{provider}.{view['service']}.{view['name']}"
+
+    cloud = os.environ.get("DATABRICKS_CLOUD") or "aws"
+    if cloud in NOT_APPLICABLE_VIEWS.get(f"{view['scope']}.{view['service']}.{view['name']}", set()):
+        return SKIP, 0, f"API not available on {cloud}"
 
     missing = [p for p in view["params"] if p not in seeds]
     if missing:
@@ -442,9 +472,11 @@ def lifecycle_secret_scope(runner, seeds, report):
                 "SELECT name FROM databricks_workspace.workspace.secret_scopes "
                 f"WHERE deployment_name = '{deployment}' AND name = '{scope}'"
             )
-            gone = ok and not rows
+            # A workspace with no scopes left answers {} and stackql reports the
+            # missing objectKey ("unknown key scopes"): that is an empty list.
+            gone = (ok and not rows) or (not ok and "unknown key" in message)
             report("workspace.workspace.secret_scopes SELECT (after delete)", PASS if gone else FAIL,
-                   message if not ok else ("" if gone else f"{scope} still listed - remove it by hand"))
+                   message if not ok and not gone else ("" if gone else f"{scope} still listed - remove it by hand"))
 
 
 def main():
@@ -522,9 +554,9 @@ def main():
     queries = [q for q in RESOURCE_QUERIES if scoped(q["scope"])]
     print(f"\nResource queries ({len(queries)})...")
     for query in queries:
-        started = time.time()
+        started = time.monotonic()
         status, row_count, message = run_resource_test(runner, query, seeds)
-        report(f"{PROVIDER_BY_SCOPE[query['scope']]}.{query['name']}", status, message, row_count, time.time() - started)
+        report(f"{PROVIDER_BY_SCOPE[query['scope']]}.{query['name']}", status, message, row_count, time.monotonic() - started)
 
     if args.read_only:
         print("\nLifecycles skipped (--read-only)")
@@ -543,9 +575,9 @@ def main():
         print(f"\nViews ({len(views)})...")
     for view in views:
         fqn = f"{PROVIDER_BY_SCOPE[view['scope']]}.{view['service']}.{view['name']}"
-        started = time.time()
+        started = time.monotonic()
         status, row_count, message = run_view_test(runner, view, seeds)
-        report(fqn, status, message, row_count, time.time() - started)
+        report(fqn, status, message, row_count, time.monotonic() - started)
 
     counts = {s: sum(1 for r in results if r[1] == s) for s in (PASS, EMPTY, FAIL, SKIP)}
     print("\n" + "=" * 70)

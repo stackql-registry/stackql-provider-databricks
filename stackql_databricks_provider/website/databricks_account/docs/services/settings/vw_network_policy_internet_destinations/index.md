@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(d.value, '$.internet_destination_type') AS destination_type
 FROM databricks_account.settings.network_policies np,
      JSON_EACH(JSON_EXTRACT(np.egress, '$.network_access.allowed_internet_destinations')) d
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   d.value->>'internet_destination_type' AS destination_type
 FROM databricks_account.settings.network_policies np,
      jsonb_array_elements((np.egress->'network_access'->'allowed_internet_destinations')::jsonb) AS d
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

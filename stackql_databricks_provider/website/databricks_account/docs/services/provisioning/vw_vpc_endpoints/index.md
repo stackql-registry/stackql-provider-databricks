@@ -197,7 +197,6 @@ SELECT
     ELSE 'UNKNOWN'
   END AS cloud_type
 FROM databricks_account.provisioning.vpc_endpoints v
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -225,7 +224,6 @@ SELECT
     ELSE 'UNKNOWN'
   END AS cloud_type
 FROM databricks_account.provisioning.vpc_endpoints v
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

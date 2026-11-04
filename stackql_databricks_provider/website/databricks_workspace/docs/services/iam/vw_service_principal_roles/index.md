@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(r.value, '$.value') AS role
 FROM databricks_workspace.iam.service_principals_v2 sp,
      JSON_EACH(sp.roles) r
-WHERE sp.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   r.value->>'value' AS role
 FROM databricks_workspace.iam.service_principals_v2 sp,
      jsonb_array_elements(sp.roles::jsonb) AS r
-WHERE sp.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

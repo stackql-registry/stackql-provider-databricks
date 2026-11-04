@@ -137,9 +137,6 @@ SELECT
 FROM databricks_workspace.iam.rule_sets rs,
      JSON_EACH(rs.grant_rules) gr,
      JSON_EACH(JSON_EXTRACT(gr.value, '$.principals')) pr
-WHERE rs.deployment_name = '{{ deployment_name }}'
-AND rs.name = '{{ name }}'
-AND rs.etag = '{{ etag }}'
 ```
 
 </TabItem>
@@ -155,9 +152,6 @@ SELECT
 FROM databricks_workspace.iam.rule_sets rs,
      jsonb_array_elements(rs.grant_rules::jsonb) AS gr,
      jsonb_array_elements((gr.value->'principals')::jsonb) AS pr
-WHERE rs.deployment_name = '{{ deployment_name }}'
-AND rs.name = '{{ name }}'
-AND rs.etag = '{{ etag }}'
 ```
 
 </TabItem>

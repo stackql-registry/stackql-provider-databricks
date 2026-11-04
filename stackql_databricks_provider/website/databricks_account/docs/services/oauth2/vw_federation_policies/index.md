@@ -186,7 +186,6 @@ SELECT
   JSON_EXTRACT(fp.oidc_policy, '$.jwks_uri') AS oidc_jwks_uri,
   JSON_EXTRACT(fp.oidc_policy, '$.jwks_json') AS oidc_jwks_json
 FROM databricks_account.oauth2.account_federation_policy fp
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -209,7 +208,6 @@ SELECT
   fp.oidc_policy->>'jwks_uri' AS oidc_jwks_uri,
   fp.oidc_policy->>'jwks_json' AS oidc_jwks_json
 FROM databricks_account.oauth2.account_federation_policy fp
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

@@ -35,7 +35,6 @@
                 JSON_EXTRACT(r.value, '$.value') AS role
               FROM databricks_account.iam.account_users u,
                    JSON_EACH(u.roles) r
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -47,7 +46,6 @@
                   r.value->>'value' AS role
                 FROM databricks_account.iam.account_users u,
                      jsonb_array_elements(u.roles::jsonb) AS r
-                WHERE account_id = '{{ account_id }}'
 
     vw_account_group_members:
       name: vw_account_group_members
@@ -94,7 +92,6 @@
                 JSON_EXTRACT(m.value, '$.type') AS member_type
               FROM databricks_account.iam.account_groups g,
                    JSON_EACH(g.members) m
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -108,7 +105,6 @@
                   m.value->>'type' AS member_type
                 FROM databricks_account.iam.account_groups g,
                      jsonb_array_elements(g.members::jsonb) AS m
-                WHERE account_id = '{{ account_id }}'
 
     vw_account_group_roles:
       name: vw_account_group_roles
@@ -143,7 +139,6 @@
                 JSON_EXTRACT(r.value, '$.value') AS role
               FROM databricks_account.iam.account_groups g,
                    JSON_EACH(g.roles) r
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -154,7 +149,6 @@
                   r.value->>'value' AS role
                 FROM databricks_account.iam.account_groups g,
                      jsonb_array_elements(g.roles::jsonb) AS r
-                WHERE account_id = '{{ account_id }}'
 
     vw_account_service_principal_roles:
       name: vw_account_service_principal_roles
@@ -197,7 +191,6 @@
                 JSON_EXTRACT(r.value, '$.value') AS role
               FROM databricks_account.iam.account_service_principals sp,
                    JSON_EACH(sp.roles) r
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -210,7 +203,6 @@
                   r.value->>'value' AS role
                 FROM databricks_account.iam.account_service_principals sp,
                      jsonb_array_elements(sp.roles::jsonb) AS r
-                WHERE account_id = '{{ account_id }}'
 
     vw_workspace_assignments:
       name: vw_workspace_assignments
@@ -264,8 +256,6 @@
                 p.value AS permission
               FROM databricks_account.iam.workspace_assignment wa,
                    JSON_EACH(wa.permissions) p
-              WHERE account_id = '{{ account_id }}'
-              AND workspace_id = '{{ workspace_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -280,5 +270,3 @@
                   p.value AS permission
                 FROM databricks_account.iam.workspace_assignment wa,
                      jsonb_array_elements(wa.permissions::jsonb) AS p
-                WHERE account_id = '{{ account_id }}'
-                AND workspace_id = '{{ workspace_id }}'

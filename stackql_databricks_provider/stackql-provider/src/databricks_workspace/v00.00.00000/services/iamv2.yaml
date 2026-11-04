@@ -12,7 +12,8 @@ servers:
   variables:
     deployment_name:
       description: 'The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS,
-        adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.'
+        adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the
+        session.'
       default: dbc-abcd0123-a1bc
       x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME
     workspace_domain:
@@ -3661,8 +3662,6 @@ components:
                 p.value AS permission
               FROM databricks_workspace.iamv2.workspace_access_details wa,
                    JSON_EACH(wa.permissions) p
-              WHERE wa.deployment_name = '{{ deployment_name }}'
-              AND wa.principal_id = '{{ principal_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3677,8 +3676,6 @@ components:
                   p.value AS permission
                 FROM databricks_workspace.iamv2.workspace_access_details wa,
                      jsonb_array_elements(wa.permissions::jsonb) AS p
-                WHERE wa.deployment_name = '{{ deployment_name }}'
-                AND wa.principal_id = '{{ principal_id }}'
 x-stackQL-config:
   pagination:
     requestToken:

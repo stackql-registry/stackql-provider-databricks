@@ -130,7 +130,6 @@ SELECT
   s.role_arn,
   JSON_EXTRACT(s.root_bucket_info, '$.bucket_name') AS root_bucket_name
 FROM databricks_account.provisioning.storage s
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -145,7 +144,6 @@ SELECT
   s.role_arn,
   s.root_bucket_info->>'bucket_name' AS root_bucket_name
 FROM databricks_account.provisioning.storage s
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

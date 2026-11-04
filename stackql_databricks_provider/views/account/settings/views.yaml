@@ -59,7 +59,6 @@
                 a.value AS ip_address
               FROM databricks_account.settings.account_ip_access_lists l,
                    JSON_EACH(l.ip_addresses) a
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -77,7 +76,6 @@
                   a.value AS ip_address
                 FROM databricks_account.settings.account_ip_access_lists l,
                      jsonb_array_elements(l.ip_addresses::jsonb) AS a
-                WHERE account_id = '{{ account_id }}'
 
     vw_network_connectivity_configs:
       name: vw_network_connectivity_configs
@@ -135,7 +133,6 @@
                 JSON_EXTRACT(ncc.egress_config, '$.default_rules.azure_service_endpoint_rule.subnets') AS azure_svc_endpoint_subnets,
                 JSON_EXTRACT(ncc.egress_config, '$.default_rules.azure_service_endpoint_rule.target_services') AS azure_svc_endpoint_services
               FROM databricks_account.settings.network_connectivity ncc
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -151,7 +148,6 @@
                   ncc.egress_config->'default_rules'->'azure_service_endpoint_rule'->'subnets' AS azure_svc_endpoint_subnets,
                   ncc.egress_config->'default_rules'->'azure_service_endpoint_rule'->'target_services' AS azure_svc_endpoint_services
                 FROM databricks_account.settings.network_connectivity ncc
-                WHERE account_id = '{{ account_id }}'
 
     vw_ncc_aws_private_endpoint_rules:
       name: vw_ncc_aws_private_endpoint_rules
@@ -234,7 +230,6 @@
                 JSON_EXTRACT(r.value, '$.updated_time') AS updated_time
               FROM databricks_account.settings.network_connectivity ncc,
                    JSON_EACH(JSON_EXTRACT(ncc.egress_config, '$.target_rules.aws_private_endpoint_rules')) r
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -257,7 +252,6 @@
                   (r.value->>'updated_time')::bigint AS updated_time
                 FROM databricks_account.settings.network_connectivity ncc,
                      jsonb_array_elements((ncc.egress_config->'target_rules'->'aws_private_endpoint_rules')::jsonb) AS r
-                WHERE account_id = '{{ account_id }}'
 
     vw_ncc_azure_private_endpoint_rules:
       name: vw_ncc_azure_private_endpoint_rules
@@ -336,7 +330,6 @@
                 JSON_EXTRACT(r.value, '$.updated_time') AS updated_time
               FROM databricks_account.settings.network_connectivity ncc,
                    JSON_EACH(JSON_EXTRACT(ncc.egress_config, '$.target_rules.azure_private_endpoint_rules')) r
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -358,7 +351,6 @@
                   (r.value->>'updated_time')::bigint AS updated_time
                 FROM databricks_account.settings.network_connectivity ncc,
                      jsonb_array_elements((ncc.egress_config->'target_rules'->'azure_private_endpoint_rules')::jsonb) AS r
-                WHERE account_id = '{{ account_id }}'
 
     vw_network_policy_internet_destinations:
       name: vw_network_policy_internet_destinations
@@ -401,7 +393,6 @@
                 JSON_EXTRACT(d.value, '$.internet_destination_type') AS destination_type
               FROM databricks_account.settings.network_policies np,
                    JSON_EACH(JSON_EXTRACT(np.egress, '$.network_access.allowed_internet_destinations')) d
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -414,7 +405,6 @@
                   d.value->>'internet_destination_type' AS destination_type
                 FROM databricks_account.settings.network_policies np,
                      jsonb_array_elements((np.egress->'network_access'->'allowed_internet_destinations')::jsonb) AS d
-                WHERE account_id = '{{ account_id }}'
 
     vw_network_policy_storage_destinations:
       name: vw_network_policy_storage_destinations
@@ -469,7 +459,6 @@
                 JSON_EXTRACT(d.value, '$.azure_storage_service') AS azure_storage_service
               FROM databricks_account.settings.network_policies np,
                    JSON_EACH(JSON_EXTRACT(np.egress, '$.network_access.allowed_storage_destinations')) d
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -485,4 +474,3 @@
                   d.value->>'azure_storage_service' AS azure_storage_service
                 FROM databricks_account.settings.network_policies np,
                      jsonb_array_elements((np.egress->'network_access'->'allowed_storage_destinations')::jsonb) AS d
-                WHERE account_id = '{{ account_id }}'

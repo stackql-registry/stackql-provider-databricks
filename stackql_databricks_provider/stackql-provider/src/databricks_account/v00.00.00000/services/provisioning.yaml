@@ -3555,7 +3555,6 @@ components:
                 JSON_EXTRACT(w.gke_config, '$.connectivity_type') AS gke_connectivity_type,
                 JSON_EXTRACT(w.gke_config, '$.master_ip_range') AS gke_master_ip_range
               FROM databricks_account.provisioning.workspaces w
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3590,7 +3589,6 @@ components:
                   w.gke_config->>'connectivity_type' AS gke_connectivity_type,
                   w.gke_config->>'master_ip_range' AS gke_master_ip_range
                 FROM databricks_account.provisioning.workspaces w
-                WHERE account_id = '{{ account_id }}'
     vw_networks:
       name: vw_networks
       id: databricks_account.provisioning.vw_networks
@@ -3675,7 +3673,6 @@ components:
                 JSON_EXTRACT(n.vpc_endpoints, '$.rest_api') AS vpc_endpoint_rest_api_ids,
                 JSON_EXTRACT(n.vpc_endpoints, '$.dataplane_relay') AS vpc_endpoint_dataplane_relay_ids
               FROM databricks_account.provisioning.networks n
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3698,7 +3695,6 @@ components:
                   n.vpc_endpoints->'rest_api' AS vpc_endpoint_rest_api_ids,
                   n.vpc_endpoints->'dataplane_relay' AS vpc_endpoint_dataplane_relay_ids
                 FROM databricks_account.provisioning.networks n
-                WHERE account_id = '{{ account_id }}'
     vw_network_errors:
       name: vw_network_errors
       id: databricks_account.provisioning.vw_network_errors
@@ -3740,7 +3736,6 @@ components:
                 JSON_EXTRACT(e.value, '$.error_message') AS error_message
               FROM databricks_account.provisioning.networks n,
                    JSON_EACH(n.error_messages) e
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3753,7 +3748,6 @@ components:
                   e.value->>'error_message' AS error_message
                 FROM databricks_account.provisioning.networks n,
                      jsonb_array_elements(n.error_messages::jsonb) AS e
-                WHERE account_id = '{{ account_id }}'
     vw_network_warnings:
       name: vw_network_warnings
       id: databricks_account.provisioning.vw_network_warnings
@@ -3795,7 +3789,6 @@ components:
                 JSON_EXTRACT(w.value, '$.warning_message') AS warning_message
               FROM databricks_account.provisioning.networks n,
                    JSON_EACH(n.warning_messages) w
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3808,7 +3801,6 @@ components:
                   w.value->>'warning_message' AS warning_message
                 FROM databricks_account.provisioning.networks n,
                      jsonb_array_elements(n.warning_messages::jsonb) AS w
-                WHERE account_id = '{{ account_id }}'
     vw_encryption_keys:
       name: vw_encryption_keys
       id: databricks_account.provisioning.vw_encryption_keys
@@ -3891,7 +3883,6 @@ components:
                 END AS cloud_type
               FROM databricks_account.provisioning.encryption_keys k,
                    JSON_EACH(k.use_cases) uc
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3918,7 +3909,6 @@ components:
                   END AS cloud_type
                 FROM databricks_account.provisioning.encryption_keys k,
                      jsonb_array_elements(k.use_cases::jsonb) AS uc
-                WHERE account_id = '{{ account_id }}'
     vw_credentials:
       name: vw_credentials
       id: databricks_account.provisioning.vw_credentials
@@ -3955,7 +3945,6 @@ components:
                 c.creation_time,
                 JSON_EXTRACT(c.aws_credentials, '$.sts_role.role_arn') AS aws_role_arn
               FROM databricks_account.provisioning.credentials c
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -3966,7 +3955,6 @@ components:
                   c.creation_time,
                   c.aws_credentials->'sts_role'->>'role_arn' AS aws_role_arn
                 FROM databricks_account.provisioning.credentials c
-                WHERE account_id = '{{ account_id }}'
     vw_storage_configurations:
       name: vw_storage_configurations
       id: databricks_account.provisioning.vw_storage_configurations
@@ -4007,7 +3995,6 @@ components:
                 s.role_arn,
                 JSON_EXTRACT(s.root_bucket_info, '$.bucket_name') AS root_bucket_name
               FROM databricks_account.provisioning.storage s
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -4019,7 +4006,6 @@ components:
                   s.role_arn,
                   s.root_bucket_info->>'bucket_name' AS root_bucket_name
                 FROM databricks_account.provisioning.storage s
-                WHERE account_id = '{{ account_id }}'
     vw_vpc_endpoints:
       name: vw_vpc_endpoints
       id: databricks_account.provisioning.vw_vpc_endpoints
@@ -4100,7 +4086,6 @@ components:
                   ELSE 'UNKNOWN'
                 END AS cloud_type
               FROM databricks_account.provisioning.vpc_endpoints v
-              WHERE account_id = '{{ account_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -4125,7 +4110,6 @@ components:
                     ELSE 'UNKNOWN'
                   END AS cloud_type
                 FROM databricks_account.provisioning.vpc_endpoints v
-                WHERE account_id = '{{ account_id }}'
 x-stackQL-config:
   pagination:
     requestToken:

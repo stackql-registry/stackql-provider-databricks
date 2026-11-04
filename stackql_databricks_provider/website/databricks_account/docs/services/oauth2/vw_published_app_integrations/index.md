@@ -158,7 +158,6 @@ SELECT
   JSON_EXTRACT(p.token_access_policy, '$.absolute_session_lifetime_in_minutes') AS session_lifetime_minutes,
   JSON_EXTRACT(p.token_access_policy, '$.enable_single_use_refresh_tokens') AS single_use_refresh_tokens
 FROM databricks_account.oauth2.published_app_integration p
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -177,7 +176,6 @@ SELECT
   (p.token_access_policy->>'absolute_session_lifetime_in_minutes')::integer AS session_lifetime_minutes,
   (p.token_access_policy->>'enable_single_use_refresh_tokens')::boolean AS single_use_refresh_tokens
 FROM databricks_account.oauth2.published_app_integration p
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

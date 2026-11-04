@@ -187,7 +187,6 @@ SELECT
   JSON_EXTRACT(ac.value, '$.action_configurations') AS action_configurations
 FROM databricks_account.billing.budgets b,
      JSON_EACH(b.alert_configurations) ac
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -211,7 +210,6 @@ SELECT
   ac.value->'action_configurations' AS action_configurations
 FROM databricks_account.billing.budgets b,
      jsonb_array_elements(b.alert_configurations::jsonb) AS ac
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

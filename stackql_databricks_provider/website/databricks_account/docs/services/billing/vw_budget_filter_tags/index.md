@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(t.value, '$.value.values') AS tag_values
 FROM databricks_account.billing.budgets b,
      JSON_EACH(JSON_EXTRACT(b.filter, '$.tags')) t
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   t.value->'value'->'values' AS tag_values
 FROM databricks_account.billing.budgets b,
      jsonb_array_elements((b.filter->'tags')::jsonb) AS t
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

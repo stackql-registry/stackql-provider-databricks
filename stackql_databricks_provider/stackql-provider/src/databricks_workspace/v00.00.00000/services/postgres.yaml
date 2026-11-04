@@ -12,7 +12,8 @@ servers:
   variables:
     deployment_name:
       description: 'The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS,
-        adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.'
+        adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the
+        session.'
       default: dbc-abcd0123-a1bc
       x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME
     workspace_domain:
@@ -7437,7 +7438,6 @@ components:
                 uid,
                 update_time
               FROM databricks_workspace.postgres.postgres_projects
-              WHERE deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -7458,7 +7458,6 @@ components:
                   uid,
                   update_time
                 FROM databricks_workspace.postgres.postgres_projects
-                WHERE deployment_name = '{{ deployment_name }}'
     vw_branches:
       name: vw_branches
       id: databricks_workspace.postgres.vw_branches
@@ -7526,8 +7525,6 @@ components:
                 uid,
                 update_time
               FROM databricks_workspace.postgres.postgres_branches
-              WHERE project_id = '{{ project_id }}'
-              AND deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -7545,8 +7542,6 @@ components:
                   uid,
                   update_time
                 FROM databricks_workspace.postgres.postgres_branches
-                WHERE project_id = '{{ project_id }}'
-                AND deployment_name = '{{ deployment_name }}'
     vw_databases:
       name: vw_databases
       id: databricks_workspace.postgres.vw_databases
@@ -7593,9 +7588,6 @@ components:
                 JSON_EXTRACT(status, '$.postgres_database') AS postgres_database,
                 SPLIT_PART(JSON_EXTRACT(status, '$.role'), '/', -1) AS role
               FROM databricks_workspace.postgres.postgres_databases
-              WHERE deployment_name = '{{ deployment_name }}'
-              AND project_id = '{{ project_id }}'
-              AND branch_id = '{{ branch_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -7607,9 +7599,6 @@ components:
                   (status::jsonb)->>'postgres_database' AS postgres_database,
                   SPLIT_PART((status::jsonb)->>'role', '/', -1) AS role
                 FROM databricks_workspace.postgres.postgres_databases
-                WHERE deployment_name = '{{ deployment_name }}'
-                AND project_id = '{{ project_id }}'
-                AND branch_id = '{{ branch_id }}'
     vw_roles:
       name: vw_roles
       id: databricks_workspace.postgres.vw_roles
@@ -7684,9 +7673,6 @@ components:
                 JSON_EXTRACT(status, '$.postgres_role') AS postgres_role,
                 update_time
               FROM databricks_workspace.postgres.postgres_roles
-              WHERE project_id = '{{ project_id }}'
-              AND branch_id = '{{ branch_id }}'
-              AND deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -7705,9 +7691,6 @@ components:
                   (status::jsonb)->>'postgres_role' AS postgres_role,
                   update_time
                 FROM databricks_workspace.postgres.postgres_roles
-                WHERE project_id = '{{ project_id }}'
-                AND branch_id = '{{ branch_id }}'
-                AND deployment_name = '{{ deployment_name }}'
     vw_endpoints:
       name: vw_endpoints
       id: databricks_workspace.postgres.vw_endpoints
@@ -7806,9 +7789,6 @@ components:
                 uid,
                 update_time
               FROM databricks_workspace.postgres.postgres_endpoints
-              WHERE project_id = '{{ project_id }}'
-              AND branch_id = '{{ branch_id }}'
-              AND deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -7833,9 +7813,6 @@ components:
                   uid,
                   update_time
                 FROM databricks_workspace.postgres.postgres_endpoints
-                WHERE project_id = '{{ project_id }}'
-                AND branch_id = '{{ branch_id }}'
-                AND deployment_name = '{{ deployment_name }}'
 x-stackQL-config:
   pagination:
     requestToken:

@@ -207,7 +207,6 @@ SELECT
   JSON_EXTRACT(n.vpc_endpoints, '$.rest_api') AS vpc_endpoint_rest_api_ids,
   JSON_EXTRACT(n.vpc_endpoints, '$.dataplane_relay') AS vpc_endpoint_dataplane_relay_ids
 FROM databricks_account.provisioning.networks n
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -233,7 +232,6 @@ SELECT
   n.vpc_endpoints->'rest_api' AS vpc_endpoint_rest_api_ids,
   n.vpc_endpoints->'dataplane_relay' AS vpc_endpoint_dataplane_relay_ids
 FROM databricks_account.provisioning.networks n
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

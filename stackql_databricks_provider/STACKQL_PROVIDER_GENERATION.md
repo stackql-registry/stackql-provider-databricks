@@ -353,7 +353,7 @@ export DATABRICKS_DEPLOYMENT_NAME=adb-1234567890123456.7     # optional default 
 |-------|-----------------------------------------------|----------------|
 | aws   | accounts.cloud.databricks.com                 | `<deployment_name>.cloud.databricks.com` |
 | azure | accounts.azuredatabricks.net                  | `<deployment_name>.azuredatabricks.net` (deployment_name `adb-<id>.<n>`) |
-| gcp   | accounts.gcp.databricks.com                   | `<deployment_name>.gcp.databricks.com` (deployment_name is the workspace id) |
+| gcp   | accounts.gcp.databricks.com                   | `<deployment_name>.gcp.databricks.com` (deployment_name is `<workspace_id>.<n>`, e.g. `1234567890123456.7`) |
 
 With none of these set the providers behave exactly as before (AWS hosts, AWS token endpoint, the same
 required predicates). The hosts are declared once in `provider-config/*.json`; see "Multi-cloud hosts"

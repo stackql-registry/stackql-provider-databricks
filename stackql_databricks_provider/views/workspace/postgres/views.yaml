@@ -56,10 +56,44 @@ vw_projects:
     views:
       select:
         predicate: sqlDialect == "sqlite3"
-        ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  initial_endpoint_spec,\n  spec,\n  JSON_EXTRACT(status, '$.compute_last_active_time') AS compute_last_active_time,\n  JSON_EXTRACT(status, '$.default_endpoint_settings.autoscaling_limit_min_cu') AS min_cu,\n  JSON_EXTRACT(status, '$.default_endpoint_settings.autoscaling_limit_max_cu') AS max_cu,\n  JSON_EXTRACT(status, '$.default_endpoint_settings.suspend_timeout_duration') AS suspend_timeout_duration,\n  JSON_EXTRACT(status, '$.display_name') AS display_name,\n  JSON_EXTRACT(status, '$.enable_pg_native_login') AS enable_pg_native_login,\n  JSON_EXTRACT(status, '$.history_retention_duration') AS history_retention_duration,\n  JSON_EXTRACT(status, '$.owner') AS owner,\n  JSON_EXTRACT(status, '$.pg_version') AS pg_version,\n  uid,\n  update_time\nFROM databricks_workspace.postgres.postgres_projects\nWHERE deployment_name = '{{ deployment_name }}'"
+        ddl: |-
+          SELECT
+            SPLIT_PART(name, '/', -1) AS name,
+            create_time,
+            initial_endpoint_spec,
+            spec,
+            JSON_EXTRACT(status, '$.compute_last_active_time') AS compute_last_active_time,
+            JSON_EXTRACT(status, '$.default_endpoint_settings.autoscaling_limit_min_cu') AS min_cu,
+            JSON_EXTRACT(status, '$.default_endpoint_settings.autoscaling_limit_max_cu') AS max_cu,
+            JSON_EXTRACT(status, '$.default_endpoint_settings.suspend_timeout_duration') AS suspend_timeout_duration,
+            JSON_EXTRACT(status, '$.display_name') AS display_name,
+            JSON_EXTRACT(status, '$.enable_pg_native_login') AS enable_pg_native_login,
+            JSON_EXTRACT(status, '$.history_retention_duration') AS history_retention_duration,
+            JSON_EXTRACT(status, '$.owner') AS owner,
+            JSON_EXTRACT(status, '$.pg_version') AS pg_version,
+            uid,
+            update_time
+          FROM databricks_workspace.postgres.postgres_projects
         fallback:
           predicate: sqlDialect == "postgres"
-          ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  initial_endpoint_spec,\n  spec,\n  (status::jsonb)->>'compute_last_active_time' AS compute_last_active_time,\n  (status::jsonb)#>>'{default_endpoint_settings,autoscaling_limit_min_cu}' AS min_cu,\n  (status::jsonb)#>>'{default_endpoint_settings,autoscaling_limit_max_cu}' AS max_cu,\n  (status::jsonb)#>>'{default_endpoint_settings,suspend_timeout_duration}' AS suspend_timeout_duration,\n  (status::jsonb)->>'display_name' AS display_name,\n  (status::jsonb)->>'enable_pg_native_login' AS enable_pg_native_login,\n  (status::jsonb)->>'history_retention_duration' AS history_retention_duration,\n  (status::jsonb)->>'owner' AS owner,\n  (status::jsonb)->>'pg_version' AS pg_version,\n  uid,\n  update_time\nFROM databricks_workspace.postgres.postgres_projects\nWHERE deployment_name = '{{ deployment_name }}'"
+          ddl: |-
+            SELECT
+              SPLIT_PART(name, '/', -1) AS name,
+              create_time,
+              initial_endpoint_spec,
+              spec,
+              (status::jsonb)->>'compute_last_active_time' AS compute_last_active_time,
+              (status::jsonb)#>>'{default_endpoint_settings,autoscaling_limit_min_cu}' AS min_cu,
+              (status::jsonb)#>>'{default_endpoint_settings,autoscaling_limit_max_cu}' AS max_cu,
+              (status::jsonb)#>>'{default_endpoint_settings,suspend_timeout_duration}' AS suspend_timeout_duration,
+              (status::jsonb)->>'display_name' AS display_name,
+              (status::jsonb)->>'enable_pg_native_login' AS enable_pg_native_login,
+              (status::jsonb)->>'history_retention_duration' AS history_retention_duration,
+              (status::jsonb)->>'owner' AS owner,
+              (status::jsonb)->>'pg_version' AS pg_version,
+              uid,
+              update_time
+            FROM databricks_workspace.postgres.postgres_projects
 vw_branches:
   name: vw_branches
   id: databricks_workspace.postgres.vw_branches
@@ -112,10 +146,38 @@ vw_branches:
     views:
       select:
         predicate: sqlDialect == "sqlite3"
-        ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  project_id,\n  spec,\n  JSON_EXTRACT(status, '$.branch_id') AS branch_id,\n  JSON_EXTRACT(status, '$.current_state') AS current_state,\n  JSON_EXTRACT(status, '$.default') AS default,\n  JSON_EXTRACT(status, '$.is_protected') AS is_protected,\n  JSON_EXTRACT(status, '$.logical_size_bytes') AS logical_size_bytes,\n  JSON_EXTRACT(status, '$.state_change_time') AS state_change_time,\n  uid,\n  update_time\nFROM databricks_workspace.postgres.postgres_branches\nWHERE project_id = '{{ project_id }}'\nAND deployment_name = '{{ deployment_name }}'"
+        ddl: |-
+          SELECT
+            SPLIT_PART(name, '/', -1) AS name,
+            create_time,
+            project_id,
+            spec,
+            JSON_EXTRACT(status, '$.branch_id') AS branch_id,
+            JSON_EXTRACT(status, '$.current_state') AS current_state,
+            JSON_EXTRACT(status, '$.default') AS default,
+            JSON_EXTRACT(status, '$.is_protected') AS is_protected,
+            JSON_EXTRACT(status, '$.logical_size_bytes') AS logical_size_bytes,
+            JSON_EXTRACT(status, '$.state_change_time') AS state_change_time,
+            uid,
+            update_time
+          FROM databricks_workspace.postgres.postgres_branches
         fallback:
           predicate: sqlDialect == "postgres"
-          ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  project_id,\n  spec,\n  (status::jsonb)->>'branch_id' AS branch_id,\n  (status::jsonb)->>'current_state' AS current_state,\n  (status::jsonb)->>'default' AS default,\n  (status::jsonb)->>'is_protected' AS is_protected,\n  (status::jsonb)->>'logical_size_bytes' AS logical_size_bytes,\n  (status::jsonb)->>'state_change_time' AS state_change_time,\n  uid,\n  update_time\nFROM databricks_workspace.postgres.postgres_branches\nWHERE project_id = '{{ project_id }}'\nAND deployment_name = '{{ deployment_name }}'"
+          ddl: |-
+            SELECT
+              SPLIT_PART(name, '/', -1) AS name,
+              create_time,
+              project_id,
+              spec,
+              (status::jsonb)->>'branch_id' AS branch_id,
+              (status::jsonb)->>'current_state' AS current_state,
+              (status::jsonb)->>'default' AS default,
+              (status::jsonb)->>'is_protected' AS is_protected,
+              (status::jsonb)->>'logical_size_bytes' AS logical_size_bytes,
+              (status::jsonb)->>'state_change_time' AS state_change_time,
+              uid,
+              update_time
+            FROM databricks_workspace.postgres.postgres_branches
 vw_databases:
   name: vw_databases
   id: databricks_workspace.postgres.vw_databases
@@ -153,10 +215,26 @@ vw_databases:
     views:
       select:
         predicate: sqlDialect == "sqlite3"
-        ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  project_id,\n  branch_id,\n  spec,\n  JSON_EXTRACT(status, '$.postgres_database') AS postgres_database,\n  SPLIT_PART(JSON_EXTRACT(status, '$.role'), '/', -1) AS role\nFROM databricks_workspace.postgres.postgres_databases\nWHERE deployment_name = '{{ deployment_name }}'\nAND project_id = '{{ project_id }}'\nAND branch_id = '{{ branch_id }}'"
+        ddl: |-
+          SELECT
+            SPLIT_PART(name, '/', -1) AS name,
+            project_id,
+            branch_id,
+            spec,
+            JSON_EXTRACT(status, '$.postgres_database') AS postgres_database,
+            SPLIT_PART(JSON_EXTRACT(status, '$.role'), '/', -1) AS role
+          FROM databricks_workspace.postgres.postgres_databases
         fallback:
           predicate: sqlDialect == "postgres"
-          ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  project_id,\n  branch_id,\n  spec,\n  (status::jsonb)->>'postgres_database' AS postgres_database,\n  SPLIT_PART((status::jsonb)->>'role', '/', -1) AS role\nFROM databricks_workspace.postgres.postgres_databases\nWHERE deployment_name = '{{ deployment_name }}'\nAND project_id = '{{ project_id }}'\nAND branch_id = '{{ branch_id }}'"
+          ddl: |-
+            SELECT
+              SPLIT_PART(name, '/', -1) AS name,
+              project_id,
+              branch_id,
+              spec,
+              (status::jsonb)->>'postgres_database' AS postgres_database,
+              SPLIT_PART((status::jsonb)->>'role', '/', -1) AS role
+            FROM databricks_workspace.postgres.postgres_databases
 vw_roles:
   name: vw_roles
   id: databricks_workspace.postgres.vw_roles
@@ -215,10 +293,40 @@ vw_roles:
     views:
       select:
         predicate: sqlDialect == "sqlite3"
-        ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  project_id,\n  branch_id,\n  spec,\n  JSON_EXTRACT(status, '$.attributes.bypassrls') AS bypassrls,\n  JSON_EXTRACT(status, '$.attributes.createdb') AS createdb,\n  JSON_EXTRACT(status, '$.attributes.createrole') AS createrole,\n  JSON_EXTRACT(status, '$.auth_method') AS auth_method,\n  JSON_EXTRACT(status, '$.identity_type') AS identity_type,\n  JSON_EXTRACT(status, '$.membership_roles') AS membership_roles,\n  JSON_EXTRACT(status, '$.postgres_role') AS postgres_role,\n  update_time\nFROM databricks_workspace.postgres.postgres_roles\nWHERE project_id = '{{ project_id }}'\nAND branch_id = '{{ branch_id }}'\nAND deployment_name = '{{ deployment_name }}'"
+        ddl: |-
+          SELECT
+            SPLIT_PART(name, '/', -1) AS name,
+            create_time,
+            project_id,
+            branch_id,
+            spec,
+            JSON_EXTRACT(status, '$.attributes.bypassrls') AS bypassrls,
+            JSON_EXTRACT(status, '$.attributes.createdb') AS createdb,
+            JSON_EXTRACT(status, '$.attributes.createrole') AS createrole,
+            JSON_EXTRACT(status, '$.auth_method') AS auth_method,
+            JSON_EXTRACT(status, '$.identity_type') AS identity_type,
+            JSON_EXTRACT(status, '$.membership_roles') AS membership_roles,
+            JSON_EXTRACT(status, '$.postgres_role') AS postgres_role,
+            update_time
+          FROM databricks_workspace.postgres.postgres_roles
         fallback:
           predicate: sqlDialect == "postgres"
-          ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  project_id,\n  branch_id,\n  spec,\n  (status::jsonb)#>>'{attributes,bypassrls}' AS bypassrls,\n  (status::jsonb)#>>'{attributes,createdb}' AS createdb,\n  (status::jsonb)#>>'{attributes,createrole}' AS createrole,\n  (status::jsonb)->>'auth_method' AS auth_method,\n  (status::jsonb)->>'identity_type' AS identity_type,\n  (status::jsonb)->>'membership_roles' AS membership_roles,\n  (status::jsonb)->>'postgres_role' AS postgres_role,\n  update_time\nFROM databricks_workspace.postgres.postgres_roles\nWHERE project_id = '{{ project_id }}'\nAND branch_id = '{{ branch_id }}'\nAND deployment_name = '{{ deployment_name }}'"
+          ddl: |-
+            SELECT
+              SPLIT_PART(name, '/', -1) AS name,
+              create_time,
+              project_id,
+              branch_id,
+              spec,
+              (status::jsonb)#>>'{attributes,bypassrls}' AS bypassrls,
+              (status::jsonb)#>>'{attributes,createdb}' AS createdb,
+              (status::jsonb)#>>'{attributes,createrole}' AS createrole,
+              (status::jsonb)->>'auth_method' AS auth_method,
+              (status::jsonb)->>'identity_type' AS identity_type,
+              (status::jsonb)->>'membership_roles' AS membership_roles,
+              (status::jsonb)->>'postgres_role' AS postgres_role,
+              update_time
+            FROM databricks_workspace.postgres.postgres_roles
 vw_endpoints:
   name: vw_endpoints
   id: databricks_workspace.postgres.vw_endpoints
@@ -295,9 +403,49 @@ vw_endpoints:
     views:
       select:
         predicate: sqlDialect == "sqlite3"
-        ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  project_id,\n  branch_id,\n  spec,\n  JSON_EXTRACT(status, '$.autoscaling_limit_max_cu') AS max_cu,\n  JSON_EXTRACT(status, '$.autoscaling_limit_min_cu') AS min_cu,\n  JSON_EXTRACT(status, '$.current_state') AS current_state,\n  JSON_EXTRACT(status, '$.disabled') AS disabled,\n  JSON_EXTRACT(status, '$.endpoint_type') AS endpoint_type,\n  JSON_EXTRACT(status, '$.last_active_time') AS last_active_time,\n  JSON_EXTRACT(status, '$.settings') AS settings,\n  JSON_EXTRACT(status, '$.group.enable_readable_secondaries') AS group_enable_readable_secondaries,\n  JSON_EXTRACT(status, '$.group.max') AS group_max,\n  JSON_EXTRACT(status, '$.group.min') AS group_min,\n  JSON_EXTRACT(status, '$.hosts.host') AS host,\n  JSON_EXTRACT(status, '$.hosts.read_write_pooled_host') AS read_write_pooled_host,\n  uid,\n  update_time\nFROM databricks_workspace.postgres.postgres_endpoints\nWHERE project_id = '{{ project_id }}'\nAND branch_id\
-          \ = '{{ branch_id }}'\nAND deployment_name = '{{ deployment_name }}'"
+        ddl: |-
+          SELECT
+            SPLIT_PART(name, '/', -1) AS name,
+            create_time,
+            project_id,
+            branch_id,
+            spec,
+            JSON_EXTRACT(status, '$.autoscaling_limit_max_cu') AS max_cu,
+            JSON_EXTRACT(status, '$.autoscaling_limit_min_cu') AS min_cu,
+            JSON_EXTRACT(status, '$.current_state') AS current_state,
+            JSON_EXTRACT(status, '$.disabled') AS disabled,
+            JSON_EXTRACT(status, '$.endpoint_type') AS endpoint_type,
+            JSON_EXTRACT(status, '$.last_active_time') AS last_active_time,
+            JSON_EXTRACT(status, '$.settings') AS settings,
+            JSON_EXTRACT(status, '$.group.enable_readable_secondaries') AS group_enable_readable_secondaries,
+            JSON_EXTRACT(status, '$.group.max') AS group_max,
+            JSON_EXTRACT(status, '$.group.min') AS group_min,
+            JSON_EXTRACT(status, '$.hosts.host') AS host,
+            JSON_EXTRACT(status, '$.hosts.read_write_pooled_host') AS read_write_pooled_host,
+            uid,
+            update_time
+          FROM databricks_workspace.postgres.postgres_endpoints
         fallback:
           predicate: sqlDialect == "postgres"
-          ddl: "SELECT\n  SPLIT_PART(name, '/', -1) AS name,\n  create_time,\n  project_id,\n  branch_id,\n  spec,\n  (status::jsonb)->>'autoscaling_limit_max_cu' AS max_cu,\n  (status::jsonb)->>'autoscaling_limit_min_cu' AS min_cu,\n  (status::jsonb)->>'current_state' AS current_state,\n  (status::jsonb)->>'disabled' AS disabled,\n  (status::jsonb)->>'endpoint_type' AS endpoint_type,\n  (status::jsonb)->>'last_active_time' AS last_active_time,\n  (status::jsonb)->>'settings' AS settings,\n  (status::jsonb)#>>'{group,enable_readable_secondaries}' AS group_enable_readable_secondaries,\n  (status::jsonb)#>>'{group,max}' AS group_max,\n  (status::jsonb)#>>'{group,min}' AS group_min,\n  (status::jsonb)#>>'{hosts,host}' AS host,\n  (status::jsonb)#>>'{hosts,read_write_pooled_host}' AS read_write_pooled_host,\n  uid,\n  update_time\nFROM databricks_workspace.postgres.postgres_endpoints\nWHERE project_id = '{{ project_id }}'\nAND branch_id = '{{ branch_id }}'\nAND deployment_name = '{{ deployment_name\
-            \ }}'"
+          ddl: |-
+            SELECT
+              SPLIT_PART(name, '/', -1) AS name,
+              create_time,
+              project_id,
+              branch_id,
+              spec,
+              (status::jsonb)->>'autoscaling_limit_max_cu' AS max_cu,
+              (status::jsonb)->>'autoscaling_limit_min_cu' AS min_cu,
+              (status::jsonb)->>'current_state' AS current_state,
+              (status::jsonb)->>'disabled' AS disabled,
+              (status::jsonb)->>'endpoint_type' AS endpoint_type,
+              (status::jsonb)->>'last_active_time' AS last_active_time,
+              (status::jsonb)->>'settings' AS settings,
+              (status::jsonb)#>>'{group,enable_readable_secondaries}' AS group_enable_readable_secondaries,
+              (status::jsonb)#>>'{group,max}' AS group_max,
+              (status::jsonb)#>>'{group,min}' AS group_min,
+              (status::jsonb)#>>'{hosts,host}' AS host,
+              (status::jsonb)#>>'{hosts,read_write_pooled_host}' AS read_write_pooled_host,
+              uid,
+              update_time
+            FROM databricks_workspace.postgres.postgres_endpoints

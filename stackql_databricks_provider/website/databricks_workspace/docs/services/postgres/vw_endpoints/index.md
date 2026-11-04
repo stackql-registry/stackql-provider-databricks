@@ -233,9 +233,6 @@ SELECT
   uid,
   update_time
 FROM databricks_workspace.postgres.postgres_endpoints
-WHERE project_id = '{{ project_id }}'
-AND branch_id = '{{ branch_id }}'
-AND deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -263,9 +260,6 @@ SELECT
   uid,
   update_time
 FROM databricks_workspace.postgres.postgres_endpoints
-WHERE project_id = '{{ project_id }}'
-AND branch_id = '{{ branch_id }}'
-AND deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

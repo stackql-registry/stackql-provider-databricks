@@ -12,7 +12,8 @@ servers:
   variables:
     deployment_name:
       description: 'The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS,
-        adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.'
+        adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the
+        session.'
       default: dbc-abcd0123-a1bc
       x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME
     workspace_domain:
@@ -8656,7 +8657,6 @@ components:
                 JSON_EXTRACT(a.pending_deployment, '$.status.state') AS pending_deployment_state,
                 JSON_EXTRACT(a.pending_deployment, '$.status.message') AS pending_deployment_message
               FROM databricks_workspace.apps.apps a
-              WHERE deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -8695,7 +8695,6 @@ components:
                   a.pending_deployment->'status'->>'state' AS pending_deployment_state,
                   a.pending_deployment->'status'->>'message' AS pending_deployment_message
                 FROM databricks_workspace.apps.apps a
-                WHERE deployment_name = '{{ deployment_name }}'
     vw_app_resources:
       name: vw_app_resources
       id: databricks_workspace.apps.vw_app_resources
@@ -8824,7 +8823,6 @@ components:
                 JSON_EXTRACT(r.value, '$.uc_securable.permission') AS uc_securable_permission
               FROM databricks_workspace.apps.apps a,
                    JSON_EACH(a.resources) r
-              WHERE deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -8866,7 +8864,6 @@ components:
                   r.value->'uc_securable'->>'permission' AS uc_securable_permission
                 FROM databricks_workspace.apps.apps a,
                      jsonb_array_elements(a.resources::jsonb) AS r
-                WHERE deployment_name = '{{ deployment_name }}'
 x-stackQL-config:
   pagination:
     requestToken:

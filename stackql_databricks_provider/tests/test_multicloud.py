@@ -214,7 +214,7 @@ def test_cloud_selects_account_host(cloud):
 
 @pytest.mark.parametrize(
     "cloud, deployment",
-    [("aws", "dbc-abcd0123-a1bc"), ("azure", "adb-1234567890123456.7"), ("gcp", "1234567890123456")],
+    [("aws", "dbc-abcd0123-a1bc"), ("azure", "adb-1234567890123456.7"), ("gcp", "1234567890123456.7")],
 )
 def test_cloud_selects_workspace_domain(cloud, deployment):
     server = workspace_servers()

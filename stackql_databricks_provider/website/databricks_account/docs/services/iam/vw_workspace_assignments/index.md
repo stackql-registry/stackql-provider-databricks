@@ -151,8 +151,6 @@ SELECT
   p.value AS permission
 FROM databricks_account.iam.workspace_assignment wa,
      JSON_EACH(wa.permissions) p
-WHERE account_id = '{{ account_id }}'
-AND workspace_id = '{{ workspace_id }}'
 ```
 
 </TabItem>
@@ -170,8 +168,6 @@ SELECT
   p.value AS permission
 FROM databricks_account.iam.workspace_assignment wa,
      jsonb_array_elements(wa.permissions::jsonb) AS p
-WHERE account_id = '{{ account_id }}'
-AND workspace_id = '{{ workspace_id }}'
 ```
 
 </TabItem>

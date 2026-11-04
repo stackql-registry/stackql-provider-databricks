@@ -152,7 +152,6 @@ SELECT
   JSON_EXTRACT(d.value, '$.azure_storage_service') AS azure_storage_service
 FROM databricks_account.settings.network_policies np,
      JSON_EACH(JSON_EXTRACT(np.egress, '$.network_access.allowed_storage_destinations')) d
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -171,7 +170,6 @@ SELECT
   d.value->>'azure_storage_service' AS azure_storage_service
 FROM databricks_account.settings.network_policies np,
      jsonb_array_elements((np.egress->'network_access'->'allowed_storage_destinations')::jsonb) AS d
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
