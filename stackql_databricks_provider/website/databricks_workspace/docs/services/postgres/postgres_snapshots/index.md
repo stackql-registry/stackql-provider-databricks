@@ -34,11 +34,106 @@ Creates, updates, deletes, gets or lists a <code>postgres_snapshots</code> resou
 The following fields are returned by `SELECT` queries:
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+<SchemaTable fields={[
+  {
+    "name": "name",
+    "type": "string",
+    "description": "The resource name of the snapshot. Format: projects/&#123;project_id&#125;/snapshots/&#123;snapshot_id&#125;"
+  },
+  {
+    "name": "snapshot_id",
+    "type": "string",
+    "description": "The user-chosen ID; the final segment of ``name``."
+  },
+  {
+    "name": "create_time",
+    "type": "string (date-time)",
+    "description": "When the snapshot was created."
+  },
+  {
+    "name": "spec",
+    "type": "object",
+    "description": "Client-provided configuration of the snapshot.",
+    "children": [
+      {
+        "name": "source_branch",
+        "type": "string",
+        "description": "The source branch to snapshot. Format: projects/&#123;project_id&#125;/branches/&#123;branch_id&#125;"
+      },
+      {
+        "name": "expire_time",
+        "type": "string (date-time)",
+        "description": "Absolute time at which the snapshot is deleted. Mutually exclusive with ``ttl`` and ``no_expiry``."
+      },
+      {
+        "name": "no_expiry",
+        "type": "boolean",
+        "description": "If true, the snapshot never expires. Mutually exclusive with ``ttl`` and ``expire_time``."
+      },
+      {
+        "name": "source_branch_lsn",
+        "type": "string",
+        "description": "LSN to snapshot from, e.g. ``16/B374D848``. Mutually exclusive with ``source_branch_time``."
+      },
+      {
+        "name": "source_branch_time",
+        "type": "string (date-time)",
+        "description": "Timestamp to snapshot from. Mutually exclusive with ``source_branch_lsn``."
+      },
+      {
+        "name": "ttl",
+        "type": "string",
+        "description": "Time-to-live. The snapshot expires this long after it is created. Mutually exclusive with ``expire_time`` and ``no_expiry``. Reads report the resolved absolute ``expire_time`` instead."
+      }
+    ]
+  },
+  {
+    "name": "status",
+    "type": "object",
+    "description": "Server-observed state of the snapshot.",
+    "children": [
+      {
+        "name": "diff_size_bytes",
+        "type": "integer",
+        "description": "Incremental storage size in bytes since the previous snapshot. Unset when the snapshot is not billed on incremental usage."
+      },
+      {
+        "name": "expire_time",
+        "type": "string (date-time)",
+        "description": "Absolute time at which the snapshot is deleted."
+      },
+      {
+        "name": "full_size_bytes",
+        "type": "integer",
+        "description": "Full logical size of the snapshot, in bytes."
+      },
+      {
+        "name": "no_expiry",
+        "type": "boolean",
+        "description": "True if the snapshot never expires."
+      },
+      {
+        "name": "source_branch",
+        "type": "string",
+        "description": "The source branch the snapshot was taken from. Format: projects/&#123;project_id&#125;/branches/&#123;branch_id&#125;"
+      }
+    ]
+  },
+  {
+    "name": "uid",
+    "type": "string",
+    "description": "Unique system-generated ID for the snapshot."
+  }
+]} />
+</TabItem>
 <TabItem value="list">
 
 <SchemaTable fields={[
@@ -90,7 +185,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "ttl",
         "type": "string",
-        "description": "Time-to-live. The snapshot expires this long after it is created. Mutually exclusive with ``expire_time`` and ``no_expiry``."
+        "description": "Time-to-live. The snapshot expires this long after it is created. Mutually exclusive with ``expire_time`` and ``no_expiry``. Reads report the resolved absolute ``expire_time`` instead."
       }
     ]
   },
@@ -99,11 +194,6 @@ The following fields are returned by `SELECT` queries:
     "type": "object",
     "description": "Server-observed state of the snapshot.",
     "children": [
-      {
-        "name": "current_state",
-        "type": "string",
-        "description": "The snapshot's current state. (AVAILABLE, CREATING, DELETING, FAILED)"
-      },
       {
         "name": "diff_size_bytes",
         "type": "integer",
@@ -128,16 +218,6 @@ The following fields are returned by `SELECT` queries:
         "name": "source_branch",
         "type": "string",
         "description": "The source branch the snapshot was taken from. Format: projects/&#123;project_id&#125;/branches/&#123;branch_id&#125;"
-      },
-      {
-        "name": "source_branch_lsn",
-        "type": "string",
-        "description": "The LSN at which the snapshot was taken."
-      },
-      {
-        "name": "source_branch_time",
-        "type": "string (date-time)",
-        "description": "The point in time at which the snapshot was taken."
       }
     ]
   },
@@ -145,11 +225,6 @@ The following fields are returned by `SELECT` queries:
     "name": "uid",
     "type": "string",
     "description": "Unique system-generated ID for the snapshot."
-  },
-  {
-    "name": "update_time",
-    "type": "string (date-time)",
-    "description": "When the snapshot was last updated."
   }
 ]} />
 </TabItem>
@@ -171,18 +246,32 @@ The following methods are available for this resource:
 </thead>
 <tbody>
 <tr>
+    <td><a href="#get"><CopyableCode code="get" /></a></td>
+    <td><CopyableCode code="select" /></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-snapshot_id"><code>snapshot_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Retrieves information about the specified snapshot.</td>
+</tr>
+<tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Returns a paginated list of snapshots in the project.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-snapshot"><code>snapshot</code></a></td>
-    <td><a href="#parameter-snapshot_id"><code>snapshot_id</code></a></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-snapshot_id"><code>snapshot_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
     <td>Creates a snapshot, an immutable point-in-time copy of a branch's data, within the project.</td>
+</tr>
+<tr>
+    <td><a href="#delete"><CopyableCode code="delete" /></a></td>
+    <td><CopyableCode code="delete" /></td>
+    <td><a href="#parameter-project_id"><code>project_id</code></a>, <a href="#parameter-snapshot_id"><code>snapshot_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Deletes the specified snapshot.</td>
 </tr>
 </tbody>
 </table>
@@ -203,12 +292,22 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
-<tr id="parameter-parent">
-    <td><CopyableCode code="parent" /></td>
+<tr id="parameter-project_id">
+    <td><CopyableCode code="project_id" /></td>
     <td><code>string</code></td>
-    <td>The project in which to create the snapshot. Format: projects/&#123;project_id&#125;</td>
+    <td>The `project_id` segment of the `name` resource name (`projects/&#123;project_id&#125;/snapshots/&#123;snapshot_id&#125;`). The resource name of the snapshot to delete. Format: projects/&#123;project_id&#125;/snapshots/&#123;snapshot_id&#125;</td>
+</tr>
+<tr id="parameter-snapshot_id">
+    <td><CopyableCode code="snapshot_id" /></td>
+    <td><code>string</code></td>
+    <td>The `snapshot_id` segment of the `name` resource name (`projects/&#123;project_id&#125;/snapshots/&#123;snapshot_id&#125;`). The resource name of the snapshot to delete. Format: projects/&#123;project_id&#125;/snapshots/&#123;snapshot_id&#125;</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -220,22 +319,38 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>string</code></td>
     <td>Page token from a previous response; omit for the first page.</td>
 </tr>
-<tr id="parameter-snapshot_id">
-    <td><CopyableCode code="snapshot_id" /></td>
-    <td><code>string</code></td>
-    <td>Client-chosen ID for the snapshot. If omitted, the server generates one.</td>
-</tr>
 </tbody>
 </table>
 
 ## `SELECT` examples
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+Retrieves information about the specified snapshot.
+
+```sql
+SELECT
+name,
+snapshot_id,
+create_time,
+spec,
+status,
+uid
+FROM databricks_workspace.postgres.postgres_snapshots
+WHERE project_id = '{{ project_id }}' -- required
+AND snapshot_id = '{{ snapshot_id }}' -- required
+AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
+;
+```
+</TabItem>
 <TabItem value="list">
 
 Returns a paginated list of snapshots in the project.
@@ -247,11 +362,11 @@ snapshot_id,
 create_time,
 spec,
 status,
-uid,
-update_time
+uid
 FROM databricks_workspace.postgres.postgres_snapshots
-WHERE parent = '{{ parent }}' -- required
+WHERE project_id = '{{ project_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -275,16 +390,28 @@ Creates a snapshot, an immutable point-in-time copy of a branch's data, within t
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_snapshots (
-snapshot,
-parent,
+create_time,
+name,
+snapshot_id,
+spec,
+status,
+uid,
+project_id,
+snapshot_id,
 deployment_name,
-snapshot_id
+workspace_domain
 )
 SELECT 
-'{{ snapshot }}' /* required */,
-'{{ parent }}',
+'{{ create_time }}',
+'{{ name }}',
+'{{ snapshot_id }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ uid }}',
+'{{ project_id }}',
+'{{ snapshot_id }}',
 '{{ deployment_name }}',
-'{{ snapshot_id }}'
+'{{ workspace_domain }}'
 ;
 ```
 </TabItem>
@@ -293,42 +420,78 @@ SELECT
 <CodeBlock language="yaml">{`# Description fields are for documentation purposes
 - name: postgres_snapshots
   props:
-    - name: parent
-      value: "{{ parent }}"
+    - name: project_id
+      value: "{{ project_id }}"
+      description: Required parameter for the postgres_snapshots resource.
+    - name: snapshot_id
+      value: "{{ snapshot_id }}"
       description: Required parameter for the postgres_snapshots resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the postgres_snapshots resource.
-    - name: snapshot
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the postgres_snapshots resource.
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        The snapshot to create.
-      value:
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
-        snapshot_id: "{{ snapshot_id }}"
-        spec:
-          source_branch: "{{ source_branch }}"
-          expire_time: "{{ expire_time }}"
-          no_expiry: {{ no_expiry }}
-          source_branch_lsn: "{{ source_branch_lsn }}"
-          source_branch_time: "{{ source_branch_time }}"
-          ttl: "{{ ttl }}"
-        status:
-          current_state: "{{ current_state }}"
-          diff_size_bytes: {{ diff_size_bytes }}
-          expire_time: "{{ expire_time }}"
-          full_size_bytes: {{ full_size_bytes }}
-          no_expiry: {{ no_expiry }}
-          source_branch: "{{ source_branch }}"
-          source_branch_lsn: "{{ source_branch_lsn }}"
-          source_branch_time: "{{ source_branch_time }}"
-        uid: "{{ uid }}"
-        update_time: "{{ update_time }}"
+        When the snapshot was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the snapshot. Format: projects/{project_id}/snapshots/{snapshot_id}
     - name: snapshot_id
       value: "{{ snapshot_id }}"
-      description: Client-chosen ID for the snapshot. If omitted, the server generates one.
-      description: Client-chosen ID for the snapshot. If omitted, the server generates one.
+      description: |
+        The user-chosen ID; the final segment of \`\`name\`\`.
+    - name: spec
+      description: |
+        Client-provided configuration of the snapshot.
+      value:
+        source_branch: "{{ source_branch }}"
+        expire_time: "{{ expire_time }}"
+        no_expiry: {{ no_expiry }}
+        source_branch_lsn: "{{ source_branch_lsn }}"
+        source_branch_time: "{{ source_branch_time }}"
+        ttl: "{{ ttl }}"
+    - name: status
+      description: |
+        Server-observed state of the snapshot.
+      value:
+        diff_size_bytes: {{ diff_size_bytes }}
+        expire_time: "{{ expire_time }}"
+        full_size_bytes: {{ full_size_bytes }}
+        no_expiry: {{ no_expiry }}
+        source_branch: "{{ source_branch }}"
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        Unique system-generated ID for the snapshot.
 `}</CodeBlock>
 
+</TabItem>
+</Tabs>
+
+
+## `DELETE` examples
+
+<Tabs
+    defaultValue="delete"
+    values={[
+        { label: 'delete', value: 'delete' }
+    ]}
+>
+<TabItem value="delete">
+
+Deletes the specified snapshot.
+
+```sql
+DELETE FROM databricks_workspace.postgres.postgres_snapshots
+WHERE project_id = '{{ project_id }}' --required
+AND snapshot_id = '{{ snapshot_id }}' --required
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+;
+```
 </TabItem>
 </Tabs>

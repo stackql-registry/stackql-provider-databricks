@@ -186,9 +186,6 @@ SELECT
 FROM databricks_workspace.iam.permissions p,
      JSON_EACH(p.access_control_list) acl,
      JSON_EACH(JSON_EXTRACT(acl.value, '$.all_permissions')) perm
-WHERE p.deployment_name = '{{ deployment_name }}'
-AND p.request_object_type = '{{ request_object_type }}'
-AND p.request_object_id = '{{ request_object_id }}'
 ```
 
 </TabItem>
@@ -211,9 +208,6 @@ SELECT
 FROM databricks_workspace.iam.permissions p,
      jsonb_array_elements(p.access_control_list::jsonb) AS acl,
      jsonb_array_elements((acl.value->'all_permissions')::jsonb) AS perm
-WHERE p.deployment_name = '{{ deployment_name }}'
-AND p.request_object_type = '{{ request_object_type }}'
-AND p.request_object_id = '{{ request_object_id }}'
 ```
 
 </TabItem>

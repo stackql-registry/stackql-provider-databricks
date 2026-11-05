@@ -151,8 +151,6 @@ SELECT
   p.value AS permission
 FROM databricks_workspace.iamv2.workspace_access_details wa,
      JSON_EACH(wa.permissions) p
-WHERE wa.deployment_name = '{{ deployment_name }}'
-AND wa.principal_id = '{{ principal_id }}'
 ```
 
 </TabItem>
@@ -170,8 +168,6 @@ SELECT
   p.value AS permission
 FROM databricks_workspace.iamv2.workspace_access_details wa,
      jsonb_array_elements(wa.permissions::jsonb) AS p
-WHERE wa.deployment_name = '{{ deployment_name }}'
-AND wa.principal_id = '{{ principal_id }}'
 ```
 
 </TabItem>

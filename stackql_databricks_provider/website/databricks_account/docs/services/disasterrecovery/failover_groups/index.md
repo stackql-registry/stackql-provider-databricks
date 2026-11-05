@@ -34,12 +34,13 @@ Creates, updates, deletes, gets or lists a <code>failover_groups</code> resource
 The following fields are returned by `SELECT` queries:
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
-<TabItem value="list">
+<TabItem value="get">
 
 <SchemaTable fields={[
   {
@@ -63,9 +64,26 @@ The following fields are returned by `SELECT` queries:
     "description": "Opaque version string for optimistic locking. Server-generated and returned in responses."
   },
   {
+    "name": "has_replication_point_blocking_errors",
+    "type": "boolean",
+    "description": "True if errors currently block the replication point."
+  },
+  {
     "name": "initial_primary_region",
     "type": "string",
     "description": "Initial primary region. Used only in Create requests to set the starting primary region. Not returned in responses."
+  },
+  {
+    "name": "initial_replication_progress",
+    "type": "object",
+    "description": "Initial replication progress of all in-scope assets. Set only when the FailoverGroup is in INITIAL_REPLICATION state.",
+    "children": [
+      {
+        "name": "completed",
+        "type": "integer",
+        "description": "Percent complete, 0-100."
+      }
+    ]
   },
   {
     "name": "regions",
@@ -156,56 +174,151 @@ The following fields are returned by `SELECT` queries:
         "description": "Workspace IDs in this set. The system derives and validates regions. All workspaces must be in the Mission Critical tier."
       },
       {
-        "name": "asset_replication_config",
-        "type": "object",
-        "description": "Per-asset-type control over which workspace assets are replicated. Applies only when replicate_workspace_assets is true. When omitted while control plane DR is enabled, every asset type is replicated.",
+        "name": "replicate_workspace_assets",
+        "type": "boolean",
+        "description": "Whether to enable control plane DR (notebooks, jobs, clusters, etc.) for this set. Defaults to false."
+      },
+      {
+        "name": "stable_url_names",
+        "type": "array",
+        "description": "Resource names of stable URLs associated with this workspace set. Format: accounts/&#123;account_id&#125;/stable-urls/&#123;stable_url_id&#125;. The referenced stable URLs must already exist (via CreateStableUrl)."
+      }
+    ]
+  }
+]} />
+</TabItem>
+<TabItem value="list">
+
+<SchemaTable fields={[
+  {
+    "name": "name",
+    "type": "string",
+    "description": "Fully qualified resource name in the format accounts/&#123;account_id&#125;/failover-groups/&#123;failover_group_id&#125;."
+  },
+  {
+    "name": "create_time",
+    "type": "string (date-time)",
+    "description": "Time at which this failover group was created."
+  },
+  {
+    "name": "effective_primary_region",
+    "type": "string",
+    "description": "Current effective primary region. Replication flows FROM workspaces in this region. Changes after a successful failover."
+  },
+  {
+    "name": "etag",
+    "type": "string",
+    "description": "Opaque version string for optimistic locking. Server-generated and returned in responses."
+  },
+  {
+    "name": "has_replication_point_blocking_errors",
+    "type": "boolean",
+    "description": "True if errors currently block the replication point."
+  },
+  {
+    "name": "initial_primary_region",
+    "type": "string",
+    "description": "Initial primary region. Used only in Create requests to set the starting primary region. Not returned in responses."
+  },
+  {
+    "name": "initial_replication_progress",
+    "type": "object",
+    "description": "Initial replication progress of all in-scope assets. Set only when the FailoverGroup is in INITIAL_REPLICATION state.",
+    "children": [
+      {
+        "name": "completed",
+        "type": "integer",
+        "description": "Percent complete, 0-100."
+      }
+    ]
+  },
+  {
+    "name": "regions",
+    "type": "array",
+    "description": "List of all regions participating in this failover group."
+  },
+  {
+    "name": "replication_point",
+    "type": "string (date-time)",
+    "description": "The latest point in time to which data has been replicated."
+  },
+  {
+    "name": "state",
+    "type": "string",
+    "description": "Aggregate state of the failover group. (ACTIVE, CREATING, CREATION_FAILED, DELETING, DELETION_FAILED, FAILING_OVER, FAILOVER_FAILED, INITIAL_REPLICATION)"
+  },
+  {
+    "name": "unity_catalog_assets",
+    "type": "object",
+    "description": "Unity Catalog replication configuration.",
+    "children": [
+      {
+        "name": "catalogs",
+        "type": "array",
+        "description": "UC catalogs to replicate.",
         "children": [
           {
-            "name": "enable_jobs",
-            "type": "boolean",
-            "description": "Whether to replicate jobs."
-          },
-          {
-            "name": "enable_clusters",
-            "type": "boolean",
-            "description": "Whether to replicate clusters (including cluster policies, instance profiles, global init scripts, and worker environment overlays)."
-          },
-          {
-            "name": "enable_warehouse",
-            "type": "boolean",
-            "description": "Whether to replicate SQL warehouses."
-          },
-          {
-            "name": "enable_sql_workspace",
-            "type": "boolean",
-            "description": "Whether to replicate the SQL workspace."
-          },
-          {
-            "name": "enable_libraries",
-            "type": "boolean",
-            "description": "Whether to replicate libraries."
-          },
-          {
-            "name": "enable_notebooks",
-            "type": "boolean",
-            "description": "Whether to replicate notebooks."
-          },
-          {
-            "name": "enable_files",
-            "type": "boolean",
-            "description": "Whether to replicate workspace files."
-          },
-          {
-            "name": "enable_queries",
-            "type": "boolean",
-            "description": "Whether to replicate SQL queries."
-          },
-          {
-            "name": "enable_dashboards",
-            "type": "boolean",
-            "description": "Whether to replicate dashboards."
+            "name": "name",
+            "type": "string",
+            "description": "The name of the UC catalog to replicate."
           }
         ]
+      },
+      {
+        "name": "data_replication_workspace_set",
+        "type": "string",
+        "description": "The workspace set whose workspaces will be used for data replication of all UC catalogs' underlying storage."
+      },
+      {
+        "name": "location_mappings",
+        "type": "array",
+        "description": "Location mappings - storage URI per region for each location.",
+        "children": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "Resource name for this location."
+          },
+          {
+            "name": "uri_by_region",
+            "type": "array",
+            "description": "URI for each region. Each entry maps a region name to a storage URI.",
+            "children": [
+              {
+                "name": "region",
+                "type": "string",
+                "description": "The region name."
+              },
+              {
+                "name": "uri",
+                "type": "string",
+                "description": "The storage URI for this region."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "update_time",
+    "type": "string (date-time)",
+    "description": "Time at which this failover group was last modified."
+  },
+  {
+    "name": "workspace_sets",
+    "type": "array",
+    "description": "Workspace sets, each containing workspaces that replicate to each other.",
+    "children": [
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Resource name for this workspace set."
+      },
+      {
+        "name": "workspace_ids",
+        "type": "array",
+        "description": "Workspace IDs in this set. The system derives and validates regions. All workspaces must be in the Mission Critical tier."
       },
       {
         "name": "replicate_workspace_assets",
@@ -239,30 +352,44 @@ The following methods are available for this resource:
 </thead>
 <tbody>
 <tr>
+    <td><a href="#get"><CopyableCode code="get" /></a></td>
+    <td><CopyableCode code="select" /></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td></td>
+    <td>Get a failover group.</td>
+</tr>
+<tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List failover groups.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-failover_group"><code>failover_group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-regions"><code>regions</code></a>, <a href="#parameter-workspace_sets"><code>workspace_sets</code></a>, <a href="#parameter-initial_primary_region"><code>initial_primary_region</code></a></td>
     <td><a href="#parameter-validate_only"><code>validate_only</code></a></td>
     <td>Create a new failover group.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-failover_group"><code>failover_group</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-regions"><code>regions</code></a>, <a href="#parameter-workspace_sets"><code>workspace_sets</code></a>, <a href="#parameter-initial_primary_region"><code>initial_primary_region</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Update a failover group.</td>
 </tr>
 <tr>
+    <td><a href="#delete"><CopyableCode code="delete" /></a></td>
+    <td><CopyableCode code="delete" /></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td><a href="#parameter-etag"><code>etag</code></a></td>
+    <td>Delete a failover group.</td>
+</tr>
+<tr>
     <td><a href="#failover"><CopyableCode code="failover" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-target_primary_region"><code>target_primary_region</code></a>, <a href="#parameter-failover_type"><code>failover_type</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-failover_group_id"><code>failover_group_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-target_primary_region"><code>target_primary_region</code></a>, <a href="#parameter-failover_type"><code>failover_type</code></a></td>
     <td></td>
     <td>Initiate a failover to a new primary region.</td>
 </tr>
@@ -282,20 +409,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
+<tr id="parameter-account_id">
+    <td><CopyableCode code="account_id" /></td>
+    <td><code>string</code></td>
+    <td>The `account_id` segment of the `name` resource name (`accounts/&#123;account_id&#125;/failover-groups/&#123;failover_group_id&#125;`). The fully qualified resource name of the failover group to failover. Format: accounts/&#123;account_id&#125;/failover-groups/&#123;failover_group_id&#125;.</td>
+</tr>
 <tr id="parameter-failover_group_id">
     <td><CopyableCode code="failover_group_id" /></td>
     <td><code>string</code></td>
-    <td>Client-provided identifier for the failover group. Used to construct the resource name as &#123;parent&#125;/failover-groups/&#123;failover_group_id&#125;.</td>
-</tr>
-<tr id="parameter-name">
-    <td><CopyableCode code="name" /></td>
-    <td><code>string</code></td>
-    <td>The fully qualified resource name of the failover group to failover. Format: accounts/&#123;account_id&#125;/failover-groups/&#123;failover_group_id&#125;.</td>
-</tr>
-<tr id="parameter-parent">
-    <td><CopyableCode code="parent" /></td>
-    <td><code>string</code></td>
-    <td>The parent resource. Format: accounts/&#123;account_id&#125;.</td>
+    <td>The `failover_group_id` segment of the `name` resource name (`accounts/&#123;account_id&#125;/failover-groups/&#123;failover_group_id&#125;`). The fully qualified resource name of the failover group to failover. Format: accounts/&#123;account_id&#125;/failover-groups/&#123;failover_group_id&#125;.</td>
 </tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
@@ -305,7 +432,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-etag">
     <td><CopyableCode code="etag" /></td>
     <td><code>string</code></td>
-    <td>Optional opaque version string for optimistic locking, obtained from a prior read of the failover group. If provided, the update is rejected unless it matches the failover group's current etag. If omitted, the update proceeds without an optimistic-lock check.</td>
+    <td>Opaque version string for optimistic locking. If provided, must match the current etag. If omitted, the delete proceeds without an etag check.</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -328,11 +455,38 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 ## `SELECT` examples
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+Get a failover group.
+
+```sql
+SELECT
+name,
+create_time,
+effective_primary_region,
+etag,
+has_replication_point_blocking_errors,
+initial_primary_region,
+initial_replication_progress,
+regions,
+replication_point,
+state,
+unity_catalog_assets,
+update_time,
+workspace_sets
+FROM databricks_account.disasterrecovery.failover_groups
+WHERE account_id = '{{ account_id }}' -- required
+AND failover_group_id = '{{ failover_group_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
+;
+```
+</TabItem>
 <TabItem value="list">
 
 List failover groups.
@@ -343,7 +497,9 @@ name,
 create_time,
 effective_primary_region,
 etag,
+has_replication_point_blocking_errors,
 initial_primary_region,
+initial_replication_progress,
 regions,
 replication_point,
 state,
@@ -351,7 +507,8 @@ unity_catalog_assets,
 update_time,
 workspace_sets
 FROM databricks_account.disasterrecovery.failover_groups
-WHERE parent = '{{ parent }}' -- required
+WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -375,22 +532,50 @@ Create a new failover group.
 
 ```sql
 INSERT INTO databricks_account.disasterrecovery.failover_groups (
-failover_group,
-parent,
+regions,
+workspace_sets,
+initial_primary_region,
+create_time,
+effective_primary_region,
+etag,
+has_replication_point_blocking_errors,
+initial_replication_progress,
+name,
+replication_point,
+state,
+unity_catalog_assets,
+update_time,
+account_id,
 failover_group_id,
+account_host,
 validate_only
 )
 SELECT 
-'{{ failover_group }}' /* required */,
-'{{ parent }}',
+'{{ regions }}' /* required */,
+'{{ workspace_sets }}' /* required */,
+'{{ initial_primary_region }}' /* required */,
+'{{ create_time }}',
+'{{ effective_primary_region }}',
+'{{ etag }}',
+{{ has_replication_point_blocking_errors }},
+'{{ initial_replication_progress }}',
+'{{ name }}',
+'{{ replication_point }}',
+'{{ state }}',
+'{{ unity_catalog_assets }}',
+'{{ update_time }}',
+'{{ account_id }}',
 '{{ failover_group_id }}',
+'{{ account_host }}',
 '{{ validate_only }}'
 RETURNING
 name,
 create_time,
 effective_primary_region,
 etag,
+has_replication_point_blocking_errors,
 initial_primary_region,
+initial_replication_progress,
 regions,
 replication_point,
 state,
@@ -405,48 +590,79 @@ workspace_sets
 <CodeBlock language="yaml">{`# Description fields are for documentation purposes
 - name: failover_groups
   props:
-    - name: parent
-      value: "{{ parent }}"
+    - name: account_id
+      value: "{{ account_id }}"
       description: Required parameter for the failover_groups resource.
     - name: failover_group_id
       value: "{{ failover_group_id }}"
       description: Required parameter for the failover_groups resource.
-    - name: failover_group
-      description: |
-        The failover group to create.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the failover_groups resource.
+    - name: regions
       value:
-        regions:
-          - "{{ regions }}"
-        workspace_sets:
+        - "{{ regions }}"
+      description: |
+        List of all regions participating in this failover group.
+    - name: workspace_sets
+      description: |
+        Workspace sets, each containing workspaces that replicate to each other.
+      value:
+        - name: "{{ name }}"
+          workspace_ids: "{{ workspace_ids }}"
+          replicate_workspace_assets: {{ replicate_workspace_assets }}
+          stable_url_names: "{{ stable_url_names }}"
+    - name: initial_primary_region
+      value: "{{ initial_primary_region }}"
+      description: |
+        Initial primary region. Used only in Create requests to set the starting primary region. Not returned in responses.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time at which this failover group was created.
+    - name: effective_primary_region
+      value: "{{ effective_primary_region }}"
+      description: |
+        Current effective primary region. Replication flows FROM workspaces in this region. Changes after a successful failover.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        Opaque version string for optimistic locking. Server-generated and returned in responses.
+    - name: has_replication_point_blocking_errors
+      value: {{ has_replication_point_blocking_errors }}
+      description: |
+        True if errors currently block the replication point.
+    - name: initial_replication_progress
+      description: |
+        Initial replication progress of all in-scope assets. Set only when the FailoverGroup is in INITIAL_REPLICATION state.
+      value:
+        completed: {{ completed }}
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Fully qualified resource name in the format accounts/{account_id}/failover-groups/{failover_group_id}.
+    - name: replication_point
+      value: "{{ replication_point }}"
+      description: |
+        The latest point in time to which data has been replicated.
+    - name: state
+      value: "{{ state }}"
+      description: |
+        Aggregate state of the failover group.
+    - name: unity_catalog_assets
+      description: |
+        Unity Catalog replication configuration.
+      value:
+        catalogs:
           - name: "{{ name }}"
-            workspace_ids: "{{ workspace_ids }}"
-            asset_replication_config:
-              enable_jobs: {{ enable_jobs }}
-              enable_clusters: {{ enable_clusters }}
-              enable_warehouse: {{ enable_warehouse }}
-              enable_sql_workspace: {{ enable_sql_workspace }}
-              enable_libraries: {{ enable_libraries }}
-              enable_notebooks: {{ enable_notebooks }}
-              enable_files: {{ enable_files }}
-              enable_queries: {{ enable_queries }}
-              enable_dashboards: {{ enable_dashboards }}
-            replicate_workspace_assets: {{ replicate_workspace_assets }}
-            stable_url_names: "{{ stable_url_names }}"
-        initial_primary_region: "{{ initial_primary_region }}"
-        create_time: "{{ create_time }}"
-        effective_primary_region: "{{ effective_primary_region }}"
-        etag: "{{ etag }}"
-        name: "{{ name }}"
-        replication_point: "{{ replication_point }}"
-        state: "{{ state }}"
-        unity_catalog_assets:
-          catalogs:
-            - name: "{{ name }}"
-          data_replication_workspace_set: "{{ data_replication_workspace_set }}"
-          location_mappings:
-            - name: "{{ name }}"
-              uri_by_region: "{{ uri_by_region }}"
-        update_time: "{{ update_time }}"
+        data_replication_workspace_set: "{{ data_replication_workspace_set }}"
+        location_mappings:
+          - name: "{{ name }}"
+            uri_by_region: "{{ uri_by_region }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time at which this failover group was last modified.
     - name: validate_only
       value: {{ validate_only }}
       description: When true, validates the request without creating the failover group.
@@ -472,24 +688,66 @@ Update a failover group.
 ```sql
 UPDATE databricks_account.disasterrecovery.failover_groups
 SET 
-failover_group = '{{ failover_group }}'
+regions = '{{ regions }}',
+workspace_sets = '{{ workspace_sets }}',
+initial_primary_region = '{{ initial_primary_region }}',
+create_time = '{{ create_time }}',
+effective_primary_region = '{{ effective_primary_region }}',
+etag = '{{ etag }}',
+has_replication_point_blocking_errors = {{ has_replication_point_blocking_errors }},
+initial_replication_progress = '{{ initial_replication_progress }}',
+name = '{{ name }}',
+replication_point = '{{ replication_point }}',
+state = '{{ state }}',
+unity_catalog_assets = '{{ unity_catalog_assets }}',
+update_time = '{{ update_time }}'
 WHERE 
-name = '{{ name }}' --required
+account_id = '{{ account_id }}' --required
+AND failover_group_id = '{{ failover_group_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
-AND failover_group = '{{ failover_group }}' --required
+AND account_host = '{{ account_host }}' --required
+AND regions = '{{ regions }}' --required
+AND workspace_sets = '{{ workspace_sets }}' --required
+AND initial_primary_region = '{{ initial_primary_region }}' --required
 AND etag = '{{ etag}}'
 RETURNING
 name,
 create_time,
 effective_primary_region,
 etag,
+has_replication_point_blocking_errors,
 initial_primary_region,
+initial_replication_progress,
 regions,
 replication_point,
 state,
 unity_catalog_assets,
 update_time,
 workspace_sets;
+```
+</TabItem>
+</Tabs>
+
+
+## `DELETE` examples
+
+<Tabs
+    defaultValue="delete"
+    values={[
+        { label: 'delete', value: 'delete' }
+    ]}
+>
+<TabItem value="delete">
+
+Delete a failover group.
+
+```sql
+DELETE FROM databricks_account.disasterrecovery.failover_groups
+WHERE account_id = '{{ account_id }}' --required
+AND failover_group_id = '{{ failover_group_id }}' --required
+AND account_host = '{{ account_host }}' --required
+AND etag = '{{ etag }}'
+;
 ```
 </TabItem>
 </Tabs>
@@ -509,7 +767,9 @@ Initiate a failover to a new primary region.
 
 ```sql
 EXEC databricks_account.disasterrecovery.failover_groups.failover 
-@name='{{ name }}' --required 
+@account_id='{{ account_id }}' --required, 
+@failover_group_id='{{ failover_group_id }}' --required, 
+@account_host='{{ account_host }}' --required 
 @@json=
 '{
 "target_primary_region": "{{ target_primary_region }}", 

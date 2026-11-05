@@ -76,7 +76,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-resource"><code>resource</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-resource"><code>resource</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets all the roles that can be granted on an account level resource. A role is grantable if the rule</td>
 </tr>
@@ -99,12 +99,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-resource">
     <td><CopyableCode code="resource" /></td>
     <td><code>string</code></td>
     <td>The resource name for which assignable roles will be listed. Examples | Summary :--- | :--- ``resource=accounts/&lt;ACCOUNT_ID&gt;`` | A resource name for the account. ``resource=accounts/&lt;ACCOUNT_ID&gt;/groups/&lt;GROUP_ID&gt;`` | A resource name for the group. ``resource=accounts/&lt;ACCOUNT_ID&gt;/servicePrincipals/&lt;SP_ID&gt;`` | A resource name for the service principal. ``resource=accounts/&lt;ACCOUNT_ID&gt;/tagPolicies/&lt;TAG_POLICY_ID&gt;`` | A resource name for the tag policy.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -127,6 +132,7 @@ roles
 FROM databricks_workspace.iam.assignable_roles
 WHERE resource = '{{ resource }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>

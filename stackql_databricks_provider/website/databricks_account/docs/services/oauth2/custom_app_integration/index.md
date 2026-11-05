@@ -59,11 +59,6 @@ The following fields are returned by `SELECT` queries:
     "description": "ID of this custom app"
   },
   {
-    "name": "principal_id",
-    "type": "integer",
-    "description": "The principal id of the service principal associated with this OAuth app."
-  },
-  {
     "name": "confidential",
     "type": "boolean",
     "description": "This field indicates whether an OAuth client secret is required to authenticate this client."
@@ -144,11 +139,6 @@ The following fields are returned by `SELECT` queries:
     "name": "integration_id",
     "type": "string",
     "description": "ID of this custom app"
-  },
-  {
-    "name": "principal_id",
-    "type": "integer",
-    "description": "The principal id of the service principal associated with this OAuth app."
   },
   {
     "name": "confidential",
@@ -234,35 +224,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#custom_app_integration_get"><CopyableCode code="custom_app_integration_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets the Custom OAuth App Integration for the given integration id.</td>
 </tr>
 <tr>
     <td><a href="#custom_app_integration_list"><CopyableCode code="custom_app_integration_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
-    <td><a href="#parameter-include_creator_username"><code>include_creator_username</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-search_keyword"><code>search_keyword</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td><a href="#parameter-include_creator_username"><code>include_creator_username</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Get the list of custom OAuth app integrations for the specified Databricks account</td>
 </tr>
 <tr>
     <td><a href="#custom_app_integration_create"><CopyableCode code="custom_app_integration_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Create Custom OAuth App Integration.</td>
 </tr>
 <tr>
     <td><a href="#custom_app_integration_update"><CopyableCode code="custom_app_integration_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing custom OAuth App Integration. You can retrieve the custom OAuth app integration</td>
 </tr>
 <tr>
     <td><a href="#custom_app_integration_delete"><CopyableCode code="custom_app_integration_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Delete an existing Custom OAuth App Integration. You can retrieve the custom OAuth app integration via</td>
 </tr>
@@ -282,6 +272,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -307,11 +302,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>string</code></td>
     <td></td>
 </tr>
-<tr id="parameter-search_keyword">
-    <td><CopyableCode code="search_keyword" /></td>
-    <td><code>string</code></td>
-    <td>Search term to filter app integrations (case-insensitive substring match). Matches if the display name, the OAuth client_id (a UUID for custom apps or a stable string like "databricks-cli" for published apps), or the integration id contains the term.</td>
-</tr>
 </tbody>
 </table>
 
@@ -333,7 +323,6 @@ SELECT
 name,
 client_id,
 integration_id,
-principal_id,
 confidential,
 create_time,
 created_by,
@@ -345,6 +334,7 @@ user_authorized_scopes
 FROM databricks_account.oauth2.custom_app_integration
 WHERE account_id = '{{ account_id }}' -- required
 AND integration_id = '{{ integration_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -357,7 +347,6 @@ SELECT
 name,
 client_id,
 integration_id,
-principal_id,
 confidential,
 create_time,
 created_by,
@@ -368,10 +357,10 @@ token_access_policy,
 user_authorized_scopes
 FROM databricks_account.oauth2.custom_app_integration
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND include_creator_username = '{{ include_creator_username }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
-AND search_keyword = '{{ search_keyword }}'
 ;
 ```
 </TabItem>
@@ -394,29 +383,27 @@ Create Custom OAuth App Integration.
 ```sql
 INSERT INTO databricks_account.oauth2.custom_app_integration (
 confidential,
-is_agent,
 name,
 redirect_urls,
 scopes,
 token_access_policy,
 user_authorized_scopes,
-account_id
+account_id,
+account_host
 )
 SELECT 
 {{ confidential }},
-{{ is_agent }},
 '{{ name }}',
 '{{ redirect_urls }}',
 '{{ scopes }}',
 '{{ token_access_policy }}',
 '{{ user_authorized_scopes }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 client_id,
 integration_id,
-principal_id,
-client_secret,
-client_secret_expire_time
+client_secret
 ;
 ```
 </TabItem>
@@ -428,14 +415,13 @@ client_secret_expire_time
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the custom_app_integration resource.
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the custom_app_integration resource.
     - name: confidential
       value: {{ confidential }}
       description: |
         This field indicates whether an OAuth client secret is required to authenticate this client.
-    - name: is_agent
-      value: {{ is_agent }}
-      description: |
-        When true, the custom OAuth app integration is backed by an agent service principal instead of a standard application service principal. The public surface stays a simple boolean; the server maps it to the internal OAuthClientApp.agent message.
     - name: name
       value: "{{ name }}"
       description: |
@@ -490,7 +476,8 @@ token_access_policy = '{{ token_access_policy }}',
 user_authorized_scopes = '{{ user_authorized_scopes }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND integration_id = '{{ integration_id }}' --required;
+AND integration_id = '{{ integration_id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -512,6 +499,7 @@ Delete an existing Custom OAuth App Integration. You can retrieve the custom OAu
 DELETE FROM databricks_account.oauth2.custom_app_integration
 WHERE account_id = '{{ account_id }}' --required
 AND integration_id = '{{ integration_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

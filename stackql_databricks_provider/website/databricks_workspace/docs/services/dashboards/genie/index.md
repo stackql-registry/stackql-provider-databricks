@@ -38,7 +38,6 @@ The following fields are returned by `SELECT` queries:
     values={[
         { label: 'genie_list_message_comments', value: 'genie_list_message_comments' },
         { label: 'genie_list_conversation_comments', value: 'genie_list_conversation_comments' },
-        { label: 'genie_download_message_attachment_visualization', value: 'genie_download_message_attachment_visualization' },
         { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
@@ -147,10 +146,6 @@ The following fields are returned by `SELECT` queries:
   }
 ]} />
 </TabItem>
-<TabItem value="genie_download_message_attachment_visualization">
-
-<SchemaTable fields={[]} />
-</TabItem>
 <TabItem value="get">
 
 <SchemaTable fields={[
@@ -163,6 +158,11 @@ The following fields are returned by `SELECT` queries:
     "name": "warehouse_id",
     "type": "string",
     "description": "Warehouse associated with the Genie Space"
+  },
+  {
+    "name": "create_time",
+    "type": "string (date-time)",
+    "description": "Time when the Genie space was created."
   },
   {
     "name": "description",
@@ -188,6 +188,11 @@ The following fields are returned by `SELECT` queries:
     "name": "title",
     "type": "string",
     "description": "Title of the Genie Space"
+  },
+  {
+    "name": "update_time",
+    "type": "string (date-time)",
+    "description": "Time when the Genie space was last modified, matching the value shown in the Genie Agent UI."
   }
 ]} />
 </TabItem>
@@ -215,6 +220,11 @@ The following fields are returned by `SELECT` queries:
         "description": "Title of the Genie Space"
       },
       {
+        "name": "create_time",
+        "type": "string (date-time)",
+        "description": "Time when the Genie space was created."
+      },
+      {
         "name": "description",
         "type": "string",
         "description": "Description of the Genie Space"
@@ -233,6 +243,11 @@ The following fields are returned by `SELECT` queries:
         "name": "serialized_space",
         "type": "string",
         "description": "The contents of the Genie Space in serialized string form. This field is excluded in List Genie spaces responses. Use the [Get Genie Space](:method:genie/getspace) API to retrieve an example response, which includes the ``serialized_space`` field. This field provides the structure of the JSON string that represents the space's layout and components."
+      },
+      {
+        "name": "update_time",
+        "type": "string (date-time)",
+        "description": "Time when the Genie space was last modified, matching the value shown in the Genie Agent UI."
       },
       {
         "name": "warehouse_id",
@@ -263,63 +278,56 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#genie_list_message_comments"><CopyableCode code="genie_list_message_comments" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List comments on a specific conversation message.</td>
 </tr>
 <tr>
     <td><a href="#genie_list_conversation_comments"><CopyableCode code="genie_list_conversation_comments" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all comments across all messages in a conversation.</td>
 </tr>
 <tr>
-    <td><a href="#genie_download_message_attachment_visualization"><CopyableCode code="genie_download_message_attachment_visualization" /></a></td>
-    <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td></td>
-    <td>Download a rendered image of a message visualization attachment. The response body is the raw PNG</td>
-</tr>
-<tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_serialized_space"><code>include_serialized_space</code></a></td>
     <td>Get details of a Genie Space.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Get list of Genie Spaces.</td>
 </tr>
 <tr>
     <td><a href="#genie_create_message_comment"><CopyableCode code="genie_create_message_comment" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-content"><code>content</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-content"><code>content</code></a></td>
     <td></td>
     <td>Create a comment on a conversation message.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-warehouse_id"><code>warehouse_id</code></a>, <a href="#parameter-serialized_space"><code>serialized_space</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-warehouse_id"><code>warehouse_id</code></a>, <a href="#parameter-serialized_space"><code>serialized_space</code></a></td>
     <td></td>
     <td>Creates a Genie space from a serialized payload.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates a Genie space with a serialized payload.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Move a Genie Space to the trash.</td>
 </tr>
@@ -347,22 +355,22 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-message_id">
     <td><CopyableCode code="message_id" /></td>
     <td><code>string</code></td>
     <td>The ID associated with the message.</td>
 </tr>
-<tr id="parameter-name">
-    <td><CopyableCode code="name" /></td>
-    <td><code>string</code></td>
-    <td>The resource name of the attachment to render, in the format ``spaces/&#123;space_id&#125;/conversations/&#123;conversation_id&#125;/messages/&#123;message_id&#125;/attachments/&#123;attachment_id&#125;``.</td>
-</tr>
 <tr id="parameter-space_id">
     <td><CopyableCode code="space_id" /></td>
     <td><code>string</code></td>
     <td>The ID associated with the Genie space to be sent to the trash.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-include_serialized_space">
     <td><CopyableCode code="include_serialized_space" /></td>
@@ -389,7 +397,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     values={[
         { label: 'genie_list_message_comments', value: 'genie_list_message_comments' },
         { label: 'genie_list_conversation_comments', value: 'genie_list_conversation_comments' },
-        { label: 'genie_download_message_attachment_visualization', value: 'genie_download_message_attachment_visualization' },
         { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
@@ -407,6 +414,7 @@ WHERE space_id = '{{ space_id }}' -- required
 AND conversation_id = '{{ conversation_id }}' -- required
 AND message_id = '{{ message_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -424,21 +432,9 @@ FROM databricks_workspace.dashboards.genie
 WHERE space_id = '{{ space_id }}' -- required
 AND conversation_id = '{{ conversation_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
-;
-```
-</TabItem>
-<TabItem value="genie_download_message_attachment_visualization">
-
-Download a rendered image of a message visualization attachment. The response body is the raw PNG
-
-```sql
-SELECT
-*
-FROM databricks_workspace.dashboards.genie
-WHERE name = '{{ name }}' -- required
-AND deployment_name = '{{ deployment_name }}' -- required
 ;
 ```
 </TabItem>
@@ -450,14 +446,17 @@ Get details of a Genie Space.
 SELECT
 space_id,
 warehouse_id,
+create_time,
 description,
 etag,
 parent_path,
 serialized_space,
-title
+title,
+update_time
 FROM databricks_workspace.dashboards.genie
 WHERE space_id = '{{ space_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_serialized_space = '{{ include_serialized_space }}'
 ;
 ```
@@ -472,6 +471,7 @@ next_page_token,
 spaces
 FROM databricks_workspace.dashboards.genie
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -500,14 +500,16 @@ content,
 space_id,
 conversation_id,
 message_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ content }}' /* required */,
 '{{ space_id }}',
 '{{ conversation_id }}',
 '{{ message_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 conversation_id,
 message_comment_id,
@@ -530,7 +532,8 @@ serialized_space,
 description,
 parent_path,
 title,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ warehouse_id }}' /* required */,
@@ -538,15 +541,18 @@ SELECT
 '{{ description }}',
 '{{ parent_path }}',
 '{{ title }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 space_id,
 warehouse_id,
+create_time,
 description,
 etag,
 parent_path,
 serialized_space,
-title
+title,
+update_time
 ;
 ```
 </TabItem>
@@ -566,6 +572,9 @@ title
       description: Required parameter for the genie resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the genie resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the genie resource.
     - name: content
       value: "{{ content }}"
@@ -621,14 +630,17 @@ warehouse_id = '{{ warehouse_id }}'
 WHERE 
 space_id = '{{ space_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 space_id,
 warehouse_id,
+create_time,
 description,
 etag,
 parent_path,
 serialized_space,
-title;
+title,
+update_time;
 ```
 </TabItem>
 </Tabs>
@@ -650,6 +662,7 @@ Move a Genie Space to the trash.
 DELETE FROM databricks_workspace.dashboards.genie
 WHERE space_id = '{{ space_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

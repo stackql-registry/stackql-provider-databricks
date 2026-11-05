@@ -224,28 +224,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#vpc_endpoints_get"><CopyableCode code="vpc_endpoints_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-vpc_endpoint_id"><code>vpc_endpoint_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-vpc_endpoint_id"><code>vpc_endpoint_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a VPC endpoint configuration, which represents a `VPC endpoint</td>
 </tr>
 <tr>
     <td><a href="#vpc_endpoints_list"><CopyableCode code="vpc_endpoints_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Lists Databricks VPC endpoint configurations for an account.</td>
 </tr>
 <tr>
     <td><a href="#vpc_endpoints_create"><CopyableCode code="vpc_endpoints_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a VPC endpoint configuration, which represents a `VPC endpoint</td>
 </tr>
 <tr>
     <td><a href="#vpc_endpoints_delete"><CopyableCode code="vpc_endpoints_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-vpc_endpoint_id"><code>vpc_endpoint_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-vpc_endpoint_id"><code>vpc_endpoint_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a Databricks VPC endpoint configuration. You cannot delete a VPC endpoint configuration that</td>
 </tr>
@@ -265,6 +265,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -306,6 +311,7 @@ use_case
 FROM databricks_account.provisioning.vpc_endpoints
 WHERE account_id = '{{ account_id }}' -- required
 AND vpc_endpoint_id = '{{ vpc_endpoint_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -327,6 +333,7 @@ state,
 use_case
 FROM databricks_account.provisioning.vpc_endpoints
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -352,14 +359,16 @@ aws_vpc_endpoint_id,
 gcp_vpc_endpoint_info,
 region,
 vpc_endpoint_name,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ aws_vpc_endpoint_id }}',
 '{{ gcp_vpc_endpoint_info }}',
 '{{ region }}',
 '{{ vpc_endpoint_name }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 aws_account_id,
@@ -381,6 +390,9 @@ use_case
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the vpc_endpoints resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the vpc_endpoints resource.
     - name: aws_vpc_endpoint_id
       value: "{{ aws_vpc_endpoint_id }}"
@@ -425,6 +437,7 @@ Deletes a Databricks VPC endpoint configuration. You cannot delete a VPC endpoin
 DELETE FROM databricks_account.provisioning.vpc_endpoints
 WHERE account_id = '{{ account_id }}' --required
 AND vpc_endpoint_id = '{{ vpc_endpoint_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

@@ -138,7 +138,6 @@ SELECT
   JSON_EXTRACT(m.value, '$.type') AS member_type
 FROM databricks_workspace.iam.groups_v2 g,
      JSON_EACH(g.members) m
-WHERE g.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -155,7 +154,6 @@ SELECT
   m.value->>'type' AS member_type
 FROM databricks_workspace.iam.groups_v2 g,
      jsonb_array_elements(g.members::jsonb) AS m
-WHERE g.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

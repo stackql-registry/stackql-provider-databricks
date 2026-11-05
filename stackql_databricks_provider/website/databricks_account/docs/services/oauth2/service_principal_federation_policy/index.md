@@ -71,7 +71,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "oidc_policy",
     "type": "object",
-    "description": "Specifies the policy to use for validating OIDC claims in your federated tokens.",
+    "description": "audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC policy configuration is captured in create/update audit logs (see go/auditlogs).",
     "children": [
       {
         "name": "audiences",
@@ -148,7 +148,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "oidc_policy",
     "type": "object",
-    "description": "Specifies the policy to use for validating OIDC claims in your federated tokens.",
+    "description": "audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC policy configuration is captured in create/update audit logs (see go/auditlogs).",
     "children": [
       {
         "name": "audiences",
@@ -214,35 +214,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#service_principal_federation_policy_get"><CopyableCode code="service_principal_federation_policy_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Get account federation policy.</td>
 </tr>
 <tr>
     <td><a href="#service_principal_federation_policy_list"><CopyableCode code="service_principal_federation_policy_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List account federation policies.</td>
 </tr>
 <tr>
     <td><a href="#service_principal_federation_policy_create"><CopyableCode code="service_principal_federation_policy_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-policy_id"><code>policy_id</code></a></td>
     <td>Create account federation policy.</td>
 </tr>
 <tr>
     <td><a href="#service_principal_federation_policy_update"><CopyableCode code="service_principal_federation_policy_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td>Update account federation policy.</td>
 </tr>
 <tr>
     <td><a href="#service_principal_federation_policy_delete"><CopyableCode code="service_principal_federation_policy_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-policy_id"><code>policy_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Delete account federation policy.</td>
 </tr>
@@ -262,6 +262,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -327,6 +332,7 @@ FROM databricks_account.oauth2.service_principal_federation_policy
 WHERE account_id = '{{ account_id }}' -- required
 AND service_principal_id = '{{ service_principal_id }}' -- required
 AND policy_id = '{{ policy_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -347,6 +353,7 @@ update_time
 FROM databricks_account.oauth2.service_principal_federation_policy
 WHERE account_id = '{{ account_id }}' -- required
 AND service_principal_id = '{{ service_principal_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -370,15 +377,31 @@ Create account federation policy.
 
 ```sql
 INSERT INTO databricks_account.oauth2.service_principal_federation_policy (
-policy,
+create_time,
+description,
+name,
+oidc_policy,
+policy_id,
+service_principal_id,
+uid,
+update_time,
 account_id,
 service_principal_id,
+account_host,
 policy_id
 )
 SELECT 
-'{{ policy }}' /* required */,
+'{{ create_time }}',
+'{{ description }}',
+'{{ name }}',
+'{{ oidc_policy }}',
+'{{ policy_id }}',
+{{ service_principal_id }},
+'{{ uid }}',
+'{{ update_time }}',
 '{{ account_id }}',
-'{{ service_principal_id }}',
+{{ service_principal_id }},
+'{{ account_host }}',
 '{{ policy_id }}'
 RETURNING
 name,
@@ -403,23 +426,46 @@ update_time
     - name: service_principal_id
       value: {{ service_principal_id }}
       description: Required parameter for the service_principal_federation_policy resource.
-    - name: policy
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the service_principal_federation_policy resource.
+    - name: create_time
+      value: "{{ create_time }}"
+    - name: description
+      value: "{{ description }}"
+      description: |
+        Description of the federation policy.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Resource name for the federation policy. Example values include \`\`accounts/<account-id>/federationPolicies/my-federation-policy\`\` for Account Federation Policies, and \`\`accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy\`\` for Service Principal Federation Policies. Typically an output parameter, which does not need to be specified in create or update requests. If specified in a request, must match the value in the request URL.
+    - name: oidc_policy
+      description: |
+        audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC policy configuration is captured in create/update audit logs (see go/auditlogs).
       value:
-        create_time: "{{ create_time }}"
-        description: "{{ description }}"
-        name: "{{ name }}"
-        oidc_policy:
-          audiences:
-            - "{{ audiences }}"
-          issuer: "{{ issuer }}"
-          jwks_json: "{{ jwks_json }}"
-          jwks_uri: "{{ jwks_uri }}"
-          subject: "{{ subject }}"
-          subject_claim: "{{ subject_claim }}"
-        policy_id: "{{ policy_id }}"
-        service_principal_id: {{ service_principal_id }}
-        uid: "{{ uid }}"
-        update_time: "{{ update_time }}"
+        audiences:
+          - "{{ audiences }}"
+        issuer: "{{ issuer }}"
+        jwks_json: "{{ jwks_json }}"
+        jwks_uri: "{{ jwks_uri }}"
+        subject: "{{ subject }}"
+        subject_claim: "{{ subject_claim }}"
+    - name: policy_id
+      value: "{{ policy_id }}"
+      description: |
+        The ID of the federation policy. Output only.
+    - name: service_principal_id
+      value: {{ service_principal_id }}
+      description: |
+        The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies.
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        Unique, immutable id of the federation policy.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Last update time of the federation policy.
     - name: policy_id
       value: "{{ policy_id }}"
       description: The identifier for the federation policy. The identifier must contain only lowercase alphanumeric characters, numbers, hyphens, and slashes. If unspecified, the id will be assigned by Databricks.
@@ -445,12 +491,19 @@ Update account federation policy.
 ```sql
 UPDATE databricks_account.oauth2.service_principal_federation_policy
 SET 
-policy = '{{ policy }}'
+create_time = '{{ create_time }}',
+description = '{{ description }}',
+name = '{{ name }}',
+oidc_policy = '{{ oidc_policy }}',
+policy_id = '{{ policy_id }}',
+service_principal_id = {{ service_principal_id }},
+uid = '{{ uid }}',
+update_time = '{{ update_time }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND service_principal_id = '{{ service_principal_id }}' --required
 AND policy_id = '{{ policy_id }}' --required
-AND policy = '{{ policy }}' --required
+AND account_host = '{{ account_host }}' --required
 AND update_mask = '{{ update_mask}}'
 RETURNING
 name,
@@ -483,6 +536,7 @@ DELETE FROM databricks_account.oauth2.service_principal_federation_policy
 WHERE account_id = '{{ account_id }}' --required
 AND service_principal_id = '{{ service_principal_id }}' --required
 AND policy_id = '{{ policy_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

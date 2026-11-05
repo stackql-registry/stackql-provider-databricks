@@ -121,7 +121,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "using_arguments",
             "type": "array",
-            "description": "The list of additional table columns or literals to be passed as additional arguments to a column mask function. This is the replacement of the deprecated using_column_names field and carries information about the types (alias or constant) of the arguments to the mask function.",
+            "description": "The list of table columns or literals to be passed as additional arguments to a column mask function, carrying the type (column reference vs constant literal) of each argument. Deprecated: use using_column_names instead.",
             "children": [
               {
                 "name": "column",
@@ -175,7 +175,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "type_name",
         "type": "string",
-        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
       },
       {
         "name": "type_precision",
@@ -310,7 +310,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "input_arguments",
         "type": "array",
-        "description": "The list of additional table columns or literals to be passed as additional arguments to a row filter function. This is the replacement of the deprecated input_column_names field and carries information about the types (alias or constant) of the arguments to the filter function.",
+        "description": "The list of table columns or literals to be passed as additional arguments to a row filter function, carrying the type (column reference vs constant literal) of each argument. Deprecated: use input_column_names instead.",
         "children": [
           {
             "name": "column",
@@ -350,23 +350,6 @@ The following fields are returned by `SELECT` queries:
             "name": "allowed_values",
             "type": "array",
             "description": "For drop down / radio button selections, UI will want to know the possible input values, it can also be used by other option types to limit input selections."
-          },
-          {
-            "name": "conditional_display",
-            "type": "object",
-            "description": "Conditional display configuration. Specifies when this option should be hidden based on another option's value.",
-            "children": [
-              {
-                "name": "depends_on_option",
-                "type": "string",
-                "description": "The name of the option whose value determines visibility of this option."
-              },
-              {
-                "name": "hidden_when_values",
-                "type": "array",
-                "description": "The values of the depends_on_option that will hide this option. If empty or not set, this option follows default visibility (shown unless is_hidden is true). If depends_on_option has any of these values, this option is hidden."
-              }
-            ]
           },
           {
             "name": "default_value",
@@ -431,19 +414,19 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type",
             "type": "string",
-            "description": "The type of the option. (OPTION_BIGINT, OPTION_BOOLEAN, OPTION_ENUM, OPTION_MULTILINE_STRING, OPTION_NUMBER, OPTION_SERVICE_CREDENTIAL, OPTION_STORAGE_CREDENTIAL, OPTION_STRING)"
+            "description": "The type of the option. (OPTION_BIGINT, OPTION_BOOLEAN, OPTION_ENUM, OPTION_MULTILINE_STRING, OPTION_NUMBER, OPTION_SERVICE_CREDENTIAL, OPTION_STRING)"
           }
         ]
       },
       {
         "name": "securable_kind",
         "type": "string",
-        "description": "Securable kind to get manifest of. (CATALOG_FOREIGN_BIGLAKE, CATALOG_FOREIGN_GOOGLE_CLOUD_LAKEHOUSE, CATALOG_FOREIGN_ICEBERG_REST, CONNECTION_BIGLAKE_SERVICE_ACCOUNT, CONNECTION_COMMUNITY_OAUTH_M2M, CONNECTION_COMMUNITY_OAUTH_U2M, CONNECTION_COMMUNITY_OAUTH_U2M_MAPPING, CONNECTION_GOOGLE_CLOUD_LAKEHOUSE_OAUTH_U2M, CONNECTION_GOOGLE_CLOUD_LAKEHOUSE_SERVICE_ACCOUNT, CONNECTION_ICEBERG_REST_BEARER_TOKEN, CONNECTION_ICEBERG_REST_OAUTH_M2M, RECIPIENT_EMAIL, RECIPIENT_EMAIL_DATABRICKS, RECIPIENT_EMAIL_TOKEN, SCHEMA_FOREIGN_BIGLAKE, SCHEMA_FOREIGN_GOOGLE_CLOUD_LAKEHOUSE, SCHEMA_FOREIGN_ICEBERG_REST, TABLE_DB_STORAGE, TABLE_DELTA, TABLE_DELTASHARING, TABLE_DELTASHARING_MUTABLE, TABLE_DELTASHARING_OPEN_DIR_BASED, TABLE_DELTA_EXTERNAL, TABLE_DELTA_ICEBERG_DELTASHARING, TABLE_DELTA_ICEBERG_MANAGED, TABLE_DELTA_UNIFORM_HUDI_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_SNOWFLAKE, TABLE_EXTERNAL, TABLE_FEATURE_STORE, TABLE_FEATURE_STORE_EXTERNAL, TABLE_FOREIGN_BIGLAKE, TABLE_FOREIGN_BIGQUERY, TABLE_FOREIGN_DATABRICKS, TABLE_FOREIGN_DELTASHARING, TABLE_FOREIGN_DELTA_DELTASHARING, TABLE_FOREIGN_GOOGLE_CLOUD_LAKEHOUSE, TABLE_FOREIGN_HIVE_METASTORE, TABLE_FOREIGN_HIVE_METASTORE_DBFS_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_VIEW, TABLE_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_VIEW, TABLE_FOREIGN_ICEBERG_REST, TABLE_FOREIGN_MONGODB, TABLE_FOREIGN_MYSQL, TABLE_FOREIGN_NETSUITE, TABLE_FOREIGN_ORACLE, TABLE_FOREIGN_PALANTIR, TABLE_FOREIGN_POSTGRESQL, TABLE_FOREIGN_REDSHIFT, TABLE_FOREIGN_SALESFORCE, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING_VIEW, TABLE_FOREIGN_SNOWFLAKE, TABLE_FOREIGN_SQLDW, TABLE_FOREIGN_SQLSERVER, TABLE_FOREIGN_TERADATA, TABLE_FOREIGN_WORKDAY_RAAS, TABLE_ICEBERG_UNIFORM_MANAGED, TABLE_INTERNAL, TABLE_MANAGED_POSTGRESQL, TABLE_MATERIALIZED_VIEW, TABLE_MATERIALIZED_VIEW_DELTASHARING, TABLE_METRIC_VIEW, TABLE_METRIC_VIEW_DELTASHARING, TABLE_ONLINE_VECTOR_INDEX_DIRECT, TABLE_ONLINE_VECTOR_INDEX_REPLICA, TABLE_ONLINE_VIEW, TABLE_STANDARD, TABLE_STREAMING_LIVE_TABLE, TABLE_STREAMING_LIVE_TABLE_DELTASHARING, TABLE_SYSTEM, TABLE_SYSTEM_DELTASHARING, TABLE_VIEW, TABLE_VIEW_DELTASHARING)"
+        "description": "Securable kind to get manifest of. (TABLE_DB_STORAGE, TABLE_DELTA, TABLE_DELTASHARING, TABLE_DELTASHARING_MUTABLE, TABLE_DELTASHARING_OPEN_DIR_BASED, TABLE_DELTA_EXTERNAL, TABLE_DELTA_ICEBERG_DELTASHARING, TABLE_DELTA_ICEBERG_MANAGED, TABLE_DELTA_UNIFORM_HUDI_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_SNOWFLAKE, TABLE_EXTERNAL, TABLE_FEATURE_STORE, TABLE_FEATURE_STORE_EXTERNAL, TABLE_FOREIGN_BIGQUERY, TABLE_FOREIGN_DATABRICKS, TABLE_FOREIGN_DELTASHARING, TABLE_FOREIGN_DELTA_DELTASHARING, TABLE_FOREIGN_HIVE_METASTORE, TABLE_FOREIGN_HIVE_METASTORE_DBFS_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_VIEW, TABLE_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_VIEW, TABLE_FOREIGN_MONGODB, TABLE_FOREIGN_MYSQL, TABLE_FOREIGN_NETSUITE, TABLE_FOREIGN_ORACLE, TABLE_FOREIGN_POSTGRESQL, TABLE_FOREIGN_REDSHIFT, TABLE_FOREIGN_SALESFORCE, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING_VIEW, TABLE_FOREIGN_SNOWFLAKE, TABLE_FOREIGN_SQLDW, TABLE_FOREIGN_SQLSERVER, TABLE_FOREIGN_TERADATA, TABLE_FOREIGN_WORKDAY_RAAS, TABLE_ICEBERG_UNIFORM_MANAGED, TABLE_INTERNAL, TABLE_MANAGED_POSTGRESQL, TABLE_MATERIALIZED_VIEW, TABLE_MATERIALIZED_VIEW_DELTASHARING, TABLE_METRIC_VIEW, TABLE_METRIC_VIEW_DELTASHARING, TABLE_ONLINE_VECTOR_INDEX_DIRECT, TABLE_ONLINE_VECTOR_INDEX_REPLICA, TABLE_ONLINE_VIEW, TABLE_STANDARD, TABLE_STREAMING_LIVE_TABLE, TABLE_STREAMING_LIVE_TABLE_DELTASHARING, TABLE_SYSTEM, TABLE_SYSTEM_DELTASHARING, TABLE_VIEW, TABLE_VIEW_DELTASHARING)"
       },
       {
         "name": "securable_type",
         "type": "string",
-        "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+        "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
       }
     ]
   },
@@ -602,23 +585,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -627,18 +593,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -729,7 +683,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "using_arguments",
             "type": "array",
-            "description": "The list of additional table columns or literals to be passed as additional arguments to a column mask function. This is the replacement of the deprecated using_column_names field and carries information about the types (alias or constant) of the arguments to the mask function.",
+            "description": "The list of table columns or literals to be passed as additional arguments to a column mask function, carrying the type (column reference vs constant literal) of each argument. Deprecated: use using_column_names instead.",
             "children": [
               {
                 "name": "column",
@@ -783,7 +737,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "type_name",
         "type": "string",
-        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
       },
       {
         "name": "type_precision",
@@ -918,7 +872,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "input_arguments",
         "type": "array",
-        "description": "The list of additional table columns or literals to be passed as additional arguments to a row filter function. This is the replacement of the deprecated input_column_names field and carries information about the types (alias or constant) of the arguments to the filter function.",
+        "description": "The list of table columns or literals to be passed as additional arguments to a row filter function, carrying the type (column reference vs constant literal) of each argument. Deprecated: use input_column_names instead.",
         "children": [
           {
             "name": "column",
@@ -958,23 +912,6 @@ The following fields are returned by `SELECT` queries:
             "name": "allowed_values",
             "type": "array",
             "description": "For drop down / radio button selections, UI will want to know the possible input values, it can also be used by other option types to limit input selections."
-          },
-          {
-            "name": "conditional_display",
-            "type": "object",
-            "description": "Conditional display configuration. Specifies when this option should be hidden based on another option's value.",
-            "children": [
-              {
-                "name": "depends_on_option",
-                "type": "string",
-                "description": "The name of the option whose value determines visibility of this option."
-              },
-              {
-                "name": "hidden_when_values",
-                "type": "array",
-                "description": "The values of the depends_on_option that will hide this option. If empty or not set, this option follows default visibility (shown unless is_hidden is true). If depends_on_option has any of these values, this option is hidden."
-              }
-            ]
           },
           {
             "name": "default_value",
@@ -1039,19 +976,19 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type",
             "type": "string",
-            "description": "The type of the option. (OPTION_BIGINT, OPTION_BOOLEAN, OPTION_ENUM, OPTION_MULTILINE_STRING, OPTION_NUMBER, OPTION_SERVICE_CREDENTIAL, OPTION_STORAGE_CREDENTIAL, OPTION_STRING)"
+            "description": "The type of the option. (OPTION_BIGINT, OPTION_BOOLEAN, OPTION_ENUM, OPTION_MULTILINE_STRING, OPTION_NUMBER, OPTION_SERVICE_CREDENTIAL, OPTION_STRING)"
           }
         ]
       },
       {
         "name": "securable_kind",
         "type": "string",
-        "description": "Securable kind to get manifest of. (CATALOG_FOREIGN_BIGLAKE, CATALOG_FOREIGN_GOOGLE_CLOUD_LAKEHOUSE, CATALOG_FOREIGN_ICEBERG_REST, CONNECTION_BIGLAKE_SERVICE_ACCOUNT, CONNECTION_COMMUNITY_OAUTH_M2M, CONNECTION_COMMUNITY_OAUTH_U2M, CONNECTION_COMMUNITY_OAUTH_U2M_MAPPING, CONNECTION_GOOGLE_CLOUD_LAKEHOUSE_OAUTH_U2M, CONNECTION_GOOGLE_CLOUD_LAKEHOUSE_SERVICE_ACCOUNT, CONNECTION_ICEBERG_REST_BEARER_TOKEN, CONNECTION_ICEBERG_REST_OAUTH_M2M, RECIPIENT_EMAIL, RECIPIENT_EMAIL_DATABRICKS, RECIPIENT_EMAIL_TOKEN, SCHEMA_FOREIGN_BIGLAKE, SCHEMA_FOREIGN_GOOGLE_CLOUD_LAKEHOUSE, SCHEMA_FOREIGN_ICEBERG_REST, TABLE_DB_STORAGE, TABLE_DELTA, TABLE_DELTASHARING, TABLE_DELTASHARING_MUTABLE, TABLE_DELTASHARING_OPEN_DIR_BASED, TABLE_DELTA_EXTERNAL, TABLE_DELTA_ICEBERG_DELTASHARING, TABLE_DELTA_ICEBERG_MANAGED, TABLE_DELTA_UNIFORM_HUDI_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_SNOWFLAKE, TABLE_EXTERNAL, TABLE_FEATURE_STORE, TABLE_FEATURE_STORE_EXTERNAL, TABLE_FOREIGN_BIGLAKE, TABLE_FOREIGN_BIGQUERY, TABLE_FOREIGN_DATABRICKS, TABLE_FOREIGN_DELTASHARING, TABLE_FOREIGN_DELTA_DELTASHARING, TABLE_FOREIGN_GOOGLE_CLOUD_LAKEHOUSE, TABLE_FOREIGN_HIVE_METASTORE, TABLE_FOREIGN_HIVE_METASTORE_DBFS_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_VIEW, TABLE_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_VIEW, TABLE_FOREIGN_ICEBERG_REST, TABLE_FOREIGN_MONGODB, TABLE_FOREIGN_MYSQL, TABLE_FOREIGN_NETSUITE, TABLE_FOREIGN_ORACLE, TABLE_FOREIGN_PALANTIR, TABLE_FOREIGN_POSTGRESQL, TABLE_FOREIGN_REDSHIFT, TABLE_FOREIGN_SALESFORCE, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING_VIEW, TABLE_FOREIGN_SNOWFLAKE, TABLE_FOREIGN_SQLDW, TABLE_FOREIGN_SQLSERVER, TABLE_FOREIGN_TERADATA, TABLE_FOREIGN_WORKDAY_RAAS, TABLE_ICEBERG_UNIFORM_MANAGED, TABLE_INTERNAL, TABLE_MANAGED_POSTGRESQL, TABLE_MATERIALIZED_VIEW, TABLE_MATERIALIZED_VIEW_DELTASHARING, TABLE_METRIC_VIEW, TABLE_METRIC_VIEW_DELTASHARING, TABLE_ONLINE_VECTOR_INDEX_DIRECT, TABLE_ONLINE_VECTOR_INDEX_REPLICA, TABLE_ONLINE_VIEW, TABLE_STANDARD, TABLE_STREAMING_LIVE_TABLE, TABLE_STREAMING_LIVE_TABLE_DELTASHARING, TABLE_SYSTEM, TABLE_SYSTEM_DELTASHARING, TABLE_VIEW, TABLE_VIEW_DELTASHARING)"
+        "description": "Securable kind to get manifest of. (TABLE_DB_STORAGE, TABLE_DELTA, TABLE_DELTASHARING, TABLE_DELTASHARING_MUTABLE, TABLE_DELTASHARING_OPEN_DIR_BASED, TABLE_DELTA_EXTERNAL, TABLE_DELTA_ICEBERG_DELTASHARING, TABLE_DELTA_ICEBERG_MANAGED, TABLE_DELTA_UNIFORM_HUDI_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_EXTERNAL_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_DELTASHARING, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_DELTA_UNIFORM_ICEBERG_FOREIGN_SNOWFLAKE, TABLE_EXTERNAL, TABLE_FEATURE_STORE, TABLE_FEATURE_STORE_EXTERNAL, TABLE_FOREIGN_BIGQUERY, TABLE_FOREIGN_DATABRICKS, TABLE_FOREIGN_DELTASHARING, TABLE_FOREIGN_DELTA_DELTASHARING, TABLE_FOREIGN_HIVE_METASTORE, TABLE_FOREIGN_HIVE_METASTORE_DBFS_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_DBFS_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_DBFS_VIEW, TABLE_FOREIGN_HIVE_METASTORE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_EXTERNAL, TABLE_FOREIGN_HIVE_METASTORE_SHALLOW_CLONE_MANAGED, TABLE_FOREIGN_HIVE_METASTORE_VIEW, TABLE_FOREIGN_MONGODB, TABLE_FOREIGN_MYSQL, TABLE_FOREIGN_NETSUITE, TABLE_FOREIGN_ORACLE, TABLE_FOREIGN_POSTGRESQL, TABLE_FOREIGN_REDSHIFT, TABLE_FOREIGN_SALESFORCE, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING, TABLE_FOREIGN_SALESFORCE_DATA_CLOUD_FILE_SHARING_VIEW, TABLE_FOREIGN_SNOWFLAKE, TABLE_FOREIGN_SQLDW, TABLE_FOREIGN_SQLSERVER, TABLE_FOREIGN_TERADATA, TABLE_FOREIGN_WORKDAY_RAAS, TABLE_ICEBERG_UNIFORM_MANAGED, TABLE_INTERNAL, TABLE_MANAGED_POSTGRESQL, TABLE_MATERIALIZED_VIEW, TABLE_MATERIALIZED_VIEW_DELTASHARING, TABLE_METRIC_VIEW, TABLE_METRIC_VIEW_DELTASHARING, TABLE_ONLINE_VECTOR_INDEX_DIRECT, TABLE_ONLINE_VECTOR_INDEX_REPLICA, TABLE_ONLINE_VIEW, TABLE_STANDARD, TABLE_STREAMING_LIVE_TABLE, TABLE_STREAMING_LIVE_TABLE_DELTASHARING, TABLE_SYSTEM, TABLE_SYSTEM_DELTASHARING, TABLE_VIEW, TABLE_VIEW_DELTASHARING)"
       },
       {
         "name": "securable_type",
         "type": "string",
-        "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+        "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
       }
     ]
   },
@@ -1210,23 +1147,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -1235,18 +1155,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -1276,42 +1184,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-include_delta_metadata"><code>include_delta_metadata</code></a>, <a href="#parameter-include_manifest_capabilities"><code>include_manifest_capabilities</code></a></td>
     <td>Gets a table from the metastore for a specific catalog and schema. The caller must satisfy one of the</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-include_manifest_capabilities"><code>include_manifest_capabilities</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-omit_columns"><code>omit_columns</code></a>, <a href="#parameter-omit_properties"><code>omit_properties</code></a>, <a href="#parameter-omit_username"><code>omit_username</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of all tables for the current metastore under the parent catalog and schema. The caller</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-table_type"><code>table_type</code></a>, <a href="#parameter-data_source_format"><code>data_source_format</code></a>, <a href="#parameter-storage_location"><code>storage_location</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-table_type"><code>table_type</code></a>, <a href="#parameter-data_source_format"><code>data_source_format</code></a>, <a href="#parameter-storage_location"><code>storage_location</code></a></td>
     <td></td>
     <td>Creates a new table in the specified catalog and schema.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Change the owner of the table. The caller must be the owner of the parent catalog, have the</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a table from the specified parent catalog and schema. The caller must be the owner of the</td>
 </tr>
 <tr>
     <td><a href="#exists"><CopyableCode code="exists" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets if a table exists in the metastore for a specific catalog and schema. The caller must satisfy one</td>
 </tr>
@@ -1339,7 +1247,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-full_name">
     <td><CopyableCode code="full_name" /></td>
@@ -1350,6 +1258,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="schema_name" /></td>
     <td><code>string</code></td>
     <td>Parent schema of tables.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-include_browse">
     <td><CopyableCode code="include_browse" /></td>
@@ -1445,6 +1358,7 @@ view_dependencies
 FROM databricks_workspace.catalog.tables
 WHERE full_name = '{{ full_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 AND include_delta_metadata = '{{ include_delta_metadata }}'
 AND include_manifest_capabilities = '{{ include_manifest_capabilities }}'
@@ -1494,6 +1408,7 @@ FROM databricks_workspace.catalog.tables
 WHERE catalog_name = '{{ catalog_name }}' -- required
 AND schema_name = '{{ schema_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 AND include_manifest_capabilities = '{{ include_manifest_capabilities }}'
 AND max_results = '{{ max_results }}'
@@ -1530,7 +1445,8 @@ data_source_format,
 storage_location,
 columns,
 properties,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -1541,7 +1457,8 @@ SELECT
 '{{ storage_location }}' /* required */,
 '{{ columns }}',
 '{{ properties }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 data_access_configuration_id,
@@ -1586,6 +1503,9 @@ view_dependencies
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the tables resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the tables resource.
     - name: name
       value: "{{ name }}"
@@ -1683,7 +1603,8 @@ SET
 owner = '{{ owner }}'
 WHERE 
 full_name = '{{ full_name }}' --required
-AND deployment_name = '{{ deployment_name }}' --required;
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -1705,6 +1626,7 @@ Deletes a table from the specified parent catalog and schema. The caller must be
 DELETE FROM databricks_workspace.catalog.tables
 WHERE full_name = '{{ full_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -1726,7 +1648,8 @@ Gets if a table exists in the metastore for a specific catalog and schema. The c
 ```sql
 EXEC databricks_workspace.catalog.tables.exists 
 @full_name='{{ full_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

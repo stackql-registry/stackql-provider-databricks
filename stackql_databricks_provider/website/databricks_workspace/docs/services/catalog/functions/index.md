@@ -106,7 +106,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "data_type",
     "type": "string",
-    "description": "Scalar function return data type. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+    "description": "Scalar function return data type. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
   },
   {
     "name": "external_language",
@@ -141,7 +141,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type_name",
             "type": "string",
-            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
           },
           {
             "name": "position",
@@ -240,7 +240,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type_name",
             "type": "string",
-            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
           },
           {
             "name": "position",
@@ -304,7 +304,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "routine_dependencies",
     "type": "object",
-    "description": "function dependencies.",
+    "description": "Function dependencies. For external UDFs, dependencies may contain only credential, secret, or volume objects.",
     "children": [
       {
         "name": "dependencies",
@@ -348,23 +348,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -373,18 +356,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -485,7 +456,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "data_type",
     "type": "string",
-    "description": "Scalar function return data type. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+    "description": "Scalar function return data type. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
   },
   {
     "name": "external_language",
@@ -520,7 +491,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type_name",
             "type": "string",
-            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
           },
           {
             "name": "position",
@@ -619,7 +590,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type_name",
             "type": "string",
-            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FILE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLEREF_TYPE, TABLE_TYPE, TIME, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+            "description": "Name of type (INT, STRUCT, MAP, etc.) (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
           },
           {
             "name": "position",
@@ -683,7 +654,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "routine_dependencies",
     "type": "object",
-    "description": "function dependencies.",
+    "description": "Function dependencies. For external UDFs, dependencies may contain only credential, secret, or volume objects.",
     "children": [
       {
         "name": "dependencies",
@@ -727,23 +698,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -752,18 +706,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -818,35 +760,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a></td>
     <td>Gets a function from within a parent catalog and schema. For the fetch to succeed, the user must</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List functions within the specified parent catalog and schema. If the user is a metastore admin, all</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-function_info"><code>function_info</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-function_info"><code>function_info</code></a></td>
     <td></td>
     <td>**WARNING: This API is experimental and will change in future versions**</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the function that matches the supplied name. Only the owner of the function can be updated. If</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes the function that matches the supplied name. For the deletion to succeed, the user must</td>
 </tr>
@@ -874,7 +816,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -885,6 +827,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="schema_name" /></td>
     <td><code>string</code></td>
     <td>Parent schema of functions.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-force">
     <td><CopyableCode code="force" /></td>
@@ -957,6 +904,7 @@ updated_by
 FROM databricks_workspace.catalog.functions
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 ;
 ```
@@ -1001,6 +949,7 @@ FROM databricks_workspace.catalog.functions
 WHERE catalog_name = '{{ catalog_name }}' -- required
 AND schema_name = '{{ schema_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
@@ -1026,11 +975,13 @@ AND page_token = '{{ page_token }}'
 ```sql
 INSERT INTO databricks_workspace.catalog.functions (
 function_info,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ function_info }}' /* required */,
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 function_id,
@@ -1072,6 +1023,9 @@ updated_by
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the functions resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the functions resource.
     - name: function_info
       description: |
@@ -1130,13 +1084,8 @@ updated_by
                 credential_name: "{{ credential_name }}"
               function:
                 function_full_name: "{{ function_full_name }}"
-              metastore_name: "{{ metastore_name }}"
-              secret:
-                secret_full_name: "{{ secret_full_name }}"
               table:
                 table_full_name: "{{ table_full_name }}"
-              volume:
-                volume_full_name: "{{ volume_full_name }}"
         sql_path: "{{ sql_path }}"
 `}</CodeBlock>
 
@@ -1163,6 +1112,7 @@ owner = '{{ owner }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 name,
 function_id,
@@ -1215,6 +1165,7 @@ Deletes the function that matches the supplied name. For the deletion to succeed
 DELETE FROM databricks_workspace.catalog.functions
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND force = '{{ force }}'
 ;
 ```

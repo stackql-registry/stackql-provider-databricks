@@ -54,11 +54,6 @@ The following fields are returned by `SELECT` queries:
     "description": "The global UC metastore id of the data provider. This field is only present when the **authentication_type** is **DATABRICKS**. The identifier is of format **cloud**:**region**:**metastore-uuid**."
   },
   {
-    "name": "email_recipient_id",
-    "type": "string",
-    "description": "The ID of the email recipient this provider is being created to accept. Only valid on DATABRICKS CreateProvider when accepting an email invite."
-  },
-  {
     "name": "metastore_id",
     "type": "string",
     "description": "UUID of the provider's UC metastore. This field is only present when the **authentication_type** is **DATABRICKS**."
@@ -66,7 +61,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "authentication_type",
     "type": "string",
-    "description": "The delta sharing authentication type. (DATABRICKS, EMAIL, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
+    "description": "The delta sharing authentication type. (DATABRICKS, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
   },
   {
     "name": "cloud",
@@ -151,11 +146,6 @@ The following fields are returned by `SELECT` queries:
     "description": "The global UC metastore id of the data provider. This field is only present when the **authentication_type** is **DATABRICKS**. The identifier is of format **cloud**:**region**:**metastore-uuid**."
   },
   {
-    "name": "email_recipient_id",
-    "type": "string",
-    "description": "The ID of the email recipient this provider is being created to accept. Only valid on DATABRICKS CreateProvider when accepting an email invite."
-  },
-  {
     "name": "metastore_id",
     "type": "string",
     "description": "UUID of the provider's UC metastore. This field is only present when the **authentication_type** is **DATABRICKS**."
@@ -163,7 +153,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "authentication_type",
     "type": "string",
-    "description": "The delta sharing authentication type. (DATABRICKS, EMAIL, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
+    "description": "The delta sharing authentication type. (DATABRICKS, OAUTH_CLIENT_CREDENTIALS, OIDC_FEDERATION, TOKEN)"
   },
   {
     "name": "cloud",
@@ -254,35 +244,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a specific authentication provider. The caller must supply the name of the provider, and must</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-data_provider_global_metastore_id"><code>data_provider_global_metastore_id</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of available authentication providers. The caller must either be a metastore admin, have</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-authentication_type"><code>authentication_type</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-authentication_type"><code>authentication_type</code></a></td>
     <td></td>
     <td>Creates a new authentication provider minimally based on a name and authentication type. The caller</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the information for an authentication provider, if the caller is a metastore admin or is the</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes an authentication provider, if the caller is a metastore admin or is the owner of the</td>
 </tr>
@@ -305,12 +295,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Name of the provider.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-data_provider_global_metastore_id">
     <td><CopyableCode code="data_provider_global_metastore_id" /></td>
@@ -347,7 +342,6 @@ Gets a specific authentication provider. The caller must supply the name of the 
 SELECT
 name,
 data_provider_global_metastore_id,
-email_recipient_id,
 metastore_id,
 authentication_type,
 cloud,
@@ -363,6 +357,7 @@ updated_by
 FROM databricks_workspace.sharing.providers
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -374,7 +369,6 @@ Gets an array of available authentication providers. The caller must either be a
 SELECT
 name,
 data_provider_global_metastore_id,
-email_recipient_id,
 metastore_id,
 authentication_type,
 cloud,
@@ -389,6 +383,7 @@ updated_at,
 updated_by
 FROM databricks_workspace.sharing.providers
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND data_provider_global_metastore_id = '{{ data_provider_global_metastore_id }}'
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
@@ -416,21 +411,20 @@ INSERT INTO databricks_workspace.sharing.providers (
 name,
 authentication_type,
 comment,
-email_recipient_id,
 recipient_profile_str,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
 '{{ authentication_type }}' /* required */,
 '{{ comment }}',
-'{{ email_recipient_id }}',
 '{{ recipient_profile_str }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 data_provider_global_metastore_id,
-email_recipient_id,
 metastore_id,
 authentication_type,
 cloud,
@@ -454,6 +448,9 @@ updated_by
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the providers resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the providers resource.
     - name: name
       value: "{{ name }}"
       description: |
@@ -466,10 +463,6 @@ updated_by
       value: "{{ comment }}"
       description: |
         Description about the provider.
-    - name: email_recipient_id
-      value: "{{ email_recipient_id }}"
-      description: |
-        The ID of the email recipient this provider is being created to accept. Only valid on DATABRICKS CreateProvider when accepting an email invite.
     - name: recipient_profile_str
       value: "{{ recipient_profile_str }}"
       description: |
@@ -502,10 +495,10 @@ recipient_profile_str = '{{ recipient_profile_str }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 name,
 data_provider_global_metastore_id,
-email_recipient_id,
 metastore_id,
 authentication_type,
 cloud,
@@ -539,6 +532,7 @@ Deletes an authentication provider, if the caller is a metastore admin or is the
 DELETE FROM databricks_workspace.sharing.providers
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

@@ -5,17 +5,30 @@
     "description": "OpenAPI specification for the Databricks sql service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.sql"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
@@ -874,24 +887,117 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "alert": {
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "query_text": {
+                    "type": "string",
+                    "description": "Text of the query to be run."
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "ID of the SQL warehouse attached to the alert."
+                  },
+                  "evaluation": {
                     "type": "object",
                     "properties": {
-                      "display_name": {
-                        "type": "string"
-                      },
-                      "query_text": {
-                        "type": "string",
-                        "description": "Text of the query to be run."
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "ID of the SQL warehouse attached to the alert."
-                      },
-                      "evaluation": {
+                      "source": {
                         "type": "object",
                         "properties": {
-                          "source": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "aggregation": {
+                            "type": "string",
+                            "x-enum": [
+                              "AVG",
+                              "COUNT",
+                              "COUNT_DISTINCT",
+                              "MAX",
+                              "MEDIAN",
+                              "MIN",
+                              "STDDEV",
+                              "SUM"
+                            ],
+                            "description": "If not set, the behavior is equivalent to using ``First row`` in the UI."
+                          },
+                          "display": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "comparison_operator": {
+                        "type": "string",
+                        "x-enum": [
+                          "EQUAL",
+                          "GREATER_THAN",
+                          "GREATER_THAN_OR_EQUAL",
+                          "IS_NOT_NULL",
+                          "IS_NULL",
+                          "LESS_THAN",
+                          "LESS_THAN_OR_EQUAL",
+                          "NOT_EQUAL"
+                        ],
+                        "description": "Operator used for comparison in alert evaluation."
+                      },
+                      "empty_result_state": {
+                        "type": "string",
+                        "x-enum": [
+                          "ERROR",
+                          "OK",
+                          "TRIGGERED",
+                          "UNKNOWN"
+                        ],
+                        "description": "Alert state if result is empty. Please avoid setting this field to be ``UNKNOWN`` because ``UNKNOWN`` state is planned to be deprecated."
+                      },
+                      "last_evaluated_at": {
+                        "type": "string",
+                        "description": "Timestamp of the last evaluation."
+                      },
+                      "notification": {
+                        "type": "object",
+                        "properties": {
+                          "notify_on_ok": {
+                            "type": "boolean"
+                          },
+                          "retrigger_seconds": {
+                            "type": "integer",
+                            "description": "Number of seconds an alert waits after being triggered before it is allowed to send another notification. If set to 0 or omitted, the alert will not send any further notifications after the first trigger Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes."
+                          },
+                          "subscriptions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "destination_id": {
+                                  "type": "string"
+                                },
+                                "user_email": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "description": "User or Notification Destination to notify when alert is triggered."
+                      },
+                      "state": {
+                        "type": "string",
+                        "x-enum": [
+                          "ERROR",
+                          "OK",
+                          "TRIGGERED",
+                          "UNKNOWN"
+                        ],
+                        "description": "Latest state of alert evaluation."
+                      },
+                      "threshold": {
+                        "type": "object",
+                        "properties": {
+                          "column": {
                             "type": "object",
                             "properties": {
                               "name": {
@@ -919,264 +1025,159 @@
                               "name"
                             ]
                           },
-                          "comparison_operator": {
-                            "type": "string",
-                            "x-enum": [
-                              "EQUAL",
-                              "GREATER_THAN",
-                              "GREATER_THAN_OR_EQUAL",
-                              "IS_NOT_NULL",
-                              "IS_NULL",
-                              "LESS_THAN",
-                              "LESS_THAN_OR_EQUAL",
-                              "NOT_EQUAL"
-                            ],
-                            "description": "Operator used for comparison in alert evaluation."
-                          },
-                          "empty_result_state": {
-                            "type": "string",
-                            "x-enum": [
-                              "ERROR",
-                              "OK",
-                              "TRIGGERED",
-                              "UNKNOWN"
-                            ],
-                            "description": "Alert state if result is empty. Please avoid setting this field to be ``UNKNOWN`` because ``UNKNOWN`` state is planned to be deprecated."
-                          },
-                          "last_evaluated_at": {
-                            "type": "string",
-                            "description": "Timestamp of the last evaluation."
-                          },
-                          "notification": {
+                          "value": {
                             "type": "object",
                             "properties": {
-                              "notify_on_ok": {
+                              "bool_value": {
                                 "type": "boolean"
                               },
-                              "retrigger_seconds": {
-                                "type": "integer",
-                                "description": "Number of seconds an alert waits after being triggered before it is allowed to send another notification. If set to 0 or omitted, the alert will not send any further notifications after the first trigger Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes."
+                              "double_value": {
+                                "type": "number"
                               },
-                              "subscriptions": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "destination_id": {
-                                      "type": "string"
-                                    },
-                                    "user_email": {
-                                      "type": "string"
-                                    }
-                                  }
-                                }
+                              "string_value": {
+                                "type": "string"
                               }
-                            },
-                            "description": "User or Notification Destination to notify when alert is triggered."
-                          },
-                          "state": {
-                            "type": "string",
-                            "x-enum": [
-                              "ERROR",
-                              "OK",
-                              "TRIGGERED",
-                              "UNKNOWN"
-                            ],
-                            "description": "Latest state of alert evaluation."
-                          },
-                          "threshold": {
-                            "type": "object",
-                            "properties": {
-                              "column": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "aggregation": {
-                                    "type": "string",
-                                    "x-enum": [
-                                      "AVG",
-                                      "COUNT",
-                                      "COUNT_DISTINCT",
-                                      "MAX",
-                                      "MEDIAN",
-                                      "MIN",
-                                      "STDDEV",
-                                      "SUM"
-                                    ],
-                                    "description": "If not set, the behavior is equivalent to using ``First row`` in the UI."
-                                  },
-                                  "display": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "name"
-                                ]
-                              },
-                              "value": {
-                                "type": "object",
-                                "properties": {
-                                  "bool_value": {
-                                    "type": "boolean"
-                                  },
-                                  "double_value": {
-                                    "type": "number"
-                                  },
-                                  "string_value": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            },
-                            "description": "Threshold to user for alert evaluation, can be a column or a value."
-                          }
-                        },
-                        "required": [
-                          "source",
-                          "comparison_operator"
-                        ]
-                      },
-                      "schedule": {
-                        "type": "object",
-                        "properties": {
-                          "quartz_cron_schedule": {
-                            "type": "string"
-                          },
-                          "timezone_id": {
-                            "type": "string",
-                            "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
-                          },
-                          "effective_pause_status": {
-                            "type": "string",
-                            "x-enum": [
-                              "PAUSED",
-                              "UNPAUSED"
-                            ],
-                            "description": "The actual pause status of the schedule. This is an output-only field."
-                          },
-                          "pause_status": {
-                            "type": "string",
-                            "x-enum": [
-                              "PAUSED",
-                              "UNPAUSED"
-                            ],
-                            "description": "Indicate whether this schedule is paused or not."
-                          }
-                        },
-                        "required": [
-                          "quartz_cron_schedule",
-                          "timezone_id"
-                        ]
-                      },
-                      "create_time": {
-                        "type": "string",
-                        "description": "The timestamp indicating when the alert was created."
-                      },
-                      "custom_description": {
-                        "type": "string",
-                        "description": "Custom description for the alert. support mustache template."
-                      },
-                      "custom_summary": {
-                        "type": "string",
-                        "description": "Custom summary for the alert. support mustache template."
-                      },
-                      "effective_parent_path": {
-                        "type": "string",
-                        "description": "The actual workspace path of the folder containing the alert. This is an output-only field."
-                      },
-                      "effective_run_as": {
-                        "type": "object",
-                        "properties": {
-                          "service_principal_name": {
-                            "type": "string"
-                          },
-                          "user_name": {
-                            "type": "string",
-                            "description": "The email of an active workspace user. Can only set this field to their own email."
-                          }
-                        },
-                        "description": "The actual identity that will be used to execute the alert. This is an output-only field that shows the resolved run-as identity after applying permissions and defaults."
-                      },
-                      "id": {
-                        "type": "string",
-                        "description": "UUID identifying the alert."
-                      },
-                      "lifecycle_state": {
-                        "type": "string",
-                        "x-enum": [
-                          "ACTIVE",
-                          "DELETED"
-                        ],
-                        "description": "Indicates whether the query is trashed."
-                      },
-                      "owner_user_name": {
-                        "type": "string",
-                        "description": "The owner's username. This field is set to \"Unavailable\" if the user has been deleted."
-                      },
-                      "parameters": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string",
-                              "description": "The name of the parameter, referenced in the query as ``:name``."
-                            },
-                            "type": {
-                              "type": "string",
-                              "description": "The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY, MAP, and STRUCT are not supported."
-                            },
-                            "value": {
-                              "type": "string",
-                              "description": "The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL."
                             }
-                          },
-                          "required": [
-                            "name"
-                          ],
-                          "description": "Redash-owned copy of the internal StatementParameter for the external AlertV2 API. The internal\n    ``ordinal`` and ``args`` fields are intentionally omitted: the public API supports only flat,\n    named scalar parameters; complex types (ARRAY, MAP, STRUCT) are not supported. This mirrors\n    SEA's public StatementParameter schema, see:\n    cmdexec/sql-exec-api/proto/sql_exec_api_service.proto:763-779"
-                        },
-                        "description": "Query parameters bound when executing the alert query, referenced in the query text with ``:name`` syntax. Static values only."
-                      },
-                      "parent_path": {
-                        "type": "string",
-                        "description": "The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated."
-                      },
-                      "run_as": {
-                        "type": "object",
-                        "properties": {
-                          "service_principal_name": {
-                            "type": "string"
-                          },
-                          "user_name": {
-                            "type": "string",
-                            "description": "The email of an active workspace user. Can only set this field to their own email."
                           }
                         },
-                        "description": "Specifies the identity that will be used to run the alert. This field allows you to configure alerts to run as a specific user or service principal. - For user identity: Set ``user_name`` to the email of an active workspace user. Users can only set this to their own email. - For service principal: Set ``service_principal_name`` to the application ID. Requires the ``servicePrincipal/user`` role. If not specified, the alert will run as the request user."
-                      },
-                      "run_as_user_name": {
-                        "type": "string",
-                        "description": "The run as username or application ID of service principal. On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role. Deprecated: Use ``run_as`` field instead. This field will be removed in a future release."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "The timestamp indicating when the alert was updated."
+                        "description": "Threshold to user for alert evaluation, can be a column or a value."
                       }
                     },
                     "required": [
-                      "display_name",
-                      "query_text",
-                      "warehouse_id",
-                      "evaluation",
-                      "schedule"
+                      "source",
+                      "comparison_operator"
                     ]
+                  },
+                  "schedule": {
+                    "type": "object",
+                    "properties": {
+                      "quartz_cron_schedule": {
+                        "type": "string"
+                      },
+                      "timezone_id": {
+                        "type": "string",
+                        "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
+                      },
+                      "pause_status": {
+                        "type": "string",
+                        "x-enum": [
+                          "PAUSED",
+                          "UNPAUSED"
+                        ],
+                        "description": "Indicate whether this schedule is paused or not."
+                      }
+                    },
+                    "required": [
+                      "quartz_cron_schedule",
+                      "timezone_id"
+                    ]
+                  },
+                  "create_time": {
+                    "type": "string",
+                    "description": "The timestamp indicating when the alert was created."
+                  },
+                  "custom_description": {
+                    "type": "string",
+                    "description": "Custom description for the alert. Interpreted according to ``custom_template_format``."
+                  },
+                  "custom_summary": {
+                    "type": "string",
+                    "description": "Custom summary for the alert. Interpreted according to ``custom_template_format``."
+                  },
+                  "custom_template_format": {
+                    "type": "string",
+                    "x-enum": [
+                      "HTML",
+                      "MARKDOWN"
+                    ],
+                    "description": "The format used to interpret the ``custom_summary`` and ``custom_description`` templates. ``HTML`` treats both templates as HTML with Mustache ``{{VARIABLE_NAME}}`` placeholders. ``MARKDOWN`` treats them as Markdown with allowlisted ``@VARIABLE_NAME`` placeholders and converts them to the format each notification destination expects, so a single template renders correctly in email, Slack, and Microsoft Teams. When unset, the API applies no default. Responses omit the field unless a format is stored, and a template with no format is rendered as HTML."
+                  },
+                  "effective_run_as": {
+                    "type": "object",
+                    "properties": {
+                      "service_principal_name": {
+                        "type": "string"
+                      },
+                      "user_name": {
+                        "type": "string",
+                        "description": "The email of an active workspace user. Can only set this field to their own email."
+                      }
+                    },
+                    "description": "The actual identity that will be used to execute the alert. This is an output-only field that shows the resolved run-as identity after applying permissions and defaults."
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "The canonical identifier of the alert to retrieve information about."
+                  },
+                  "lifecycle_state": {
+                    "type": "string",
+                    "x-enum": [
+                      "ACTIVE",
+                      "DELETED"
+                    ],
+                    "description": "Indicates whether the query is trashed."
+                  },
+                  "owner_user_name": {
+                    "type": "string",
+                    "description": "The owner's username. This field is set to \"Unavailable\" if the user has been deleted."
+                  },
+                  "parameters": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "The name of the parameter. Reference it in the query text as ``:name``. Required, must be non-empty, and must be unique across the alert's parameters."
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "The SQL data type of the parameter, for example ``STRING``, ``INT``, or ``DECIMAL(10, 2)``. If no type is given the type is assumed to be ``STRING``. Complex types such as ``ARRAY``, ``MAP``, and ``STRUCT`` are not supported."
+                        },
+                        "value": {
+                          "type": "string",
+                          "description": "The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL."
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "description": "A named parameter bound to the alert query. Only flat, named scalar parameters are supported;\n    complex types such as ARRAY, MAP, and STRUCT are not."
+                    },
+                    "description": "A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only. Reference a parameter in the query text as ``:name``. Each parameter must have a unique, non-empty name. Each parameter consists of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as a string. If the type is given, parameters will be checked for type correctness according to the given type. A value is correct if the provided string can be converted to the requested type using the ``cast`` function. The exact semantics are described in the section `cast function <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language reference."
+                  },
+                  "parent_path": {
+                    "type": "string",
+                    "description": "The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated."
+                  },
+                  "run_as": {
+                    "type": "object",
+                    "properties": {
+                      "service_principal_name": {
+                        "type": "string"
+                      },
+                      "user_name": {
+                        "type": "string",
+                        "description": "The email of an active workspace user. Can only set this field to their own email."
+                      }
+                    },
+                    "description": "Specifies the identity that will be used to run the alert. This field allows you to configure alerts to run as a specific user or service principal. - For user identity: Set ``user_name`` to the email of an active workspace user. Users can only set this to their own email. - For service principal: Set ``service_principal_name`` to the application ID. Requires the ``servicePrincipal/user`` role. If not specified, the alert will run as the request user."
+                  },
+                  "run_as_user_name": {
+                    "type": "string",
+                    "description": "The run as username or application ID of service principal. On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role. Deprecated: Use ``run_as`` field instead. This field will be removed in a future release."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "The timestamp indicating when the alert was updated."
                   }
                 },
                 "required": [
-                  "alert"
+                  "display_name",
+                  "query_text",
+                  "warehouse_id",
+                  "evaluation",
+                  "schedule"
                 ]
               }
             }
@@ -1383,7 +1384,7 @@
           "sql",
           "alerts_v2"
         ],
-        "description": "Update alert\n\n:param id: str\n  UUID identifying the alert.\n:param alert: :class:`AlertV2`\n:param update_mask: str\n  The field mask must be a single string, with multiple fields separated by commas (no spaces). The\n  field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g.,\n  ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only\n  the entire collection field can be specified. Field names must exactly match the resource field\n  names.\n\n  A field mask of ``*`` indicates full replacement. It\u2019s recommended to always explicitly list the\n  fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the\n  API changes in the future.\n\n:returns: :class:`AlertV2`",
+        "description": "Update alert\n\n:param id: str\n  The canonical identifier of the alert to retrieve information about.\n:param alert: :class:`AlertV2`\n:param update_mask: str\n  The field mask must be a single string, with multiple fields separated by commas (no spaces). The\n  field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g.,\n  ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only\n  the entire collection field can be specified. Field names must exactly match the resource field\n  names.\n\n  A field mask of ``*`` indicates full replacement. It\u2019s recommended to always explicitly list the\n  fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the\n  API changes in the future.\n\n:returns: :class:`AlertV2`",
         "parameters": [
           {
             "name": "id",
@@ -1392,7 +1393,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "UUID identifying the alert."
+            "description": "The canonical identifier of the alert to retrieve information about."
           },
           {
             "name": "update_mask",
@@ -1410,24 +1411,117 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "alert": {
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "query_text": {
+                    "type": "string",
+                    "description": "Text of the query to be run."
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "ID of the SQL warehouse attached to the alert."
+                  },
+                  "evaluation": {
                     "type": "object",
                     "properties": {
-                      "display_name": {
-                        "type": "string"
-                      },
-                      "query_text": {
-                        "type": "string",
-                        "description": "Text of the query to be run."
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "ID of the SQL warehouse attached to the alert."
-                      },
-                      "evaluation": {
+                      "source": {
                         "type": "object",
                         "properties": {
-                          "source": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "aggregation": {
+                            "type": "string",
+                            "x-enum": [
+                              "AVG",
+                              "COUNT",
+                              "COUNT_DISTINCT",
+                              "MAX",
+                              "MEDIAN",
+                              "MIN",
+                              "STDDEV",
+                              "SUM"
+                            ],
+                            "description": "If not set, the behavior is equivalent to using ``First row`` in the UI."
+                          },
+                          "display": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ]
+                      },
+                      "comparison_operator": {
+                        "type": "string",
+                        "x-enum": [
+                          "EQUAL",
+                          "GREATER_THAN",
+                          "GREATER_THAN_OR_EQUAL",
+                          "IS_NOT_NULL",
+                          "IS_NULL",
+                          "LESS_THAN",
+                          "LESS_THAN_OR_EQUAL",
+                          "NOT_EQUAL"
+                        ],
+                        "description": "Operator used for comparison in alert evaluation."
+                      },
+                      "empty_result_state": {
+                        "type": "string",
+                        "x-enum": [
+                          "ERROR",
+                          "OK",
+                          "TRIGGERED",
+                          "UNKNOWN"
+                        ],
+                        "description": "Alert state if result is empty. Please avoid setting this field to be ``UNKNOWN`` because ``UNKNOWN`` state is planned to be deprecated."
+                      },
+                      "last_evaluated_at": {
+                        "type": "string",
+                        "description": "Timestamp of the last evaluation."
+                      },
+                      "notification": {
+                        "type": "object",
+                        "properties": {
+                          "notify_on_ok": {
+                            "type": "boolean"
+                          },
+                          "retrigger_seconds": {
+                            "type": "integer",
+                            "description": "Number of seconds an alert waits after being triggered before it is allowed to send another notification. If set to 0 or omitted, the alert will not send any further notifications after the first trigger Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes."
+                          },
+                          "subscriptions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "destination_id": {
+                                  "type": "string"
+                                },
+                                "user_email": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "description": "User or Notification Destination to notify when alert is triggered."
+                      },
+                      "state": {
+                        "type": "string",
+                        "x-enum": [
+                          "ERROR",
+                          "OK",
+                          "TRIGGERED",
+                          "UNKNOWN"
+                        ],
+                        "description": "Latest state of alert evaluation."
+                      },
+                      "threshold": {
+                        "type": "object",
+                        "properties": {
+                          "column": {
                             "type": "object",
                             "properties": {
                               "name": {
@@ -1455,264 +1549,159 @@
                               "name"
                             ]
                           },
-                          "comparison_operator": {
-                            "type": "string",
-                            "x-enum": [
-                              "EQUAL",
-                              "GREATER_THAN",
-                              "GREATER_THAN_OR_EQUAL",
-                              "IS_NOT_NULL",
-                              "IS_NULL",
-                              "LESS_THAN",
-                              "LESS_THAN_OR_EQUAL",
-                              "NOT_EQUAL"
-                            ],
-                            "description": "Operator used for comparison in alert evaluation."
-                          },
-                          "empty_result_state": {
-                            "type": "string",
-                            "x-enum": [
-                              "ERROR",
-                              "OK",
-                              "TRIGGERED",
-                              "UNKNOWN"
-                            ],
-                            "description": "Alert state if result is empty. Please avoid setting this field to be ``UNKNOWN`` because ``UNKNOWN`` state is planned to be deprecated."
-                          },
-                          "last_evaluated_at": {
-                            "type": "string",
-                            "description": "Timestamp of the last evaluation."
-                          },
-                          "notification": {
+                          "value": {
                             "type": "object",
                             "properties": {
-                              "notify_on_ok": {
+                              "bool_value": {
                                 "type": "boolean"
                               },
-                              "retrigger_seconds": {
-                                "type": "integer",
-                                "description": "Number of seconds an alert waits after being triggered before it is allowed to send another notification. If set to 0 or omitted, the alert will not send any further notifications after the first trigger Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes."
+                              "double_value": {
+                                "type": "number"
                               },
-                              "subscriptions": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "destination_id": {
-                                      "type": "string"
-                                    },
-                                    "user_email": {
-                                      "type": "string"
-                                    }
-                                  }
-                                }
+                              "string_value": {
+                                "type": "string"
                               }
-                            },
-                            "description": "User or Notification Destination to notify when alert is triggered."
-                          },
-                          "state": {
-                            "type": "string",
-                            "x-enum": [
-                              "ERROR",
-                              "OK",
-                              "TRIGGERED",
-                              "UNKNOWN"
-                            ],
-                            "description": "Latest state of alert evaluation."
-                          },
-                          "threshold": {
-                            "type": "object",
-                            "properties": {
-                              "column": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "aggregation": {
-                                    "type": "string",
-                                    "x-enum": [
-                                      "AVG",
-                                      "COUNT",
-                                      "COUNT_DISTINCT",
-                                      "MAX",
-                                      "MEDIAN",
-                                      "MIN",
-                                      "STDDEV",
-                                      "SUM"
-                                    ],
-                                    "description": "If not set, the behavior is equivalent to using ``First row`` in the UI."
-                                  },
-                                  "display": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "name"
-                                ]
-                              },
-                              "value": {
-                                "type": "object",
-                                "properties": {
-                                  "bool_value": {
-                                    "type": "boolean"
-                                  },
-                                  "double_value": {
-                                    "type": "number"
-                                  },
-                                  "string_value": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            },
-                            "description": "Threshold to user for alert evaluation, can be a column or a value."
-                          }
-                        },
-                        "required": [
-                          "source",
-                          "comparison_operator"
-                        ]
-                      },
-                      "schedule": {
-                        "type": "object",
-                        "properties": {
-                          "quartz_cron_schedule": {
-                            "type": "string"
-                          },
-                          "timezone_id": {
-                            "type": "string",
-                            "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
-                          },
-                          "effective_pause_status": {
-                            "type": "string",
-                            "x-enum": [
-                              "PAUSED",
-                              "UNPAUSED"
-                            ],
-                            "description": "The actual pause status of the schedule. This is an output-only field."
-                          },
-                          "pause_status": {
-                            "type": "string",
-                            "x-enum": [
-                              "PAUSED",
-                              "UNPAUSED"
-                            ],
-                            "description": "Indicate whether this schedule is paused or not."
-                          }
-                        },
-                        "required": [
-                          "quartz_cron_schedule",
-                          "timezone_id"
-                        ]
-                      },
-                      "create_time": {
-                        "type": "string",
-                        "description": "The timestamp indicating when the alert was created."
-                      },
-                      "custom_description": {
-                        "type": "string",
-                        "description": "Custom description for the alert. support mustache template."
-                      },
-                      "custom_summary": {
-                        "type": "string",
-                        "description": "Custom summary for the alert. support mustache template."
-                      },
-                      "effective_parent_path": {
-                        "type": "string",
-                        "description": "The actual workspace path of the folder containing the alert. This is an output-only field."
-                      },
-                      "effective_run_as": {
-                        "type": "object",
-                        "properties": {
-                          "service_principal_name": {
-                            "type": "string"
-                          },
-                          "user_name": {
-                            "type": "string",
-                            "description": "The email of an active workspace user. Can only set this field to their own email."
-                          }
-                        },
-                        "description": "The actual identity that will be used to execute the alert. This is an output-only field that shows the resolved run-as identity after applying permissions and defaults."
-                      },
-                      "id": {
-                        "type": "string",
-                        "description": "UUID identifying the alert."
-                      },
-                      "lifecycle_state": {
-                        "type": "string",
-                        "x-enum": [
-                          "ACTIVE",
-                          "DELETED"
-                        ],
-                        "description": "Indicates whether the query is trashed."
-                      },
-                      "owner_user_name": {
-                        "type": "string",
-                        "description": "The owner's username. This field is set to \"Unavailable\" if the user has been deleted."
-                      },
-                      "parameters": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string",
-                              "description": "The name of the parameter, referenced in the query as ``:name``."
-                            },
-                            "type": {
-                              "type": "string",
-                              "description": "The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY, MAP, and STRUCT are not supported."
-                            },
-                            "value": {
-                              "type": "string",
-                              "description": "The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL."
                             }
-                          },
-                          "required": [
-                            "name"
-                          ],
-                          "description": "Redash-owned copy of the internal StatementParameter for the external AlertV2 API. The internal\n    ``ordinal`` and ``args`` fields are intentionally omitted: the public API supports only flat,\n    named scalar parameters; complex types (ARRAY, MAP, STRUCT) are not supported. This mirrors\n    SEA's public StatementParameter schema, see:\n    cmdexec/sql-exec-api/proto/sql_exec_api_service.proto:763-779"
-                        },
-                        "description": "Query parameters bound when executing the alert query, referenced in the query text with ``:name`` syntax. Static values only."
-                      },
-                      "parent_path": {
-                        "type": "string",
-                        "description": "The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated."
-                      },
-                      "run_as": {
-                        "type": "object",
-                        "properties": {
-                          "service_principal_name": {
-                            "type": "string"
-                          },
-                          "user_name": {
-                            "type": "string",
-                            "description": "The email of an active workspace user. Can only set this field to their own email."
                           }
                         },
-                        "description": "Specifies the identity that will be used to run the alert. This field allows you to configure alerts to run as a specific user or service principal. - For user identity: Set ``user_name`` to the email of an active workspace user. Users can only set this to their own email. - For service principal: Set ``service_principal_name`` to the application ID. Requires the ``servicePrincipal/user`` role. If not specified, the alert will run as the request user."
-                      },
-                      "run_as_user_name": {
-                        "type": "string",
-                        "description": "The run as username or application ID of service principal. On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role. Deprecated: Use ``run_as`` field instead. This field will be removed in a future release."
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "description": "The timestamp indicating when the alert was updated."
+                        "description": "Threshold to user for alert evaluation, can be a column or a value."
                       }
                     },
                     "required": [
-                      "display_name",
-                      "query_text",
-                      "warehouse_id",
-                      "evaluation",
-                      "schedule"
+                      "source",
+                      "comparison_operator"
                     ]
+                  },
+                  "schedule": {
+                    "type": "object",
+                    "properties": {
+                      "quartz_cron_schedule": {
+                        "type": "string"
+                      },
+                      "timezone_id": {
+                        "type": "string",
+                        "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
+                      },
+                      "pause_status": {
+                        "type": "string",
+                        "x-enum": [
+                          "PAUSED",
+                          "UNPAUSED"
+                        ],
+                        "description": "Indicate whether this schedule is paused or not."
+                      }
+                    },
+                    "required": [
+                      "quartz_cron_schedule",
+                      "timezone_id"
+                    ]
+                  },
+                  "create_time": {
+                    "type": "string",
+                    "description": "The timestamp indicating when the alert was created."
+                  },
+                  "custom_description": {
+                    "type": "string",
+                    "description": "Custom description for the alert. Interpreted according to ``custom_template_format``."
+                  },
+                  "custom_summary": {
+                    "type": "string",
+                    "description": "Custom summary for the alert. Interpreted according to ``custom_template_format``."
+                  },
+                  "custom_template_format": {
+                    "type": "string",
+                    "x-enum": [
+                      "HTML",
+                      "MARKDOWN"
+                    ],
+                    "description": "The format used to interpret the ``custom_summary`` and ``custom_description`` templates. ``HTML`` treats both templates as HTML with Mustache ``{{VARIABLE_NAME}}`` placeholders. ``MARKDOWN`` treats them as Markdown with allowlisted ``@VARIABLE_NAME`` placeholders and converts them to the format each notification destination expects, so a single template renders correctly in email, Slack, and Microsoft Teams. When unset, the API applies no default. Responses omit the field unless a format is stored, and a template with no format is rendered as HTML."
+                  },
+                  "effective_run_as": {
+                    "type": "object",
+                    "properties": {
+                      "service_principal_name": {
+                        "type": "string"
+                      },
+                      "user_name": {
+                        "type": "string",
+                        "description": "The email of an active workspace user. Can only set this field to their own email."
+                      }
+                    },
+                    "description": "The actual identity that will be used to execute the alert. This is an output-only field that shows the resolved run-as identity after applying permissions and defaults."
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "The canonical identifier of the alert to retrieve information about."
+                  },
+                  "lifecycle_state": {
+                    "type": "string",
+                    "x-enum": [
+                      "ACTIVE",
+                      "DELETED"
+                    ],
+                    "description": "Indicates whether the query is trashed."
+                  },
+                  "owner_user_name": {
+                    "type": "string",
+                    "description": "The owner's username. This field is set to \"Unavailable\" if the user has been deleted."
+                  },
+                  "parameters": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "The name of the parameter. Reference it in the query text as ``:name``. Required, must be non-empty, and must be unique across the alert's parameters."
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "The SQL data type of the parameter, for example ``STRING``, ``INT``, or ``DECIMAL(10, 2)``. If no type is given the type is assumed to be ``STRING``. Complex types such as ``ARRAY``, ``MAP``, and ``STRUCT`` are not supported."
+                        },
+                        "value": {
+                          "type": "string",
+                          "description": "The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL."
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "description": "A named parameter bound to the alert query. Only flat, named scalar parameters are supported;\n    complex types such as ARRAY, MAP, and STRUCT are not."
+                    },
+                    "description": "A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only. Reference a parameter in the query text as ``:name``. Each parameter must have a unique, non-empty name. Each parameter consists of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as a string. If the type is given, parameters will be checked for type correctness according to the given type. A value is correct if the provided string can be converted to the requested type using the ``cast`` function. The exact semantics are described in the section `cast function <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language reference."
+                  },
+                  "parent_path": {
+                    "type": "string",
+                    "description": "The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated."
+                  },
+                  "run_as": {
+                    "type": "object",
+                    "properties": {
+                      "service_principal_name": {
+                        "type": "string"
+                      },
+                      "user_name": {
+                        "type": "string",
+                        "description": "The email of an active workspace user. Can only set this field to their own email."
+                      }
+                    },
+                    "description": "Specifies the identity that will be used to run the alert. This field allows you to configure alerts to run as a specific user or service principal. - For user identity: Set ``user_name`` to the email of an active workspace user. Users can only set this to their own email. - For service principal: Set ``service_principal_name`` to the application ID. Requires the ``servicePrincipal/user`` role. If not specified, the alert will run as the request user."
+                  },
+                  "run_as_user_name": {
+                    "type": "string",
+                    "description": "The run as username or application ID of service principal. On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role. Deprecated: Use ``run_as`` field instead. This field will be removed in a future release."
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "description": "The timestamp indicating when the alert was updated."
                   }
                 },
                 "required": [
-                  "alert"
+                  "display_name",
+                  "query_text",
+                  "warehouse_id",
+                  "evaluation",
+                  "schedule"
                 ]
               }
             }
@@ -4713,7 +4702,7 @@
           "sql",
           "statement_execution"
         ],
-        "description": "Execute a SQL statement and optionally await its results for a specified time.\n\n**Use case: small result sets with INLINE + JSON_ARRAY**\n\nFor flows that generate small and predictable result sets (<= 25 MiB), ``INLINE`` responses of\n``JSON_ARRAY`` result data are typically the simplest way to execute and fetch result data.\n\n**Use case: large result sets with EXTERNAL_LINKS**\n\nUsing ``EXTERNAL_LINKS`` to fetch result data allows you to fetch large result sets efficiently. The\nmain differences from using ``INLINE`` disposition are that the result data is accessed with URLs, and\nthat there are 3 supported formats: ``JSON_ARRAY``, ``ARROW_STREAM`` and ``CSV`` compared to only\n``JSON_ARRAY`` with ``INLINE``.\n\n** URLs**\n\nExternal links point to data stored within your workspace's internal storage, in the form of a URL.\nThe URLs are valid for only a short period, <= 15 minutes. Alongside each ``external_link`` is an\nexpiration field indicating the time at which the URL is no longer valid. In ``EXTERNAL_LINKS`` mode,\nchunks can be resolved and fetched multiple times and in parallel.\n\n**Warning: Databricks strongly recommends that you protect the URLs that are returned by the\n``EXTERNAL_LINKS`` disposition.**\n\nWhen you use the ``EXTERNAL_LINKS`` disposition, a short-lived, URL is generated, which can be used to\ndownload the results directly from . As a short-lived is embedded in this URL, you should protect the\nURL.\n\nBecause URLs are already generated with embedded temporary s, you must not set an ``Authorization``\nheader in the download requests.\n\nThe ``EXTERNAL_LINKS`` disposition can be disabled upon request by creating a support case.\n\nSee also `Security best practices\n<https://docs.databricks.com/sql/admin/sql-execution-tutorial.html#security-best-practices>`__.\n\nStatementResponse contains ``statement_id`` and ``status``; other fields might be absent or present\ndepending on context. If the SQL warehouse fails to execute the provided statement, a 200 response is\nreturned with ``status.state`` set to ``FAILED`` (in contrast to a failure when accepting the request,\nwhich results in a non-200 response). Details of the error can be found at ``status.error`` in case of\nexecution failures.\n\n:param statement: str\n  The SQL statement to execute. The statement can optionally be parameterized, see ``parameters``. The\n  maximum query text size is 16 MiB.\n:param warehouse_id: str\n  Warehouse upon which to execute a statement. See also `What are SQL warehouses?\n  <https://docs.databricks.com/sql/admin/warehouse-type.html>`__\n:param byte_limit: int (optional)\n  Applies the given byte limit to the statement's result size. Byte counts are based on internal data\n  representations and might not match the final size in the requested ``format``. If the result was\n  truncated due to the byte limit, then ``truncated`` in the response is set to ``true``. When using\n  ``EXTERNAL_LINKS`` disposition, a default ``byte_limit`` of 100 GiB is applied if ``byte_limit`` is\n  not explicitly set.\n:param catalog: str (optional)\n  Sets default catalog for statement execution, similar to `USE CATALOG\n  <https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-catalog.html>`__ in SQL.\n:param disposition: :class:`Disposition` (optional)\n  The fetch disposition provides two modes of fetching results: ``INLINE`` and ``EXTERNAL_LINKS``.\n\n  Statements executed with ``INLINE`` disposition will return result data inline, in ``JSON_ARRAY``\n  format, in a series of chunks. If a given statement produces a result set with a size larger than 25\n  MiB, that statement execution is aborted, and no result set will be available.\n\n  **NOTE** Byte limits are computed based upon internal representations of the result set data, and\n  might not match the sizes visible in JSON responses.\n\n  Statements executed with ``EXTERNAL_LINKS`` disposition will return result data as external links:\n  URLs that point to cloud storage internal to the workspace. Using ``EXTERNAL_LINKS`` disposition\n  allows statements to generate arbitrarily sized result sets for fetching up to 100 GiB. The\n  resulting links have two important properties:\n\n  1. They point to resources *external* to the Databricks compute; therefore any associated\n     authentication information (typically a personal access token, OAuth token, or similar) *must be\n     removed* when fetching from these links.\n  2. These are URLs with a specific expiration, indicated in the response. The behavior when\n     attempting to use an expired link is cloud specific.\n:param format: :class:`Format` (optional)\n  Statement execution supports three result formats: ``JSON_ARRAY`` (default), ``ARROW_STREAM``, and\n  ``CSV``.\n\n  Important: The formats ``ARROW_STREAM`` and ``CSV`` are supported only with ``EXTERNAL_LINKS``\n  disposition. ``JSON_ARRAY`` is supported in ``INLINE`` and ``EXTERNAL_LINKS`` disposition.\n\n  When specifying ``format=JSON_ARRAY``, result data will be formatted as an array of arrays of\n  values, where each value is either the *string representation* of a value, or ``null``. For example,\n  the output of ``SELECT concat('id-', id) AS strCol, id AS intCol, null AS nullCol FROM range(3)``\n  would look like this:\n\n  .. code-block::\n\n     [\n     [ \"id-1\", \"1\", null ],\n     [ \"id-2\", \"2\", null ],\n     [ \"id-3\", \"3\", null ],\n     ]\n\n  When specifying ``format=JSON_ARRAY`` and ``disposition=EXTERNAL_LINKS``, each chunk in the result\n  contains compact JSON with no indentation or extra whitespace.\n\n  When specifying ``format=ARROW_STREAM`` and ``disposition=EXTERNAL_LINKS``, each chunk in the result\n  will be formatted as Apache Arrow Stream. See the `Apache Arrow streaming format\n  <https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format>`__.\n\n  When specifying ``format=CSV`` and ``disposition=EXTERNAL_LINKS``, each chunk in the result will be\n  a CSV according to `RFC 4180 <https://www.rfc-editor.org/rfc/rfc4180>`__ standard. All the columns\n  values will have *string representation* similar to the ``JSON_ARRAY`` format, and ``null`` values\n  will be encoded as \u201cnull\u201d. Only the first chunk in the result would contain a header row with\n  column names. For example, the output of ``SELECT concat('id-', id) AS strCol, id AS intCol, null as\n  nullCol FROM range(3)`` would look like this:\n\n  .. code-block::\n\n     strCol,intCol,nullCol\n     id-1,1,null\n     id-2,2,null\n     id-3,3,null\n:param on_wait_timeout: :class:`ExecuteStatementRequestOnWaitTimeout` (optional)\n  When ``wait_timeout > 0s``, the call will block up to the specified time. If the statement execution\n  doesn't finish within this time, ``on_wait_timeout`` determines whether the execution should\n  continue or be canceled. When set to ``CONTINUE``, the statement execution continues asynchronously\n  and the call returns a statement ID which can be used for polling with\n  :method:statementexecution/getStatement. When set to ``CANCEL``, the statement execution is canceled\n  and the call returns with a ``CANCELED`` state.\n:param parameters: List[:class:`StatementParameterListItem`] (optional)\n  A list of parameters to pass into a SQL statement containing parameter markers. A parameter consists\n  of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be\n  omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as\n  a string.\n\n  If the type is given, parameters will be checked for type correctness according to the given type. A\n  value is correct if the provided string can be converted to the requested type using the ``cast``\n  function. The exact semantics are described in the section `cast function\n  <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language\n  reference.\n\n  For example, the following statement contains two parameters, ``my_name`` and ``my_date``:\n\n  .. code-block::\n\n     SELECT * FROM my_table WHERE name = :my_name AND date = :my_date\n\n  The parameters can be passed in the request body as follows:\n\n  ``{ ..., \"statement\": \"SELECT * FROM my_table WHERE name = :my_name AND date = :my_date\",\n  \"parameters\": [ { \"name\": \"my_name\", \"value\": \"the name\" }, { \"name\": \"my_date\", \"value\":\n  \"2020-01-01\", \"type\": \"DATE\" } ] }``\n\n  Currently, positional parameters denoted by a ``?`` marker are not supported by the Databricks SQL\n  Statement Execution API.\n\n  Also see the section `Parameter markers\n  <https://docs.databricks.com/sql/language-manual/sql-ref-parameter-marker.html>`__ of the SQL\n  language reference.\n:param query_tags: List[:class:`QueryTag`] (optional)\n  An array of query tags to annotate a SQL statement. A query tag consists of a non-empty key and,\n  optionally, a value. To represent a NULL value, either omit the ``value`` field or manually set it\n  to ``null`` or white space. Refer to the SQL language reference for the format specification of\n  query tags. There's no significance to the order of tags. Only one value per key will be recorded. A\n  sequence in excess of 20 query tags will be coerced to 20. Example:\n\n  { ..., \"query_tags\": [ { \"key\": \"team\", \"value\": \"eng\" }, { \"key\": \"some key only tag\" } ] }\n:param row_limit: int (optional)\n  Applies the given row limit to the statement's result set, but unlike the ``LIMIT`` clause in SQL,\n  it also sets the ``truncated`` field in the response to indicate whether the result was trimmed due\n  to the limit or not.\n:param schema: str (optional)\n  Sets default schema for statement execution, similar to `USE SCHEMA\n  <https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-schema.html>`__ in SQL.\n:param wait_timeout: str (optional)\n  The time in seconds the call will wait for the statement's result set as ``Ns``, where ``N`` can be\n  set to 0 or to a value between 5 and 50.\n\n  When set to ``0s``, the statement will execute in asynchronous mode and the call will not wait for\n  the execution to finish. In this case, the call returns directly with ``PENDING`` state and a\n  statement ID which can be used for polling with :method:statementexecution/getStatement.\n\n  When set between 5 and 50 seconds, the call will behave synchronously up to this timeout and wait\n  for the statement execution to finish. If the execution finishes within this time, the call returns\n  immediately with a manifest and result data (or a ``FAILED`` state in case of an execution error).\n  If the statement takes longer to execute, ``on_wait_timeout`` determines what should happen after\n  the timeout is reached.\n\n:returns: :class:`StatementResponse`",
+        "description": "Execute a SQL statement and optionally await its results for a specified time.\n\n**Use case: small result sets with INLINE + JSON_ARRAY**\n\nFor flows that generate small and predictable result sets (<= 25 MiB), ``INLINE`` responses of\n``JSON_ARRAY`` result data are typically the simplest way to execute and fetch result data.\n\n**Use case: large result sets with EXTERNAL_LINKS**\n\nUsing ``EXTERNAL_LINKS`` to fetch result data allows you to fetch large result sets efficiently. The\nmain differences from using ``INLINE`` disposition are that the result data is accessed with\nshort-lived cloud-storage URLs, and that there are 3 supported formats: ``JSON_ARRAY``,\n``ARROW_STREAM`` and ``CSV`` compared to only ``JSON_ARRAY`` with ``INLINE``.\n\n**External-link URLs**\n\nExternal links point to data stored within your workspace's internal cloud storage. The URLs are valid\nfor only a short period, <= 15 minutes. Alongside each ``external_link`` is an expiration field\nindicating the time at which the URL is no longer valid. In ``EXTERNAL_LINKS`` mode, chunks can be\nresolved and fetched multiple times and in parallel.\n\n**Warning: Databricks strongly recommends that you protect the URLs that are returned by the\n``EXTERNAL_LINKS`` disposition.**\n\nWhen you use the ``EXTERNAL_LINKS`` disposition, a short-lived cloud-storage URL is generated to\ndownload the results. The URL contains temporary access credentials, so protect it and do not set an\n``Authorization`` header in the download request.\n\nThe ``EXTERNAL_LINKS`` disposition can be disabled upon request by creating a `support case\n<https://docs.databricks.com/resources/support.html>`__.\n\nSee also `Security best practices\n<https://docs.databricks.com/sql/admin/sql-execution-tutorial.html#security-best-practices>`__.\n\nStatementResponse contains ``statement_id`` and ``status``; other fields might be absent or present\ndepending on context. If the SQL warehouse fails to execute the provided statement, a 200 response is\nreturned with ``status.state`` set to ``FAILED`` (in contrast to a failure when accepting the request,\nwhich results in a non-200 response). Details of the error can be found at ``status.error`` in case of\nexecution failures.\n\n:param statement: str\n  The SQL statement to execute. The statement can optionally be parameterized, see ``parameters``. The\n  maximum query text size is 16 MiB.\n:param warehouse_id: str\n  Warehouse upon which to execute a statement. See also `What are SQL warehouses?\n  <https://docs.databricks.com/sql/admin/warehouse-type.html>`__\n:param byte_limit: int (optional)\n  Applies the given byte limit to the statement's result size. Byte counts are based on internal data\n  representations and might not match the final size in the requested ``format``. If the result was\n  truncated due to the byte limit, then ``truncated`` in the response is set to ``true``. When using\n  ``EXTERNAL_LINKS`` disposition, a default ``byte_limit`` of 100 GiB is applied if ``byte_limit`` is\n  not explicitly set.\n:param catalog: str (optional)\n  Sets default catalog for statement execution, similar to `USE CATALOG\n  <https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-catalog.html>`__ in SQL.\n:param disposition: :class:`Disposition` (optional)\n  The fetch disposition provides two modes of fetching results: ``INLINE`` and ``EXTERNAL_LINKS``.\n\n  Statements executed with ``INLINE`` disposition will return result data inline, in ``JSON_ARRAY``\n  format, in a series of chunks. If a given statement produces a result set with a size larger than 25\n  MiB, that statement execution is aborted, and no result set will be available.\n\n  **NOTE** Byte limits are computed based upon internal representations of the result set data, and\n  might not match the sizes visible in JSON responses.\n\n  Statements executed with ``EXTERNAL_LINKS`` disposition will return result data as external links:\n  URLs that point to cloud storage internal to the workspace. Using ``EXTERNAL_LINKS`` disposition\n  allows statements to generate arbitrarily sized result sets for fetching up to 100 GiB. The\n  resulting links have two important properties:\n\n  1. They point to resources *external* to the Databricks compute; therefore any associated\n     authentication information (typically a personal access token, OAuth token, or similar) *must be\n     removed* when fetching from these links.\n  2. These are short-lived cloud-storage URLs with a specific expiration, indicated in the response.\n     The behavior when attempting to use an expired link is cloud specific.\n:param format: :class:`Format` (optional)\n  Statement execution supports three result formats: ``JSON_ARRAY`` (default), ``ARROW_STREAM``, and\n  ``CSV``.\n\n  Important: The formats ``ARROW_STREAM`` and ``CSV`` are supported only with ``EXTERNAL_LINKS``\n  disposition. ``JSON_ARRAY`` is supported in ``INLINE`` and ``EXTERNAL_LINKS`` disposition.\n\n  When specifying ``format=JSON_ARRAY``, result data will be formatted as an array of arrays of\n  values, where each value is either the *string representation* of a value, or ``null``. For example,\n  the output of ``SELECT concat('id-', id) AS strCol, id AS intCol, null AS nullCol FROM range(3)``\n  would look like this:\n\n  .. code-block::\n\n     [\n     [ \"id-1\", \"1\", null ],\n     [ \"id-2\", \"2\", null ],\n     [ \"id-3\", \"3\", null ],\n     ]\n\n  When specifying ``format=JSON_ARRAY`` and ``disposition=EXTERNAL_LINKS``, each chunk in the result\n  contains compact JSON with no indentation or extra whitespace.\n\n  When specifying ``format=ARROW_STREAM`` and ``disposition=EXTERNAL_LINKS``, each chunk in the result\n  will be formatted as Apache Arrow Stream. See the `Apache Arrow streaming format\n  <https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format>`__.\n\n  When specifying ``format=CSV`` and ``disposition=EXTERNAL_LINKS``, each chunk in the result will be\n  a CSV according to `RFC 4180 <https://www.rfc-editor.org/rfc/rfc4180>`__ standard. All the columns\n  values will have *string representation* similar to the ``JSON_ARRAY`` format, and ``null`` values\n  will be encoded as \u201cnull\u201d. Only the first chunk in the result would contain a header row with\n  column names. For example, the output of ``SELECT concat('id-', id) AS strCol, id AS intCol, null as\n  nullCol FROM range(3)`` would look like this:\n\n  .. code-block::\n\n     strCol,intCol,nullCol\n     id-1,1,null\n     id-2,2,null\n     id-3,3,null\n:param on_wait_timeout: :class:`ExecuteStatementRequestOnWaitTimeout` (optional)\n  When ``wait_timeout > 0s``, the call will block up to the specified time. If the statement execution\n  doesn't finish within this time, ``on_wait_timeout`` determines whether the execution should\n  continue or be canceled. When set to ``CONTINUE``, the statement execution continues asynchronously\n  and the call returns a statement ID which can be used for polling with\n  :method:statementexecution/getStatement. When set to ``CANCEL``, the statement execution is canceled\n  and the call returns with a ``CANCELED`` state.\n:param parameters: List[:class:`StatementParameterListItem`] (optional)\n  A list of parameters to pass into a SQL statement containing parameter markers. A parameter consists\n  of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be\n  omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as\n  a string.\n\n  If the type is given, parameters will be checked for type correctness according to the given type. A\n  value is correct if the provided string can be converted to the requested type using the ``cast``\n  function. The exact semantics are described in the section `cast function\n  <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language\n  reference.\n\n  For example, the following statement contains two parameters, ``my_name`` and ``my_date``:\n\n  .. code-block::\n\n     SELECT * FROM my_table WHERE name = :my_name AND date = :my_date\n\n  The parameters can be passed in the request body as follows:\n\n  ``{ ..., \"statement\": \"SELECT * FROM my_table WHERE name = :my_name AND date = :my_date\",\n  \"parameters\": [ { \"name\": \"my_name\", \"value\": \"the name\" }, { \"name\": \"my_date\", \"value\":\n  \"2020-01-01\", \"type\": \"DATE\" } ] }``\n\n  Currently, positional parameters denoted by a ``?`` marker are not supported by the Databricks SQL\n  Statement Execution API.\n\n  Also see the section `Parameter markers\n  <https://docs.databricks.com/sql/language-manual/sql-ref-parameter-marker.html>`__ of the SQL\n  language reference.\n:param query_tags: List[:class:`QueryTag`] (optional)\n  An array of query tags to annotate a SQL statement. A query tag consists of a non-empty key and,\n  optionally, a value. To represent a NULL value, either omit the ``value`` field or manually set it\n  to ``null`` or white space. Refer to the SQL language reference for the format specification of\n  query tags. There's no significance to the order of tags. Only one value per key will be recorded. A\n  sequence in excess of 20 query tags will be coerced to 20. Example:\n\n  { ..., \"query_tags\": [ { \"key\": \"team\", \"value\": \"eng\" }, { \"key\": \"some key only tag\" } ] }\n:param row_limit: int (optional)\n  Applies the given row limit to the statement's result set, but unlike the ``LIMIT`` clause in SQL,\n  it also sets the ``truncated`` field in the response to indicate whether the result was trimmed due\n  to the limit or not.\n:param schema: str (optional)\n  Sets default schema for statement execution, similar to `USE SCHEMA\n  <https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-schema.html>`__ in SQL.\n:param wait_timeout: str (optional)\n  The time in seconds the call will wait for the statement's result set as ``Ns``, where ``N`` can be\n  set to 0 or to a value between 5 and 50.\n\n  When set to ``0s``, the statement will execute in asynchronous mode and the call will not wait for\n  the execution to finish. In this case, the call returns directly with ``PENDING`` state and a\n  statement ID which can be used for polling with :method:statementexecution/getStatement.\n\n  When set between 5 and 50 seconds, the call will behave synchronously up to this timeout and wait\n  for the statement execution to finish. If the execution finishes within this time, the call returns\n  immediately with a manifest and result data (or a ``FAILED`` state in case of an execution error).\n  If the statement takes longer to execute, ``on_wait_timeout`` determines what should happen after\n  the timeout is reached.\n\n:returns: :class:`StatementResponse`",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4742,7 +4731,7 @@
                       "EXTERNAL_LINKS",
                       "INLINE"
                     ],
-                    "description": "The fetch disposition provides two modes of fetching results: ``INLINE`` and ``EXTERNAL_LINKS``. Statements executed with ``INLINE`` disposition will return result data inline, in ``JSON_ARRAY`` format, in a series of chunks. If a given statement produces a result set with a size larger than 25 MiB, that statement execution is aborted, and no result set will be available. **NOTE** Byte limits are computed based upon internal representations of the result set data, and might not match the sizes visible in JSON responses. Statements executed with ``EXTERNAL_LINKS`` disposition will return result data as external links: URLs that point to cloud storage internal to the workspace. Using ``EXTERNAL_LINKS`` disposition allows statements to generate arbitrarily sized result sets for fetching up to 100 GiB. The resulting links have two important properties: 1. They point to resources *external* to the Databricks compute; therefore any associated authentication information (typically a personal access token, OAuth token, or similar) *must be removed* when fetching from these links. 2. These are URLs with a specific expiration, indicated in the response. The behavior when attempting to use an expired link is cloud specific."
+                    "description": "The fetch disposition provides two modes of fetching results: ``INLINE`` and ``EXTERNAL_LINKS``. Statements executed with ``INLINE`` disposition will return result data inline, in ``JSON_ARRAY`` format, in a series of chunks. If a given statement produces a result set with a size larger than 25 MiB, that statement execution is aborted, and no result set will be available. **NOTE** Byte limits are computed based upon internal representations of the result set data, and might not match the sizes visible in JSON responses. Statements executed with ``EXTERNAL_LINKS`` disposition will return result data as external links: URLs that point to cloud storage internal to the workspace. Using ``EXTERNAL_LINKS`` disposition allows statements to generate arbitrarily sized result sets for fetching up to 100 GiB. The resulting links have two important properties: 1. They point to resources *external* to the Databricks compute; therefore any associated authentication information (typically a personal access token, OAuth token, or similar) *must be removed* when fetching from these links. 2. These are short-lived cloud-storage URLs with a specific expiration, indicated in the response. The behavior when attempting to use an expired link is cloud specific."
                   },
                   "format": {
                     "type": "string",
@@ -4979,7 +4968,7 @@
           "sql",
           "warehouses"
         ],
-        "description": "Creates a new SQL warehouse.\n\n:param auto_stop_mins: int (optional)\n  The amount of time in minutes that a SQL warehouse must be idle (i.e., no RUNNING queries) before it\n  is automatically stopped.\n\n  Supported values:\n\n  - Must be == 0 or >= 10 mins\n  - 0 indicates no autostop.\n\n  Defaults to 120 mins\n:param channel: :class:`Channel` (optional)\n  Channel Details\n:param cluster_size: str (optional)\n  Size of the clusters allocated for this warehouse. Increasing the size of a spark cluster allows you\n  to run larger queries on it. If you want to increase the number of concurrent queries, please tune\n  max_num_clusters.\n\n  Supported values:\n\n  - 2X-Small\n  - X-Small\n  - Small\n  - Medium\n  - Large\n  - X-Large\n  - 2X-Large\n  - 3X-Large\n  - 4X-Large\n  - 5X-Large\n:param creator_name: str (optional)\n  warehouse creator name\n:param enable_photon: bool (optional)\n  Configures whether the warehouse should use Photon optimized clusters.\n\n  Defaults to true.\n:param enable_serverless_compute: bool (optional)\n  Configures whether the warehouse should use serverless compute\n:param instance_profile_arn: str (optional)\n  Deprecated. Instance profile used to pass IAM role to the cluster\n:param max_num_clusters: int (optional)\n  Maximum number of clusters that the autoscaler will create to handle concurrent queries.\n\n  Supported values:\n\n  - Must be >= min_num_clusters\n  - Must be <= 40.\n\n  Defaults to min_clusters if unset.\n:param min_num_clusters: int (optional)\n  Minimum number of available clusters that will be maintained for this SQL warehouse. Increasing this\n  will ensure that a larger number of clusters are always running and therefore may reduce the cold\n  start time for new queries. This is similar to reserved vs. revocable cores in a resource manager.\n\n  Supported values:\n\n  - Must be > 0\n  - Must be <= min(max_num_clusters, 30)\n\n  Defaults to 1\n:param name: str (optional)\n  Logical name for the cluster.\n\n  Supported values:\n\n  - Must be unique within an org.\n  - Must be less than 100 characters.\n:param spot_instance_policy: :class:`SpotInstancePolicy` (optional)\n  Configurations whether the endpoint should use spot instances.\n:param tags: :class:`EndpointTags` (optional)\n  A set of key-value pairs that will be tagged on all resources (e.g., AWS instances and EBS volumes)\n  associated with this SQL warehouse.\n\n  Supported values:\n\n  - Number of tags < 45.\n:param warehouse_type: :class:`CreateWarehouseRequestWarehouseType` (optional)\n  Warehouse type: ``PRO`` or ``CLASSIC``. If you want to use serverless compute, you must set to\n  ``PRO`` and also set the field ``enable_serverless_compute`` to ``true``.\n\n:returns:\n  Long-running operation waiter for :class:`GetWarehouseResponse`.\n  See :method:wait_get_warehouse_running for more details.",
+        "description": "Creates a new SQL warehouse.\n\n:param auto_stop_mins: int (optional)\n  The amount of time in minutes that a SQL warehouse must be idle (i.e., no RUNNING queries) before it\n  is automatically stopped.\n\n  Supported values:\n\n  - Must be == 0 or >= 10 mins\n  - 0 indicates no autostop.\n\n  Defaults to 120 mins\n:param channel: :class:`Channel` (optional)\n  Channel Details\n:param cluster_size: str (optional)\n  Size of the clusters allocated for this warehouse. Increasing the size of a spark cluster allows you\n  to run larger queries on it. If you want to increase the number of concurrent queries, please tune\n  max_num_clusters.\n\n  Supported values:\n\n  - 2X-Small\n  - X-Small\n  - Small\n  - Medium\n  - Large\n  - X-Large\n  - 2X-Large\n  - 3X-Large\n  - 4X-Large\n  - 5X-Large\n:param creator_name: str (optional)\n  warehouse creator name\n:param customer_version_label: str (optional)\n  Compute version label for a REALTIME warehouse. This field is output only.\n:param enable_photon: bool (optional)\n  Configures whether the warehouse should use Photon optimized clusters.\n\n  Defaults to true.\n:param enable_serverless_compute: bool (optional)\n  Configures whether the warehouse should use serverless compute\n:param instance_profile_arn: str (optional)\n  Deprecated. Instance profile used to pass IAM role to the cluster\n:param max_dbu: int (optional)\n  Maximum compute capacity of a real-time SQL warehouse, in DBU per hour. Must be a multiple of 3\n  between 3 and 960. The effective maximum cannot be lower than the warehouse's minimum capacity.\n:param max_num_clusters: int (optional)\n  Maximum number of clusters that the autoscaler will create to handle concurrent queries.\n\n  Supported values:\n\n  - Must be >= min_num_clusters\n  - Must be <= 40.\n\n  Defaults to min_clusters if unset.\n:param min_num_clusters: int (optional)\n  Minimum number of available clusters that will be maintained for this SQL warehouse. Increasing this\n  will ensure that a larger number of clusters are always running and therefore may reduce the cold\n  start time for new queries. This is similar to reserved vs. revocable cores in a resource manager.\n\n  Supported values:\n\n  - Must be > 0\n  - Must be <= min(max_num_clusters, 30)\n\n  Defaults to 1\n:param name: str (optional)\n  Logical name for the cluster.\n\n  Supported values:\n\n  - Must be unique within an org.\n  - Must be less than 100 characters.\n:param reyden_cluster_size_multiplier: float (optional)\n  Cluster size multiplier for Reyden warehouses. Scales the effective compute capacity relative to the\n  nominal virtual cluster size. Only meaningful when the warehouse is of Reyden type.\n\n  Accepted range: 1.0 to the workspace-configured maximum (decimals allowed). The default maximum is\n  100.0.\n\n  - Values below 1.0 are normalized to 1.0.\n  - Values above the configured maximum are capped at that maximum.\n  - When absent, the warehouse is treated as having a multiplier of 1.0.\n:param spot_instance_policy: :class:`SpotInstancePolicy` (optional)\n  Configurations whether the endpoint should use spot instances.\n:param statement_timeout: int (optional)\n  Warehouse statement timeout in seconds.\n:param tags: :class:`EndpointTags` (optional)\n  A set of key-value pairs that will be tagged on all resources (e.g., AWS instances and EBS volumes)\n  associated with this SQL warehouse.\n\n  Supported values:\n\n  - Number of tags < 45.\n:param warehouse_type: :class:`CreateWarehouseRequestWarehouseType` (optional)\n  Warehouse type: ``PRO`` or ``CLASSIC``. If you want to use serverless compute, you must set to\n  ``PRO`` and also set the field ``enable_serverless_compute`` to ``true``.\n\n:returns:\n  Long-running operation waiter for :class:`GetWarehouseResponse`.\n  See :method:wait_get_warehouse_running for more details.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5017,6 +5006,10 @@
                     "type": "string",
                     "description": "warehouse creator name"
                   },
+                  "customer_version_label": {
+                    "type": "string",
+                    "description": "Compute version label for a REALTIME warehouse. This field is output only."
+                  },
                   "enable_photon": {
                     "type": "boolean",
                     "description": "Configures whether the warehouse should use Photon optimized clusters. Defaults to true."
@@ -5028,6 +5021,10 @@
                   "instance_profile_arn": {
                     "type": "string",
                     "description": "Deprecated. Instance profile used to pass IAM role to the cluster"
+                  },
+                  "max_dbu": {
+                    "type": "integer",
+                    "description": "Maximum compute capacity of a real-time SQL warehouse, in DBU per hour. Must be a multiple of 3 between 3 and 960. The effective maximum cannot be lower than the warehouse's minimum capacity."
                   },
                   "max_num_clusters": {
                     "type": "integer",
@@ -5041,6 +5038,10 @@
                     "type": "string",
                     "description": "Logical name for the cluster. Supported values: - Must be unique within an org. - Must be less than 100 characters."
                   },
+                  "reyden_cluster_size_multiplier": {
+                    "type": "number",
+                    "description": "Cluster size multiplier for Reyden warehouses. Scales the effective compute capacity relative to the nominal virtual cluster size. Only meaningful when the warehouse is of Reyden type. Accepted range: 1.0 to the workspace-configured maximum (decimals allowed). The default maximum is 100.0. - Values below 1.0 are normalized to 1.0. - Values above the configured maximum are capped at that maximum. - When absent, the warehouse is treated as having a multiplier of 1.0."
+                  },
                   "spot_instance_policy": {
                     "type": "string",
                     "x-enum": [
@@ -5049,6 +5050,10 @@
                       "RELIABILITY_OPTIMIZED"
                     ],
                     "description": "Configurations whether the endpoint should use spot instances."
+                  },
+                  "statement_timeout": {
+                    "type": "integer",
+                    "description": "Warehouse statement timeout in seconds."
                   },
                   "tags": {
                     "type": "object",
@@ -5076,7 +5081,6 @@
                       "CLASSIC",
                       "PRO",
                       "REALTIME",
-                      "REYDEN",
                       "TYPE_UNSPECIFIED"
                     ],
                     "description": "Warehouse type: ``PRO`` or ``CLASSIC``. If you want to use serverless compute, you must set to ``PRO`` and also set the field ``enable_serverless_compute`` to ``true``."
@@ -5214,38 +5218,29 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "default_warehouse_override": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string",
-                        "x-enum": [
-                          "CUSTOM",
-                          "LAST_SELECTED"
-                        ],
-                        "description": "The type of override behavior."
-                      },
-                      "default_warehouse_override_id": {
-                        "type": "string",
-                        "description": "The ID component of the resource name (user ID)."
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}"
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED type."
-                      }
-                    },
-                    "required": [
-                      "type"
+                  "type": {
+                    "type": "string",
+                    "x-enum": [
+                      "CUSTOM",
+                      "LAST_SELECTED"
                     ],
-                    "description": "Required. The default warehouse override to create."
+                    "description": "The type of override behavior."
+                  },
+                  "default_warehouse_override_id": {
+                    "type": "string",
+                    "description": "The ID component of the resource name (user ID)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}"
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED type."
                   }
                 },
                 "required": [
-                  "default_warehouse_override"
+                  "type"
                 ]
               }
             }
@@ -5441,7 +5436,7 @@
         "x-stackql-sdk-source": "WarehousesAPI"
       }
     },
-    "/api/warehouses/v1/{name}": {
+    "/api/warehouses/v1/default-warehouse-overrides/{default_warehouse_override_id}": {
       "delete": {
         "operationId": "warehouses_delete_default_warehouse_override",
         "summary": "Deletes the default warehouse override for a user. Users can delete their own override. Admins can",
@@ -5452,13 +5447,13 @@
         "description": "Deletes the default warehouse override for a user. Users can delete their own override. Admins can\ndelete overrides for any user. After deletion, the workspace default warehouse will be used.\n\n:param name: str\n  Required. The resource name of the default warehouse override to delete. Format:\n  default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be\n  a numeric user ID or the literal string \"me\" for the current user.",
         "parameters": [
           {
-            "name": "name",
+            "name": "default_warehouse_override_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Required. The resource name of the default warehouse override to delete. Format: default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be a numeric user ID or the literal string \"me\" for the current user."
+            "description": "The `default_warehouse_override_id` segment of the `name` resource name (`default-warehouse-overrides/{default_warehouse_override_id}`). Required. The resource name of the default warehouse override to delete. Format: default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be a numeric user ID or the literal string \"me\" for the current user."
           }
         ],
         "responses": {
@@ -5496,13 +5491,13 @@
         "description": "Returns the default warehouse override for a user. Users can fetch their own override. Admins can\nfetch overrides for any user. If no override exists, the UI will fallback to the workspace default\nwarehouse.\n\n:param name: str\n  Required. The resource name of the default warehouse override to retrieve. Format:\n  default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be\n  a numeric user ID or the literal string \"me\" for the current user.\n\n:returns: :class:`DefaultWarehouseOverride`",
         "parameters": [
           {
-            "name": "name",
+            "name": "default_warehouse_override_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Required. The resource name of the default warehouse override to retrieve. Format: default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be a numeric user ID or the literal string \"me\" for the current user."
+            "description": "The `default_warehouse_override_id` segment of the `name` resource name (`default-warehouse-overrides/{default_warehouse_override_id}`). Required. The resource name of the default warehouse override to retrieve. Format: default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be a numeric user ID or the literal string \"me\" for the current user."
           }
         ],
         "responses": {
@@ -5547,13 +5542,13 @@
         "description": "Updates an existing default warehouse override for a user. Users can update their own override. Admins\ncan update overrides for any user.\n\n:param name: str\n  The resource name of the default warehouse override. Format:\n  default-warehouse-overrides/{default_warehouse_override_id}\n:param default_warehouse_override: :class:`DefaultWarehouseOverride`\n  Required. The default warehouse override to update. The name field must be set in the format:\n  default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be\n  a numeric user ID or the literal string \"me\" for the current user.\n:param update_mask: FieldMask\n  Required. Field mask specifying which fields to update. Only the fields specified in the mask will\n  be updated. Use \"*\" to update all fields. When allow_missing is true, this field is ignored and all\n  fields are applied.\n:param allow_missing: bool (optional)\n  If set to true, and the override is not found, a new override will be created. In this situation,\n  ``update_mask`` is ignored and all fields are applied. Defaults to false.\n\n:returns: :class:`DefaultWarehouseOverride`",
         "parameters": [
           {
-            "name": "name",
+            "name": "default_warehouse_override_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}"
+            "description": "The `default_warehouse_override_id` segment of the `name` resource name (`default-warehouse-overrides/{default_warehouse_override_id}`). The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}"
           },
           {
             "name": "update_mask",
@@ -5580,38 +5575,29 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "default_warehouse_override": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string",
-                        "x-enum": [
-                          "CUSTOM",
-                          "LAST_SELECTED"
-                        ],
-                        "description": "The type of override behavior."
-                      },
-                      "default_warehouse_override_id": {
-                        "type": "string",
-                        "description": "The ID component of the resource name (user ID)."
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}"
-                      },
-                      "warehouse_id": {
-                        "type": "string",
-                        "description": "The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED type."
-                      }
-                    },
-                    "required": [
-                      "type"
+                  "type": {
+                    "type": "string",
+                    "x-enum": [
+                      "CUSTOM",
+                      "LAST_SELECTED"
                     ],
-                    "description": "Required. The default warehouse override to update. The name field must be set in the format: default-warehouse-overrides/{default_warehouse_override_id} The default_warehouse_override_id can be a numeric user ID or the literal string \"me\" for the current user."
+                    "description": "The type of override behavior."
+                  },
+                  "default_warehouse_override_id": {
+                    "type": "string",
+                    "description": "The ID component of the resource name (user ID)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}"
+                  },
+                  "warehouse_id": {
+                    "type": "string",
+                    "description": "The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED type."
                   }
                 },
                 "required": [
-                  "default_warehouse_override"
+                  "type"
                 ]
               }
             }
@@ -5658,7 +5644,7 @@
           "sql",
           "warehouses"
         ],
-        "description": "Updates the configuration for a SQL warehouse.\n\n:param id: str\n  Required. Id of the warehouse to configure.\n:param auto_stop_mins: int (optional)\n  The amount of time in minutes that a SQL warehouse must be idle (i.e., no RUNNING queries) before it\n  is automatically stopped.\n\n  Supported values:\n\n  - Must be == 0 or >= 10 mins\n  - 0 indicates no autostop.\n\n  Defaults to 120 mins\n:param channel: :class:`Channel` (optional)\n  Channel Details\n:param cluster_size: str (optional)\n  Size of the clusters allocated for this warehouse. Increasing the size of a spark cluster allows you\n  to run larger queries on it. If you want to increase the number of concurrent queries, please tune\n  max_num_clusters.\n\n  Supported values:\n\n  - 2X-Small\n  - X-Small\n  - Small\n  - Medium\n  - Large\n  - X-Large\n  - 2X-Large\n  - 3X-Large\n  - 4X-Large\n  - 5X-Large\n:param creator_name: str (optional)\n  warehouse creator name\n:param enable_photon: bool (optional)\n  Configures whether the warehouse should use Photon optimized clusters.\n\n  Defaults to true.\n:param enable_serverless_compute: bool (optional)\n  Configures whether the warehouse should use serverless compute\n:param instance_profile_arn: str (optional)\n  Deprecated. Instance profile used to pass IAM role to the cluster\n:param max_num_clusters: int (optional)\n  Maximum number of clusters that the autoscaler will create to handle concurrent queries.\n\n  Supported values:\n\n  - Must be >= min_num_clusters\n  - Must be <= 40.\n\n  Defaults to min_clusters if unset.\n:param min_num_clusters: int (optional)\n  Minimum number of available clusters that will be maintained for this SQL warehouse. Increasing this\n  will ensure that a larger number of clusters are always running and therefore may reduce the cold\n  start time for new queries. This is similar to reserved vs. revocable cores in a resource manager.\n\n  Supported values:\n\n  - Must be > 0\n  - Must be <= min(max_num_clusters, 30)\n\n  Defaults to 1\n:param name: str (optional)\n  Logical name for the cluster.\n\n  Supported values:\n\n  - Must be unique within an org.\n  - Must be less than 100 characters.\n:param spot_instance_policy: :class:`SpotInstancePolicy` (optional)\n  Configurations whether the endpoint should use spot instances.\n:param tags: :class:`EndpointTags` (optional)\n  A set of key-value pairs that will be tagged on all resources (e.g., AWS instances and EBS volumes)\n  associated with this SQL warehouse.\n\n  Supported values:\n\n  - Number of tags < 45.\n:param warehouse_type: :class:`EditWarehouseRequestWarehouseType` (optional)\n  Warehouse type: ``PRO`` or ``CLASSIC``. If you want to use serverless compute, you must set to\n  ``PRO`` and also set the field ``enable_serverless_compute`` to ``true``.\n\n:returns:\n  Long-running operation waiter for :class:`GetWarehouseResponse`.\n  See :method:wait_get_warehouse_running for more details.",
+        "description": "Updates the configuration for a SQL warehouse.\n\n:param id: str\n  Required. Id of the warehouse to configure.\n:param auto_stop_mins: int (optional)\n  The amount of time in minutes that a SQL warehouse must be idle (i.e., no RUNNING queries) before it\n  is automatically stopped.\n\n  Supported values:\n\n  - Must be == 0 or >= 10 mins\n  - 0 indicates no autostop.\n\n  Defaults to 120 mins\n:param channel: :class:`Channel` (optional)\n  Channel Details\n:param cluster_size: str (optional)\n  Size of the clusters allocated for this warehouse. Increasing the size of a spark cluster allows you\n  to run larger queries on it. If you want to increase the number of concurrent queries, please tune\n  max_num_clusters.\n\n  Supported values:\n\n  - 2X-Small\n  - X-Small\n  - Small\n  - Medium\n  - Large\n  - X-Large\n  - 2X-Large\n  - 3X-Large\n  - 4X-Large\n  - 5X-Large\n:param creator_name: str (optional)\n  warehouse creator name\n:param customer_version_label: str (optional)\n  Compute version label for a REALTIME warehouse. This field is output only.\n:param enable_photon: bool (optional)\n  Configures whether the warehouse should use Photon optimized clusters.\n\n  Defaults to true.\n:param enable_serverless_compute: bool (optional)\n  Configures whether the warehouse should use serverless compute\n:param instance_profile_arn: str (optional)\n  Deprecated. Instance profile used to pass IAM role to the cluster\n:param max_dbu: int (optional)\n  Maximum compute capacity of a real-time SQL warehouse, in DBU per hour. Must be a multiple of 3\n  between 3 and 960. The effective maximum cannot be lower than the warehouse's minimum capacity.\n:param max_num_clusters: int (optional)\n  Maximum number of clusters that the autoscaler will create to handle concurrent queries.\n\n  Supported values:\n\n  - Must be >= min_num_clusters\n  - Must be <= 40.\n\n  Defaults to min_clusters if unset.\n:param min_num_clusters: int (optional)\n  Minimum number of available clusters that will be maintained for this SQL warehouse. Increasing this\n  will ensure that a larger number of clusters are always running and therefore may reduce the cold\n  start time for new queries. This is similar to reserved vs. revocable cores in a resource manager.\n\n  Supported values:\n\n  - Must be > 0\n  - Must be <= min(max_num_clusters, 30)\n\n  Defaults to 1\n:param name: str (optional)\n  Logical name for the cluster.\n\n  Supported values:\n\n  - Must be unique within an org.\n  - Must be less than 100 characters.\n:param reyden_cluster_size_multiplier: float (optional)\n  Cluster size multiplier for Reyden warehouses. Scales the effective compute capacity relative to the\n  nominal virtual cluster size. Only meaningful when the warehouse is of Reyden type.\n\n  Accepted range: 1.0 to the workspace-configured maximum (decimals allowed). The default maximum is\n  100.0.\n\n  - Values below 1.0 are normalized to 1.0.\n  - Values above the configured maximum are capped at that maximum.\n  - When absent, the warehouse is treated as having a multiplier of 1.0.\n:param spot_instance_policy: :class:`SpotInstancePolicy` (optional)\n  Configurations whether the endpoint should use spot instances.\n:param statement_timeout: int (optional)\n  Warehouse statement timeout in seconds.\n:param tags: :class:`EndpointTags` (optional)\n  A set of key-value pairs that will be tagged on all resources (e.g., AWS instances and EBS volumes)\n  associated with this SQL warehouse.\n\n  Supported values:\n\n  - Number of tags < 45.\n:param warehouse_type: :class:`EditWarehouseRequestWarehouseType` (optional)\n  Warehouse type: ``PRO`` or ``CLASSIC``. If you want to use serverless compute, you must set to\n  ``PRO`` and also set the field ``enable_serverless_compute`` to ``true``.\n\n:returns:\n  Long-running operation waiter for :class:`GetWarehouseResponse`.\n  See :method:wait_get_warehouse_running for more details.",
         "parameters": [
           {
             "name": "id",
@@ -5707,6 +5693,10 @@
                     "type": "string",
                     "description": "warehouse creator name"
                   },
+                  "customer_version_label": {
+                    "type": "string",
+                    "description": "Compute version label for a REALTIME warehouse. This field is output only."
+                  },
                   "enable_photon": {
                     "type": "boolean",
                     "description": "Configures whether the warehouse should use Photon optimized clusters. Defaults to true."
@@ -5718,6 +5708,10 @@
                   "instance_profile_arn": {
                     "type": "string",
                     "description": "Deprecated. Instance profile used to pass IAM role to the cluster"
+                  },
+                  "max_dbu": {
+                    "type": "integer",
+                    "description": "Maximum compute capacity of a real-time SQL warehouse, in DBU per hour. Must be a multiple of 3 between 3 and 960. The effective maximum cannot be lower than the warehouse's minimum capacity."
                   },
                   "max_num_clusters": {
                     "type": "integer",
@@ -5731,6 +5725,10 @@
                     "type": "string",
                     "description": "Logical name for the cluster. Supported values: - Must be unique within an org. - Must be less than 100 characters."
                   },
+                  "reyden_cluster_size_multiplier": {
+                    "type": "number",
+                    "description": "Cluster size multiplier for Reyden warehouses. Scales the effective compute capacity relative to the nominal virtual cluster size. Only meaningful when the warehouse is of Reyden type. Accepted range: 1.0 to the workspace-configured maximum (decimals allowed). The default maximum is 100.0. - Values below 1.0 are normalized to 1.0. - Values above the configured maximum are capped at that maximum. - When absent, the warehouse is treated as having a multiplier of 1.0."
+                  },
                   "spot_instance_policy": {
                     "type": "string",
                     "x-enum": [
@@ -5739,6 +5737,10 @@
                       "RELIABILITY_OPTIMIZED"
                     ],
                     "description": "Configurations whether the endpoint should use spot instances."
+                  },
+                  "statement_timeout": {
+                    "type": "integer",
+                    "description": "Warehouse statement timeout in seconds."
                   },
                   "tags": {
                     "type": "object",
@@ -5766,7 +5768,6 @@
                       "CLASSIC",
                       "PRO",
                       "REALTIME",
-                      "REYDEN",
                       "TYPE_UNSPECIFIED"
                     ],
                     "description": "Warehouse type: ``PRO`` or ``CLASSIC``. If you want to use serverless compute, you must set to ``PRO`` and also set the field ``enable_serverless_compute`` to ``true``."
@@ -6241,7 +6242,6 @@
                             "CLASSIC",
                             "PRO",
                             "REALTIME",
-                            "REYDEN",
                             "TYPE_UNSPECIFIED"
                           ],
                           "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
@@ -6714,21 +6714,21 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name of the parameter, referenced in the query as ``:name``."
+            "description": "The name of the parameter. Reference it in the query text as ``:name``. Required, must be non-empty, and must be unique across the alert's parameters."
           },
           "type": {
             "type": "string",
-            "description": "The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY, MAP, and STRUCT are not supported."
+            "description": "The SQL data type of the parameter, for example ``STRING``, ``INT``, or ``DECIMAL(10, 2)``. If no type is given the type is assumed to be ``STRING``. Complex types such as ``ARRAY``, ``MAP``, and ``STRUCT`` are not supported."
           },
           "value": {
             "type": "string",
-            "description": "The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL."
+            "description": "The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL."
           }
         },
         "required": [
           "name"
         ],
-        "description": "Redash-owned copy of the internal StatementParameter for the external AlertV2 API. The internal\n    ``ordinal`` and ``args`` fields are intentionally omitted: the public API supports only flat,\n    named scalar parameters; complex types (ARRAY, MAP, STRUCT) are not supported. This mirrors\n    SEA's public StatementParameter schema, see:\n    cmdexec/sql-exec-api/proto/sql_exec_api_service.proto:763-779"
+        "description": "A named parameter bound to the alert query. Only flat, named scalar parameters are supported;\n    complex types such as ARRAY, MAP, and STRUCT are not."
       },
       "AlertV2": {
         "type": "object",
@@ -6756,15 +6756,15 @@
           },
           "custom_description": {
             "type": "string",
-            "description": "Custom description for the alert. support mustache template."
+            "description": "Custom description for the alert. Interpreted according to ``custom_template_format``."
           },
           "custom_summary": {
             "type": "string",
-            "description": "Custom summary for the alert. support mustache template."
+            "description": "Custom summary for the alert. Interpreted according to ``custom_template_format``."
           },
-          "effective_parent_path": {
-            "type": "string",
-            "description": "The actual workspace path of the folder containing the alert. This is an output-only field."
+          "custom_template_format": {
+            "$ref": "#/components/schemas/CustomTemplateFormat",
+            "description": "The format used to interpret the ``custom_summary`` and ``custom_description`` templates. ``HTML`` treats both templates as HTML with Mustache ``{{VARIABLE_NAME}}`` placeholders. ``MARKDOWN`` treats them as Markdown with allowlisted ``@VARIABLE_NAME`` placeholders and converts them to the format each notification destination expects, so a single template renders correctly in email, Slack, and Microsoft Teams. When unset, the API applies no default. Responses omit the field unless a format is stored, and a template with no format is rendered as HTML."
           },
           "effective_run_as": {
             "$ref": "#/components/schemas/AlertV2RunAs",
@@ -6772,7 +6772,7 @@
           },
           "id": {
             "type": "string",
-            "description": "UUID identifying the alert."
+            "description": "The canonical identifier of the alert to retrieve information about."
           },
           "lifecycle_state": {
             "$ref": "#/components/schemas/AlertLifecycleState",
@@ -6787,7 +6787,7 @@
             "items": {
               "$ref": "#/components/schemas/AlertStatementParameter"
             },
-            "description": "Query parameters bound when executing the alert query, referenced in the query text with ``:name`` syntax. Static values only."
+            "description": "A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only. Reference a parameter in the query text as ``:name``. Each parameter must have a unique, non-empty name. Each parameter consists of a name, a value, and optionally a type. To represent a NULL value, the ``value`` field may be omitted or set to ``null`` explicitly. If the ``type`` field is omitted, the value is interpreted as a string. If the type is given, parameters will be checked for type correctness according to the given type. A value is correct if the provided string can be converted to the requested type using the ``cast`` function. The exact semantics are described in the section `cast function <https://docs.databricks.com/sql/language-manual/functions/cast.html>`__ of the SQL language reference."
           },
           "parent_path": {
             "type": "string",
@@ -7178,10 +7178,6 @@
             "type": "string",
             "description": "A Java timezone id. The schedule will be resolved using this timezone. This will be combined with the quartz_cron_schedule to determine the schedule. See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details."
           },
-          "effective_pause_status": {
-            "$ref": "#/components/schemas/SchedulePauseStatus",
-            "description": "The actual pause status of the schedule. This is an output-only field."
-          },
           "pause_status": {
             "$ref": "#/components/schemas/SchedulePauseStatus",
             "description": "Indicate whether this schedule is paused or not."
@@ -7463,6 +7459,10 @@
             "type": "string",
             "description": "warehouse creator name"
           },
+          "customer_version_label": {
+            "type": "string",
+            "description": "Compute version label for a REALTIME warehouse. This field is output only."
+          },
           "enable_photon": {
             "type": "boolean",
             "description": "Configures whether the warehouse should use Photon optimized clusters. Defaults to true."
@@ -7486,6 +7486,10 @@
           "jdbc_url": {
             "type": "string",
             "description": "the jdbc connection string for this warehouse"
+          },
+          "max_dbu": {
+            "type": "integer",
+            "description": "Maximum compute capacity of a real-time SQL warehouse, in DBU per hour. Must be a multiple of 3 between 3 and 960. The effective maximum cannot be lower than the warehouse's minimum capacity."
           },
           "max_num_clusters": {
             "type": "integer",
@@ -7511,6 +7515,10 @@
             "$ref": "#/components/schemas/OdbcParams",
             "description": "ODBC parameters for the SQL warehouse"
           },
+          "reyden_cluster_size_multiplier": {
+            "type": "number",
+            "description": "Cluster size multiplier for Reyden warehouses. Scales the effective compute capacity relative to the nominal virtual cluster size. Only meaningful when the warehouse is of Reyden type. Accepted range: 1.0 to the workspace-configured maximum (decimals allowed). The default maximum is 100.0. - Values below 1.0 are normalized to 1.0. - Values above the configured maximum are capped at that maximum. - When absent, the warehouse is treated as having a multiplier of 1.0."
+          },
           "spot_instance_policy": {
             "$ref": "#/components/schemas/SpotInstancePolicy",
             "description": "Configurations whether the endpoint should use spot instances."
@@ -7518,6 +7526,10 @@
           "state": {
             "$ref": "#/components/schemas/State",
             "description": "state of the endpoint"
+          },
+          "statement_timeout": {
+            "type": "integer",
+            "description": "Warehouse statement timeout in seconds."
           },
           "tags": {
             "$ref": "#/components/schemas/EndpointTags",
@@ -7586,7 +7598,7 @@
           },
           "external_link": {
             "type": "string",
-            "description": "A URL pointing to a chunk of result data, hosted by an external service, with a short expiration time (<= 15 minutes). As this URL contains a temporary credential, it should be considered sensitive and the client should not expose this URL in a log."
+            "description": "A short-lived cloud-storage URL pointing to a chunk of result data, hosted by an external service, with a short expiration time (<= 15 minutes). As this URL contains a temporary credential, it should be considered sensitive and the client should not expose this URL in a log."
           },
           "http_headers": {
             "type": "object",
@@ -7705,6 +7717,10 @@
             "type": "string",
             "description": "warehouse creator name"
           },
+          "customer_version_label": {
+            "type": "string",
+            "description": "Compute version label for a REALTIME warehouse. This field is output only."
+          },
           "enable_photon": {
             "type": "boolean",
             "description": "Configures whether the warehouse should use Photon optimized clusters. Defaults to true."
@@ -7728,6 +7744,10 @@
           "jdbc_url": {
             "type": "string",
             "description": "the jdbc connection string for this warehouse"
+          },
+          "max_dbu": {
+            "type": "integer",
+            "description": "Maximum compute capacity of a real-time SQL warehouse, in DBU per hour. Must be a multiple of 3 between 3 and 960. The effective maximum cannot be lower than the warehouse's minimum capacity."
           },
           "max_num_clusters": {
             "type": "integer",
@@ -7753,6 +7773,10 @@
             "$ref": "#/components/schemas/OdbcParams",
             "description": "ODBC parameters for the SQL warehouse"
           },
+          "reyden_cluster_size_multiplier": {
+            "type": "number",
+            "description": "Cluster size multiplier for Reyden warehouses. Scales the effective compute capacity relative to the nominal virtual cluster size. Only meaningful when the warehouse is of Reyden type. Accepted range: 1.0 to the workspace-configured maximum (decimals allowed). The default maximum is 100.0. - Values below 1.0 are normalized to 1.0. - Values above the configured maximum are capped at that maximum. - When absent, the warehouse is treated as having a multiplier of 1.0."
+          },
           "spot_instance_policy": {
             "$ref": "#/components/schemas/SpotInstancePolicy",
             "description": "Configurations whether the endpoint should use spot instances."
@@ -7760,6 +7784,10 @@
           "state": {
             "$ref": "#/components/schemas/State",
             "description": "state of the endpoint"
+          },
+          "statement_timeout": {
+            "type": "integer",
+            "description": "Warehouse statement timeout in seconds."
           },
           "tags": {
             "$ref": "#/components/schemas/EndpointTags",
@@ -8868,7 +8896,7 @@
             "description": "The starting row offset within the result set."
           }
         },
-        "description": "Contains the result data of a single chunk when using ``INLINE`` disposition. When using\n    ``EXTERNAL_LINKS`` disposition, the array ``external_links`` is used instead to provide URLs to\n    the result data in cloud storage. Exactly one of these alternatives is used. (While the\n    ``external_links`` array prepares the API to return multiple links in a single response.\n    Currently only a single link is returned.)"
+        "description": "Contains the result data of a single chunk when using ``INLINE`` disposition. When using\n    ``EXTERNAL_LINKS`` disposition, the array ``external_links`` is used instead to provide\n    short-lived cloud-storage URLs to the result data in cloud storage. Exactly one of these\n    alternatives is used. (While the ``external_links`` array prepares the API to return multiple\n    links in a single response. Currently only a single link is returned.)"
       },
       "ResultManifest": {
         "type": "object",
@@ -9554,10 +9582,17 @@
           "CLASSIC",
           "PRO",
           "REALTIME",
-          "REYDEN",
           "TYPE_UNSPECIFIED"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
+      },
+      "CustomTemplateFormat": {
+        "type": "string",
+        "x-enum": [
+          "HTML",
+          "MARKDOWN"
+        ],
+        "description": "Rendering format for the ``custom_summary`` and ``custom_description`` templates."
       },
       "DatePrecision": {
         "type": "string",
@@ -9621,7 +9656,6 @@
           "CLASSIC",
           "PRO",
           "REALTIME",
-          "REYDEN",
           "TYPE_UNSPECIFIED"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
@@ -9632,7 +9666,6 @@
           "CLASSIC",
           "PRO",
           "REALTIME",
-          "REYDEN",
           "TYPE_UNSPECIFIED"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
@@ -9660,7 +9693,6 @@
           "CLASSIC",
           "PRO",
           "REALTIME",
-          "REYDEN",
           "TYPE_UNSPECIFIED"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
@@ -9766,7 +9798,6 @@
         "x-enum": [
           "ALTER",
           "ANALYZE",
-          "CALL",
           "COPY",
           "CREATE",
           "DELETE",
@@ -9864,7 +9895,7 @@
           "POLICY_UNSPECIFIED",
           "RELIABILITY_OPTIMIZED"
         ],
-        "description": "EndpointSpotInstancePolicy configures whether the endpoint should use spot instances.\n\nThe breakdown of how the EndpointSpotInstancePolicy converts to per cloud configurations is:\n\n+-------+--------------------------------------+--------------------------------+ | Cloud |\nCOST_OPTIMIZED | RELIABILITY_OPTIMIZED |\n+-------+--------------------------------------+--------------------------------+ | AWS | On\nDemand Driver with Spot Executors | On Demand Driver and Executors | | AZURE | On Demand Driver\nand Executors | On Demand Driver and Executors |\n+-------+--------------------------------------+--------------------------------+"
+        "description": "EndpointSpotInstancePolicy configures whether the endpoint should use spot instances.\n\nThe breakdown of how the EndpointSpotInstancePolicy converts to per cloud configurations is:\n\n- AWS, COST_OPTIMIZED: On Demand Driver with Spot Executors.\n- AWS, RELIABILITY_OPTIMIZED: On Demand Driver and Executors.\n- AZURE, COST_OPTIMIZED: On Demand Driver and Executors.\n- AZURE, RELIABILITY_OPTIMIZED: On Demand Driver and Executors."
       },
       "State": {
         "type": "string",
@@ -9947,7 +9978,6 @@
           "BOOTSTRAP_TIMEOUT_DUE_TO_MISCONFIG",
           "BUDGET_POLICY_LIMIT_ENFORCEMENT_ACTIVATED",
           "BUDGET_POLICY_RESOLUTION_FAILURE",
-          "CERT_ROTATION",
           "CLOUD_ACCOUNT_POD_QUOTA_EXCEEDED",
           "CLOUD_ACCOUNT_SETUP_FAILURE",
           "CLOUD_OPERATION_CANCELLED",
@@ -9966,7 +9996,6 @@
           "CONTROL_PLANE_CONNECTION_FAILURE_DUE_TO_MISCONFIG",
           "CONTROL_PLANE_REQUEST_FAILURE",
           "CONTROL_PLANE_REQUEST_FAILURE_DUE_TO_MISCONFIG",
-          "COST_CONTROL_ENTITLEMENT_DENIED",
           "DATABASE_CONNECTION_FAILURE",
           "DATA_ACCESS_CONFIG_CHANGED",
           "DBFS_COMPONENT_UNHEALTHY",
@@ -9977,7 +10006,6 @@
           "DOCKER_IMAGE_PULL_FAILURE",
           "DOCKER_IMAGE_TOO_LARGE_FOR_INSTANCE_EXCEPTION",
           "DOCKER_INVALID_OS_EXCEPTION",
-          "DRIVER_DNS_RESOLUTION_FAILURE",
           "DRIVER_EVICTION",
           "DRIVER_LAUNCH_TIMEOUT",
           "DRIVER_NODE_UNREACHABLE",
@@ -10054,8 +10082,6 @@
           "NETWORK_CHECK_STORAGE_FAILURE_DUE_TO_MISCONFIG",
           "NETWORK_CONFIGURATION_FAILURE",
           "NFS_MOUNT_FAILURE",
-          "NO_ACTIVATED_K8S",
-          "NO_ACTIVATED_K8S_TESTING_TAG",
           "NO_MATCHED_K8S",
           "NO_MATCHED_K8S_TESTING_TAG",
           "NPIP_TUNNEL_SETUP_FAILURE",
@@ -10066,11 +10092,9 @@
           "REQUEST_REJECTED",
           "REQUEST_THROTTLED",
           "RESOURCE_USAGE_BLOCKED",
-          "SECRET_CREATION_ACCESS_DENIED",
           "SECRET_CREATION_FAILURE",
           "SECRET_PERMISSION_DENIED",
           "SECRET_RESOLUTION_ERROR",
-          "SECURITY_AGENTS_FAILED_INITIAL_VERIFICATION",
           "SECURITY_DAEMON_REGISTRATION_EXCEPTION",
           "SELF_BOOTSTRAP_FAILURE",
           "SERVERLESS_LONG_RUNNING_TERMINATED",
@@ -10102,10 +10126,9 @@
           "WORKER_SETUP_FAILURE",
           "WORKSPACE_CANCELLED_ERROR",
           "WORKSPACE_CONFIGURATION_ERROR",
-          "WORKSPACE_DELEGATION_KEY_MISCONFIGURED",
           "WORKSPACE_UPDATE"
         ],
-        "description": "The status code indicating why the cluster was terminated"
+        "description": "The status code indicating why the cluster was terminated."
       },
       "TerminationReasonType": {
         "type": "string",
@@ -10134,7 +10157,6 @@
           "CLASSIC",
           "PRO",
           "REALTIME",
-          "REYDEN",
           "TYPE_UNSPECIFIED"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."

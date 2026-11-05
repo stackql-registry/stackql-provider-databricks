@@ -34,13 +34,13 @@ Creates, updates, deletes, gets or lists a <code>stable_urls</code> resource.
 The following fields are returned by `SELECT` queries:
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
-        { label: 'list', value: 'list' },
-        { label: 'get', value: 'get' }
+        { label: 'get', value: 'get' },
+        { label: 'list', value: 'list' }
     ]}
 >
-<TabItem value="list">
+<TabItem value="get">
 
 <SchemaTable fields={[
   {
@@ -75,7 +75,7 @@ The following fields are returned by `SELECT` queries:
   }
 ]} />
 </TabItem>
-<TabItem value="get">
+<TabItem value="list">
 
 <SchemaTable fields={[
   {
@@ -128,30 +128,30 @@ The following methods are available for this resource:
 </thead>
 <tbody>
 <tr>
-    <td><a href="#list"><CopyableCode code="list" /></a></td>
-    <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a></td>
-    <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
-    <td>List stable URLs for an account.</td>
-</tr>
-<tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-stable_url_id"><code>stable_url_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Get a stable URL.</td>
 </tr>
 <tr>
+    <td><a href="#list"><CopyableCode code="list" /></a></td>
+    <td><CopyableCode code="select" /></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
+    <td>List stable URLs for an account.</td>
+</tr>
+<tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-stable_url_id"><code>stable_url_id</code></a>, <a href="#parameter-stable_url"><code>stable_url</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-stable_url_id"><code>stable_url_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-initial_workspace_id"><code>initial_workspace_id</code></a></td>
     <td><a href="#parameter-validate_only"><code>validate_only</code></a></td>
     <td>Create a new stable URL.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-stable_url_id"><code>stable_url_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Delete a stable URL.</td>
 </tr>
@@ -171,20 +171,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
-<tr id="parameter-name">
-    <td><CopyableCode code="name" /></td>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
     <td><code>string</code></td>
-    <td>The fully qualified resource name. Format: accounts/&#123;account_id&#125;/stable-urls/&#123;stable_url_id&#125;.</td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
 </tr>
-<tr id="parameter-parent">
-    <td><CopyableCode code="parent" /></td>
+<tr id="parameter-account_id">
+    <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
-    <td>The parent resource. Format: accounts/&#123;account_id&#125;.</td>
+    <td>The `account_id` segment of the `name` resource name (`accounts/&#123;account_id&#125;/stable-urls/&#123;stable_url_id&#125;`). The fully qualified resource name. Format: accounts/&#123;account_id&#125;/stable-urls/&#123;stable_url_id&#125;.</td>
 </tr>
 <tr id="parameter-stable_url_id">
     <td><CopyableCode code="stable_url_id" /></td>
     <td><code>string</code></td>
-    <td>Client-provided identifier for the stable URL. Used to construct the resource name as &#123;parent&#125;/stable-urls/&#123;stable_url_id&#125;.</td>
+    <td>The `stable_url_id` segment of the `name` resource name (`accounts/&#123;account_id&#125;/stable-urls/&#123;stable_url_id&#125;`). The fully qualified resource name. Format: accounts/&#123;account_id&#125;/stable-urls/&#123;stable_url_id&#125;.</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -207,31 +207,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 ## `SELECT` examples
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
-        { label: 'list', value: 'list' },
-        { label: 'get', value: 'get' }
+        { label: 'get', value: 'get' },
+        { label: 'list', value: 'list' }
     ]}
 >
-<TabItem value="list">
-
-List stable URLs for an account.
-
-```sql
-SELECT
-name,
-effective_workspace_id,
-initial_workspace_id,
-stable_workspace_id,
-failover_group_name,
-url
-FROM databricks_account.disasterrecovery.stable_urls
-WHERE parent = '{{ parent }}' -- required
-AND page_size = '{{ page_size }}'
-AND page_token = '{{ page_token }}'
-;
-```
-</TabItem>
 <TabItem value="get">
 
 Get a stable URL.
@@ -245,7 +226,29 @@ stable_workspace_id,
 failover_group_name,
 url
 FROM databricks_account.disasterrecovery.stable_urls
-WHERE name = '{{ name }}' -- required
+WHERE account_id = '{{ account_id }}' -- required
+AND stable_url_id = '{{ stable_url_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
+;
+```
+</TabItem>
+<TabItem value="list">
+
+List stable URLs for an account.
+
+```sql
+SELECT
+name,
+effective_workspace_id,
+initial_workspace_id,
+stable_workspace_id,
+failover_group_name,
+url
+FROM databricks_account.disasterrecovery.stable_urls
+WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
+AND page_size = '{{ page_size }}'
+AND page_token = '{{ page_token }}'
 ;
 ```
 </TabItem>
@@ -267,15 +270,27 @@ Create a new stable URL.
 
 ```sql
 INSERT INTO databricks_account.disasterrecovery.stable_urls (
-stable_url,
-parent,
+initial_workspace_id,
+effective_workspace_id,
+failover_group_name,
+name,
+stable_workspace_id,
+url,
+account_id,
 stable_url_id,
+account_host,
 validate_only
 )
 SELECT 
-'{{ stable_url }}' /* required */,
-'{{ parent }}',
+'{{ initial_workspace_id }}' /* required */,
+'{{ effective_workspace_id }}',
+'{{ failover_group_name }}',
+'{{ name }}',
+'{{ stable_workspace_id }}',
+'{{ url }}',
+'{{ account_id }}',
 '{{ stable_url_id }}',
+'{{ account_host }}',
 '{{ validate_only }}'
 RETURNING
 name,
@@ -292,22 +307,39 @@ url
 <CodeBlock language="yaml">{`# Description fields are for documentation purposes
 - name: stable_urls
   props:
-    - name: parent
-      value: "{{ parent }}"
+    - name: account_id
+      value: "{{ account_id }}"
       description: Required parameter for the stable_urls resource.
     - name: stable_url_id
       value: "{{ stable_url_id }}"
       description: Required parameter for the stable_urls resource.
-    - name: stable_url
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the stable_urls resource.
+    - name: initial_workspace_id
+      value: "{{ initial_workspace_id }}"
       description: |
-        The stable URL to create.
-      value:
-        initial_workspace_id: "{{ initial_workspace_id }}"
-        effective_workspace_id: "{{ effective_workspace_id }}"
-        failover_group_name: "{{ failover_group_name }}"
-        name: "{{ name }}"
-        stable_workspace_id: "{{ stable_workspace_id }}"
-        url: "{{ url }}"
+        The workspace this stable URL is initially bound to. Used only in Create requests to associate the stable URL with a workspace. Not returned in responses.
+    - name: effective_workspace_id
+      value: "{{ effective_workspace_id }}"
+      description: |
+        The workspace this stable URL currently routes to. Set to \`\`initial_workspace_id\`\` at creation, advanced to the failover group's primary while attached (including across a failover), and preserved when the stable URL is detached from its failover group. Read this to see where an unattached stable URL points: after a failover followed by a detach it reflects the post-failover primary, not \`\`initial_workspace_id\`\`.
+    - name: failover_group_name
+      value: "{{ failover_group_name }}"
+      description: |
+        Fully qualified resource name of the FailoverGroup this stable URL is currently linked to, in the format \`\`accounts/{account_id}/failover-groups/{failover_group_id}\`\`. Empty when the stable URL is not attached to any failover group.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Fully qualified resource name. Format: accounts/{account_id}/stable-urls/{stable_url_id}.
+    - name: stable_workspace_id
+      value: "{{ stable_workspace_id }}"
+      description: |
+        The stable workspace ID for this stable URL. Generated on creation and immutable thereafter; identifies the URL across failovers and is the same value embedded in the \`\`url\`\` (as the \`\`w=\`\` query parameter for SPOG URLs, or in the \`\`conn-<id>\`\` hostname for Private-Link URLs).
+    - name: url
+      value: "{{ url }}"
+      description: |
+        The stable URL endpoint. Generated on creation and immutable thereafter. For non-Private-Link workspaces this is \`\`https://<spog_host>/?w=<connection_id>\`\`. For Private-Link workspaces this is the per-connection hostname.
     - name: validate_only
       value: {{ validate_only }}
       description: When true, validates the request without creating the stable URL.
@@ -332,7 +364,9 @@ Delete a stable URL.
 
 ```sql
 DELETE FROM databricks_account.disasterrecovery.stable_urls
-WHERE name = '{{ name }}' --required
+WHERE account_id = '{{ account_id }}' --required
+AND stable_url_id = '{{ stable_url_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

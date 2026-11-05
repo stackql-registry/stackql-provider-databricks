@@ -140,35 +140,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#private_access_get"><CopyableCode code="private_access_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a Databricks private access settings configuration, both specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#private_access_list"><CopyableCode code="private_access_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Lists Databricks private access settings for an account.</td>
 </tr>
 <tr>
     <td><a href="#private_access_create"><CopyableCode code="private_access_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a private access settings configuration, which represents network access restrictions for</td>
 </tr>
 <tr>
     <td><a href="#private_access_replace"><CopyableCode code="private_access_replace" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a>, <a href="#parameter-customer_facing_private_access_settings"><code>customer_facing_private_access_settings</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing private access settings object, which specifies how your workspace is accessed</td>
 </tr>
 <tr>
     <td><a href="#private_access_delete"><CopyableCode code="private_access_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-private_access_settings_id"><code>private_access_settings_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a Databricks private access settings configuration, both specified by ID.</td>
 </tr>
@@ -188,6 +188,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -226,6 +231,7 @@ region
 FROM databricks_account.provisioning.private_access
 WHERE account_id = '{{ account_id }}' -- required
 AND private_access_settings_id = '{{ private_access_settings_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -244,6 +250,7 @@ public_access_enabled,
 region
 FROM databricks_account.provisioning.private_access
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -270,7 +277,8 @@ private_access_level,
 private_access_settings_name,
 public_access_enabled,
 region,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ allowed_vpc_endpoint_ids }}',
@@ -278,7 +286,8 @@ SELECT
 '{{ private_access_settings_name }}',
 {{ public_access_enabled }},
 '{{ region }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 private_access_settings_id,
@@ -297,6 +306,9 @@ region
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the private_access resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the private_access resource.
     - name: allowed_vpc_endpoint_ids
       value:
@@ -340,11 +352,17 @@ Updates an existing private access settings object, which specifies how your wor
 ```sql
 REPLACE databricks_account.provisioning.private_access
 SET 
-customer_facing_private_access_settings = '{{ customer_facing_private_access_settings }}'
+account_id = '{{ account_id }}',
+allowed_vpc_endpoint_ids = '{{ allowed_vpc_endpoint_ids }}',
+private_access_level = '{{ private_access_level }}',
+private_access_settings_id = '{{ private_access_settings_id }}',
+private_access_settings_name = '{{ private_access_settings_name }}',
+public_access_enabled = {{ public_access_enabled }},
+region = '{{ region }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND private_access_settings_id = '{{ private_access_settings_id }}' --required
-AND customer_facing_private_access_settings = '{{ customer_facing_private_access_settings }}' --required
+AND account_host = '{{ account_host }}' --required
 RETURNING
 account_id,
 private_access_settings_id,
@@ -374,6 +392,7 @@ Deletes a Databricks private access settings configuration, both specified by ID
 DELETE FROM databricks_account.provisioning.private_access
 WHERE account_id = '{{ account_id }}' --required
 AND private_access_settings_id = '{{ private_access_settings_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

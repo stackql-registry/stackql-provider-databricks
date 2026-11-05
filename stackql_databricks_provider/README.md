@@ -16,57 +16,39 @@ A library of modular, testable functions to parse the Databricks Python SDK and 
 ```
 stackql_databricks_provider/
 ├── __init__.py              # Public API (get_resources, get_operations, etc.)
-├── extract.py               # Core extraction functions (routes, schemas, params)
+├── extract.py               # Core extraction functions (routes, schemas, params, resource-name expansion)
 ├── registry.py              # Service registry (account vs workspace classification)
 ├── generate.py              # OpenAPI spec generation and CLI entry point
 ├── inventory_gen.py         # CSV inventory generator (operation mapping files)
+├── resource_name_templates.json  # Curated `name`/`parent` templates the SDK does not document
+├── spec_overrides.json      # Post-extraction JSON-path overrides on the specs
+├── provider-config/         # The hosts, auth and pagination config (the only place hosts are written)
+│   ├── account_servers.json     # servers block: account_host selected by DATABRICKS_CLOUD
+│   ├── workspace_servers.json   # servers block: deployment_name + workspace_domain
+│   ├── provider_config.json     # provider.yaml config.auth (OAuth M2M token_url + variables)
+│   └── service_config.json      # x-stackQL-config (pagination) for every service
+├── Makefile                 # The operator surface (make help)
+├── .env.aws.example         # Smoke-test credential templates per cloud: copy to .env.<cloud> (gitignored)
+├── .env.azure.example
+├── .env.gcp.example
 ├── README.md                # This file
 ├── tests/
 │   ├── __init__.py
 │   ├── test_extract.py      # Tests for extraction functions
 │   ├── test_registry.py     # Tests for service registry
 │   ├── test_generate.py     # Tests for spec generation
-│   └── test_inventory_gen.py # Tests for CSV inventory generator
-├── inventory/               # CSV operation inventories (after running inventory_gen)
-│   ├── account/             # One CSV per account-level service
-│   └── workspace/           # One CSV per workspace-level service
-└── openapi_generated/       # Generated output (after running the generator)
-    ├── account/             # Account-level service specs
-    │   ├── billing.json
-    │   ├── catalog.json
-    │   ├── iam.json
-    │   ├── iamv2.json
-    │   ├── oauth2.json
-    │   ├── provisioning.json
-    │   ├── settings.json
-    │   └── settingsv2.json
-    └── workspace/           # Workspace-level service specs
-        ├── agentbricks.json
-        ├── apps.json
-        ├── catalog.json
-        ├── cleanrooms.json
-        ├── compute.json
-        ├── dashboards.json
-        ├── database.json
-        ├── dataquality.json
-        ├── files.json
-        ├── iam.json
-        ├── iamv2.json
-        ├── jobs.json
-        ├── marketplace.json
-        ├── ml.json
-        ├── oauth2.json
-        ├── pipelines.json
-        ├── postgres.json
-        ├── qualitymonitorv2.json
-        ├── serving.json
-        ├── settings.json
-        ├── settingsv2.json
-        ├── sharing.json
-        ├── sql.json
-        ├── tags.json
-        ├── vectorsearch.json
-        └── workspace.json
+│   ├── test_inventory_gen.py # Tests for CSV inventory generator
+│   └── test_multicloud.py   # Snapshot + resolution of the AWS/Azure/GCP host selection
+├── smoke_tests/smoke.py     # Live smoke harness (resource queries, lifecycles, views)
+├── views/                   # SQL views merged into the providers (also the smoke surface)
+├── inventory/               # CSV operation inventories (the mapping masters)
+│   ├── account/             # One CSV per account-level service + all_services.csv
+│   └── workspace/           # One CSV per workspace-level service + all_services.csv
+├── openapi_generated/       # Generated specs (after running the generator)
+│   ├── account/             # 10 account-level service specs (billing ... settingsv2, networking)
+│   └── workspace/           # 36 workspace-level service specs (agentbricks ... workspace)
+├── stackql-provider/        # Generated providers (after make providers)
+└── website/                 # Docusaurus microsites (after make docs)
 ```
 
 ## Setup
@@ -162,6 +144,24 @@ python -m pytest stackql_databricks_provider/tests/test_extract.py::TestGetResou
 python -m pytest stackql_databricks_provider/tests/test_extract.py::TestGetOperationDetails::test_get_operation_structure -v
 ```
 
+### Live smoke tests
+
+`make smoke` (local provider), `make smoke-live` (published providers) and `make smoke-read-only` run
+`smoke_tests/smoke.py`: resource queries, self-cleaning lifecycles (an account SCIM group and a workspace
+secret scope, no compute, no charge) and every view. Credentials come from a gitignored env file: copy
+`.env.aws.example`, `.env.azure.example` or `.env.gcp.example` to `.env.<cloud>` (or `.env` for the AWS
+default) and fill in a Databricks-managed service principal with the account admin role (OAuth M2M).
+`CLOUD=aws|azure|gcp` reads `.env.<cloud>` and selects the cloud, `ENV_FILE=...` names any other file (a
+named file overrides the shell's environment, the default `.env` does not), `SMOKE_ARGS` passes harness
+flags (`--skip-views`, `--scope account`, `--view SUBSTR`):
+
+```bash
+cp .env.azure.example .env.azure             # then fill in the credentials
+make smoke                                   # AWS from .env, everything
+make smoke CLOUD=azure                       # Azure account + workspace from .env.azure
+make smoke-read-only CLOUD=gcp SMOKE_ARGS="--skip-views"
+```
+
 ## How to Update
 
 When the upstream Databricks Python SDK is updated with new services or API changes:
@@ -176,18 +176,38 @@ When the upstream Databricks Python SDK is updated with new services or API chan
    ```bash
    python -m stackql_databricks_provider.generate
    ```
+   A `WARNING ... no resource-name template found for path param 'name'` means a Google-style
+   `/api/2.0/{name}` operation whose SDK docstring states no `Format:`; add the template to
+   `resource_name_templates.json` (keyed `<service>: {"<ApiClass>.<method>.<param>": ...}`) unless it is
+   a long-running-operation name, which stays `{name}` by design. An `ERROR ... path collision` means two
+   SDK methods resolve to the same path and verb and one would be lost.
 
 5. **Regenerate inventories** (existing manual edits are preserved):
    ```bash
+   python -m stackql_databricks_provider.inventory_gen --refresh-response-objects
+   python -m stackql_databricks_provider.inventory_gen --populate-object-keys
    python -m stackql_databricks_provider.inventory_gen
    ```
+   The report lists **New Operations** (default routing: curate `stackql_resource_name`,
+   `stackql_method_name`, `stackql_verb`, `stackql_object_key` in the per-service CSV), **Path Changes**
+   (the operationId survived a path move, the curated mapping was carried over; nothing to do) and
+   **Removed Operations** (dropped from the CSVs; a breaking change for the published provider, list them
+   in the release notes).
 
 6. **Run tests** to verify nothing broke:
    ```bash
    python -m pytest stackql_databricks_provider/tests/ -v
    ```
 
-7. **Review the diff** in the generated files to understand what changed.
+7. **Review the diff** in the generated files to understand what changed. `inventory/*/all_services.csv`
+   is the checked-in record of every operation -> resource.method mapping; a changed resource or method
+   name there is a breaking change to review, not noise.
+
+The Databricks hosts and auth defaults are mastered in `provider-config/*.json` (read by both
+`generate.py` and the Makefile's provider generation): the account host and workspace domain are selected
+by `DATABRICKS_CLOUD` (`aws` default, `azure`, `gcp`), `DATABRICKS_ACCOUNT_HOST` overrides the account
+host, and `DATABRICKS_DEPLOYMENT_NAME` defaults the workspace `deployment_name` predicate.
+`tests/test_multicloud.py` pins the resolution (no environment is the AWS-only provider, byte for byte).
 
 ## Public API
 

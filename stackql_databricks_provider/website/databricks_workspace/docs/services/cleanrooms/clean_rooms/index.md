@@ -224,37 +224,6 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "replication_config",
-    "type": "object",
-    "description": "Replication setting for the calling collaborator's input share. Set via UpdateCleanRoom before the collaborator adds their first asset (immutable thereafter), and read back on GetCleanRoom. When enabled, that collaborator's input data is replicated into the central clean-room region.",
-    "children": [
-      {
-        "name": "enabled",
-        "type": "boolean",
-        "description": "Whether this collaborator's input share is replicated into the central clean-room region."
-      },
-      {
-        "name": "schedule",
-        "type": "object",
-        "description": "Optional schedule describing when replication runs. When unset, the service-default schedule (currently every hour) applies.",
-        "children": [
-          {
-            "name": "interval",
-            "type": "object",
-            "description": "Fixed-interval replication schedule.",
-            "children": [
-              {
-                "name": "duration",
-                "type": "string",
-                "description": "How often the collaborator's input-share data should be replicated. When unset, the service-default interval applies."
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
     "name": "status",
     "type": "string",
     "description": "Clean room status. (ACTIVE, DELETED, FAILED, PROVISIONING)"
@@ -450,37 +419,6 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "replication_config",
-    "type": "object",
-    "description": "Replication setting for the calling collaborator's input share. Set via UpdateCleanRoom before the collaborator adds their first asset (immutable thereafter), and read back on GetCleanRoom. When enabled, that collaborator's input data is replicated into the central clean-room region.",
-    "children": [
-      {
-        "name": "enabled",
-        "type": "boolean",
-        "description": "Whether this collaborator's input share is replicated into the central clean-room region."
-      },
-      {
-        "name": "schedule",
-        "type": "object",
-        "description": "Optional schedule describing when replication runs. When unset, the service-default schedule (currently every hour) applies.",
-        "children": [
-          {
-            "name": "interval",
-            "type": "object",
-            "description": "Fixed-interval replication schedule.",
-            "children": [
-              {
-                "name": "duration",
-                "type": "string",
-                "description": "How often the collaborator's input-share data should be replicated. When unset, the service-default interval applies."
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
     "name": "status",
     "type": "string",
     "description": "Clean room status. (ACTIVE, DELETED, FAILED, PROVISIONING)"
@@ -512,42 +450,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get the details of a clean room given its name.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Get a list of all clean rooms of the metastore. Only clean rooms the caller has access to are</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-clean_room"><code>clean_room</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a new clean room with the specified collaborators. This method is asynchronous; the returned</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update a clean room. The caller must be the owner of the clean room, have **MODIFY_CLEAN_ROOM**</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a clean room. After deletion, the clean room will be removed from the metastore. If the other</td>
 </tr>
 <tr>
     <td><a href="#create_output_catalog"><CopyableCode code="create_output_catalog" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-output_catalog"><code>output_catalog</code></a></td>
+    <td><a href="#parameter-clean_room_name"><code>clean_room_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create the output catalog of the clean room.</td>
 </tr>
@@ -575,12 +513,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Name of the clean room.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -619,12 +562,12 @@ local_collaborator_alias,
 output_catalog,
 owner,
 remote_detailed_info,
-replication_config,
 status,
 updated_at
 FROM databricks_workspace.cleanrooms.clean_rooms
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -643,11 +586,11 @@ local_collaborator_alias,
 output_catalog,
 owner,
 remote_detailed_info,
-replication_config,
 status,
 updated_at
 FROM databricks_workspace.cleanrooms.clean_rooms
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -671,12 +614,34 @@ Create a new clean room with the specified collaborators. This method is asynchr
 
 ```sql
 INSERT INTO databricks_workspace.cleanrooms.clean_rooms (
-clean_room,
-deployment_name
+access_restricted,
+comment,
+created_at,
+enable_shared_output,
+local_collaborator_alias,
+name,
+output_catalog,
+owner,
+remote_detailed_info,
+status,
+updated_at,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ clean_room }}' /* required */,
-'{{ deployment_name }}'
+'{{ access_restricted }}',
+'{{ comment }}',
+{{ created_at }},
+{{ enable_shared_output }},
+'{{ local_collaborator_alias }}',
+'{{ name }}',
+'{{ output_catalog }}',
+'{{ owner }}',
+'{{ remote_detailed_info }}',
+'{{ status }}',
+{{ updated_at }},
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 access_restricted,
@@ -687,7 +652,6 @@ local_collaborator_alias,
 output_catalog,
 owner,
 remote_detailed_info,
-replication_config,
 status,
 updated_at
 ;
@@ -701,49 +665,98 @@ updated_at
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the clean_rooms resource.
-    - name: clean_room
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the clean_rooms resource.
+    - name: access_restricted
+      value: "{{ access_restricted }}"
+      description: |
+        Create a collection of name/value pairs.
+        Example enumeration:
+        >>> class Color(Enum):
+        ...     RED = 1
+        ...     BLUE = 2
+        ...     GREEN = 3
+        Access them by:
+        - attribute access:
+        >>> Color.RED
+        <Color.RED: 1>
+        - value lookup:
+        >>> Color(1)
+        <Color.RED: 1>
+        - name lookup:
+        >>> Color['RED']
+        <Color.RED: 1>
+        Enumerations can be iterated over, and know how many members they have:
+        >>> len(Color)
+        3
+        >>> list(Color)
+        [<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]
+        Methods can be added to enumerations, and members can have their own
+        attributes -- see the documentation for details.
+    - name: comment
+      value: "{{ comment }}"
+    - name: created_at
+      value: {{ created_at }}
+      description: |
+        When the clean room was created, in epoch milliseconds.
+    - name: enable_shared_output
+      value: {{ enable_shared_output }}
+      description: |
+        Whether allow task to write to shared output schema. When enabled, clean room task runs triggered by the current collaborator can write to the run-scoped shared output schema which is accessible by all collaborators.
+    - name: local_collaborator_alias
+      value: "{{ local_collaborator_alias }}"
+      description: |
+        The alias of the collaborator tied to the local clean room.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The name of the clean room. It should follow \`UC securable naming requirements <https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements>\`__.
+    - name: output_catalog
+      description: |
+        Output catalog of the clean room. It is an output only field. Output catalog is manipulated using the separate CreateCleanRoomOutputCatalog API.
       value:
-        access_restricted: "{{ access_restricted }}"
-        comment: "{{ comment }}"
-        created_at: {{ created_at }}
-        enable_shared_output: {{ enable_shared_output }}
-        local_collaborator_alias: "{{ local_collaborator_alias }}"
-        name: "{{ name }}"
-        output_catalog:
-          catalog_name: "{{ catalog_name }}"
-          status: "{{ status }}"
-        owner: "{{ owner }}"
-        remote_detailed_info:
-          central_clean_room_id: "{{ central_clean_room_id }}"
-          cloud_vendor: "{{ cloud_vendor }}"
-          collaborators:
-            - collaborator_alias: "{{ collaborator_alias }}"
-              display_name: "{{ display_name }}"
-              global_metastore_id: "{{ global_metastore_id }}"
-              invite_recipient_email: "{{ invite_recipient_email }}"
-              invite_recipient_workspace_id: {{ invite_recipient_workspace_id }}
-              organization_name: "{{ organization_name }}"
-          compliance_security_profile:
-            compliance_standards: "{{ compliance_standards }}"
-            is_enabled: {{ is_enabled }}
-          creator:
-            collaborator_alias: "{{ collaborator_alias }}"
+        catalog_name: "{{ catalog_name }}"
+        status: "{{ status }}"
+    - name: owner
+      value: "{{ owner }}"
+      description: |
+        This is the Databricks username of the owner of the local clean room securable for permission management.
+    - name: remote_detailed_info
+      description: |
+        Central clean room details. During creation, users need to specify cloud_vendor, region, and collaborators.global_metastore_id. This field will not be filled in the ListCleanRooms call.
+      value:
+        central_clean_room_id: "{{ central_clean_room_id }}"
+        cloud_vendor: "{{ cloud_vendor }}"
+        collaborators:
+          - collaborator_alias: "{{ collaborator_alias }}"
             display_name: "{{ display_name }}"
             global_metastore_id: "{{ global_metastore_id }}"
             invite_recipient_email: "{{ invite_recipient_email }}"
             invite_recipient_workspace_id: {{ invite_recipient_workspace_id }}
             organization_name: "{{ organization_name }}"
-          egress_network_policy: "{{ egress_network_policy }}"
-          enable_shared_output: {{ enable_shared_output }}
-          package_provider_collaborator_alias: "{{ package_provider_collaborator_alias }}"
-          region: "{{ region }}"
-        replication_config:
-          enabled: {{ enabled }}
-          schedule:
-            interval:
-              duration: "{{ duration }}"
-        status: "{{ status }}"
-        updated_at: {{ updated_at }}
+        compliance_security_profile:
+          compliance_standards: "{{ compliance_standards }}"
+          is_enabled: {{ is_enabled }}
+        creator:
+          collaborator_alias: "{{ collaborator_alias }}"
+          display_name: "{{ display_name }}"
+          global_metastore_id: "{{ global_metastore_id }}"
+          invite_recipient_email: "{{ invite_recipient_email }}"
+          invite_recipient_workspace_id: {{ invite_recipient_workspace_id }}
+          organization_name: "{{ organization_name }}"
+        egress_network_policy: "{{ egress_network_policy }}"
+        enable_shared_output: {{ enable_shared_output }}
+        package_provider_collaborator_alias: "{{ package_provider_collaborator_alias }}"
+        region: "{{ region }}"
+    - name: status
+      value: "{{ status }}"
+      description: |
+        Clean room status.
+    - name: updated_at
+      value: {{ updated_at }}
+      description: |
+        When the clean room was last updated, in epoch milliseconds.
 `}</CodeBlock>
 
 </TabItem>
@@ -769,6 +782,7 @@ clean_room = '{{ clean_room }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 name,
 access_restricted,
@@ -779,7 +793,6 @@ local_collaborator_alias,
 output_catalog,
 owner,
 remote_detailed_info,
-replication_config,
 status,
 updated_at;
 ```
@@ -803,6 +816,7 @@ Delete a clean room. After deletion, the clean room will be removed from the met
 DELETE FROM databricks_workspace.cleanrooms.clean_rooms
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -824,10 +838,12 @@ Create the output catalog of the clean room.
 ```sql
 EXEC databricks_workspace.cleanrooms.clean_rooms.create_output_catalog 
 @clean_room_name='{{ clean_room_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
-"output_catalog": "{{ output_catalog }}"
+"catalog_name": "{{ catalog_name }}", 
+"status": "{{ status }}"
 }'
 ;
 ```

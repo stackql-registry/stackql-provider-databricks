@@ -54,7 +54,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the user in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "user_id",
     "type": "string",
     "description": "Internal userId of the user in Databricks."
   },
@@ -101,7 +101,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the user in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "user_id",
     "type": "string",
     "description": "Internal userId of the user in Databricks."
   },
@@ -154,42 +154,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Fetches a user by its internal ID from the Databricks account that parents the calling workspace.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists the users in the Databricks account that parents the calling workspace, returning one page per</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-user"><code>user</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-username"><code>username</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-account_user_status"><code>account_user_status</code></a></td>
     <td></td>
-    <td>Creates a user in the Databricks account that parents the calling workspace and returns the resulting</td>
+    <td>Creates a local user in the Databricks account that parents the calling workspace and returns the</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-user"><code>user</code></a></td>
+    <td><a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-username"><code>username</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-account_user_status"><code>account_user_status</code></a></td>
     <td></td>
-    <td>Updates an existing user in the Databricks account that parents the calling workspace. Only the fields</td>
+    <td>Updates an existing user in the Databricks account that parents the calling workspace and returns the</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a user by its internal ID from the Databricks account that parents the calling workspace.</td>
 </tr>
 <tr>
     <td><a href="#resolve"><CopyableCode code="resolve" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
     <td></td>
     <td>Resolves a user with the given external ID from the customer's IdP. If the user does not exist, it</td>
 </tr>
@@ -212,17 +212,22 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
-</tr>
-<tr id="parameter-internal_id">
-    <td><CopyableCode code="internal_id" /></td>
-    <td><code>string</code></td>
-    <td>Required. Internal ID of the user in Databricks.</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
-    <td>Optional. The list of fields to update.</td>
+    <td>Required. The list of fields to update.</td>
+</tr>
+<tr id="parameter-user_id">
+    <td><CopyableCode code="user_id" /></td>
+    <td><code>string</code></td>
+    <td>Required. Internal ID of the user in Databricks.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-filter">
     <td><CopyableCode code="filter" /></td>
@@ -232,7 +237,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of users to return. The service may return fewer than this value.</td>
+    <td>The maximum number of users to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -259,13 +264,14 @@ Fetches a user by its internal ID from the Databricks account that parents the c
 SELECT
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username
 FROM databricks_workspace.iamv2.users
-WHERE internal_id = '{{ internal_id }}' -- required
+WHERE user_id = '{{ user_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -277,12 +283,13 @@ Lists the users in the Databricks account that parents the calling workspace, re
 SELECT
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username
 FROM databricks_workspace.iamv2.users
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND filter = '{{ filter }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -303,20 +310,32 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Creates a user in the Databricks account that parents the calling workspace and returns the resulting
+Creates a local user in the Databricks account that parents the calling workspace and returns the
 
 ```sql
 INSERT INTO databricks_workspace.iamv2.users (
-user,
-deployment_name
+username,
+full_name,
+account_user_status,
+account_id,
+external_id,
+user_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ user }}' /* required */,
-'{{ deployment_name }}'
+'{{ username }}' /* required */,
+'{{ full_name }}' /* required */,
+'{{ account_user_status }}' /* required */,
+'{{ account_id }}',
+'{{ external_id }}',
+'{{ user_id }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username
@@ -331,18 +350,33 @@ username
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the users resource.
-    - name: user
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the users resource.
+    - name: username
+      value: "{{ username }}"
       description: |
-        Required. User to be created in <Databricks>
+        Username/email of the user.
+    - name: full_name
       value:
-        account_id: "{{ account_id }}"
-        account_user_status: "{{ account_user_status }}"
-        external_id: "{{ external_id }}"
-        full_name:
-          family_name: "{{ family_name }}"
-          given_name: "{{ given_name }}"
-        internal_id: "{{ internal_id }}"
-        username: "{{ username }}"
+        family_name: "{{ family_name }}"
+        given_name: "{{ given_name }}"
+    - name: account_user_status
+      value: "{{ account_user_status }}"
+      description: |
+        The activity status of a user in a Databricks account.
+    - name: account_id
+      value: "{{ account_id }}"
+      description: |
+        The accountId parent of the user in Databricks.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        ExternalId of the user in the customer's IdP.
+    - name: user_id
+      value: "{{ user_id }}"
+      description: |
+        Internal userId of the user in Databricks.
 `}</CodeBlock>
 
 </TabItem>
@@ -359,21 +393,29 @@ username
 >
 <TabItem value="update">
 
-Updates an existing user in the Databricks account that parents the calling workspace. Only the fields
+Updates an existing user in the Databricks account that parents the calling workspace and returns the
 
 ```sql
 UPDATE databricks_workspace.iamv2.users
 SET 
-user = '{{ user }}'
+username = '{{ username }}',
+full_name = '{{ full_name }}',
+account_user_status = '{{ account_user_status }}',
+account_id = '{{ account_id }}',
+external_id = '{{ external_id }}',
+user_id = '{{ user_id }}'
 WHERE 
-internal_id = '{{ internal_id }}' --required
+user_id = '{{ user_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND user = '{{ user }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND username = '{{ username }}' --required
+AND full_name = '{{ full_name }}' --required
+AND account_user_status = '{{ account_user_status }}' --required
 RETURNING
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username;
@@ -396,8 +438,9 @@ Deletes a user by its internal ID from the Databricks account that parents the c
 
 ```sql
 DELETE FROM databricks_workspace.iamv2.users
-WHERE internal_id = '{{ internal_id }}' --required
+WHERE user_id = '{{ user_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -418,7 +461,8 @@ Resolves a user with the given external ID from the customer's IdP. If the user 
 
 ```sql
 EXEC databricks_workspace.iamv2.users.resolve 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "external_id": "{{ external_id }}"

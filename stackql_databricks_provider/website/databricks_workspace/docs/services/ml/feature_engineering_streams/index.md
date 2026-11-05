@@ -61,7 +61,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "direct_mtls_config",
         "type": "object",
-        "description": "Direct mTLS configuration for stream platform access. This is only used in the short term until UC Kafka Connections support mTLS . Once UC Kafka Connections support mTLS, this will be deprecated.",
+        "description": "Direct mTLS configuration for stream platform access.",
         "children": [
           {
             "name": "bootstrap_servers",
@@ -71,7 +71,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "mtls_config",
             "type": "object",
-            "description": "Mutual-TLS (mTLS) authentication configuration. The keystore (client certificate + private key)<br />    and truststore (CAs trusted to verify the broker) live as JKS files on Unity Catalog volumes,<br />    with their passwords stored in Databricks secret scopes. This matches the SSL setup pattern<br />    documented at<br />    https://docs.databricks.com/en/connect/streaming/kafka/authentication#use-ssl-to-connect-databricks-to-kafka.<br /><br />    At materialization time, the generated PySpark code passes the JKS file paths and resolved<br />    passwords through to the Kafka SSL options (kafka.ssl.keystore.location,<br />    kafka.ssl.keystore.password, kafka.ssl.key.password, kafka.ssl.truststore.location,<br />    kafka.ssl.truststore.password). Passwords are resolved on the Spark cluster via<br />    dbutils.secrets.get; this message stores only references, never password values.",
+            "description": "Mutual-TLS (mTLS) authentication configuration. The keystore (client certificate + private key)<br />    and truststore (CAs trusted to verify the broker) live as JKS files on Unity Catalog volumes,<br />    with their passwords stored in Databricks secret scopes. This matches the SSL setup pattern<br />    documented at<br />    https://docs.databricks.com/en/connect/streaming/kafka/authentication#use-ssl-to-connect-databricks-to-kafka.",
             "children": [
               {
                 "name": "keystore_location",
@@ -130,6 +130,11 @@ The following fields are returned by `SELECT` queries:
     "description": "User-provided description."
   },
   {
+    "name": "excluded_columns",
+    "type": "array",
+    "description": "Column paths (dot notation, e.g. \"value.email\" for Kafka) to drop. A path may reference a struct, in which case all of its nested fields are dropped (e.g. \"value.address\" drops \"value.address.city\" and \"value.address.zip\"). These columns are not written to the ingestion table and cannot be referenced by any feature. They are dropped from ingestion, backfill, and materialization. For direct schemas, each column must exist in the relevant key or payload schema. With a schema registry, a column can be excluded before it exists. A column cannot also be a deduplication column in the ingestion_config."
+  },
+  {
     "name": "ingestion_config",
     "type": "object",
     "description": "Configuration for streaming data ingestion: the managed table storing an offline copy of forward fill data and optional historical backfill.",
@@ -154,7 +159,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "backfill_source",
         "type": "object",
-        "description": "A user-provided source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Stream. The backfill data stored in this location will be copied into the ingestion table for offline querying and training. The schema for this source must match exactly that of the key and payload schemas specified for this Stream.",
+        "description": "A user-provided source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Stream. The backfill data stored in this location will be copied into the ingestion table for offline querying and training. The schema for this source must match exactly that of the key and payload schemas specified for this Stream, except that it may omit any columns listed in excluded_columns.",
         "children": [
           {
             "name": "delta_table_name",
@@ -179,7 +184,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "entity_columns",
                 "type": "array",
-                "description": "Deprecated: Use Feature.entity instead. Kept for backwards compatibility. The entity columns of the Delta table."
+                "description": ""
               },
               {
                 "name": "filter_condition",
@@ -189,7 +194,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "timeseries_column",
                 "type": "string",
-                "description": "Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility. The timeseries column of the Delta table."
+                "description": ""
               },
               {
                 "name": "transformation_sql",
@@ -199,6 +204,11 @@ The following fields are returned by `SELECT` queries:
             ]
           }
         ]
+      },
+      {
+        "name": "budget_policy_id",
+        "type": "string",
+        "description": "The ID of the budget policy used to attribute the serverless compute cost of this stream's managed ingestion. If not specified, a default budget policy may be applied."
       },
       {
         "name": "deduplication_columns",
@@ -214,8 +224,18 @@ The following fields are returned by `SELECT` queries:
         "name": "ingestion_pipeline_id",
         "type": "string",
         "description": "The ID of the SDP pipeline that continuously copies new events from the streaming source into the ingestion Delta table."
+      },
+      {
+        "name": "tags",
+        "type": "object",
+        "description": "Custom tags to associate with this stream's managed ingestion. They are applied to the ingestion pipeline and its forward-fill and backfill jobs, and forwarded to the underlying compute as cluster tags, so ingestion cost can be attributed in the billing system tables. These tags apply only to the managed ingestion compute; they are not applied to the Stream entity itself, and are distinct from any Unity Catalog tags on the Stream. A maximum of 25 tags is supported; keys and values are subject to the same limitations as cluster tags."
       }
     ]
+  },
+  {
+    "name": "record_type_filter",
+    "type": "string",
+    "description": "Optional SQL predicate to filter which record types from a streaming channel (e.g. a topic for Kafka) belong to this Stream. Events that do not match are not written to the ingestion table and are not used in materialization. Example: \"value.event_type = 'transaction'\"."
   },
   {
     "name": "schema_config",
@@ -281,7 +301,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "api_secret_ref",
             "type": "object",
-            "description": "Reference to the schema registry API secret in a Databricks secret scope.",
+            "description": "Reference to the schema registry API secret in a Databricks secret scope. Set this only if required for authentication for the schema registry.",
             "children": [
               {
                 "name": "scope",
@@ -385,7 +405,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "extra_options",
             "type": "object",
-            "description": "Optional Kinesis source options, validated against a server-side allowlist at request time. Auth and connection details belong on the parent Stream's ``connection_config``, not here."
+            "description": "Optional Kinesis source options, validated against a server-side allowlist at request time. Allowed keys: - ``consumerMode`` - ``consumerNamePrefix`` - ``maxFetchRate`` - ``minFetchPeriod`` - ``maxFetchDuration`` - ``maxRecordsPerFetch`` - ``shardsPerTask`` - ``fetchBufferSize`` - ``shardFetchInterval`` ``consumerMode`` must be ``efo`` or ``polling`` (case-insensitive). ``maxRecordsPerFetch`` applies only during ingestion and does not affect the materialization pipeline. Auth and connection details belong on the parent Stream's ``connection_config``, not here."
           },
           {
             "name": "stream_arns",
@@ -448,7 +468,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "direct_mtls_config",
         "type": "object",
-        "description": "Direct mTLS configuration for stream platform access. This is only used in the short term until UC Kafka Connections support mTLS . Once UC Kafka Connections support mTLS, this will be deprecated.",
+        "description": "Direct mTLS configuration for stream platform access.",
         "children": [
           {
             "name": "bootstrap_servers",
@@ -458,7 +478,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "mtls_config",
             "type": "object",
-            "description": "Mutual-TLS (mTLS) authentication configuration. The keystore (client certificate + private key)<br />    and truststore (CAs trusted to verify the broker) live as JKS files on Unity Catalog volumes,<br />    with their passwords stored in Databricks secret scopes. This matches the SSL setup pattern<br />    documented at<br />    https://docs.databricks.com/en/connect/streaming/kafka/authentication#use-ssl-to-connect-databricks-to-kafka.<br /><br />    At materialization time, the generated PySpark code passes the JKS file paths and resolved<br />    passwords through to the Kafka SSL options (kafka.ssl.keystore.location,<br />    kafka.ssl.keystore.password, kafka.ssl.key.password, kafka.ssl.truststore.location,<br />    kafka.ssl.truststore.password). Passwords are resolved on the Spark cluster via<br />    dbutils.secrets.get; this message stores only references, never password values.",
+            "description": "Mutual-TLS (mTLS) authentication configuration. The keystore (client certificate + private key)<br />    and truststore (CAs trusted to verify the broker) live as JKS files on Unity Catalog volumes,<br />    with their passwords stored in Databricks secret scopes. This matches the SSL setup pattern<br />    documented at<br />    https://docs.databricks.com/en/connect/streaming/kafka/authentication#use-ssl-to-connect-databricks-to-kafka.",
             "children": [
               {
                 "name": "keystore_location",
@@ -517,6 +537,11 @@ The following fields are returned by `SELECT` queries:
     "description": "User-provided description."
   },
   {
+    "name": "excluded_columns",
+    "type": "array",
+    "description": "Column paths (dot notation, e.g. \"value.email\" for Kafka) to drop. A path may reference a struct, in which case all of its nested fields are dropped (e.g. \"value.address\" drops \"value.address.city\" and \"value.address.zip\"). These columns are not written to the ingestion table and cannot be referenced by any feature. They are dropped from ingestion, backfill, and materialization. For direct schemas, each column must exist in the relevant key or payload schema. With a schema registry, a column can be excluded before it exists. A column cannot also be a deduplication column in the ingestion_config."
+  },
+  {
     "name": "ingestion_config",
     "type": "object",
     "description": "Configuration for streaming data ingestion: the managed table storing an offline copy of forward fill data and optional historical backfill.",
@@ -541,7 +566,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "backfill_source",
         "type": "object",
-        "description": "A user-provided source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Stream. The backfill data stored in this location will be copied into the ingestion table for offline querying and training. The schema for this source must match exactly that of the key and payload schemas specified for this Stream.",
+        "description": "A user-provided source for backfilling data. Historical data is used when creating a training set from streaming features linked to this Stream. The backfill data stored in this location will be copied into the ingestion table for offline querying and training. The schema for this source must match exactly that of the key and payload schemas specified for this Stream, except that it may omit any columns listed in excluded_columns.",
         "children": [
           {
             "name": "delta_table_name",
@@ -566,7 +591,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "entity_columns",
                 "type": "array",
-                "description": "Deprecated: Use Feature.entity instead. Kept for backwards compatibility. The entity columns of the Delta table."
+                "description": ""
               },
               {
                 "name": "filter_condition",
@@ -576,7 +601,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "timeseries_column",
                 "type": "string",
-                "description": "Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility. The timeseries column of the Delta table."
+                "description": ""
               },
               {
                 "name": "transformation_sql",
@@ -586,6 +611,11 @@ The following fields are returned by `SELECT` queries:
             ]
           }
         ]
+      },
+      {
+        "name": "budget_policy_id",
+        "type": "string",
+        "description": "The ID of the budget policy used to attribute the serverless compute cost of this stream's managed ingestion. If not specified, a default budget policy may be applied."
       },
       {
         "name": "deduplication_columns",
@@ -601,8 +631,18 @@ The following fields are returned by `SELECT` queries:
         "name": "ingestion_pipeline_id",
         "type": "string",
         "description": "The ID of the SDP pipeline that continuously copies new events from the streaming source into the ingestion Delta table."
+      },
+      {
+        "name": "tags",
+        "type": "object",
+        "description": "Custom tags to associate with this stream's managed ingestion. They are applied to the ingestion pipeline and its forward-fill and backfill jobs, and forwarded to the underlying compute as cluster tags, so ingestion cost can be attributed in the billing system tables. These tags apply only to the managed ingestion compute; they are not applied to the Stream entity itself, and are distinct from any Unity Catalog tags on the Stream. A maximum of 25 tags is supported; keys and values are subject to the same limitations as cluster tags."
       }
     ]
+  },
+  {
+    "name": "record_type_filter",
+    "type": "string",
+    "description": "Optional SQL predicate to filter which record types from a streaming channel (e.g. a topic for Kafka) belong to this Stream. Events that do not match are not written to the ingestion table and are not used in materialization. Example: \"value.event_type = 'transaction'\"."
   },
   {
     "name": "schema_config",
@@ -668,7 +708,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "api_secret_ref",
             "type": "object",
-            "description": "Reference to the schema registry API secret in a Databricks secret scope.",
+            "description": "Reference to the schema registry API secret in a Databricks secret scope. Set this only if required for authentication for the schema registry.",
             "children": [
               {
                 "name": "scope",
@@ -772,7 +812,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "extra_options",
             "type": "object",
-            "description": "Optional Kinesis source options, validated against a server-side allowlist at request time. Auth and connection details belong on the parent Stream's ``connection_config``, not here."
+            "description": "Optional Kinesis source options, validated against a server-side allowlist at request time. Allowed keys: - ``consumerMode`` - ``consumerNamePrefix`` - ``maxFetchRate`` - ``minFetchPeriod`` - ``maxFetchDuration`` - ``maxRecordsPerFetch`` - ``shardsPerTask`` - ``fetchBufferSize`` - ``shardFetchInterval`` ``consumerMode`` must be ``efo`` or ``polling`` (case-insensitive). ``maxRecordsPerFetch`` applies only during ingestion and does not affect the materialization pipeline. Auth and connection details belong on the parent Stream's ``connection_config``, not here."
           },
           {
             "name": "stream_arns",
@@ -834,35 +874,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a Stream by its full three-part name (catalog.schema.stream).</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-parent"><code>parent</code></a></td>
     <td>List Streams under a given catalog.schema parent.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-stream"><code>stream</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-source_config"><code>source_config</code></a>, <a href="#parameter-connection_config"><code>connection_config</code></a>, <a href="#parameter-schema_config"><code>schema_config</code></a>, <a href="#parameter-ingestion_config"><code>ingestion_config</code></a></td>
     <td></td>
     <td>Create a Stream, a governed UC entity representing an external streaming data source.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-stream"><code>stream</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-source_config"><code>source_config</code></a>, <a href="#parameter-connection_config"><code>connection_config</code></a>, <a href="#parameter-schema_config"><code>schema_config</code></a>, <a href="#parameter-ingestion_config"><code>ingestion_config</code></a></td>
     <td></td>
     <td>Update a Stream. Only fields listed in ``update_mask`` are mutated.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a Stream by its full three-part name (catalog.schema.stream).</td>
 </tr>
@@ -885,7 +925,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -896,6 +936,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>object</code></td>
     <td>The list of fields to update.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -936,7 +981,9 @@ connection_config,
 create_time,
 created_by,
 description,
+excluded_columns,
 ingestion_config,
+record_type_filter,
 schema_config,
 source_config,
 update_time,
@@ -944,6 +991,7 @@ updated_by
 FROM databricks_workspace.ml.feature_engineering_streams
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -959,13 +1007,16 @@ connection_config,
 create_time,
 created_by,
 description,
+excluded_columns,
 ingestion_config,
+record_type_filter,
 schema_config,
 source_config,
 update_time,
 updated_by
 FROM databricks_workspace.ml.feature_engineering_streams
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 AND parent = '{{ parent }}'
@@ -990,12 +1041,38 @@ Create a Stream, a governed UC entity representing an external streaming data so
 
 ```sql
 INSERT INTO databricks_workspace.ml.feature_engineering_streams (
-stream,
-deployment_name
+name,
+source_config,
+connection_config,
+schema_config,
+ingestion_config,
+browse_only,
+create_time,
+created_by,
+description,
+excluded_columns,
+record_type_filter,
+update_time,
+updated_by,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ stream }}' /* required */,
-'{{ deployment_name }}'
+'{{ name }}' /* required */,
+'{{ source_config }}' /* required */,
+'{{ connection_config }}' /* required */,
+'{{ schema_config }}' /* required */,
+'{{ ingestion_config }}' /* required */,
+{{ browse_only }},
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ description }}',
+'{{ excluded_columns }}',
+'{{ record_type_filter }}',
+'{{ update_time }}',
+'{{ updated_by }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 browse_only,
@@ -1003,7 +1080,9 @@ connection_config,
 create_time,
 created_by,
 description,
+excluded_columns,
 ingestion_config,
+record_type_filter,
 schema_config,
 source_config,
 update_time,
@@ -1019,94 +1098,137 @@ updated_by
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the feature_engineering_streams resource.
-    - name: stream
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the feature_engineering_streams resource.
+    - name: name
+      value: "{{ name }}"
       description: |
-        The Stream to create.
+        Full three-part (catalog.schema.stream) name of the stream.
+    - name: source_config
+      description: |
+        Source-specific configuration. Determines the streaming platform source.
       value:
-        name: "{{ name }}"
-        source_config:
-          kafka_stream_config:
-            subscription_mode:
-              assign: "{{ assign }}"
-              subscribe: "{{ subscribe }}"
-              subscribe_pattern: "{{ subscribe_pattern }}"
-            extra_options: "{{ extra_options }}"
-          kinesis_stream_config:
-            extra_options: "{{ extra_options }}"
-            stream_arns:
-              arns:
-                - "{{ arns }}"
-            stream_names:
-              names:
-                - "{{ names }}"
-        connection_config:
-          direct_mtls_config:
-            bootstrap_servers: "{{ bootstrap_servers }}"
-            mtls_config:
-              keystore_location: "{{ keystore_location }}"
-              keystore_password_ref:
-                scope: "{{ scope }}"
-                key: "{{ key }}"
-              key_password_ref:
-                scope: "{{ scope }}"
-                key: "{{ key }}"
-              truststore_location: "{{ truststore_location }}"
-              truststore_password_ref:
-                scope: "{{ scope }}"
-                key: "{{ key }}"
-              disable_hostname_verification: {{ disable_hostname_verification }}
-          uc_connection_name: "{{ uc_connection_name }}"
-        schema_config:
-          direct_schemas:
-            key_schema:
-              avro_schema: "{{ avro_schema }}"
-              json_schema: "{{ json_schema }}"
-              proto_schema:
-                schema_text: "{{ schema_text }}"
-                message_name: "{{ message_name }}"
-            payload_schema:
-              avro_schema: "{{ avro_schema }}"
-              json_schema: "{{ json_schema }}"
-              proto_schema:
-                schema_text: "{{ schema_text }}"
-                message_name: "{{ message_name }}"
-          schema_registry_config:
-            api_secret_ref:
+        kafka_stream_config:
+          subscription_mode:
+            assign: "{{ assign }}"
+            subscribe: "{{ subscribe }}"
+            subscribe_pattern: "{{ subscribe_pattern }}"
+          extra_options: "{{ extra_options }}"
+        kinesis_stream_config:
+          extra_options: "{{ extra_options }}"
+          stream_arns:
+            arns:
+              - "{{ arns }}"
+          stream_names:
+            names:
+              - "{{ names }}"
+    - name: connection_config
+      description: |
+        Specifies how to connect and authenticate to the stream platform.
+      value:
+        direct_mtls_config:
+          bootstrap_servers: "{{ bootstrap_servers }}"
+          mtls_config:
+            keystore_location: "{{ keystore_location }}"
+            keystore_password_ref:
               scope: "{{ scope }}"
               key: "{{ key }}"
-            key_schema_locator:
-              format: "{{ format }}"
-              confluent_schema:
-                subject: "{{ subject }}"
-            payload_schema_locator:
-              format: "{{ format }}"
-              confluent_schema:
-                subject: "{{ subject }}"
-            uc_connection: "{{ uc_connection }}"
-        ingestion_config:
-          ingestion_destination:
-            delta_table_name: "{{ delta_table_name }}"
-          backfill_job_id: {{ backfill_job_id }}
-          backfill_source:
-            delta_table_name: "{{ delta_table_name }}"
-            delta_table_source:
-              full_name: "{{ full_name }}"
-              dataframe_schema: "{{ dataframe_schema }}"
-              entity_columns:
-                - "{{ entity_columns }}"
-              filter_condition: "{{ filter_condition }}"
-              timeseries_column: "{{ timeseries_column }}"
-              transformation_sql: "{{ transformation_sql }}"
-          deduplication_columns:
-            - "{{ deduplication_columns }}"
-          ingestion_job_id: {{ ingestion_job_id }}
-          ingestion_pipeline_id: "{{ ingestion_pipeline_id }}"
-        browse_only: {{ browse_only }}
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        description: "{{ description }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+            key_password_ref:
+              scope: "{{ scope }}"
+              key: "{{ key }}"
+            truststore_location: "{{ truststore_location }}"
+            truststore_password_ref:
+              scope: "{{ scope }}"
+              key: "{{ key }}"
+            disable_hostname_verification: {{ disable_hostname_verification }}
+        uc_connection_name: "{{ uc_connection_name }}"
+    - name: schema_config
+      description: |
+        Schema definitions for the stream, provided either directly on the Stream or resolved from an external schema registry through a UC Connection.
+      value:
+        direct_schemas:
+          key_schema:
+            avro_schema: "{{ avro_schema }}"
+            json_schema: "{{ json_schema }}"
+            proto_schema:
+              schema_text: "{{ schema_text }}"
+              message_name: "{{ message_name }}"
+          payload_schema:
+            avro_schema: "{{ avro_schema }}"
+            json_schema: "{{ json_schema }}"
+            proto_schema:
+              schema_text: "{{ schema_text }}"
+              message_name: "{{ message_name }}"
+        schema_registry_config:
+          api_secret_ref:
+            scope: "{{ scope }}"
+            key: "{{ key }}"
+          key_schema_locator:
+            format: "{{ format }}"
+            confluent_schema:
+              subject: "{{ subject }}"
+          payload_schema_locator:
+            format: "{{ format }}"
+            confluent_schema:
+              subject: "{{ subject }}"
+          uc_connection: "{{ uc_connection }}"
+    - name: ingestion_config
+      description: |
+        Configuration for streaming data ingestion: the managed table storing an offline copy of forward fill data and optional historical backfill.
+      value:
+        ingestion_destination:
+          delta_table_name: "{{ delta_table_name }}"
+        backfill_job_id: {{ backfill_job_id }}
+        backfill_source:
+          delta_table_name: "{{ delta_table_name }}"
+          delta_table_source:
+            full_name: "{{ full_name }}"
+            dataframe_schema: "{{ dataframe_schema }}"
+            entity_columns:
+              - "{{ entity_columns }}"
+            filter_condition: "{{ filter_condition }}"
+            timeseries_column: "{{ timeseries_column }}"
+            transformation_sql: "{{ transformation_sql }}"
+        budget_policy_id: "{{ budget_policy_id }}"
+        deduplication_columns:
+          - "{{ deduplication_columns }}"
+        ingestion_job_id: {{ ingestion_job_id }}
+        ingestion_pipeline_id: "{{ ingestion_pipeline_id }}"
+        tags: "{{ tags }}"
+    - name: browse_only
+      value: {{ browse_only }}
+      description: |
+        Indicates whether the principal is limited to retrieving metadata for the associated object through the BROWSE privilege when include_browse is enabled in the request.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time at which this Stream was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Username of the Stream creator.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        User-provided description.
+    - name: excluded_columns
+      value:
+        - "{{ excluded_columns }}"
+      description: |
+        Column paths (dot notation, e.g. "value.email" for Kafka) to drop. A path may reference a struct, in which case all of its nested fields are dropped (e.g. "value.address" drops "value.address.city" and "value.address.zip"). These columns are not written to the ingestion table and cannot be referenced by any feature. They are dropped from ingestion, backfill, and materialization. For direct schemas, each column must exist in the relevant key or payload schema. With a schema registry, a column can be excluded before it exists. A column cannot also be a deduplication column in the ingestion_config.
+    - name: record_type_filter
+      value: "{{ record_type_filter }}"
+      description: |
+        Optional SQL predicate to filter which record types from a streaming channel (e.g. a topic for Kafka) belong to this Stream. Events that do not match are not written to the ingestion table and are not used in materialization. Example: "value.event_type = 'transaction'".
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time at which this Stream was last modified.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Username of user who last modified the Stream.
 `}</CodeBlock>
 
 </TabItem>
@@ -1128,12 +1250,29 @@ Update a Stream. Only fields listed in ``update_mask`` are mutated.
 ```sql
 UPDATE databricks_workspace.ml.feature_engineering_streams
 SET 
-stream = '{{ stream }}'
+name = '{{ name }}',
+source_config = '{{ source_config }}',
+connection_config = '{{ connection_config }}',
+schema_config = '{{ schema_config }}',
+ingestion_config = '{{ ingestion_config }}',
+browse_only = {{ browse_only }},
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+description = '{{ description }}',
+excluded_columns = '{{ excluded_columns }}',
+record_type_filter = '{{ record_type_filter }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND stream = '{{ stream }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND name = '{{ name }}' --required
+AND source_config = '{{ source_config }}' --required
+AND connection_config = '{{ connection_config }}' --required
+AND schema_config = '{{ schema_config }}' --required
+AND ingestion_config = '{{ ingestion_config }}' --required
 RETURNING
 name,
 browse_only,
@@ -1141,7 +1280,9 @@ connection_config,
 create_time,
 created_by,
 description,
+excluded_columns,
 ingestion_config,
+record_type_filter,
 schema_config,
 source_config,
 update_time,
@@ -1167,6 +1308,7 @@ Delete a Stream by its full three-part name (catalog.schema.stream).
 DELETE FROM databricks_workspace.ml.feature_engineering_streams
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

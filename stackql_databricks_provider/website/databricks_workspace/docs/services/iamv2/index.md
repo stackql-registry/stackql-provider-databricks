@@ -18,7 +18,7 @@ iamv2 service documentation.
 
 :::info[Service Summary]
 
-total resources: __10__  
+total resources: __13__  
 
 :::
 
@@ -26,6 +26,8 @@ total resources: __10__
 <div class="row">
 <div class="providerDocColumn">
 <a href="/services/iamv2/direct_group_members/">direct_group_members</a><br />
+<a href="/services/iamv2/external_groups/">external_groups</a><br />
+<a href="/services/iamv2/external_service_principals/">external_service_principals</a><br />
 <a href="/services/iamv2/external_users/">external_users</a><br />
 <a href="/services/iamv2/groups/">groups</a><br />
 <a href="/services/iamv2/service_principals/">service_principals</a><br />
@@ -36,6 +38,7 @@ total resources: __10__
 <a href="/services/iamv2/vw_workspace_access_details/">vw_workspace_access_details</a><br />
 <a href="/services/iamv2/workspace_access_details/">workspace_access_details</a><br />
 <a href="/services/iamv2/workspace_assignment_details/">workspace_assignment_details</a><br />
+<a href="/services/iamv2/workspace_assignments/">workspace_assignments</a><br />
 <a href="/services/iamv2/workspace_identity_details/">workspace_identity_details</a>
 </div>
 </div>

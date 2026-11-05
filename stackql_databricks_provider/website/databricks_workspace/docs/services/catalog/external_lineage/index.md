@@ -104,18 +104,6 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               }
             ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "name",
-                "type": "string",
-                "description": ""
-              }
-            ]
           }
         ]
       },
@@ -167,18 +155,6 @@ The following fields are returned by `SELECT` queries:
           },
           {
             "name": "table",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "name",
-                "type": "string",
-                "description": ""
-              }
-            ]
-          },
-          {
-            "name": "volume",
             "type": "object",
             "description": "",
             "children": [
@@ -327,33 +303,6 @@ The following fields are returned by `SELECT` queries:
         "description": "Name of Schema."
       }
     ]
-  },
-  {
-    "name": "volume_info",
-    "type": "object",
-    "description": "Information about the volume involved in the lineage relationship.",
-    "children": [
-      {
-        "name": "catalog_name",
-        "type": "string",
-        "description": ""
-      },
-      {
-        "name": "event_time",
-        "type": "string (date-time)",
-        "description": "Timestamp of the lineage event."
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "description": "Name of the volume."
-      },
-      {
-        "name": "schema_name",
-        "type": "string",
-        "description": "Name of the schema."
-      }
-    ]
   }
 ]} />
 </TabItem>
@@ -377,28 +326,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-object_info"><code>object_info</code></a>, <a href="#parameter-lineage_direction"><code>lineage_direction</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_info"><code>object_info</code></a>, <a href="#parameter-lineage_direction"><code>lineage_direction</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists external lineage relationships of a Databricks object or external metadata given a supplied</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-external_lineage_relationship"><code>external_lineage_relationship</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-source"><code>source</code></a>, <a href="#parameter-target"><code>target</code></a></td>
     <td></td>
     <td>Creates an external lineage relationship between a Databricks or external metadata object and another</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-external_lineage_relationship"><code>external_lineage_relationship</code></a></td>
+    <td><a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-source"><code>source</code></a>, <a href="#parameter-target"><code>target</code></a></td>
     <td></td>
     <td>Updates an external lineage relationship between a Databricks or external metadata object and another</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-external_lineage_relationship"><code>external_lineage_relationship</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-external_lineage_relationship"><code>external_lineage_relationship</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes an external lineage relationship between a Databricks or external metadata object and another</td>
 </tr>
@@ -421,7 +370,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-external_lineage_relationship">
     <td><CopyableCode code="external_lineage_relationship" /></td>
@@ -442,6 +391,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask must be a single string, with multiple fields separated by commas (no spaces). The field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g., ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only the entire collection field can be specified. Field names must exactly match the resource field names. A field mask of ``*`` indicates full replacement. It’s recommended to always explicitly list the fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the API changes in the future.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -474,12 +428,12 @@ external_lineage_info,
 external_metadata_info,
 file_info,
 model_info,
-table_info,
-volume_info
+table_info
 FROM databricks_workspace.catalog.external_lineage
 WHERE object_info = '{{ object_info }}' -- required
 AND lineage_direction = '{{ lineage_direction }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -503,12 +457,22 @@ Creates an external lineage relationship between a Databricks or external metada
 
 ```sql
 INSERT INTO databricks_workspace.catalog.external_lineage (
-external_lineage_relationship,
-deployment_name
+source,
+target,
+columns,
+id,
+properties,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ external_lineage_relationship }}' /* required */,
-'{{ deployment_name }}'
+'{{ source }}' /* required */,
+'{{ target }}' /* required */,
+'{{ columns }}',
+'{{ id }}',
+'{{ properties }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 columns,
@@ -526,37 +490,47 @@ target
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the external_lineage resource.
-    - name: external_lineage_relationship
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the external_lineage resource.
+    - name: source
       value:
-        source:
-          external_metadata:
-            name: "{{ name }}"
-          model_version:
-            name: "{{ name }}"
-            version: "{{ version }}"
-          path:
-            url: "{{ url }}"
-          table:
-            name: "{{ name }}"
-          volume:
-            name: "{{ name }}"
-        target:
-          external_metadata:
-            name: "{{ name }}"
-          model_version:
-            name: "{{ name }}"
-            version: "{{ version }}"
-          path:
-            url: "{{ url }}"
-          table:
-            name: "{{ name }}"
-          volume:
-            name: "{{ name }}"
-        columns:
-          - source: "{{ source }}"
-            target: "{{ target }}"
-        id: "{{ id }}"
-        properties: "{{ properties }}"
+        external_metadata:
+          name: "{{ name }}"
+        model_version:
+          name: "{{ name }}"
+          version: "{{ version }}"
+        path:
+          url: "{{ url }}"
+        table:
+          name: "{{ name }}"
+    - name: target
+      description: |
+        Target object of the external lineage relationship.
+      value:
+        external_metadata:
+          name: "{{ name }}"
+        model_version:
+          name: "{{ name }}"
+          version: "{{ version }}"
+        path:
+          url: "{{ url }}"
+        table:
+          name: "{{ name }}"
+    - name: columns
+      description: |
+        List of column relationships between source and target objects.
+      value:
+        - source: "{{ source }}"
+          target: "{{ target }}"
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique identifier of the external lineage relationship.
+    - name: properties
+      value: "{{ properties }}"
+      description: |
+        Key-value properties associated with the external lineage relationship.
 `}</CodeBlock>
 
 </TabItem>
@@ -578,11 +552,17 @@ Updates an external lineage relationship between a Databricks or external metada
 ```sql
 UPDATE databricks_workspace.catalog.external_lineage
 SET 
-external_lineage_relationship = '{{ external_lineage_relationship }}'
+source = '{{ source }}',
+target = '{{ target }}',
+columns = '{{ columns }}',
+id = '{{ id }}',
+properties = '{{ properties }}'
 WHERE 
 update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND external_lineage_relationship = '{{ external_lineage_relationship }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND source = '{{ source }}' --required
+AND target = '{{ target }}' --required
 RETURNING
 id,
 columns,
@@ -610,6 +590,7 @@ Deletes an external lineage relationship between a Databricks or external metada
 DELETE FROM databricks_workspace.catalog.external_lineage
 WHERE external_lineage_relationship = '{{ external_lineage_relationship }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

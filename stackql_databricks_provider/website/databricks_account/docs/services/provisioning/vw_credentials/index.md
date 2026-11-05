@@ -123,7 +123,6 @@ SELECT
   c.creation_time,
   JSON_EXTRACT(c.aws_credentials, '$.sts_role.role_arn') AS aws_role_arn
 FROM databricks_account.provisioning.credentials c
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -137,7 +136,6 @@ SELECT
   c.creation_time,
   c.aws_credentials->'sts_role'->>'role_arn' AS aws_role_arn
 FROM databricks_account.provisioning.credentials c
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

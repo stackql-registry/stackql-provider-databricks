@@ -210,35 +210,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets the specified external metadata object in a metastore. The caller must be a metastore admin, the</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of external metadata objects in the metastore. If the caller is the metastore admin, all</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-external_metadata"><code>external_metadata</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-system_type"><code>system_type</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Creates a new external metadata object in the parent metastore if the caller is a metastore admin or</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-external_metadata"><code>external_metadata</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-system_type"><code>system_type</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Updates the external metadata object that matches the supplied name. The caller can only update either</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes the external metadata object that matches the supplied name. The caller must be a metastore</td>
 </tr>
@@ -261,7 +261,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -272,6 +272,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask must be a single string, with multiple fields separated by commas (no spaces). The field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g., ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only the entire collection field can be specified. Field names must exactly match the resource field names. A field mask of ``*`` indicates full replacement. It’s recommended to always explicitly list the fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the API changes in the future.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -318,6 +323,7 @@ url
 FROM databricks_workspace.catalog.external_metadata
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -343,6 +349,7 @@ updated_by,
 url
 FROM databricks_workspace.catalog.external_metadata
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -366,12 +373,40 @@ Creates a new external metadata object in the parent metastore if the caller is 
 
 ```sql
 INSERT INTO databricks_workspace.catalog.external_metadata (
-external_metadata,
-deployment_name
+name,
+system_type,
+entity_type,
+columns,
+create_time,
+created_by,
+description,
+id,
+metastore_id,
+owner,
+properties,
+update_time,
+updated_by,
+url,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ external_metadata }}' /* required */,
-'{{ deployment_name }}'
+'{{ name }}' /* required */,
+'{{ system_type }}' /* required */,
+'{{ entity_type }}' /* required */,
+'{{ columns }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ description }}',
+'{{ id }}',
+'{{ metastore_id }}',
+'{{ owner }}',
+'{{ properties }}',
+'{{ update_time }}',
+'{{ updated_by }}',
+'{{ url }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -398,23 +433,64 @@ url
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the external_metadata resource.
-    - name: external_metadata
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the external_metadata resource.
+    - name: name
+      value: "{{ name }}"
+    - name: system_type
+      value: "{{ system_type }}"
+      description: |
+        Type of external system.
+    - name: entity_type
+      value: "{{ entity_type }}"
+      description: |
+        Type of entity within the external system.
+    - name: columns
       value:
-        name: "{{ name }}"
-        system_type: "{{ system_type }}"
-        entity_type: "{{ entity_type }}"
-        columns:
-          - "{{ columns }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        description: "{{ description }}"
-        id: "{{ id }}"
-        metastore_id: "{{ metastore_id }}"
-        owner: "{{ owner }}"
-        properties: "{{ properties }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
-        url: "{{ url }}"
+        - "{{ columns }}"
+      description: |
+        List of columns associated with the external metadata object.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Time at which this external metadata object was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        Username of external metadata object creator.
+    - name: description
+      value: "{{ description }}"
+      description: |
+        User-provided free-form text description.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique identifier of the external metadata object.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Unique identifier of parent metastore.
+    - name: owner
+      value: "{{ owner }}"
+      description: |
+        Owner of the external metadata object.
+    - name: properties
+      value: "{{ properties }}"
+      description: |
+        A map of key-value properties attached to the external metadata object.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Time at which this external metadata object was last modified.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        Username of user who last modified external metadata object.
+    - name: url
+      value: "{{ url }}"
+      description: |
+        URL associated with the external metadata object.
 `}</CodeBlock>
 
 </TabItem>
@@ -436,12 +512,28 @@ Updates the external metadata object that matches the supplied name. The caller 
 ```sql
 UPDATE databricks_workspace.catalog.external_metadata
 SET 
-external_metadata = '{{ external_metadata }}'
+name = '{{ name }}',
+system_type = '{{ system_type }}',
+entity_type = '{{ entity_type }}',
+columns = '{{ columns }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+description = '{{ description }}',
+id = '{{ id }}',
+metastore_id = '{{ metastore_id }}',
+owner = '{{ owner }}',
+properties = '{{ properties }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}',
+url = '{{ url }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND external_metadata = '{{ external_metadata }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND name = '{{ name }}' --required
+AND system_type = '{{ system_type }}' --required
+AND entity_type = '{{ entity_type }}' --required
 RETURNING
 id,
 name,
@@ -478,6 +570,7 @@ Deletes the external metadata object that matches the supplied name. The caller 
 DELETE FROM databricks_workspace.catalog.external_metadata
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

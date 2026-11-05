@@ -169,7 +169,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN, ISOLATION_MODE_OPEN_IN_ACCOUNT)"
+    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN)"
   },
   {
     "name": "owner",
@@ -332,7 +332,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "isolation_mode",
     "type": "string",
-    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN, ISOLATION_MODE_OPEN_IN_ACCOUNT)"
+    "description": "Whether the current securable is accessible from all workspaces or a specific set of workspaces. (ISOLATION_MODE_ISOLATED, ISOLATION_MODE_OPEN)"
   },
   {
     "name": "owner",
@@ -386,49 +386,49 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_credential"><CopyableCode code="get_credential" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name_arg"><code>name_arg</code></a></td>
+    <td><a href="#parameter-name_arg"><code>name_arg</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a service or storage credential from the metastore. The caller must be a metastore admin, the</td>
 </tr>
 <tr>
     <td><a href="#list_credentials"><CopyableCode code="list_credentials" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td></td>
+    <td><a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-include_unbound"><code>include_unbound</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-purpose"><code>purpose</code></a></td>
     <td>Gets an array of credentials (as **CredentialInfo** objects).</td>
 </tr>
 <tr>
     <td><a href="#create_credential"><CopyableCode code="create_credential" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-name"><code>name</code></a></td>
+    <td><a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Creates a new credential. The type of credential to be created is determined by the **purpose** field,</td>
 </tr>
 <tr>
     <td><a href="#update_credential"><CopyableCode code="update_credential" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name_arg"><code>name_arg</code></a></td>
+    <td><a href="#parameter-name_arg"><code>name_arg</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates a service or storage credential on the metastore.</td>
 </tr>
 <tr>
     <td><a href="#delete_credential"><CopyableCode code="delete_credential" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name_arg"><code>name_arg</code></a></td>
+    <td><a href="#parameter-name_arg"><code>name_arg</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a></td>
     <td>Deletes a service or storage credential from the metastore. The caller must be an owner of the</td>
 </tr>
 <tr>
     <td><a href="#generate_temporary_service_credential"><CopyableCode code="generate_temporary_service_credential" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-credential_name"><code>credential_name</code></a></td>
+    <td><a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-credential_name"><code>credential_name</code></a></td>
     <td></td>
     <td>Returns a set of temporary credentials generated using the specified service credential. The caller</td>
 </tr>
 <tr>
     <td><a href="#validate"><CopyableCode code="validate" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td></td>
+    <td><a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Validates a credential.</td>
 </tr>
@@ -448,6 +448,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-name_arg">
     <td><CopyableCode code="name_arg" /></td>
     <td><code>string</code></td>
@@ -516,6 +521,7 @@ updated_by,
 used_for_managed_storage
 FROM databricks_account.catalog.credentials
 WHERE name_arg = '{{ name_arg }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -544,7 +550,8 @@ updated_at,
 updated_by,
 used_for_managed_storage
 FROM databricks_account.catalog.credentials
-WHERE include_unbound = '{{ include_unbound }}'
+WHERE account_host = '{{ account_host }}' -- required
+AND include_unbound = '{{ include_unbound }}'
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
 AND purpose = '{{ purpose }}'
@@ -577,7 +584,8 @@ comment,
 databricks_gcp_service_account,
 purpose,
 read_only,
-skip_validation
+skip_validation,
+account_host
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -588,7 +596,8 @@ SELECT
 '{{ databricks_gcp_service_account }}',
 '{{ purpose }}',
 {{ read_only }},
-{{ skip_validation }}
+{{ skip_validation }},
+'{{ account_host }}'
 RETURNING
 id,
 name,
@@ -616,6 +625,9 @@ used_for_managed_storage
 <CodeBlock language="yaml">{`# Description fields are for documentation purposes
 - name: credentials
   props:
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the credentials resource.
     - name: name
       value: "{{ name }}"
       description: |
@@ -698,6 +710,7 @@ read_only = {{ read_only }},
 skip_validation = {{ skip_validation }}
 WHERE 
 name_arg = '{{ name_arg }}' --required
+AND account_host = '{{ account_host }}' --required
 RETURNING
 id,
 name,
@@ -737,6 +750,7 @@ Deletes a service or storage credential from the metastore. The caller must be a
 ```sql
 DELETE FROM databricks_account.catalog.credentials
 WHERE name_arg = '{{ name_arg }}' --required
+AND account_host = '{{ account_host }}' --required
 AND force = '{{ force }}'
 ;
 ```
@@ -759,6 +773,7 @@ Returns a set of temporary credentials generated using the specified service cre
 
 ```sql
 EXEC databricks_account.catalog.credentials.generate_temporary_service_credential 
+@account_host='{{ account_host }}' --required 
 @@json=
 '{
 "credential_name": "{{ credential_name }}", 
@@ -774,6 +789,7 @@ Validates a credential.
 
 ```sql
 EXEC databricks_account.catalog.credentials.validate 
+@account_host='{{ account_host }}' --required 
 @@json=
 '{
 "aws_iam_role": "{{ aws_iam_role }}", 

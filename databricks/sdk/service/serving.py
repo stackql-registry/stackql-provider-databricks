@@ -4,28 +4,28 @@
 # to strip the fat-import header below; ignoring F401 would defeat that.
 
 from __future__ import annotations
-
-import logging
-import random
-import threading
-import time
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Any, BinaryIO, Callable, Dict, Iterator, List, Optional
+from typing import Dict, List, Any, Iterator, Callable, Optional, BinaryIO
 
+
+import time
+import random
+import logging
 import requests
-from google.protobuf.timestamp_pb2 import Timestamp
-
-from databricks.sdk.service._internal import (
-    Wait,
-    _enum,
-    _from_dict,
-    _repeated_dict,
-    _timestamp,
-)
+import threading
 
 from ..errors import OperationFailed
+from databricks.sdk.service._internal import (
+    _enum,
+    _from_dict,
+    _int64,
+    _repeated_dict,
+    _repeated_enum,
+    Wait,
+)
+
 
 _LOG = logging.getLogger("databricks.sdk")
 
@@ -361,11 +361,11 @@ class AiGatewayRateLimit:
     def from_dict(cls, d: Dict[str, Any]) -> AiGatewayRateLimit:
         """Deserializes the AiGatewayRateLimit from a dictionary."""
         return cls(
-            calls=d.get("calls", None),
+            calls=_int64(d, "calls"),
             key=_enum(d, "key", AiGatewayRateLimitKey),
             principal=d.get("principal", None),
             renewal_period=_enum(d, "renewal_period", AiGatewayRateLimitRenewalPeriod),
-            tokens=d.get("tokens", None),
+            tokens=_int64(d, "tokens"),
         )
 
 
@@ -445,6 +445,8 @@ class AmazonBedrockConfig:
     ``aws_secret_access_key`` and ``aws_secret_access_key_plaintext``."""
 
     uc_service_credential_name: Optional[str] = None
+    """The name of the Unity Catalog service credential that the external model uses to access AWS
+    resources."""
 
     def as_dict(self) -> dict:
         """Serializes the AmazonBedrockConfig into a dictionary suitable for use as a JSON request body."""
@@ -508,7 +510,6 @@ class AmazonBedrockConfigBedrockProvider(Enum):
     AMAZON = "amazon"
     ANTHROPIC = "anthropic"
     COHERE = "cohere"
-    GROK = "grok"
 
 
 @dataclass
@@ -881,20 +882,6 @@ class CohereConfig:
             cohere_api_key=d.get("cohere_api_key", None),
             cohere_api_key_plaintext=d.get("cohere_api_key_plaintext", None),
         )
-
-
-class CommitmentStatus(Enum):
-    """The lifecycle status of a Provisioned Throughput commitment."""
-
-    ACTIVE = "ACTIVE"
-    EXPIRED = "EXPIRED"
-
-
-class CommitmentTerm(Enum):
-    """The commitment term length for a Provisioned Throughput pool."""
-
-    COMMITMENT_TERM_1_MONTH = "COMMITMENT_TERM_1_MONTH"
-    COMMITMENT_TERM_3_MONTHS = "COMMITMENT_TERM_3_MONTHS"
 
 
 @dataclass
@@ -1271,7 +1258,7 @@ class EndpointCoreConfigOutput:
         """Deserializes the EndpointCoreConfigOutput from a dictionary."""
         return cls(
             auto_capture_config=_from_dict(d, "auto_capture_config", AutoCaptureConfigOutput),
-            config_version=d.get("config_version", None),
+            config_version=_int64(d, "config_version"),
             served_entities=_repeated_dict(d, "served_entities", ServedEntityOutput),
             served_models=_repeated_dict(d, "served_models", ServedModelOutput),
             traffic_config=_from_dict(d, "traffic_config", TrafficConfig),
@@ -1379,7 +1366,7 @@ class EndpointPendingConfig:
             config_version=d.get("config_version", None),
             served_entities=_repeated_dict(d, "served_entities", ServedEntityOutput),
             served_models=_repeated_dict(d, "served_models", ServedModelOutput),
-            start_time=d.get("start_time", None),
+            start_time=_int64(d, "start_time"),
             traffic_config=_from_dict(d, "traffic_config", TrafficConfig),
         )
 
@@ -1392,9 +1379,6 @@ class EndpointState:
     endpoint's config_update state value is IN_PROGRESS, another update can not be made until the
     update completes or fails."""
 
-    pt_state: Optional[PtState] = None
-    """The Provisioned Throughput state of the endpoint, including its capacity commitments."""
-
     ready: Optional[EndpointStateReady] = None
     """The state of an endpoint, indicating whether or not the endpoint is queryable. An endpoint is
     READY if all of the served entities in its active configuration are ready. If any of the
@@ -1405,8 +1389,6 @@ class EndpointState:
         body = {}
         if self.config_update is not None:
             body["config_update"] = self.config_update.value
-        if self.pt_state:
-            body["pt_state"] = self.pt_state.as_dict()
         if self.ready is not None:
             body["ready"] = self.ready.value
         return body
@@ -1416,8 +1398,6 @@ class EndpointState:
         body = {}
         if self.config_update is not None:
             body["config_update"] = self.config_update
-        if self.pt_state:
-            body["pt_state"] = self.pt_state
         if self.ready is not None:
             body["ready"] = self.ready
         return body
@@ -1427,7 +1407,6 @@ class EndpointState:
         """Deserializes the EndpointState from a dictionary."""
         return cls(
             config_update=_enum(d, "config_update", EndpointStateConfigUpdate),
-            pt_state=_from_dict(d, "pt_state", PtState),
             ready=_enum(d, "ready", EndpointStateReady),
         )
 
@@ -1733,14 +1712,6 @@ class FallbackConfig:
     def from_dict(cls, d: Dict[str, Any]) -> FallbackConfig:
         """Deserializes the FallbackConfig from a dictionary."""
         return cls(enabled=d.get("enabled", None))
-
-
-class FirstPartyExportSetting(Enum):
-    """Whether first-party system-metrics export (to system.telemetry.otel_metrics) is enabled for an
-    endpoint. Scoped to first-party only for now; third-party (e.g. Datadog) export is deferred."""
-
-    FIRST_PARTY_EXPORT_DISABLED = "FIRST_PARTY_EXPORT_DISABLED"
-    FIRST_PARTY_EXPORT_ENABLED = "FIRST_PARTY_EXPORT_ENABLED"
 
 
 @dataclass
@@ -2184,166 +2155,6 @@ class PayloadTable:
 
 
 @dataclass
-class PtCommitment:
-    """A single Provisioned Throughput capacity commitment for an endpoint."""
-
-    auto_renew: Optional[bool] = None
-    """Whether the commitment automatically renews at the end of its term."""
-
-    auto_renew_editable: Optional[bool] = None
-    """Whether auto_renew can still be toggled. Derived at read time, gated on the lockout window: true
-    while more than the auto-renew lockout window remains before expiry. The server enforces the
-    same rule on write."""
-
-    expire_time: Optional[Timestamp] = None
-    """The commitment's expiry (start_time + the term, in UTC calendar months/years). Stored on the
-    commitment and returned verbatim, so clients, the billing meter, and the purge agree on the
-    exact instant."""
-
-    id: Optional[str] = None
-    """System-generated ID of the commitment."""
-
-    provisioned_model_units: Optional[int] = None
-    """The number of model units reserved by this commitment."""
-
-    start_time: Optional[Timestamp] = None
-    """The time at which the commitment becomes active."""
-
-    status: Optional[CommitmentStatus] = None
-    """The lifecycle status of the commitment."""
-
-    term: Optional[CommitmentTerm] = None
-    """The commitment term length."""
-
-    def as_dict(self) -> dict:
-        """Serializes the PtCommitment into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.auto_renew is not None:
-            body["auto_renew"] = self.auto_renew
-        if self.auto_renew_editable is not None:
-            body["auto_renew_editable"] = self.auto_renew_editable
-        if self.expire_time is not None:
-            body["expire_time"] = self.expire_time.ToJsonString()
-        if self.id is not None:
-            body["id"] = self.id
-        if self.provisioned_model_units is not None:
-            body["provisioned_model_units"] = self.provisioned_model_units
-        if self.start_time is not None:
-            body["start_time"] = self.start_time.ToJsonString()
-        if self.status is not None:
-            body["status"] = self.status.value
-        if self.term is not None:
-            body["term"] = self.term.value
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the PtCommitment into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.auto_renew is not None:
-            body["auto_renew"] = self.auto_renew
-        if self.auto_renew_editable is not None:
-            body["auto_renew_editable"] = self.auto_renew_editable
-        if self.expire_time is not None:
-            body["expire_time"] = self.expire_time
-        if self.id is not None:
-            body["id"] = self.id
-        if self.provisioned_model_units is not None:
-            body["provisioned_model_units"] = self.provisioned_model_units
-        if self.start_time is not None:
-            body["start_time"] = self.start_time
-        if self.status is not None:
-            body["status"] = self.status
-        if self.term is not None:
-            body["term"] = self.term
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> PtCommitment:
-        """Deserializes the PtCommitment from a dictionary."""
-        return cls(
-            auto_renew=d.get("auto_renew", None),
-            auto_renew_editable=d.get("auto_renew_editable", None),
-            expire_time=_timestamp(d, "expire_time"),
-            id=d.get("id", None),
-            provisioned_model_units=d.get("provisioned_model_units", None),
-            start_time=_timestamp(d, "start_time"),
-            status=_enum(d, "status", CommitmentStatus),
-            term=_enum(d, "term", CommitmentTerm),
-        )
-
-
-@dataclass
-class PtCommitmentAutoRenew:
-    """Changes the auto-renew setting of a single PT commitment."""
-
-    commitment_id: str
-    """The ID of the commitment to update."""
-
-    auto_renew: bool
-    """The desired auto-renew setting for the commitment."""
-
-    def as_dict(self) -> dict:
-        """Serializes the PtCommitmentAutoRenew into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.auto_renew is not None:
-            body["auto_renew"] = self.auto_renew
-        if self.commitment_id is not None:
-            body["commitment_id"] = self.commitment_id
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the PtCommitmentAutoRenew into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.auto_renew is not None:
-            body["auto_renew"] = self.auto_renew
-        if self.commitment_id is not None:
-            body["commitment_id"] = self.commitment_id
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> PtCommitmentAutoRenew:
-        """Deserializes the PtCommitmentAutoRenew from a dictionary."""
-        return cls(auto_renew=d.get("auto_renew", None), commitment_id=d.get("commitment_id", None))
-
-
-@dataclass
-class PtCommitmentRelocation:
-    """A request to relocate ("upgrade") an existing Provisioned Throughput commitment onto a
-    different, same-line endpoint. The commitment row moves intact (same commitment_id) from the
-    source endpoint to the target in a single transaction."""
-
-    source_endpoint: str
-    """The endpoint that currently owns the commitments (the relocation source)."""
-
-    commitment_ids: Optional[List[str]] = None
-    """The IDs of the commitments to relocate. All move from the same source endpoint to the same
-    target in one transaction (all-or-nothing), so a multi-commitment upgrade is atomic."""
-
-    def as_dict(self) -> dict:
-        """Serializes the PtCommitmentRelocation into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.commitment_ids:
-            body["commitment_ids"] = [v for v in self.commitment_ids]
-        if self.source_endpoint is not None:
-            body["source_endpoint"] = self.source_endpoint
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the PtCommitmentRelocation into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.commitment_ids:
-            body["commitment_ids"] = self.commitment_ids
-        if self.source_endpoint is not None:
-            body["source_endpoint"] = self.source_endpoint
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> PtCommitmentRelocation:
-        """Deserializes the PtCommitmentRelocation from a dictionary."""
-        return cls(commitment_ids=d.get("commitment_ids", None), source_endpoint=d.get("source_endpoint", None))
-
-
-@dataclass
 class PtEndpointCoreConfig:
     served_entities: Optional[List[PtServedModel]] = None
     """The list of served entities under the serving endpoint config."""
@@ -2386,7 +2197,8 @@ class PtServedModel:
     **catalog_name.schema_name.model_name**."""
 
     provisioned_model_units: int
-    """The number of model units to be provisioned."""
+    """The number of model units to be provisioned. Dedicated inference requires positive fixed
+    capacity and does not support scale-to-zero."""
 
     burst_scaling_enabled: Optional[bool] = None
     """Whether burst scaling is enabled. When enabled (default), the endpoint can automatically scale
@@ -2401,14 +2213,6 @@ class PtServedModel:
     model, this field defaults to external_model.name, with '.' and ':' replaced with '-', and if
     not specified for other entities, it defaults to entity_name-entity_version."""
 
-    pt_auto_renew: Optional[bool] = None
-    """Whether the Provisioned Throughput commitment should automatically renew at the end of its term.
-    Only applies when pt_term is set."""
-
-    pt_term: Optional[CommitmentTerm] = None
-    """Commitment term to purchase for this served entity; its presence marks the entity as reserved
-    (vs on-demand) PT. Valid on create and on update (purchases a commitment for a scale-up)."""
-
     def as_dict(self) -> dict:
         """Serializes the PtServedModel into a dictionary suitable for use as a JSON request body."""
         body = {}
@@ -2422,10 +2226,6 @@ class PtServedModel:
             body["name"] = self.name
         if self.provisioned_model_units is not None:
             body["provisioned_model_units"] = self.provisioned_model_units
-        if self.pt_auto_renew is not None:
-            body["pt_auto_renew"] = self.pt_auto_renew
-        if self.pt_term is not None:
-            body["pt_term"] = self.pt_term.value
         return body
 
     def as_shallow_dict(self) -> dict:
@@ -2441,10 +2241,6 @@ class PtServedModel:
             body["name"] = self.name
         if self.provisioned_model_units is not None:
             body["provisioned_model_units"] = self.provisioned_model_units
-        if self.pt_auto_renew is not None:
-            body["pt_auto_renew"] = self.pt_auto_renew
-        if self.pt_term is not None:
-            body["pt_term"] = self.pt_term
         return body
 
     @classmethod
@@ -2455,37 +2251,8 @@ class PtServedModel:
             entity_name=d.get("entity_name", None),
             entity_version=d.get("entity_version", None),
             name=d.get("name", None),
-            provisioned_model_units=d.get("provisioned_model_units", None),
-            pt_auto_renew=d.get("pt_auto_renew", None),
-            pt_term=_enum(d, "pt_term", CommitmentTerm),
+            provisioned_model_units=_int64(d, "provisioned_model_units"),
         )
-
-
-@dataclass
-class PtState:
-    """The Provisioned Throughput state for an endpoint, including all of its capacity commitments."""
-
-    commitments: Optional[List[PtCommitment]] = None
-    """The list of capacity commitments backing the endpoint."""
-
-    def as_dict(self) -> dict:
-        """Serializes the PtState into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.commitments:
-            body["commitments"] = [v.as_dict() for v in self.commitments]
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the PtState into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.commitments:
-            body["commitments"] = self.commitments
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> PtState:
-        """Deserializes the PtState from a dictionary."""
-        return cls(commitments=_repeated_dict(d, "commitments", PtCommitment))
 
 
 @dataclass
@@ -2671,7 +2438,7 @@ class QueryEndpointResponse:
         """Deserializes the QueryEndpointResponse from a dictionary."""
         return cls(
             choices=_repeated_dict(d, "choices", V1ResponseChoiceElement),
-            created=d.get("created", None),
+            created=_int64(d, "created"),
             data=_repeated_dict(d, "data", EmbeddingsV1ResponseEmbeddingElement),
             id=d.get("id", None),
             model=d.get("model", None),
@@ -2730,7 +2497,7 @@ class RateLimit:
     def from_dict(cls, d: Dict[str, Any]) -> RateLimit:
         """Deserializes the RateLimit from a dictionary."""
         return cls(
-            calls=d.get("calls", None),
+            calls=_int64(d, "calls"),
             key=_enum(d, "key", RateLimitKey),
             renewal_period=_enum(d, "renewal_period", RateLimitRenewalPeriod),
         )
@@ -2947,7 +2714,7 @@ class ServedEntityInput:
             min_provisioned_concurrency=d.get("min_provisioned_concurrency", None),
             min_provisioned_throughput=d.get("min_provisioned_throughput", None),
             name=d.get("name", None),
-            provisioned_model_units=d.get("provisioned_model_units", None),
+            provisioned_model_units=_int64(d, "provisioned_model_units"),
             scale_to_zero_enabled=d.get("scale_to_zero_enabled", None),
             workload_size=d.get("workload_size", None),
             workload_type=_enum(d, "workload_type", ServingModelWorkloadType),
@@ -3127,7 +2894,7 @@ class ServedEntityOutput:
         """Deserializes the ServedEntityOutput from a dictionary."""
         return cls(
             burst_scaling_enabled=d.get("burst_scaling_enabled", None),
-            creation_timestamp=d.get("creation_timestamp", None),
+            creation_timestamp=_int64(d, "creation_timestamp"),
             creator=d.get("creator", None),
             entity_name=d.get("entity_name", None),
             entity_version=d.get("entity_version", None),
@@ -3140,7 +2907,7 @@ class ServedEntityOutput:
             min_provisioned_concurrency=d.get("min_provisioned_concurrency", None),
             min_provisioned_throughput=d.get("min_provisioned_throughput", None),
             name=d.get("name", None),
-            provisioned_model_units=d.get("provisioned_model_units", None),
+            provisioned_model_units=_int64(d, "provisioned_model_units"),
             scale_to_zero_enabled=d.get("scale_to_zero_enabled", None),
             state=_from_dict(d, "state", ServedModelState),
             workload_size=d.get("workload_size", None),
@@ -3344,7 +3111,7 @@ class ServedModelInput:
             model_name=d.get("model_name", None),
             model_version=d.get("model_version", None),
             name=d.get("name", None),
-            provisioned_model_units=d.get("provisioned_model_units", None),
+            provisioned_model_units=_int64(d, "provisioned_model_units"),
             scale_to_zero_enabled=d.get("scale_to_zero_enabled", None),
             workload_size=d.get("workload_size", None),
             workload_type=_enum(d, "workload_type", ServedModelInputWorkloadType),
@@ -3502,7 +3269,7 @@ class ServedModelOutput:
         """Deserializes the ServedModelOutput from a dictionary."""
         return cls(
             burst_scaling_enabled=d.get("burst_scaling_enabled", None),
-            creation_timestamp=d.get("creation_timestamp", None),
+            creation_timestamp=_int64(d, "creation_timestamp"),
             creator=d.get("creator", None),
             environment_vars=d.get("environment_vars", None),
             instance_profile_arn=d.get("instance_profile_arn", None),
@@ -3511,7 +3278,7 @@ class ServedModelOutput:
             model_name=d.get("model_name", None),
             model_version=d.get("model_version", None),
             name=d.get("name", None),
-            provisioned_model_units=d.get("provisioned_model_units", None),
+            provisioned_model_units=_int64(d, "provisioned_model_units"),
             scale_to_zero_enabled=d.get("scale_to_zero_enabled", None),
             state=_from_dict(d, "state", ServedModelState),
             workload_size=d.get("workload_size", None),
@@ -3668,10 +3435,6 @@ class ServingEndpoint:
     telemetry_config: Optional[TelemetryConfig] = None
     """Telemetry configuration for the endpoint, including inference-table payload logging."""
 
-    uc_system_metrics_export_state: Optional[FirstPartyExportSetting] = None
-    """Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity
-    Catalog table. Endpoint-level property (not part of the per-version config)."""
-
     usage_policy_id: Optional[str] = None
     """The usage policy associated with serving endpoint."""
 
@@ -3704,8 +3467,6 @@ class ServingEndpoint:
             body["task"] = self.task
         if self.telemetry_config:
             body["telemetry_config"] = self.telemetry_config.as_dict()
-        if self.uc_system_metrics_export_state is not None:
-            body["uc_system_metrics_export_state"] = self.uc_system_metrics_export_state.value
         if self.usage_policy_id is not None:
             body["usage_policy_id"] = self.usage_policy_id
         return body
@@ -3739,8 +3500,6 @@ class ServingEndpoint:
             body["task"] = self.task
         if self.telemetry_config:
             body["telemetry_config"] = self.telemetry_config
-        if self.uc_system_metrics_export_state is not None:
-            body["uc_system_metrics_export_state"] = self.uc_system_metrics_export_state
         if self.usage_policy_id is not None:
             body["usage_policy_id"] = self.usage_policy_id
         return body
@@ -3752,17 +3511,16 @@ class ServingEndpoint:
             ai_gateway=_from_dict(d, "ai_gateway", AiGatewayConfig),
             budget_policy_id=d.get("budget_policy_id", None),
             config=_from_dict(d, "config", EndpointCoreConfigSummary),
-            creation_timestamp=d.get("creation_timestamp", None),
+            creation_timestamp=_int64(d, "creation_timestamp"),
             creator=d.get("creator", None),
             description=d.get("description", None),
             id=d.get("id", None),
-            last_updated_timestamp=d.get("last_updated_timestamp", None),
+            last_updated_timestamp=_int64(d, "last_updated_timestamp"),
             name=d.get("name", None),
             state=_from_dict(d, "state", EndpointState),
             tags=_repeated_dict(d, "tags", EndpointTag),
             task=d.get("task", None),
             telemetry_config=_from_dict(d, "telemetry_config", TelemetryConfig),
-            uc_system_metrics_export_state=_enum(d, "uc_system_metrics_export_state", FirstPartyExportSetting),
             usage_policy_id=d.get("usage_policy_id", None),
         )
 
@@ -3938,10 +3696,6 @@ class ServingEndpointDetailed:
     telemetry_config: Optional[TelemetryConfig] = None
     """Telemetry configuration for the endpoint, including inference-table payload logging."""
 
-    uc_system_metrics_export_state: Optional[FirstPartyExportSetting] = None
-    """Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity
-    Catalog table. Endpoint-level property (not part of the per-version config)."""
-
     def as_dict(self) -> dict:
         """Serializes the ServingEndpointDetailed into a dictionary suitable for use as a JSON request body."""
         body = {}
@@ -3983,8 +3737,6 @@ class ServingEndpointDetailed:
             body["task"] = self.task
         if self.telemetry_config:
             body["telemetry_config"] = self.telemetry_config.as_dict()
-        if self.uc_system_metrics_export_state is not None:
-            body["uc_system_metrics_export_state"] = self.uc_system_metrics_export_state.value
         return body
 
     def as_shallow_dict(self) -> dict:
@@ -4028,8 +3780,6 @@ class ServingEndpointDetailed:
             body["task"] = self.task
         if self.telemetry_config:
             body["telemetry_config"] = self.telemetry_config
-        if self.uc_system_metrics_export_state is not None:
-            body["uc_system_metrics_export_state"] = self.uc_system_metrics_export_state
         return body
 
     @classmethod
@@ -4039,14 +3789,14 @@ class ServingEndpointDetailed:
             ai_gateway=_from_dict(d, "ai_gateway", AiGatewayConfig),
             budget_policy_id=d.get("budget_policy_id", None),
             config=_from_dict(d, "config", EndpointCoreConfigOutput),
-            creation_timestamp=d.get("creation_timestamp", None),
+            creation_timestamp=_int64(d, "creation_timestamp"),
             creator=d.get("creator", None),
             data_plane_info=_from_dict(d, "data_plane_info", ModelDataPlaneInfo),
             description=d.get("description", None),
             email_notifications=_from_dict(d, "email_notifications", EmailNotifications),
             endpoint_url=d.get("endpoint_url", None),
             id=d.get("id", None),
-            last_updated_timestamp=d.get("last_updated_timestamp", None),
+            last_updated_timestamp=_int64(d, "last_updated_timestamp"),
             name=d.get("name", None),
             pending_config=_from_dict(d, "pending_config", EndpointPendingConfig),
             permission_level=_enum(d, "permission_level", ServingEndpointDetailedPermissionLevel),
@@ -4055,7 +3805,6 @@ class ServingEndpointDetailed:
             tags=_repeated_dict(d, "tags", EndpointTag),
             task=d.get("task", None),
             telemetry_config=_from_dict(d, "telemetry_config", TelemetryConfig),
-            uc_system_metrics_export_state=_enum(d, "uc_system_metrics_export_state", FirstPartyExportSetting),
         )
 
 
@@ -4202,6 +3951,10 @@ class ServingModelWorkloadType(Enum):
 
 @dataclass
 class TelemetryConfig:
+    enabled_telemetry_features: Optional[List[TelemetryFeature]] = None
+    """The telemetry signals to enable for this endpoint. If empty or omitted, all signals are enabled;
+    otherwise only the listed signals are enabled."""
+
     inference_table_config: Optional[TelemetryInferenceTableConfig] = None
     """Configuration for inference table payload logging, including sampling."""
 
@@ -4216,6 +3969,8 @@ class TelemetryConfig:
     def as_dict(self) -> dict:
         """Serializes the TelemetryConfig into a dictionary suitable for use as a JSON request body."""
         body = {}
+        if self.enabled_telemetry_features:
+            body["enabled_telemetry_features"] = [v.value for v in self.enabled_telemetry_features]
         if self.inference_table_config:
             body["inference_table_config"] = self.inference_table_config.as_dict()
         if self.table_names:
@@ -4227,6 +3982,8 @@ class TelemetryConfig:
     def as_shallow_dict(self) -> dict:
         """Serializes the TelemetryConfig into a shallow dictionary of its immediate attributes."""
         body = {}
+        if self.enabled_telemetry_features:
+            body["enabled_telemetry_features"] = self.enabled_telemetry_features
         if self.inference_table_config:
             body["inference_table_config"] = self.inference_table_config
         if self.table_names:
@@ -4239,10 +3996,21 @@ class TelemetryConfig:
     def from_dict(cls, d: Dict[str, Any]) -> TelemetryConfig:
         """Deserializes the TelemetryConfig from a dictionary."""
         return cls(
+            enabled_telemetry_features=_repeated_enum(d, "enabled_telemetry_features", TelemetryFeature),
             inference_table_config=_from_dict(d, "inference_table_config", TelemetryInferenceTableConfig),
             table_names=_from_dict(d, "table_names", UnityCatalogTableNames),
             telemetry_profile_id=d.get("telemetry_profile_id", None),
         )
+
+
+class TelemetryFeature(Enum):
+    """A telemetry signal that a serving endpoint can export to Unity Catalog. Use these values to
+    select which signals the endpoint exports."""
+
+    TELEMETRY_FEATURE_INFERENCE_TABLE = "TELEMETRY_FEATURE_INFERENCE_TABLE"
+    TELEMETRY_FEATURE_LOGS = "TELEMETRY_FEATURE_LOGS"
+    TELEMETRY_FEATURE_METRICS = "TELEMETRY_FEATURE_METRICS"
+    TELEMETRY_FEATURE_TRACES = "TELEMETRY_FEATURE_TRACES"
 
 
 @dataclass
@@ -4538,7 +4306,6 @@ class ServingEndpointsAPI:
         route_optimized: Optional[bool] = None,
         tags: Optional[List[EndpointTag]] = None,
         telemetry_config: Optional[TelemetryConfig] = None,
-        uc_system_metrics_export_state: Optional[FirstPartyExportSetting] = None,
     ) -> Wait[ServingEndpointDetailed]:
         """Create a new serving endpoint.
 
@@ -4565,9 +4332,6 @@ class ServingEndpointsAPI:
           Tags to be attached to the serving endpoint and automatically propagated to billing logs.
         :param telemetry_config: :class:`TelemetryConfig` (optional)
           Configuration for persisting endpoint telemetry (logs, traces, and metrics) to Unity Catalog tables.
-        :param uc_system_metrics_export_state: :class:`FirstPartyExportSetting` (optional)
-          Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity
-          Catalog table. Endpoint-level property (not part of the per-version config).
 
         :returns:
           Long-running operation waiter for :class:`ServingEndpointDetailed`.
@@ -4595,8 +4359,6 @@ class ServingEndpointsAPI:
             body["tags"] = [v.as_dict() for v in tags]
         if telemetry_config is not None:
             body["telemetry_config"] = telemetry_config.as_dict()
-        if uc_system_metrics_export_state is not None:
-            body["uc_system_metrics_export_state"] = uc_system_metrics_export_state.value
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -4626,7 +4388,6 @@ class ServingEndpointsAPI:
         route_optimized: Optional[bool] = None,
         tags: Optional[List[EndpointTag]] = None,
         telemetry_config: Optional[TelemetryConfig] = None,
-        uc_system_metrics_export_state: Optional[FirstPartyExportSetting] = None,
         timeout=timedelta(minutes=20),
     ) -> ServingEndpointDetailed:
         return self.create(
@@ -4640,7 +4401,6 @@ class ServingEndpointsAPI:
             route_optimized=route_optimized,
             tags=tags,
             telemetry_config=telemetry_config,
-            uc_system_metrics_export_state=uc_system_metrics_export_state,
         ).result(timeout=timeout)
 
     def create_provisioned_throughput_endpoint(
@@ -4651,7 +4411,6 @@ class ServingEndpointsAPI:
         ai_gateway: Optional[AiGatewayConfig] = None,
         budget_policy_id: Optional[str] = None,
         email_notifications: Optional[EmailNotifications] = None,
-        relocate_pt_commitment: Optional[PtCommitmentRelocation] = None,
         tags: Optional[List[EndpointTag]] = None,
     ) -> Wait[ServingEndpointDetailed]:
         """Create a new PT serving endpoint.
@@ -4667,9 +4426,6 @@ class ServingEndpointsAPI:
           The budget policy associated with the endpoint.
         :param email_notifications: :class:`EmailNotifications` (optional)
           Email notification settings.
-        :param relocate_pt_commitment: :class:`PtCommitmentRelocation` (optional)
-          Relocate ("upgrade") an existing reserved commitment into this newly created endpoint, whose served
-          model must be a same-line upgrade of the commitment's current model.
         :param tags: List[:class:`EndpointTag`] (optional)
           Tags to be attached to the serving endpoint and automatically propagated to billing logs.
 
@@ -4689,8 +4445,6 @@ class ServingEndpointsAPI:
             body["email_notifications"] = email_notifications.as_dict()
         if name is not None:
             body["name"] = name
-        if relocate_pt_commitment is not None:
-            body["relocate_pt_commitment"] = relocate_pt_commitment.as_dict()
         if tags is not None:
             body["tags"] = [v.as_dict() for v in tags]
         headers = {
@@ -4717,7 +4471,6 @@ class ServingEndpointsAPI:
         ai_gateway: Optional[AiGatewayConfig] = None,
         budget_policy_id: Optional[str] = None,
         email_notifications: Optional[EmailNotifications] = None,
-        relocate_pt_commitment: Optional[PtCommitmentRelocation] = None,
         tags: Optional[List[EndpointTag]] = None,
         timeout=timedelta(minutes=20),
     ) -> ServingEndpointDetailed:
@@ -4727,7 +4480,6 @@ class ServingEndpointsAPI:
             config=config,
             email_notifications=email_notifications,
             name=name,
-            relocate_pt_commitment=relocate_pt_commitment,
             tags=tags,
         ).result(timeout=timeout)
 
@@ -4858,7 +4610,6 @@ class ServingEndpointsAPI:
         method: ExternalFunctionRequestHttpMethod,
         path: str,
         *,
-        body: Optional[str] = None,
         headers: Optional[str] = None,
         json: Optional[str] = None,
         params: Optional[str] = None,
@@ -4872,17 +4623,6 @@ class ServingEndpointsAPI:
           The HTTP method to use (e.g., 'GET', 'POST').
         :param path: str
           The relative path for the API endpoint. This is required.
-        :param body: str (optional)
-          Raw binary request body. When set, this is forwarded as the HTTP body to the upstream connection
-          without any encoding. Use this for non-text payloads (image uploads, multipart bodies) that cannot
-          be carried in the UTF-8 string ``json`` field. Mutually exclusive with ``json`` — if both are set,
-          the request is rejected. The caller is responsible for setting an appropriate ``Content-Type``
-          header.
-
-          Size is bounded by the same limit as the rest of the request payload —
-          ``maxRequestPayloadSizeExternalFunctions`` (default 4 MiB, configurable). Note that proto-over-JSON
-          encodes ``bytes`` as base64, so the on-wire representation is ~33% larger than the raw bytes; budget
-          accordingly.
         :param headers: str (optional)
           Additional headers for the request. If not provided, only auth headers from connections would be
           passed.
@@ -4900,8 +4640,6 @@ class ServingEndpointsAPI:
         """
 
         body = {}
-        if body is not None:
-            body["body"] = body
         if connection_name is not None:
             body["connection_name"] = connection_name
         if headers is not None:
@@ -5002,39 +4740,6 @@ class ServingEndpointsAPI:
 
         res = self._api.do("PATCH", f"/api/2.0/serving-endpoints/{name}/tags", body=body, headers=headers)
         return EndpointTags.from_dict(res)
-
-    def patch_system_metrics_export_state(
-        self, name: str, *, uc_system_metrics_export_state: Optional[FirstPartyExportSetting] = None
-    ) -> ServingEndpointDetailed:
-        """Updates the system-metrics-export state of a serving endpoint, independently of the endpoint config
-        (does not trigger a config-version change or redeployment).
-
-        :param name: str
-          The name of the serving endpoint whose system-metrics-export state is being updated. This field is
-          required.
-        :param uc_system_metrics_export_state: :class:`FirstPartyExportSetting` (optional)
-          Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity
-          Catalog table. Endpoint-level property (not part of the per-version config).
-
-        :returns: :class:`ServingEndpointDetailed`
-        """
-
-        body = {}
-        if uc_system_metrics_export_state is not None:
-            body["uc_system_metrics_export_state"] = uc_system_metrics_export_state.value
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
-        cfg = self._api._cfg
-        if cfg.workspace_id:
-            headers["X-Databricks-Workspace-Id"] = cfg.workspace_id
-
-        res = self._api.do(
-            "PATCH", f"/api/2.0/serving-endpoints/{name}/system-metrics-export-state", body=body, headers=headers
-        )
-        return ServingEndpointDetailed.from_dict(res)
 
     def patch_telemetry_config(
         self, name: str, *, telemetry_config: Optional[TelemetryConfig] = None
@@ -5446,12 +5151,7 @@ class ServingEndpointsAPI:
         return ServingEndpointPermissions.from_dict(res)
 
     def update_provisioned_throughput_endpoint_config(
-        self,
-        name: str,
-        config: PtEndpointCoreConfig,
-        *,
-        pt_commitment_auto_renew: Optional[PtCommitmentAutoRenew] = None,
-        relocate_pt_commitment: Optional[PtCommitmentRelocation] = None,
+        self, name: str, config: PtEndpointCoreConfig
     ) -> Wait[ServingEndpointDetailed]:
         """Updates any combination of the pt endpoint's served entities, the compute configuration of those
         served entities, and the endpoint's traffic config. Updates are instantaneous and endpoint should be
@@ -5460,12 +5160,6 @@ class ServingEndpointsAPI:
         :param name: str
           The name of the pt endpoint to update. This field is required.
         :param config: :class:`PtEndpointCoreConfig`
-        :param pt_commitment_auto_renew: :class:`PtCommitmentAutoRenew` (optional)
-          When set, updates the referenced commitment's auto-renew flag as part of this config update.
-        :param relocate_pt_commitment: :class:`PtCommitmentRelocation` (optional)
-          Relocate ("upgrade") an existing commitment onto this endpoint, whose served model must be a
-          same-line upgrade of the commitment's current model. Mutually exclusive with a pt_term scale-up and
-          with pt_commitment_auto_renew.
 
         :returns:
           Long-running operation waiter for :class:`ServingEndpointDetailed`.
@@ -5475,10 +5169,6 @@ class ServingEndpointsAPI:
         body = {}
         if config is not None:
             body["config"] = config.as_dict()
-        if pt_commitment_auto_renew is not None:
-            body["pt_commitment_auto_renew"] = pt_commitment_auto_renew.as_dict()
-        if relocate_pt_commitment is not None:
-            body["relocate_pt_commitment"] = relocate_pt_commitment.as_dict()
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -5496,20 +5186,9 @@ class ServingEndpointsAPI:
         )
 
     def update_provisioned_throughput_endpoint_config_and_wait(
-        self,
-        name: str,
-        config: PtEndpointCoreConfig,
-        *,
-        pt_commitment_auto_renew: Optional[PtCommitmentAutoRenew] = None,
-        relocate_pt_commitment: Optional[PtCommitmentRelocation] = None,
-        timeout=timedelta(minutes=20),
+        self, name: str, config: PtEndpointCoreConfig, timeout=timedelta(minutes=20)
     ) -> ServingEndpointDetailed:
-        return self.update_provisioned_throughput_endpoint_config(
-            config=config,
-            name=name,
-            pt_commitment_auto_renew=pt_commitment_auto_renew,
-            relocate_pt_commitment=relocate_pt_commitment,
-        ).result(timeout=timeout)
+        return self.update_provisioned_throughput_endpoint_config(config=config, name=name).result(timeout=timeout)
 
 
 class ServingEndpointsDataPlaneAPI:

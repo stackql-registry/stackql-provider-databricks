@@ -1,0 +1,11 @@
+{
+  "_comment": "Resource-name templates for SDK methods whose `name`/`parent` docstring states no format and whose format cannot be inferred from sibling methods (see extract.py: _expand_resource_name_params). Keys are <service module>: {\"<ApiClass>.<method>.<param>\": \"<template>\"}. Templates use {placeholder} segments that become typed path parameters. Keys starting with `_` are comments.",
+  "networking": {
+    "_endpoints": "The SDK documents the endpoint `parent` as accounts/{account_id} and lists endpoints at accounts/{account_id}/endpoints; the endpoint resource name is the child of that collection.",
+    "EndpointsAPI.get_endpoint.name": "accounts/{account_id}/endpoints/{endpoint_id}",
+    "EndpointsAPI.delete_endpoint.name": "accounts/{account_id}/endpoints/{endpoint_id}",
+    "_gateways": "The SDK documents the gateway name as accounts/{account_id}/network-connectivity-configs/{ncc_id}/private-network-gateways/{gateway_id}; its parent is the network connectivity configuration.",
+    "PrivateNetworkGatewaysAPI.create_private_network_gateway.parent": "accounts/{account_id}/network-connectivity-configs/{ncc_id}",
+    "PrivateNetworkGatewaysAPI.list_private_network_gateways.parent": "accounts/{account_id}/network-connectivity-configs/{ncc_id}"
+  }
+}

@@ -174,35 +174,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Reads an existing federation policy for an OIDC_FEDERATION recipient for sharing data from Databricks</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists federation policies for an OIDC_FEDERATION recipient for sharing data from Databricks to</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
+    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a federation policy for an OIDC_FEDERATION recipient for sharing data from Databricks to</td>
 </tr>
 <tr>
-    <td><a href="#recipient_federation_policies_update"><CopyableCode code="recipient_federation_policies_update" /></a></td>
-    <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-policy"><code>policy</code></a></td>
-    <td><a href="#parameter-update_mask"><code>update_mask</code></a></td>
-    <td>Updates an existing federation policy for an OIDC_RECIPIENT. The caller must be the owner of the</td>
-</tr>
-<tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-recipient_name"><code>recipient_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes an existing federation policy for an OIDC_FEDERATION recipient. The caller must be the owner</td>
 </tr>
@@ -225,7 +218,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -237,6 +230,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>string</code></td>
     <td>Name of the recipient. This is the name of the recipient for which the policy is being deleted.</td>
 </tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-max_results">
     <td><CopyableCode code="max_results" /></td>
     <td><code>integer</code></td>
@@ -246,11 +244,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="page_token" /></td>
     <td><code>string</code></td>
     <td></td>
-</tr>
-<tr id="parameter-update_mask">
-    <td><CopyableCode code="update_mask" /></td>
-    <td><code>string</code></td>
-    <td>The field mask specifies which fields of the policy to update. To specify multiple fields in the field mask, use comma as the separator (no space). The special value '*' indicates that all fields should be updated (full replacement). If unspecified, all fields that are set in the policy provided in the update request will overwrite the corresponding fields in the existing policy. Example value: 'comment,oidc_policy.audiences'.</td>
 </tr>
 </tbody>
 </table>
@@ -280,6 +273,7 @@ FROM databricks_workspace.sharing.recipient_federation_policies
 WHERE recipient_name = '{{ recipient_name }}' -- required
 AND name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -298,6 +292,7 @@ update_time
 FROM databricks_workspace.sharing.recipient_federation_policies
 WHERE recipient_name = '{{ recipient_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -321,14 +316,26 @@ Create a federation policy for an OIDC_FEDERATION recipient for sharing data fro
 
 ```sql
 INSERT INTO databricks_workspace.sharing.recipient_federation_policies (
-policy,
+comment,
+create_time,
+id,
+name,
+oidc_policy,
+update_time,
 recipient_name,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ policy }}' /* required */,
+'{{ comment }}',
+'{{ create_time }}',
+'{{ id }}',
+'{{ name }}',
+'{{ oidc_policy }}',
+'{{ update_time }}',
 '{{ recipient_name }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -350,57 +357,38 @@ update_time
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the recipient_federation_policies resource.
-    - name: policy
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the recipient_federation_policies resource.
+    - name: comment
+      value: "{{ comment }}"
+    - name: create_time
+      value: "{{ create_time }}"
       description: |
-        Name of the policy. This is the name of the policy to be created.
+        System-generated timestamp indicating when the policy was created.
+    - name: id
+      value: "{{ id }}"
+      description: |
+        Unique, immutable system-generated identifier for the federation policy.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Name of the federation policy. A recipient can have multiple policies with different names. The name must contain only lowercase alphanumeric characters, numbers, and hyphens.
+    - name: oidc_policy
+      description: |
+        Specifies the policy to use for validating OIDC claims in the federated tokens.
       value:
-        comment: "{{ comment }}"
-        create_time: "{{ create_time }}"
-        id: "{{ id }}"
-        name: "{{ name }}"
-        oidc_policy:
-          issuer: "{{ issuer }}"
-          subject_claim: "{{ subject_claim }}"
-          subject: "{{ subject }}"
-          audiences:
-            - "{{ audiences }}"
-        update_time: "{{ update_time }}"
+        issuer: "{{ issuer }}"
+        subject_claim: "{{ subject_claim }}"
+        subject: "{{ subject }}"
+        audiences:
+          - "{{ audiences }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        System-generated timestamp indicating when the policy was last updated.
 `}</CodeBlock>
 
-</TabItem>
-</Tabs>
-
-
-## `UPDATE` examples
-
-<Tabs
-    defaultValue="recipient_federation_policies_update"
-    values={[
-        { label: 'recipient_federation_policies_update', value: 'recipient_federation_policies_update' }
-    ]}
->
-<TabItem value="recipient_federation_policies_update">
-
-Updates an existing federation policy for an OIDC_RECIPIENT. The caller must be the owner of the
-
-```sql
-UPDATE databricks_workspace.sharing.recipient_federation_policies
-SET 
-policy = '{{ policy }}'
-WHERE 
-recipient_name = '{{ recipient_name }}' --required
-AND name = '{{ name }}' --required
-AND deployment_name = '{{ deployment_name }}' --required
-AND policy = '{{ policy }}' --required
-AND update_mask = '{{ update_mask}}'
-RETURNING
-id,
-name,
-comment,
-create_time,
-oidc_policy,
-update_time;
-```
 </TabItem>
 </Tabs>
 
@@ -422,6 +410,7 @@ DELETE FROM databricks_workspace.sharing.recipient_federation_policies
 WHERE recipient_name = '{{ recipient_name }}' --required
 AND name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

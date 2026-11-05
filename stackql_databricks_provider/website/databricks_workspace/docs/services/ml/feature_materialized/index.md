@@ -44,9 +44,29 @@ The following fields are returned by `SELECT` queries:
 
 <SchemaTable fields={[
   {
+    "name": "budget_policy_id",
+    "type": "string",
+    "description": "The ID of the budget policy used to attribute the serverless compute cost of this materialization. If not specified, a default budget policy may be applied."
+  },
+  {
+    "name": "job_id",
+    "type": "integer",
+    "description": "The ID of the job that materializes the feature. This is present for both batch and streaming features."
+  },
+  {
+    "name": "materialization_set_id",
+    "type": "string",
+    "description": "The materialization set this materialized feature was created for, through DABs or direct-engine creation. Unset for a materialized feature that was not created as part of a set."
+  },
+  {
     "name": "materialized_feature_id",
     "type": "string",
     "description": "Server-assigned unique identifier for the materialized feature."
+  },
+  {
+    "name": "pipeline_id",
+    "type": "string",
+    "description": "The ID of the pipeline that materializes this feature. This is only present for streaming features."
   },
   {
     "name": "feature_name",
@@ -61,7 +81,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "cron_schedule",
     "type": "string",
-    "description": "The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone. Hidden from GraphQL: superseded by the ``trigger`` oneof (cron_schedule_trigger), so not exposed to Catalog Explorer."
+    "description": ""
   },
   {
     "name": "cron_schedule_trigger",
@@ -71,7 +91,17 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "cron_expression",
         "type": "string",
-        "description": "The cron expression defining the schedule (e.g., \"0 0 * * *\" for daily at midnight)."
+        "description": "The cron expression defining the schedule (e.g., \"0 0 * * *\" for daily at midnight). The schedule is interpreted in timezone_id (defaults to UTC). Required when mode is MANUAL (or unset). Left empty when mode is DERIVED, where the service computes it (aligned to UTC) from the features' window timing and fills it in on the response."
+      },
+      {
+        "name": "mode",
+        "type": "string",
+        "description": "How the schedule is determined. Defaults to MANUAL when unset. (DERIVED, MANUAL)"
+      },
+      {
+        "name": "timezone_id",
+        "type": "string",
+        "description": "A Java timezone ID. The schedule is resolved with respect to this timezone. Defaults to UTC when omitted. Can only be configured for MANUAL schedules; DERIVED schedules are always aligned to UTC."
       }
     ]
   },
@@ -86,9 +116,60 @@ The following fields are returned by `SELECT` queries:
     "description": "The timestamp when the pipeline last ran and updated the materialized feature values. If the pipeline has not run yet, this field will be null."
   },
   {
+    "name": "latest_backfill_operation",
+    "type": "string",
+    "description": "Name of the latest backfill operation on this materialized feature. Format: operations/&#123;operation_id&#125;."
+  },
+  {
+    "name": "notifications",
+    "type": "object",
+    "description": "Notification configuration around the materialization job or pipeline lifecycle. They are applied to every job and pipeline that materializes this feature. Features which are materialized in the same pipeline will share the same notification.",
+    "children": [
+      {
+        "name": "on_failure",
+        "type": "object",
+        "description": "Who to notify when a run fails, and on which attempts.",
+        "children": [
+          {
+            "name": "destination_ids",
+            "type": "array",
+            "description": "IDs of the notification destinations (for example Slack, Microsoft Teams, PagerDuty, or a generic webhook) to notify. Not supported for streaming materialized features."
+          },
+          {
+            "name": "email_addresses",
+            "type": "array",
+            "description": "Email addresses to notify."
+          },
+          {
+            "name": "final_attempt_only",
+            "type": "boolean",
+            "description": "If true, notify only when the final attempt of a run fails. If false or unset, notify on every failed attempt, including attempts that will be retried. Batch materialization does not retry failures that need a fix on your side, such as missing permissions or invalid configuration, so the first attempt is the final one. Other batch failures are retried up to twice. Streaming materialization restarts a failed update indefinitely unless the error cannot be retried. With this set, a streaming materialized feature notifies only on errors that cannot be retried, and never on failures that are restarted."
+          }
+        ]
+      },
+      {
+        "name": "on_success",
+        "type": "object",
+        "description": "Who to notify when a run succeeds.",
+        "children": [
+          {
+            "name": "destination_ids",
+            "type": "array",
+            "description": "IDs of the notification destinations (for example Slack, Microsoft Teams, PagerDuty, or a generic webhook) to notify. Not supported for streaming materialized features."
+          },
+          {
+            "name": "email_addresses",
+            "type": "array",
+            "description": "Email addresses to notify."
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "offline_store_config",
     "type": "object",
-    "description": "Destination for writing feature values to an offline Delta table.",
+    "description": "Destination for writing feature values to an offline Delta table. The resulting table is returned as ``table_name``.",
     "children": [
       {
         "name": "catalog_name",
@@ -110,7 +191,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "online_store_config",
     "type": "object",
-    "description": "Destination for writing feature values to an online Lakebase table.",
+    "description": "Destination for writing feature values to an online Lakebase table. The resulting table is returned as ``table_name``.",
     "children": [
       {
         "name": "catalog_name",
@@ -153,13 +234,40 @@ The following fields are returned by `SELECT` queries:
         "name": "mode",
         "type": "string",
         "description": "The type of streaming mode used by the materialization pipeline. (STREAMING_MODE_TYPE_MBM, STREAMING_MODE_TYPE_RTM)"
+      },
+      {
+        "name": "shuffle_partitions",
+        "type": "integer",
+        "description": "Number of shuffle partitions for streaming materialization of this feature. Higher values process high-throughput features with more parallelism at higher compute cost. Materialized features which are computed together will use the largest value set among them."
       }
     ]
   },
   {
     "name": "table_trigger",
     "type": "object",
-    "description": "A trigger that fires when the upstream source table changes."
+    "description": "A trigger that fires when the upstream source table changes.",
+    "children": [
+      {
+        "name": "condition",
+        "type": "string",
+        "description": "Which source table updates trigger a materialization run. If not set, any source table update triggers a run. (TABLE_TRIGGER_CONDITION_ALL_UPDATED, TABLE_TRIGGER_CONDITION_ANY_UPDATED)"
+      },
+      {
+        "name": "min_time_between_triggers",
+        "type": "string",
+        "description": "The minimum time between two triggered runs, so a frequently updated source table does not trigger runs too often. If not set, a feature with a sliding window uses half its slide_duration and a feature with a tumbling window uses half its window_duration, clamped to between 5 minutes and 1 hour. Other features have no minimum."
+      },
+      {
+        "name": "wait_after_last_change",
+        "type": "string",
+        "description": "How long the source table must go without updates before a run starts, so a series of updates settles before the run. If not set, a run starts as soon as the source table updates."
+      }
+    ]
+  },
+  {
+    "name": "tags",
+    "type": "object",
+    "description": "Custom tags to associate with this materialization. They are applied to the materialization job (for batch features) or pipeline (for streaming features) and forwarded to the underlying compute as cluster tags, so materialization cost can be attributed in the billing system tables. These tags apply only to the materialization compute; they are not applied to the Unity Catalog Feature resource itself, whose tags are managed separately through the Unity Catalog tagging API. A maximum of 25 tags is supported; keys and values are subject to the same limitations as cluster tags."
   }
 ]} />
 </TabItem>
@@ -167,9 +275,29 @@ The following fields are returned by `SELECT` queries:
 
 <SchemaTable fields={[
   {
+    "name": "budget_policy_id",
+    "type": "string",
+    "description": "The ID of the budget policy used to attribute the serverless compute cost of this materialization. If not specified, a default budget policy may be applied."
+  },
+  {
+    "name": "job_id",
+    "type": "integer",
+    "description": "The ID of the job that materializes the feature. This is present for both batch and streaming features."
+  },
+  {
+    "name": "materialization_set_id",
+    "type": "string",
+    "description": "The materialization set this materialized feature was created for, through DABs or direct-engine creation. Unset for a materialized feature that was not created as part of a set."
+  },
+  {
     "name": "materialized_feature_id",
     "type": "string",
     "description": "Server-assigned unique identifier for the materialized feature."
+  },
+  {
+    "name": "pipeline_id",
+    "type": "string",
+    "description": "The ID of the pipeline that materializes this feature. This is only present for streaming features."
   },
   {
     "name": "feature_name",
@@ -184,7 +312,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "cron_schedule",
     "type": "string",
-    "description": "The quartz cron expression that defines the schedule of the materialization pipeline. The schedule is evaluated in the UTC timezone. Hidden from GraphQL: superseded by the ``trigger`` oneof (cron_schedule_trigger), so not exposed to Catalog Explorer."
+    "description": ""
   },
   {
     "name": "cron_schedule_trigger",
@@ -194,7 +322,17 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "cron_expression",
         "type": "string",
-        "description": "The cron expression defining the schedule (e.g., \"0 0 * * *\" for daily at midnight)."
+        "description": "The cron expression defining the schedule (e.g., \"0 0 * * *\" for daily at midnight). The schedule is interpreted in timezone_id (defaults to UTC). Required when mode is MANUAL (or unset). Left empty when mode is DERIVED, where the service computes it (aligned to UTC) from the features' window timing and fills it in on the response."
+      },
+      {
+        "name": "mode",
+        "type": "string",
+        "description": "How the schedule is determined. Defaults to MANUAL when unset. (DERIVED, MANUAL)"
+      },
+      {
+        "name": "timezone_id",
+        "type": "string",
+        "description": "A Java timezone ID. The schedule is resolved with respect to this timezone. Defaults to UTC when omitted. Can only be configured for MANUAL schedules; DERIVED schedules are always aligned to UTC."
       }
     ]
   },
@@ -209,9 +347,60 @@ The following fields are returned by `SELECT` queries:
     "description": "The timestamp when the pipeline last ran and updated the materialized feature values. If the pipeline has not run yet, this field will be null."
   },
   {
+    "name": "latest_backfill_operation",
+    "type": "string",
+    "description": "Name of the latest backfill operation on this materialized feature. Format: operations/&#123;operation_id&#125;."
+  },
+  {
+    "name": "notifications",
+    "type": "object",
+    "description": "Notification configuration around the materialization job or pipeline lifecycle. They are applied to every job and pipeline that materializes this feature. Features which are materialized in the same pipeline will share the same notification.",
+    "children": [
+      {
+        "name": "on_failure",
+        "type": "object",
+        "description": "Who to notify when a run fails, and on which attempts.",
+        "children": [
+          {
+            "name": "destination_ids",
+            "type": "array",
+            "description": "IDs of the notification destinations (for example Slack, Microsoft Teams, PagerDuty, or a generic webhook) to notify. Not supported for streaming materialized features."
+          },
+          {
+            "name": "email_addresses",
+            "type": "array",
+            "description": "Email addresses to notify."
+          },
+          {
+            "name": "final_attempt_only",
+            "type": "boolean",
+            "description": "If true, notify only when the final attempt of a run fails. If false or unset, notify on every failed attempt, including attempts that will be retried. Batch materialization does not retry failures that need a fix on your side, such as missing permissions or invalid configuration, so the first attempt is the final one. Other batch failures are retried up to twice. Streaming materialization restarts a failed update indefinitely unless the error cannot be retried. With this set, a streaming materialized feature notifies only on errors that cannot be retried, and never on failures that are restarted."
+          }
+        ]
+      },
+      {
+        "name": "on_success",
+        "type": "object",
+        "description": "Who to notify when a run succeeds.",
+        "children": [
+          {
+            "name": "destination_ids",
+            "type": "array",
+            "description": "IDs of the notification destinations (for example Slack, Microsoft Teams, PagerDuty, or a generic webhook) to notify. Not supported for streaming materialized features."
+          },
+          {
+            "name": "email_addresses",
+            "type": "array",
+            "description": "Email addresses to notify."
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "offline_store_config",
     "type": "object",
-    "description": "Destination for writing feature values to an offline Delta table.",
+    "description": "Destination for writing feature values to an offline Delta table. The resulting table is returned as ``table_name``.",
     "children": [
       {
         "name": "catalog_name",
@@ -233,7 +422,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "online_store_config",
     "type": "object",
-    "description": "Destination for writing feature values to an online Lakebase table.",
+    "description": "Destination for writing feature values to an online Lakebase table. The resulting table is returned as ``table_name``.",
     "children": [
       {
         "name": "catalog_name",
@@ -276,13 +465,40 @@ The following fields are returned by `SELECT` queries:
         "name": "mode",
         "type": "string",
         "description": "The type of streaming mode used by the materialization pipeline. (STREAMING_MODE_TYPE_MBM, STREAMING_MODE_TYPE_RTM)"
+      },
+      {
+        "name": "shuffle_partitions",
+        "type": "integer",
+        "description": "Number of shuffle partitions for streaming materialization of this feature. Higher values process high-throughput features with more parallelism at higher compute cost. Materialized features which are computed together will use the largest value set among them."
       }
     ]
   },
   {
     "name": "table_trigger",
     "type": "object",
-    "description": "A trigger that fires when the upstream source table changes."
+    "description": "A trigger that fires when the upstream source table changes.",
+    "children": [
+      {
+        "name": "condition",
+        "type": "string",
+        "description": "Which source table updates trigger a materialization run. If not set, any source table update triggers a run. (TABLE_TRIGGER_CONDITION_ALL_UPDATED, TABLE_TRIGGER_CONDITION_ANY_UPDATED)"
+      },
+      {
+        "name": "min_time_between_triggers",
+        "type": "string",
+        "description": "The minimum time between two triggered runs, so a frequently updated source table does not trigger runs too often. If not set, a feature with a sliding window uses half its slide_duration and a feature with a tumbling window uses half its window_duration, clamped to between 5 minutes and 1 hour. Other features have no minimum."
+      },
+      {
+        "name": "wait_after_last_change",
+        "type": "string",
+        "description": "How long the source table must go without updates before a run starts, so a series of updates settles before the run. If not set, a run starts as soon as the source table updates."
+      }
+    ]
+  },
+  {
+    "name": "tags",
+    "type": "object",
+    "description": "Custom tags to associate with this materialization. They are applied to the materialization job (for batch features) or pipeline (for streaming features) and forwarded to the underlying compute as cluster tags, so materialization cost can be attributed in the billing system tables. These tags apply only to the materialization compute; they are not applied to the Unity Catalog Feature resource itself, whose tags are managed separately through the Unity Catalog tagging API. A maximum of 25 tags is supported; keys and values are subject to the same limitations as cluster tags."
   }
 ]} />
 </TabItem>
@@ -306,42 +522,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-materialized_feature_id"><code>materialized_feature_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-materialized_feature_id"><code>materialized_feature_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a materialized feature.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-feature_name"><code>feature_name</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List materialized features.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-materialized_feature"><code>materialized_feature</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature_name"><code>feature_name</code></a></td>
     <td></td>
     <td>Create a materialized feature.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-materialized_feature_id"><code>materialized_feature_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-materialized_feature"><code>materialized_feature</code></a></td>
+    <td><a href="#parameter-materialized_feature_id"><code>materialized_feature_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-feature_name"><code>feature_name</code></a></td>
     <td></td>
     <td>Update a materialized feature (pause/resume).</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-materialized_feature_id"><code>materialized_feature_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-materialized_feature_id"><code>materialized_feature_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a materialized feature.</td>
 </tr>
 <tr>
     <td><a href="#batch_create"><CopyableCode code="batch_create" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-requests"><code>requests</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-requests"><code>requests</code></a></td>
     <td></td>
     <td>Batch create materialized features.</td>
 </tr>
@@ -364,7 +580,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-materialized_feature_id">
     <td><CopyableCode code="materialized_feature_id" /></td>
@@ -375,6 +591,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>Provide the materialization feature fields which should be updated. Currently, only the pipeline_state field can be updated.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-feature_name">
     <td><CopyableCode code="feature_name" /></td>
@@ -409,21 +630,29 @@ Get a materialized feature.
 
 ```sql
 SELECT
+budget_policy_id,
+job_id,
+materialization_set_id,
 materialized_feature_id,
+pipeline_id,
 feature_name,
 table_name,
 cron_schedule,
 cron_schedule_trigger,
 is_online,
 last_materialization_time,
+latest_backfill_operation,
+notifications,
 offline_store_config,
 online_store_config,
 pipeline_schedule_state,
 streaming_mode,
-table_trigger
+table_trigger,
+tags
 FROM databricks_workspace.ml.feature_materialized
 WHERE materialized_feature_id = '{{ materialized_feature_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -433,20 +662,28 @@ List materialized features.
 
 ```sql
 SELECT
+budget_policy_id,
+job_id,
+materialization_set_id,
 materialized_feature_id,
+pipeline_id,
 feature_name,
 table_name,
 cron_schedule,
 cron_schedule_trigger,
 is_online,
 last_materialization_time,
+latest_backfill_operation,
+notifications,
 offline_store_config,
 online_store_config,
 pipeline_schedule_state,
 streaming_mode,
-table_trigger
+table_trigger,
+tags
 FROM databricks_workspace.ml.feature_materialized
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND feature_name = '{{ feature_name }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -471,25 +708,70 @@ Create a materialized feature.
 
 ```sql
 INSERT INTO databricks_workspace.ml.feature_materialized (
-materialized_feature,
-deployment_name
+feature_name,
+budget_policy_id,
+cron_schedule,
+cron_schedule_trigger,
+is_online,
+job_id,
+last_materialization_time,
+latest_backfill_operation,
+materialization_set_id,
+materialized_feature_id,
+notifications,
+offline_store_config,
+online_store_config,
+pipeline_id,
+pipeline_schedule_state,
+streaming_mode,
+table_name,
+table_trigger,
+tags,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ materialized_feature }}' /* required */,
-'{{ deployment_name }}'
+'{{ feature_name }}' /* required */,
+'{{ budget_policy_id }}',
+'{{ cron_schedule }}',
+'{{ cron_schedule_trigger }}',
+{{ is_online }},
+{{ job_id }},
+'{{ last_materialization_time }}',
+'{{ latest_backfill_operation }}',
+'{{ materialization_set_id }}',
+'{{ materialized_feature_id }}',
+'{{ notifications }}',
+'{{ offline_store_config }}',
+'{{ online_store_config }}',
+'{{ pipeline_id }}',
+'{{ pipeline_schedule_state }}',
+'{{ streaming_mode }}',
+'{{ table_name }}',
+'{{ table_trigger }}',
+'{{ tags }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
+budget_policy_id,
+job_id,
+materialization_set_id,
 materialized_feature_id,
+pipeline_id,
 feature_name,
 table_name,
 cron_schedule,
 cron_schedule_trigger,
 is_online,
 last_materialization_time,
+latest_backfill_operation,
+notifications,
 offline_store_config,
 online_store_config,
 pipeline_schedule_state,
 streaming_mode,
-table_trigger
+table_trigger,
+tags
 ;
 ```
 </TabItem>
@@ -501,32 +783,110 @@ table_trigger
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the feature_materialized resource.
-    - name: materialized_feature
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the feature_materialized resource.
+    - name: feature_name
+      value: "{{ feature_name }}"
       description: |
-        The materialized feature to create.
+        The full name of the feature in Unity Catalog.
+    - name: budget_policy_id
+      value: "{{ budget_policy_id }}"
+      description: |
+        The ID of the budget policy used to attribute the serverless compute cost of this materialization. If not specified, a default budget policy may be applied.
+    - name: cron_schedule
+      value: "{{ cron_schedule }}"
+    - name: cron_schedule_trigger
+      description: |
+        A cron-based schedule trigger for the materialization pipeline.
       value:
-        feature_name: "{{ feature_name }}"
-        cron_schedule: "{{ cron_schedule }}"
-        cron_schedule_trigger:
-          cron_expression: "{{ cron_expression }}"
-        is_online: {{ is_online }}
-        last_materialization_time: "{{ last_materialization_time }}"
-        materialized_feature_id: "{{ materialized_feature_id }}"
-        offline_store_config:
-          catalog_name: "{{ catalog_name }}"
-          schema_name: "{{ schema_name }}"
-          table_name_prefix: "{{ table_name_prefix }}"
-        online_store_config:
-          catalog_name: "{{ catalog_name }}"
-          schema_name: "{{ schema_name }}"
-          table_name_prefix: "{{ table_name_prefix }}"
-          online_store_name: "{{ online_store_name }}"
-        pipeline_schedule_state: "{{ pipeline_schedule_state }}"
-        streaming_mode:
-          freshness_target: "{{ freshness_target }}"
-          mode: "{{ mode }}"
-        table_name: "{{ table_name }}"
-        table_trigger: "{{ table_trigger }}"
+        cron_expression: "{{ cron_expression }}"
+        mode: "{{ mode }}"
+        timezone_id: "{{ timezone_id }}"
+    - name: is_online
+      value: {{ is_online }}
+      description: |
+        True if this is an online materialized feature. False if it is an offline materialized feature.
+    - name: job_id
+      value: {{ job_id }}
+      description: |
+        The ID of the job that materializes the feature. This is present for both batch and streaming features.
+    - name: last_materialization_time
+      value: "{{ last_materialization_time }}"
+      description: |
+        The timestamp when the pipeline last ran and updated the materialized feature values. If the pipeline has not run yet, this field will be null.
+    - name: latest_backfill_operation
+      value: "{{ latest_backfill_operation }}"
+      description: |
+        Name of the latest backfill operation on this materialized feature. Format: operations/{operation_id}.
+    - name: materialization_set_id
+      value: "{{ materialization_set_id }}"
+      description: |
+        The materialization set this materialized feature was created for, through DABs or direct-engine creation. Unset for a materialized feature that was not created as part of a set.
+    - name: materialized_feature_id
+      value: "{{ materialized_feature_id }}"
+      description: |
+        Server-assigned unique identifier for the materialized feature.
+    - name: notifications
+      description: |
+        Notification configuration around the materialization job or pipeline lifecycle. They are applied to every job and pipeline that materializes this feature. Features which are materialized in the same pipeline will share the same notification.
+      value:
+        on_failure:
+          destination_ids:
+            - "{{ destination_ids }}"
+          email_addresses:
+            - "{{ email_addresses }}"
+          final_attempt_only: {{ final_attempt_only }}
+        on_success:
+          destination_ids:
+            - "{{ destination_ids }}"
+          email_addresses:
+            - "{{ email_addresses }}"
+    - name: offline_store_config
+      description: |
+        Destination for writing feature values to an offline Delta table. The resulting table is returned as \`\`table_name\`\`.
+      value:
+        catalog_name: "{{ catalog_name }}"
+        schema_name: "{{ schema_name }}"
+        table_name_prefix: "{{ table_name_prefix }}"
+    - name: online_store_config
+      description: |
+        Destination for writing feature values to an online Lakebase table. The resulting table is returned as \`\`table_name\`\`.
+      value:
+        catalog_name: "{{ catalog_name }}"
+        schema_name: "{{ schema_name }}"
+        table_name_prefix: "{{ table_name_prefix }}"
+        online_store_name: "{{ online_store_name }}"
+    - name: pipeline_id
+      value: "{{ pipeline_id }}"
+      description: |
+        The ID of the pipeline that materializes this feature. This is only present for streaming features.
+    - name: pipeline_schedule_state
+      value: "{{ pipeline_schedule_state }}"
+      description: |
+        The schedule state of the materialization pipeline. Hidden from GraphQL: being deprecated, so not exposed to Catalog Explorer.
+    - name: streaming_mode
+      description: |
+        The Structured Streaming trigger mode used for materialization. Real-time mode (RTM) targets sub-second latency for operational workloads; micro-batch mode (MBM) favors cost efficiency for ETL and analytics workloads.
+      value:
+        freshness_target: "{{ freshness_target }}"
+        mode: "{{ mode }}"
+        shuffle_partitions: {{ shuffle_partitions }}
+    - name: table_name
+      value: "{{ table_name }}"
+      description: |
+        The fully qualified Unity Catalog path to the table containing the materialized feature (Delta table or Lakebase table). Output only.
+    - name: table_trigger
+      description: |
+        A trigger that fires when the upstream source table changes.
+      value:
+        condition: "{{ condition }}"
+        min_time_between_triggers: "{{ min_time_between_triggers }}"
+        wait_after_last_change: "{{ wait_after_last_change }}"
+    - name: tags
+      value: "{{ tags }}"
+      description: |
+        Custom tags to associate with this materialization. They are applied to the materialization job (for batch features) or pipeline (for streaming features) and forwarded to the underlying compute as cluster tags, so materialization cost can be attributed in the billing system tables. These tags apply only to the materialization compute; they are not applied to the Unity Catalog Feature resource itself, whose tags are managed separately through the Unity Catalog tagging API. A maximum of 25 tags is supported; keys and values are subject to the same limitations as cluster tags.
 `}</CodeBlock>
 
 </TabItem>
@@ -548,25 +908,51 @@ Update a materialized feature (pause/resume).
 ```sql
 UPDATE databricks_workspace.ml.feature_materialized
 SET 
-materialized_feature = '{{ materialized_feature }}'
+feature_name = '{{ feature_name }}',
+budget_policy_id = '{{ budget_policy_id }}',
+cron_schedule = '{{ cron_schedule }}',
+cron_schedule_trigger = '{{ cron_schedule_trigger }}',
+is_online = {{ is_online }},
+job_id = {{ job_id }},
+last_materialization_time = '{{ last_materialization_time }}',
+latest_backfill_operation = '{{ latest_backfill_operation }}',
+materialization_set_id = '{{ materialization_set_id }}',
+materialized_feature_id = '{{ materialized_feature_id }}',
+notifications = '{{ notifications }}',
+offline_store_config = '{{ offline_store_config }}',
+online_store_config = '{{ online_store_config }}',
+pipeline_id = '{{ pipeline_id }}',
+pipeline_schedule_state = '{{ pipeline_schedule_state }}',
+streaming_mode = '{{ streaming_mode }}',
+table_name = '{{ table_name }}',
+table_trigger = '{{ table_trigger }}',
+tags = '{{ tags }}'
 WHERE 
 materialized_feature_id = '{{ materialized_feature_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND materialized_feature = '{{ materialized_feature }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND feature_name = '{{ feature_name }}' --required
 RETURNING
+budget_policy_id,
+job_id,
+materialization_set_id,
 materialized_feature_id,
+pipeline_id,
 feature_name,
 table_name,
 cron_schedule,
 cron_schedule_trigger,
 is_online,
 last_materialization_time,
+latest_backfill_operation,
+notifications,
 offline_store_config,
 online_store_config,
 pipeline_schedule_state,
 streaming_mode,
-table_trigger;
+table_trigger,
+tags;
 ```
 </TabItem>
 </Tabs>
@@ -588,6 +974,7 @@ Delete a materialized feature.
 DELETE FROM databricks_workspace.ml.feature_materialized
 WHERE materialized_feature_id = '{{ materialized_feature_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -608,7 +995,8 @@ Batch create materialized features.
 
 ```sql
 EXEC databricks_workspace.ml.feature_materialized.batch_create 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "requests": "{{ requests }}"

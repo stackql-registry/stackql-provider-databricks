@@ -1045,60 +1045,6 @@ The following fields are returned by `SELECT` queries:
         "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (IN_PROGRESS, NOT_UPDATING, UPDATE_CANCELED, UPDATE_FAILED)"
       },
       {
-        "name": "pt_state",
-        "type": "object",
-        "description": "The Provisioned Throughput state of the endpoint, including its capacity commitments.",
-        "children": [
-          {
-            "name": "commitments",
-            "type": "array",
-            "description": "The list of capacity commitments backing the endpoint.",
-            "children": [
-              {
-                "name": "auto_renew",
-                "type": "boolean",
-                "description": "Whether the commitment automatically renews at the end of its term."
-              },
-              {
-                "name": "auto_renew_editable",
-                "type": "boolean",
-                "description": "Whether auto_renew can still be toggled. Derived at read time, gated on the lockout window: true while more than the auto-renew lockout window remains before expiry. The server enforces the same rule on write."
-              },
-              {
-                "name": "expire_time",
-                "type": "string (date-time)",
-                "description": "The commitment's expiry (start_time + the term, in UTC calendar months/years). Stored on the commitment and returned verbatim, so clients, the billing meter, and the purge agree on the exact instant."
-              },
-              {
-                "name": "id",
-                "type": "string",
-                "description": "System-generated ID of the commitment."
-              },
-              {
-                "name": "provisioned_model_units",
-                "type": "integer",
-                "description": "The number of model units reserved by this commitment."
-              },
-              {
-                "name": "start_time",
-                "type": "string (date-time)",
-                "description": "The time at which the commitment becomes active."
-              },
-              {
-                "name": "status",
-                "type": "string",
-                "description": "The lifecycle status of the commitment. (ACTIVE, EXPIRED)"
-              },
-              {
-                "name": "term",
-                "type": "string",
-                "description": "The commitment term length. (COMMITMENT_TERM_1_MONTH, COMMITMENT_TERM_3_MONTHS)"
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "ready",
         "type": "string",
         "description": "The state of an endpoint, indicating whether or not the endpoint is queryable. An endpoint is READY if all of the served entities in its active configuration are ready. If any of the actively served entities are in a non-ready state, the endpoint state will be NOT_READY. (NOT_READY, READY)"
@@ -1133,9 +1079,14 @@ The following fields are returned by `SELECT` queries:
     "description": "Telemetry configuration for the endpoint, including inference-table payload logging.",
     "children": [
       {
+        "name": "enabled_telemetry_features",
+        "type": "array",
+        "description": ""
+      },
+      {
         "name": "inference_table_config",
         "type": "object",
-        "description": "Inference table payload logging configuration",
+        "description": "Configuration for inference table payload logging, including sampling.",
         "children": [
           {
             "name": "name",
@@ -1182,11 +1133,6 @@ The following fields are returned by `SELECT` queries:
         "description": "The ID of an existing telemetry profile to apply to this endpoint. Provide this to reuse a telemetry profile that has already been created, instead of specifying table_names."
       }
     ]
-  },
-  {
-    "name": "uc_system_metrics_export_state",
-    "type": "string",
-    "description": "Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity Catalog table. Endpoint-level property (not part of the per-version config). (FIRST_PARTY_EXPORT_DISABLED, FIRST_PARTY_EXPORT_ENABLED)"
   }
 ]} />
 </TabItem>
@@ -1540,60 +1486,6 @@ The following fields are returned by `SELECT` queries:
         "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (IN_PROGRESS, NOT_UPDATING, UPDATE_CANCELED, UPDATE_FAILED)"
       },
       {
-        "name": "pt_state",
-        "type": "object",
-        "description": "The Provisioned Throughput state of the endpoint, including its capacity commitments.",
-        "children": [
-          {
-            "name": "commitments",
-            "type": "array",
-            "description": "The list of capacity commitments backing the endpoint.",
-            "children": [
-              {
-                "name": "auto_renew",
-                "type": "boolean",
-                "description": "Whether the commitment automatically renews at the end of its term."
-              },
-              {
-                "name": "auto_renew_editable",
-                "type": "boolean",
-                "description": "Whether auto_renew can still be toggled. Derived at read time, gated on the lockout window: true while more than the auto-renew lockout window remains before expiry. The server enforces the same rule on write."
-              },
-              {
-                "name": "expire_time",
-                "type": "string (date-time)",
-                "description": "The commitment's expiry (start_time + the term, in UTC calendar months/years). Stored on the commitment and returned verbatim, so clients, the billing meter, and the purge agree on the exact instant."
-              },
-              {
-                "name": "id",
-                "type": "string",
-                "description": "System-generated ID of the commitment."
-              },
-              {
-                "name": "provisioned_model_units",
-                "type": "integer",
-                "description": "The number of model units reserved by this commitment."
-              },
-              {
-                "name": "start_time",
-                "type": "string (date-time)",
-                "description": "The time at which the commitment becomes active."
-              },
-              {
-                "name": "status",
-                "type": "string",
-                "description": "The lifecycle status of the commitment. (ACTIVE, EXPIRED)"
-              },
-              {
-                "name": "term",
-                "type": "string",
-                "description": "The commitment term length. (COMMITMENT_TERM_1_MONTH, COMMITMENT_TERM_3_MONTHS)"
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "ready",
         "type": "string",
         "description": "The state of an endpoint, indicating whether or not the endpoint is queryable. An endpoint is READY if all of the served entities in its active configuration are ready. If any of the actively served entities are in a non-ready state, the endpoint state will be NOT_READY. (NOT_READY, READY)"
@@ -1628,9 +1520,14 @@ The following fields are returned by `SELECT` queries:
     "description": "Telemetry configuration for the endpoint, including inference-table payload logging.",
     "children": [
       {
+        "name": "enabled_telemetry_features",
+        "type": "array",
+        "description": ""
+      },
+      {
         "name": "inference_table_config",
         "type": "object",
-        "description": "Inference table payload logging configuration",
+        "description": "Configuration for inference table payload logging, including sampling.",
         "children": [
           {
             "name": "name",
@@ -1677,11 +1574,6 @@ The following fields are returned by `SELECT` queries:
         "description": "The ID of an existing telemetry profile to apply to this endpoint. Provide this to reuse a telemetry profile that has already been created, instead of specifying table_names."
       }
     ]
-  },
-  {
-    "name": "uc_system_metrics_export_state",
-    "type": "string",
-    "description": "Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity Catalog table. Endpoint-level property (not part of the per-version config). (FIRST_PARTY_EXPORT_DISABLED, FIRST_PARTY_EXPORT_ENABLED)"
   }
 ]} />
 </TabItem>
@@ -1705,63 +1597,56 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Retrieves the details for a single serving endpoint.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get all serving endpoints.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Create a new serving endpoint.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Used to batch add and delete tags from a serving endpoint with a single API call.</td>
 </tr>
 <tr>
     <td><a href="#update_config"><CopyableCode code="update_config" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates any combination of the serving endpoint's served entities, the compute configuration of those</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a serving endpoint.</td>
 </tr>
 <tr>
-    <td><a href="#patch_system_metrics_export_state"><CopyableCode code="patch_system_metrics_export_state" /></a></td>
-    <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td></td>
-    <td>Updates the system-metrics-export state of a serving endpoint, independently of the endpoint config</td>
-</tr>
-<tr>
     <td><a href="#patch_telemetry_config"><CopyableCode code="patch_telemetry_config" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the telemetry configuration of a serving endpoint.</td>
 </tr>
 <tr>
     <td><a href="#query"><CopyableCode code="query" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Query a serving endpoint</td>
 </tr>
@@ -1784,12 +1669,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>The name of the serving endpoint. This field is required and is provided via the path parameter.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -1827,11 +1717,11 @@ route_optimized,
 state,
 tags,
 task,
-telemetry_config,
-uc_system_metrics_export_state
+telemetry_config
 FROM databricks_workspace.serving.serving_endpoints
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -1854,10 +1744,10 @@ last_updated_timestamp,
 state,
 tags,
 task,
-telemetry_config,
-uc_system_metrics_export_state
+telemetry_config
 FROM databricks_workspace.serving.serving_endpoints
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -1889,8 +1779,8 @@ rate_limits,
 route_optimized,
 tags,
 telemetry_config,
-uc_system_metrics_export_state,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -1903,8 +1793,8 @@ SELECT
 {{ route_optimized }},
 '{{ tags }}',
 '{{ telemetry_config }}',
-'{{ uc_system_metrics_export_state }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 name,
@@ -1924,8 +1814,7 @@ route_optimized,
 state,
 tags,
 task,
-telemetry_config,
-uc_system_metrics_export_state
+telemetry_config
 ;
 ```
 </TabItem>
@@ -1936,6 +1825,9 @@ uc_system_metrics_export_state
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the serving_endpoints resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the serving_endpoints resource.
     - name: name
       value: "{{ name }}"
@@ -2113,6 +2005,8 @@ uc_system_metrics_export_state
       description: |
         Configuration for persisting endpoint telemetry (logs, traces, and metrics) to Unity Catalog tables.
       value:
+        enabled_telemetry_features:
+          - "{{ enabled_telemetry_features }}"
         inference_table_config:
           name: "{{ name }}"
           sampling_fraction: {{ sampling_fraction }}
@@ -2122,10 +2016,6 @@ uc_system_metrics_export_state
           metrics_table: "{{ metrics_table }}"
           traces_table: "{{ traces_table }}"
         telemetry_profile_id: "{{ telemetry_profile_id }}"
-    - name: uc_system_metrics_export_state
-      value: "{{ uc_system_metrics_export_state }}"
-      description: |
-        Whether this endpoint's system metrics are exported to the system.telemetry.otel_metrics Unity Catalog table. Endpoint-level property (not part of the per-version config).
 `}</CodeBlock>
 
 </TabItem>
@@ -2152,6 +2042,7 @@ delete_tags = '{{ delete_tags }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 tags;
 ```
@@ -2181,6 +2072,7 @@ traffic_config = '{{ traffic_config }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 id,
 name,
@@ -2200,8 +2092,7 @@ route_optimized,
 state,
 tags,
 task,
-telemetry_config,
-uc_system_metrics_export_state;
+telemetry_config;
 ```
 </TabItem>
 </Tabs>
@@ -2223,6 +2114,7 @@ Delete a serving endpoint.
 DELETE FROM databricks_workspace.serving.serving_endpoints
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -2232,28 +2124,12 @@ AND deployment_name = '{{ deployment_name }}' --required
 ## Lifecycle Methods
 
 <Tabs
-    defaultValue="patch_system_metrics_export_state"
+    defaultValue="patch_telemetry_config"
     values={[
-        { label: 'patch_system_metrics_export_state', value: 'patch_system_metrics_export_state' },
         { label: 'patch_telemetry_config', value: 'patch_telemetry_config' },
         { label: 'query', value: 'query' }
     ]}
 >
-<TabItem value="patch_system_metrics_export_state">
-
-Updates the system-metrics-export state of a serving endpoint, independently of the endpoint config
-
-```sql
-EXEC databricks_workspace.serving.serving_endpoints.patch_system_metrics_export_state 
-@name='{{ name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
-@@json=
-'{
-"uc_system_metrics_export_state": "{{ uc_system_metrics_export_state }}"
-}'
-;
-```
-</TabItem>
 <TabItem value="patch_telemetry_config">
 
 Updates the telemetry configuration of a serving endpoint.
@@ -2261,7 +2137,8 @@ Updates the telemetry configuration of a serving endpoint.
 ```sql
 EXEC databricks_workspace.serving.serving_endpoints.patch_telemetry_config 
 @name='{{ name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "telemetry_config": "{{ telemetry_config }}"
@@ -2276,7 +2153,8 @@ Query a serving endpoint
 ```sql
 EXEC databricks_workspace.serving.serving_endpoints.query 
 @name='{{ name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "client_request_id": "{{ client_request_id }}", 

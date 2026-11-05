@@ -106,18 +106,6 @@ The following fields are returned by `SELECT` queries:
                 "description": "The Azure services to which this service endpoint rule applies to."
               }
             ]
-          },
-          {
-            "name": "gcp_project_id_rule",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "project_ids",
-                "type": "array",
-                "description": ""
-              }
-            ]
           }
         ]
       },
@@ -352,18 +340,6 @@ The following fields are returned by `SELECT` queries:
                 "description": "The Azure services to which this service endpoint rule applies to."
               }
             ]
-          },
-          {
-            "name": "gcp_project_id_rule",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "project_ids",
-                "type": "array",
-                "description": ""
-              }
-            ]
           }
         ]
       },
@@ -552,28 +528,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_network_connectivity_configuration"><CopyableCode code="get_network_connectivity_configuration" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a network connectivity configuration.</td>
 </tr>
 <tr>
     <td><a href="#list_network_connectivity_configurations"><CopyableCode code="list_network_connectivity_configurations" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Gets an array of network connectivity configurations.</td>
 </tr>
 <tr>
     <td><a href="#create_network_connectivity_configuration"><CopyableCode code="create_network_connectivity_configuration" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config"><code>network_connectivity_config</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-region"><code>region</code></a></td>
     <td></td>
     <td>Creates a network connectivity configuration (NCC), which provides stable Azure service subnets when</td>
 </tr>
 <tr>
     <td><a href="#delete_network_connectivity_configuration"><CopyableCode code="delete_network_connectivity_configuration" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_connectivity_config_id"><code>network_connectivity_config_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a network connectivity configuration.</td>
 </tr>
@@ -593,6 +569,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -636,6 +617,7 @@ updated_time
 FROM databricks_account.settings.network_connectivity
 WHERE account_id = '{{ account_id }}' -- required
 AND network_connectivity_config_id = '{{ network_connectivity_config_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -654,6 +636,7 @@ region,
 updated_time
 FROM databricks_account.settings.network_connectivity
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_token = '{{ page_token }}'
 ;
 ```
@@ -676,12 +659,16 @@ Creates a network connectivity configuration (NCC), which provides stable Azure 
 
 ```sql
 INSERT INTO databricks_account.settings.network_connectivity (
-network_connectivity_config,
-account_id
+name,
+region,
+account_id,
+account_host
 )
 SELECT 
-'{{ network_connectivity_config }}' /* required */,
-'{{ account_id }}'
+'{{ name }}' /* required */,
+'{{ region }}' /* required */,
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 name,
 account_id,
@@ -701,12 +688,17 @@ updated_time
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the network_connectivity resource.
-    - name: network_connectivity_config
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the network_connectivity resource.
+    - name: name
+      value: "{{ name }}"
       description: |
-        Properties of the new network connectivity configuration.
-      value:
-        name: "{{ name }}"
-        region: "{{ region }}"
+        The name of the network connectivity configuration. The name can contain alphanumeric characters, hyphens, and underscores. The length must be between 3 and 30 characters. The name must match the regular expression ^[0-9a-zA-Z-_]{3,30}$
+    - name: region
+      value: "{{ region }}"
+      description: |
+        The region for the network connectivity configuration. Only workspaces in the same region can be attached to the network connectivity configuration.
 `}</CodeBlock>
 
 </TabItem>
@@ -729,6 +721,7 @@ Deletes a network connectivity configuration.
 DELETE FROM databricks_account.settings.network_connectivity
 WHERE account_id = '{{ account_id }}' --required
 AND network_connectivity_config_id = '{{ network_connectivity_config_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

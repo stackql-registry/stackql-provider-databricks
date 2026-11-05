@@ -72,7 +72,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "data_type",
         "type": "string",
-        "description": "The data type of the function. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+        "description": "The data type of the function. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
       },
       {
         "name": "dependency_list",
@@ -161,7 +161,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "type_name",
                 "type": "string",
-                "description": "The type of the parameter in Enum format. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, GEOGRAPHY, GEOMETRY, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
+                "description": "The type of the parameter in Enum format. (ARRAY, BINARY, BOOLEAN, BYTE, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, INT, INTERVAL, LONG, MAP, NULL, SHORT, STRING, STRUCT, TABLE_TYPE, TIMESTAMP, TIMESTAMP_NTZ, USER_DEFINED_TYPE, VARIANT)"
               },
               {
                 "name": "type_precision",
@@ -289,24 +289,14 @@ The following fields are returned by `SELECT` queries:
     "description": "The list of tables in the share.",
     "children": [
       {
-        "name": "accessModes",
-        "type": "array",
-        "description": ""
-      },
-      {
         "name": "comment",
         "type": "string",
-        "description": "The comment of the table."
+        "description": ""
       },
       {
         "name": "id",
         "type": "string",
         "description": "The id of the table."
-      },
-      {
-        "name": "location",
-        "type": "string",
-        "description": "The cloud storage location of the table for open sharing."
       },
       {
         "name": "materialization_namespace",
@@ -409,7 +399,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-provider_name"><code>provider_name</code></a>, <a href="#parameter-share_name"><code>share_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-provider_name"><code>provider_name</code></a>, <a href="#parameter-share_name"><code>share_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-function_max_results"><code>function_max_results</code></a>, <a href="#parameter-notebook_max_results"><code>notebook_max_results</code></a>, <a href="#parameter-table_max_results"><code>table_max_results</code></a>, <a href="#parameter-volume_max_results"><code>volume_max_results</code></a></td>
     <td>Get arrays of assets associated with a specified provider's share. The caller is the recipient of the</td>
 </tr>
@@ -432,7 +422,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-provider_name">
     <td><CopyableCode code="provider_name" /></td>
@@ -443,6 +433,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="share_name" /></td>
     <td><code>string</code></td>
     <td>The name of the share.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-function_max_results">
     <td><CopyableCode code="function_max_results" /></td>
@@ -490,6 +485,7 @@ FROM databricks_workspace.sharing.provider_share_assets
 WHERE provider_name = '{{ provider_name }}' -- required
 AND share_name = '{{ share_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND function_max_results = '{{ function_max_results }}'
 AND notebook_max_results = '{{ notebook_max_results }}'
 AND table_max_results = '{{ table_max_results }}'

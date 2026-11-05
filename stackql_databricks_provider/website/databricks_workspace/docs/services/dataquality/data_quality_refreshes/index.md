@@ -150,42 +150,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get data quality monitor refresh. The call must be made in the same workspace as where the monitor was</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List data quality monitor refreshes. The call must be made in the same workspace as where the monitor</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-refresh"><code>refresh</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Creates a refresh. Currently only supported for the ``table`` ``object_type``. The call must be made</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-refresh"><code>refresh</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>(Unimplemented) Update a refresh</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>(Unimplemented) Delete a refresh</td>
 </tr>
 <tr>
     <td><a href="#cancel"><CopyableCode code="cancel" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Cancels a data quality monitor refresh. Currently only supported for the ``table`` ``object_type``.</td>
 </tr>
@@ -208,7 +208,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-object_id">
     <td><CopyableCode code="object_id" /></td>
@@ -229,6 +229,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask to specify which fields to update.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -271,6 +276,7 @@ WHERE object_type = '{{ object_type }}' -- required
 AND object_id = '{{ object_id }}' -- required
 AND refresh_id = '{{ refresh_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -292,6 +298,7 @@ FROM databricks_workspace.dataquality.data_quality_refreshes
 WHERE object_type = '{{ object_type }}' -- required
 AND object_id = '{{ object_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -315,16 +322,32 @@ Creates a refresh. Currently only supported for the ``table`` ``object_type``. T
 
 ```sql
 INSERT INTO databricks_workspace.dataquality.data_quality_refreshes (
-refresh,
 object_type,
 object_id,
-deployment_name
+end_time_ms,
+message,
+refresh_id,
+start_time_ms,
+state,
+trigger,
+object_type,
+object_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ refresh }}' /* required */,
-'{{ object_type }}',
-'{{ object_id }}',
-'{{ deployment_name }}'
+'{{ object_type }}' /* required */,
+'{{ object_id }}' /* required */,
+{{ end_time_ms }},
+'{{ message }}',
+{{ refresh_id }},
+{{ start_time_ms }},
+'{{ state }}',
+'{{ trigger }}',
+'{{ object_type }}' /* required */,
+'{{ object_id }}' /* required */,
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 object_id,
 refresh_id,
@@ -351,18 +374,41 @@ trigger
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the data_quality_refreshes resource.
-    - name: refresh
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the data_quality_refreshes resource.
+    - name: object_type
+      value: "{{ object_type }}"
       description: |
-        The refresh to create
-      value:
-        object_type: "{{ object_type }}"
-        object_id: "{{ object_id }}"
-        end_time_ms: {{ end_time_ms }}
-        message: "{{ message }}"
-        refresh_id: {{ refresh_id }}
-        start_time_ms: {{ start_time_ms }}
-        state: "{{ state }}"
-        trigger: "{{ trigger }}"
+        The type of the monitored object. Can be one of the following: \`\`schema\`\` or \`\`table\`\`.
+    - name: object_id
+      value: "{{ object_id }}"
+      description: |
+        The UUID of the request object. It is \`\`schema_id\`\` for \`\`schema\`\`, and \`\`table_id\`\` for \`\`table\`\`. Find the \`\`schema_id\`\` from either: 1. The \`schema_id <https://docs.databricks.com/api/workspace/schemas/get#schema_id>\`__ of the \`\`Schemas\`\` resource. 2. In \`Catalog Explorer <https://docs.databricks.com/aws/en/catalog-explorer/>\`__ > select the \`\`schema\`\` > go to the \`\`Details\`\` tab > the \`\`Schema ID\`\` field. Find the \`\`table_id\`\` from either: 1. The \`table_id <https://docs.databricks.com/api/workspace/tables/get#table_id>\`__ of the \`\`Tables\`\` resource. 2. In \`Catalog Explorer <https://docs.databricks.com/aws/en/catalog-explorer/>\`__ > select the \`\`table\`\` > go to the \`\`Details\`\` tab > the \`\`Table ID\`\` field.
+    - name: end_time_ms
+      value: {{ end_time_ms }}
+      description: |
+        Time when the refresh ended (milliseconds since 1/1/1970 UTC).
+    - name: message
+      value: "{{ message }}"
+      description: |
+        An optional message to give insight into the current state of the refresh (e.g. FAILURE messages).
+    - name: refresh_id
+      value: {{ refresh_id }}
+      description: |
+        Unique id of the refresh operation.
+    - name: start_time_ms
+      value: {{ start_time_ms }}
+      description: |
+        Time when the refresh started (milliseconds since 1/1/1970 UTC).
+    - name: state
+      value: "{{ state }}"
+      description: |
+        The current state of the refresh.
+    - name: trigger
+      value: "{{ trigger }}"
+      description: |
+        What triggered the refresh.
 `}</CodeBlock>
 
 </TabItem>
@@ -384,14 +430,23 @@ trigger
 ```sql
 UPDATE databricks_workspace.dataquality.data_quality_refreshes
 SET 
-refresh = '{{ refresh }}'
+object_type = '{{ object_type }}',
+object_id = '{{ object_id }}',
+end_time_ms = {{ end_time_ms }},
+message = '{{ message }}',
+refresh_id = {{ refresh_id }},
+start_time_ms = {{ start_time_ms }},
+state = '{{ state }}',
+trigger = '{{ trigger }}'
 WHERE 
 object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND refresh_id = '{{ refresh_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND refresh = '{{ refresh }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND object_type = '{{ object_type }}' --required
+AND object_id = '{{ object_id }}' --required
 RETURNING
 object_id,
 refresh_id,
@@ -424,6 +479,7 @@ WHERE object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND refresh_id = '{{ refresh_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -447,7 +503,8 @@ EXEC databricks_workspace.dataquality.data_quality_refreshes.cancel
 @object_type='{{ object_type }}' --required, 
 @object_id='{{ object_id }}' --required, 
 @refresh_id='{{ refresh_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

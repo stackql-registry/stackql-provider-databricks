@@ -318,35 +318,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list_for_listing"><CopyableCode code="list_for_listing" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all installations for a particular listing.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all installations across all listings.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Install payload associated with a Databricks Marketplace listing.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-installation_id"><code>installation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-installation"><code>installation</code></a></td>
+    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-installation_id"><code>installation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-installation"><code>installation</code></a></td>
     <td></td>
     <td>This is a update API that will update the part of the fields defined in the installation table as well</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-installation_id"><code>installation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-listing_id"><code>listing_id</code></a>, <a href="#parameter-installation_id"><code>installation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Uninstall an installation associated with a Databricks Marketplace listing.</td>
 </tr>
@@ -369,7 +369,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-installation_id">
     <td><CopyableCode code="installation_id" /></td>
@@ -380,6 +380,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="listing_id" /></td>
     <td><code>string</code></td>
     <td></td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -425,6 +430,7 @@ tokens
 FROM databricks_workspace.marketplace.consumer_installations
 WHERE listing_id = '{{ listing_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -451,6 +457,7 @@ token_detail,
 tokens
 FROM databricks_workspace.marketplace.consumer_installations
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -476,22 +483,22 @@ Install payload associated with a Databricks Marketplace listing.
 INSERT INTO databricks_workspace.marketplace.consumer_installations (
 accepted_consumer_terms,
 catalog_name,
-mcp_connection_detail,
 recipient_type,
 repo_detail,
 share_name,
 listing_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ accepted_consumer_terms }}',
 '{{ catalog_name }}',
-'{{ mcp_connection_detail }}',
 '{{ recipient_type }}',
 '{{ repo_detail }}',
 '{{ share_name }}',
 '{{ listing_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 installation
 ;
@@ -508,26 +515,14 @@ installation
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the consumer_installations resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the consumer_installations resource.
     - name: accepted_consumer_terms
       value:
         version: "{{ version }}"
     - name: catalog_name
       value: "{{ catalog_name }}"
-    - name: mcp_connection_detail
-      description: |
-        Consumer-supplied details for creating the Unity Catalog HTTP connection when installing an MCP
-        listing. Values the provider configures on the listing (port, credential type, OAuth
-        token/authorization endpoints, scope, exchange method) are not repeated here.
-      value:
-        connection_name: "{{ connection_name }}"
-        base_path: "{{ base_path }}"
-        bearer_token: "{{ bearer_token }}"
-        catalog: "{{ catalog }}"
-        host: "{{ host }}"
-        oauth_credentials:
-          client_id: "{{ client_id }}"
-          client_secret: "{{ client_secret }}"
-        schema: "{{ schema }}"
     - name: recipient_type
       value: "{{ recipient_type }}"
       description: |
@@ -589,6 +584,7 @@ WHERE
 listing_id = '{{ listing_id }}' --required
 AND installation_id = '{{ installation_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND installation = '{{ installation }}' --required
 RETURNING
 installation;
@@ -614,6 +610,7 @@ DELETE FROM databricks_workspace.marketplace.consumer_installations
 WHERE listing_id = '{{ listing_id }}' --required
 AND installation_id = '{{ installation_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

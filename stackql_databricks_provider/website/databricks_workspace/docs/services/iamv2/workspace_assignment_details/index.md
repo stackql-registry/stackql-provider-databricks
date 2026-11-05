@@ -56,17 +56,17 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "workspace_id",
     "type": "integer",
-    "description": "The workspace ID where the principal is assigned"
+    "description": "The workspace ID where the principal is assigned."
   },
   {
     "name": "effective_entitlements",
     "type": "array",
-    "description": "The principal's full effective entitlements granted in this workspace: every entitlement it holds whether granted directly or via group membership. Populated on Get; empty on List."
+    "description": "Every entitlement the principal holds in this workspace, whether granted directly or through group membership. Get responses populate this field. List responses leave it empty."
   },
   {
     "name": "entitlements",
     "type": "array",
-    "description": "Entitlements granted directly to the principal on this workspace. The only client-settable field: create and update manage exactly this set (including entitlements the principal also holds via a group). Not populated by ListWorkspaceAssignmentDetails (omitted for scalability); call GetWorkspaceAssignmentDetail to read the entitlements for a single principal."
+    "description": "Entitlements granted directly to the principal on this workspace. This is the only client-settable field. Create and update manage exactly this set, including entitlements the principal also holds through a group. List responses leave this field empty. Get a single principal to read its entitlements."
   },
   {
     "name": "principal_type",
@@ -91,17 +91,17 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "workspace_id",
     "type": "integer",
-    "description": "The workspace ID where the principal is assigned"
+    "description": "The workspace ID where the principal is assigned."
   },
   {
     "name": "effective_entitlements",
     "type": "array",
-    "description": "The principal's full effective entitlements granted in this workspace: every entitlement it holds whether granted directly or via group membership. Populated on Get; empty on List."
+    "description": "Every entitlement the principal holds in this workspace, whether granted directly or through group membership. Get responses populate this field. List responses leave it empty."
   },
   {
     "name": "entitlements",
     "type": "array",
-    "description": "Entitlements granted directly to the principal on this workspace. The only client-settable field: create and update manage exactly this set (including entitlements the principal also holds via a group). Not populated by ListWorkspaceAssignmentDetails (omitted for scalability); call GetWorkspaceAssignmentDetail to read the entitlements for a single principal."
+    "description": "Entitlements granted directly to the principal on this workspace. This is the only client-settable field. Create and update manage exactly this set, including entitlements the principal also holds through a group. List responses leave this field empty. Get a single principal to read its entitlements."
   },
   {
     "name": "principal_type",
@@ -130,37 +130,37 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
-    <td>Returns the assignment details for a principal in a workspace (workspace-level proxy).</td>
+    <td>Returns the assignment details for a principal in the calling workspace.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
-    <td>Lists workspace assignment details for a workspace (workspace-level proxy). For scalability, the</td>
+    <td>Lists workspace assignment details for the calling workspace. The response omits the per-principal</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_assignment_detail"><code>workspace_assignment_detail</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
     <td></td>
-    <td>Creates a workspace assignment detail for a principal (workspace-level proxy). Entitlement grants are</td>
+    <td>Creates a workspace assignment detail for a principal in the calling workspace.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_assignment_detail"><code>workspace_assignment_detail</code></a></td>
+    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
     <td></td>
-    <td>Updates the entitlements of a directly assigned principal in a workspace (workspace-level proxy).</td>
+    <td>Updates the entitlements of a directly assigned principal in the calling workspace. Changes are</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
-    <td>Deletes a workspace assignment detail for a principal (workspace-level proxy), revoking all associated</td>
+    <td>Deletes a workspace assignment detail for a principal in the calling workspace, revoking all of its</td>
 </tr>
 </tbody>
 </table>
@@ -181,7 +181,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-principal_id">
     <td><CopyableCode code="principal_id" /></td>
@@ -193,15 +193,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>object</code></td>
     <td>Required. The list of fields to update.</td>
 </tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of workspace assignment details to return. The service may return fewer than this value.</td>
+    <td>The maximum number of workspace assignment details to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
     <td><code>string</code></td>
-    <td>A page token, received from a previous ListWorkspaceAssignmentDetailsProxy call. Provide this to retrieve the subsequent page.</td>
+    <td>A page token from a previous list call. Provide this to retrieve the subsequent page.</td>
 </tr>
 </tbody>
 </table>
@@ -217,7 +222,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 >
 <TabItem value="get">
 
-Returns the assignment details for a principal in a workspace (workspace-level proxy).
+Returns the assignment details for a principal in the calling workspace.
 
 ```sql
 SELECT
@@ -230,12 +235,13 @@ principal_type
 FROM databricks_workspace.iamv2.workspace_assignment_details
 WHERE principal_id = '{{ principal_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
 <TabItem value="list">
 
-Lists workspace assignment details for a workspace (workspace-level proxy). For scalability, the
+Lists workspace assignment details for the calling workspace. The response omits the per-principal
 
 ```sql
 SELECT
@@ -247,6 +253,7 @@ entitlements,
 principal_type
 FROM databricks_workspace.iamv2.workspace_assignment_details
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -266,16 +273,28 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Creates a workspace assignment detail for a principal (workspace-level proxy). Entitlement grants are
+Creates a workspace assignment detail for a principal in the calling workspace.
 
 ```sql
 INSERT INTO databricks_workspace.iamv2.workspace_assignment_details (
-workspace_assignment_detail,
-deployment_name
+principal_id,
+account_id,
+effective_entitlements,
+entitlements,
+principal_type,
+workspace_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ workspace_assignment_detail }}' /* required */,
-'{{ deployment_name }}'
+{{ principal_id }} /* required */,
+'{{ account_id }}',
+'{{ effective_entitlements }}',
+'{{ entitlements }}',
+'{{ principal_type }}',
+{{ workspace_id }},
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 account_id,
 principal_id,
@@ -294,18 +313,35 @@ principal_type
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the workspace_assignment_details resource.
-    - name: workspace_assignment_detail
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the workspace_assignment_details resource.
+    - name: principal_id
+      value: {{ principal_id }}
       description: |
-        Required. Workspace assignment detail to be created in <Databricks>.
+        The internal ID of the principal (user/sp/group) in Databricks.
+    - name: account_id
+      value: "{{ account_id }}"
+      description: |
+        The account ID parent of the workspace where the principal is assigned
+    - name: effective_entitlements
       value:
-        principal_id: {{ principal_id }}
-        account_id: "{{ account_id }}"
-        effective_entitlements:
-          - "{{ effective_entitlements }}"
-        entitlements:
-          - "{{ entitlements }}"
-        principal_type: "{{ principal_type }}"
-        workspace_id: {{ workspace_id }}
+        - "{{ effective_entitlements }}"
+      description: |
+        Every entitlement the principal holds in this workspace, whether granted directly or through group membership. Get responses populate this field. List responses leave it empty.
+    - name: entitlements
+      value:
+        - "{{ entitlements }}"
+      description: |
+        Entitlements granted directly to the principal on this workspace. This is the only client-settable field. Create and update manage exactly this set, including entitlements the principal also holds through a group. List responses leave this field empty. Get a single principal to read its entitlements.
+    - name: principal_type
+      value: "{{ principal_type }}"
+      description: |
+        The type of the principal (user/sp/group).
+    - name: workspace_id
+      value: {{ workspace_id }}
+      description: |
+        The workspace ID where the principal is assigned.
 `}</CodeBlock>
 
 </TabItem>
@@ -322,17 +358,23 @@ principal_type
 >
 <TabItem value="update">
 
-Updates the entitlements of a directly assigned principal in a workspace (workspace-level proxy).
+Updates the entitlements of a directly assigned principal in the calling workspace. Changes are
 
 ```sql
 UPDATE databricks_workspace.iamv2.workspace_assignment_details
 SET 
-workspace_assignment_detail = '{{ workspace_assignment_detail }}'
+principal_id = {{ principal_id }},
+account_id = '{{ account_id }}',
+effective_entitlements = '{{ effective_entitlements }}',
+entitlements = '{{ entitlements }}',
+principal_type = '{{ principal_type }}',
+workspace_id = {{ workspace_id }}
 WHERE 
 principal_id = '{{ principal_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND workspace_assignment_detail = '{{ workspace_assignment_detail }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND principal_id = '{{ principal_id }}' --required
 RETURNING
 account_id,
 principal_id,
@@ -355,12 +397,13 @@ principal_type;
 >
 <TabItem value="delete">
 
-Deletes a workspace assignment detail for a principal (workspace-level proxy), revoking all associated
+Deletes a workspace assignment detail for a principal in the calling workspace, revoking all of its
 
 ```sql
 DELETE FROM databricks_workspace.iamv2.workspace_assignment_details
 WHERE principal_id = '{{ principal_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

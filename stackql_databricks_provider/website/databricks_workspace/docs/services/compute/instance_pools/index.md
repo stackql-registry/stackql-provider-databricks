@@ -66,7 +66,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "availability",
         "type": "string",
-        "description": "Availability type used for the spot nodes. (ON_DEMAND, SPOT)"
+        "description": "Availability type used for the instances in the pool. Supports on-demand, spot, and spot-with-fallback (the pool acquires spot instances first, and falls back to on-demand instances when spot capacity is unavailable). You can change this value on an existing pool. New clusters use the updated availability, and existing clusters keep the availability they launched with. (ON_DEMAND, SPOT)"
       },
       {
         "name": "instance_profile_arn",
@@ -76,12 +76,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "spot_bid_price_percent",
         "type": "integer",
-        "description": "Calculates the bid price for AWS spot instances, as a percentage of the corresponding instance type's on-demand price. For example, if this field is set to 50, and the cluster needs a new ``r3.xlarge`` spot instance, then the bid price is half of the price of on-demand ``r3.xlarge`` instances. Similarly, if this field is set to 200, the bid price is twice the price of on-demand ``r3.xlarge`` instances. If not specified, the default value is 100. When spot instances are requested for this cluster, only spot instances whose bid price percentage matches this field will be considered. Note that, for safety, we enforce this field to be no more than 10000."
+        "description": "Calculates the bid price for AWS spot instances, as a percentage of the corresponding instance type's on-demand price. For example, if this field is set to 50, and the cluster needs a new ``r3.xlarge`` spot instance, then the bid price is half of the price of on-demand ``r3.xlarge`` instances. Similarly, if this field is set to 200, the bid price is twice the price of on-demand ``r3.xlarge`` instances. If not specified, the default value is 100. When spot instances are requested for this cluster, only spot instances whose bid price percentage matches this field will be considered. Note that, for safety, we enforce this field to be no more than 10000. You can change this value on an existing pool. New clusters use the updated bid price, and existing clusters keep the bid price they launched with."
       },
       {
         "name": "zone_id",
         "type": "string",
-        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west-2a\". The provided availability zone must be in the same region as the Databricks deployment. For example, \"us-west-2a\" is not a valid zone id if the Databricks deployment resides in the \"us-east-1\" region. This is an optional field at cluster creation, and if not specified, a default zone will be used. The list of available zones as well as the default value can be found by using the ``List Zones`` method."
+        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west-2a\". The provided availability zone must be in the same region as the Databricks deployment. For example, \"us-west-2a\" is not a valid zone id if the Databricks deployment resides in the \"us-east-1\" region. This is an optional field at cluster creation, and if not specified, a default zone will be used. The list of available zones as well as the default value can be found by using the ``List Zones`` method. Set this field to \"auto\" to enable Auto-AZ, in which case Databricks selects the availability zone for each cluster independently when the cluster launches, and retries another zone if the cluster can't be fulfilled because of insufficient capacity or quota. All nodes in a cluster land in the same zone, and different clusters backed by the pool can run in different zones. You can change the zone on an existing pool. New clusters use the updated zone, and existing clusters keep the zone they launched with."
       }
     ]
   },
@@ -93,7 +93,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "availability",
         "type": "string",
-        "description": "Availability type used for the spot nodes. (ON_DEMAND_AZURE, SPOT_AZURE)"
+        "description": "Availability type used for the instances in the pool. Supports on-demand, spot, and spot-with-fallback (the pool acquires spot instances first, and falls back to on-demand instances when spot capacity is unavailable). You can change this value on an existing pool. New clusters use the updated availability, and existing clusters keep the availability they launched with. (ON_DEMAND_AZURE, SPOT_AZURE)"
       },
       {
         "name": "capacity_reservation_group",
@@ -103,7 +103,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "spot_bid_max_price",
         "type": "number",
-        "description": "With variable pricing, you have option to set a max price, in US dollars (USD) For example, the value 2 would be a max price of $2.00 USD per hour. If you set the max price to be -1, the VM won't be evicted based on price. The price for the VM will be the current price for spot or the price for a standard VM, which ever is less, as long as there is capacity and quota available."
+        "description": "With variable pricing, you have option to set a max price, in US dollars (USD) For example, the value 2 would be a max price of $2.00 USD per hour. If you set the max price to be -1, the VM won't be evicted based on price. The price for the VM will be the current price for spot or the price for a standard VM, which ever is less, as long as there is capacity and quota available. You can change this value on an existing pool. New clusters use the updated max price, and existing clusters keep the max price they launched with."
       }
     ]
   },
@@ -162,11 +162,6 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "enable_auto_alternate_node_types",
-    "type": "boolean",
-    "description": "For pools with node type flexibility (Fleet-V2), whether auto generated alternate node type ids are enabled. This field should not be true if node_type_flexibility is set. DEPRECATED: This field was deprecated before entering PuPr and should no longer be used. TODO(CJ-71514): Remove this field after sufficient time has passed for all clients to migrate."
-  },
-  {
     "name": "enable_elastic_disk",
     "type": "boolean",
     "description": "Autoscaling Local Storage: when enabled, this instances in this pool will dynamically acquire additional disk space when its Spark workers are running low on disk space. In AWS, this feature requires specific AWS permissions to function correctly - refer to the User Guide for more details."
@@ -179,7 +174,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "gcp_availability",
         "type": "string",
-        "description": "This field determines whether the instance pool will contain preemptible VMs, on-demand VMs, or<br />preemptible VMs with a fallback to on-demand VMs if the former is unavailable. (ON_DEMAND_GCP, PREEMPTIBLE_GCP, PREEMPTIBLE_WITH_FALLBACK_GCP)"
+        "description": "Availability type for the instances in the pool. One of: - ``ON_DEMAND_GCP``: the pool uses on-demand instances only. - ``PREEMPTIBLE_GCP``: the pool uses preemptible instances only. - ``PREEMPTIBLE_WITH_FALLBACK_GCP``: the pool acquires preemptible instances first, and falls back to on-demand instances when preemptible capacity is unavailable. (ON_DEMAND_GCP, PREEMPTIBLE_GCP, PREEMPTIBLE_WITH_FALLBACK_GCP)"
       },
       {
         "name": "local_ssd_count",
@@ -189,7 +184,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "zone_id",
         "type": "string",
-        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west1-a\". The provided availability zone must be in the same region as the Databricks workspace. For example, \"us-west1-a\" is not a valid zone id if the Databricks workspace resides in the \"us-east1\" region. This is an optional field at instance pool creation, and if not specified, a default zone will be used. This field can be one of the following: - \"HA\" =&gt; High availability, spread nodes across availability zones for a Databricks deployment region - A GCP availability zone =&gt; Pick One of the available zones for (machine type + region) from https://cloud.google.com/compute/docs/regions-zones (e.g. \"us-west1-a\"). If empty, Databricks picks an availability zone to schedule the cluster on."
+        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west1-a\". The provided availability zone must be in the same region as the Databricks workspace. For example, \"us-west1-a\" is not a valid zone id if the Databricks workspace resides in the \"us-east1\" region. This is an optional field at instance pool creation, and if not specified, a default zone will be used. This field can be one of the following: - \"HA\" =&gt; High availability, spread nodes across availability zones for a Databricks deployment region - \"auto\" =&gt; Auto-AZ. Databricks selects the availability zone for each cluster independently when the cluster launches, and retries another zone if the cluster can't be fulfilled because of insufficient capacity or quota. All nodes in a cluster land in the same zone, and different clusters backed by the pool can run in different zones. - A GCP availability zone =&gt; Pick One of the available zones for (machine type + region) from https://cloud.google.com/compute/docs/regions-zones (e.g. \"us-west1-a\"). If empty, Databricks picks an availability zone to schedule the cluster on. You can change the zone on an existing pool. New clusters use the updated zone, and existing clusters keep the zone they launched with."
       }
     ]
   },
@@ -217,6 +212,11 @@ The following fields are returned by `SELECT` queries:
         "name": "alternate_node_type_ids",
         "type": "array",
         "description": "A list of node type IDs to use as fallbacks when the primary node type is unavailable."
+      },
+      {
+        "name": "aws_context_id",
+        "type": "string",
+        "description": "The AWS Context ID for EC2 Fleet. When set (non-empty), the value is passed to AWS CreateFleet API to create the EC2 Fleet."
       }
     ]
   },
@@ -348,7 +348,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "availability",
         "type": "string",
-        "description": "Availability type used for the spot nodes. (ON_DEMAND, SPOT)"
+        "description": "Availability type used for the instances in the pool. Supports on-demand, spot, and spot-with-fallback (the pool acquires spot instances first, and falls back to on-demand instances when spot capacity is unavailable). You can change this value on an existing pool. New clusters use the updated availability, and existing clusters keep the availability they launched with. (ON_DEMAND, SPOT)"
       },
       {
         "name": "instance_profile_arn",
@@ -358,12 +358,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "spot_bid_price_percent",
         "type": "integer",
-        "description": "Calculates the bid price for AWS spot instances, as a percentage of the corresponding instance type's on-demand price. For example, if this field is set to 50, and the cluster needs a new ``r3.xlarge`` spot instance, then the bid price is half of the price of on-demand ``r3.xlarge`` instances. Similarly, if this field is set to 200, the bid price is twice the price of on-demand ``r3.xlarge`` instances. If not specified, the default value is 100. When spot instances are requested for this cluster, only spot instances whose bid price percentage matches this field will be considered. Note that, for safety, we enforce this field to be no more than 10000."
+        "description": "Calculates the bid price for AWS spot instances, as a percentage of the corresponding instance type's on-demand price. For example, if this field is set to 50, and the cluster needs a new ``r3.xlarge`` spot instance, then the bid price is half of the price of on-demand ``r3.xlarge`` instances. Similarly, if this field is set to 200, the bid price is twice the price of on-demand ``r3.xlarge`` instances. If not specified, the default value is 100. When spot instances are requested for this cluster, only spot instances whose bid price percentage matches this field will be considered. Note that, for safety, we enforce this field to be no more than 10000. You can change this value on an existing pool. New clusters use the updated bid price, and existing clusters keep the bid price they launched with."
       },
       {
         "name": "zone_id",
         "type": "string",
-        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west-2a\". The provided availability zone must be in the same region as the Databricks deployment. For example, \"us-west-2a\" is not a valid zone id if the Databricks deployment resides in the \"us-east-1\" region. This is an optional field at cluster creation, and if not specified, a default zone will be used. The list of available zones as well as the default value can be found by using the ``List Zones`` method."
+        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west-2a\". The provided availability zone must be in the same region as the Databricks deployment. For example, \"us-west-2a\" is not a valid zone id if the Databricks deployment resides in the \"us-east-1\" region. This is an optional field at cluster creation, and if not specified, a default zone will be used. The list of available zones as well as the default value can be found by using the ``List Zones`` method. Set this field to \"auto\" to enable Auto-AZ, in which case Databricks selects the availability zone for each cluster independently when the cluster launches, and retries another zone if the cluster can't be fulfilled because of insufficient capacity or quota. All nodes in a cluster land in the same zone, and different clusters backed by the pool can run in different zones. You can change the zone on an existing pool. New clusters use the updated zone, and existing clusters keep the zone they launched with."
       }
     ]
   },
@@ -375,7 +375,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "availability",
         "type": "string",
-        "description": "Availability type used for the spot nodes. (ON_DEMAND_AZURE, SPOT_AZURE)"
+        "description": "Availability type used for the instances in the pool. Supports on-demand, spot, and spot-with-fallback (the pool acquires spot instances first, and falls back to on-demand instances when spot capacity is unavailable). You can change this value on an existing pool. New clusters use the updated availability, and existing clusters keep the availability they launched with. (ON_DEMAND_AZURE, SPOT_AZURE)"
       },
       {
         "name": "capacity_reservation_group",
@@ -385,7 +385,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "spot_bid_max_price",
         "type": "number",
-        "description": "With variable pricing, you have option to set a max price, in US dollars (USD) For example, the value 2 would be a max price of $2.00 USD per hour. If you set the max price to be -1, the VM won't be evicted based on price. The price for the VM will be the current price for spot or the price for a standard VM, which ever is less, as long as there is capacity and quota available."
+        "description": "With variable pricing, you have option to set a max price, in US dollars (USD) For example, the value 2 would be a max price of $2.00 USD per hour. If you set the max price to be -1, the VM won't be evicted based on price. The price for the VM will be the current price for spot or the price for a standard VM, which ever is less, as long as there is capacity and quota available. You can change this value on an existing pool. New clusters use the updated max price, and existing clusters keep the max price they launched with."
       }
     ]
   },
@@ -444,11 +444,6 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "enable_auto_alternate_node_types",
-    "type": "boolean",
-    "description": "For pools with node type flexibility (Fleet-V2), whether auto generated alternate node type ids are enabled. This field should not be true if node_type_flexibility is set. DEPRECATED: This field was deprecated before entering PuPr and should no longer be used. TODO(CJ-71514): Remove this field after sufficient time has passed for all clients to migrate."
-  },
-  {
     "name": "enable_elastic_disk",
     "type": "boolean",
     "description": "Autoscaling Local Storage: when enabled, this instances in this pool will dynamically acquire additional disk space when its Spark workers are running low on disk space. In AWS, this feature requires specific AWS permissions to function correctly - refer to the User Guide for more details."
@@ -461,7 +456,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "gcp_availability",
         "type": "string",
-        "description": "This field determines whether the instance pool will contain preemptible VMs, on-demand VMs, or<br />preemptible VMs with a fallback to on-demand VMs if the former is unavailable. (ON_DEMAND_GCP, PREEMPTIBLE_GCP, PREEMPTIBLE_WITH_FALLBACK_GCP)"
+        "description": "Availability type for the instances in the pool. One of: - ``ON_DEMAND_GCP``: the pool uses on-demand instances only. - ``PREEMPTIBLE_GCP``: the pool uses preemptible instances only. - ``PREEMPTIBLE_WITH_FALLBACK_GCP``: the pool acquires preemptible instances first, and falls back to on-demand instances when preemptible capacity is unavailable. (ON_DEMAND_GCP, PREEMPTIBLE_GCP, PREEMPTIBLE_WITH_FALLBACK_GCP)"
       },
       {
         "name": "local_ssd_count",
@@ -471,7 +466,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "zone_id",
         "type": "string",
-        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west1-a\". The provided availability zone must be in the same region as the Databricks workspace. For example, \"us-west1-a\" is not a valid zone id if the Databricks workspace resides in the \"us-east1\" region. This is an optional field at instance pool creation, and if not specified, a default zone will be used. This field can be one of the following: - \"HA\" =&gt; High availability, spread nodes across availability zones for a Databricks deployment region - A GCP availability zone =&gt; Pick One of the available zones for (machine type + region) from https://cloud.google.com/compute/docs/regions-zones (e.g. \"us-west1-a\"). If empty, Databricks picks an availability zone to schedule the cluster on."
+        "description": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like \"us-west1-a\". The provided availability zone must be in the same region as the Databricks workspace. For example, \"us-west1-a\" is not a valid zone id if the Databricks workspace resides in the \"us-east1\" region. This is an optional field at instance pool creation, and if not specified, a default zone will be used. This field can be one of the following: - \"HA\" =&gt; High availability, spread nodes across availability zones for a Databricks deployment region - \"auto\" =&gt; Auto-AZ. Databricks selects the availability zone for each cluster independently when the cluster launches, and retries another zone if the cluster can't be fulfilled because of insufficient capacity or quota. All nodes in a cluster land in the same zone, and different clusters backed by the pool can run in different zones. - A GCP availability zone =&gt; Pick One of the available zones for (machine type + region) from https://cloud.google.com/compute/docs/regions-zones (e.g. \"us-west1-a\"). If empty, Databricks picks an availability zone to schedule the cluster on. You can change the zone on an existing pool. New clusters use the updated zone, and existing clusters keep the zone they launched with."
       }
     ]
   },
@@ -499,6 +494,11 @@ The following fields are returned by `SELECT` queries:
         "name": "alternate_node_type_ids",
         "type": "array",
         "description": "A list of node type IDs to use as fallbacks when the primary node type is unavailable."
+      },
+      {
+        "name": "aws_context_id",
+        "type": "string",
+        "description": "The AWS Context ID for EC2 Fleet. When set (non-empty), the value is passed to AWS CreateFleet API to create the EC2 Fleet."
       }
     ]
   },
@@ -624,35 +624,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-instance_pool_id"><code>instance_pool_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-instance_pool_id"><code>instance_pool_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Retrieve the information for an instance pool based on its identifier.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a list of instance pools with their statistics.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-instance_pool_name"><code>instance_pool_name</code></a>, <a href="#parameter-node_type_id"><code>node_type_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-instance_pool_name"><code>instance_pool_name</code></a>, <a href="#parameter-node_type_id"><code>node_type_id</code></a></td>
     <td></td>
     <td>Creates a new instance pool using idle and ready-to-use cloud instances.</td>
 </tr>
 <tr>
     <td><a href="#replace"><CopyableCode code="replace" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-instance_pool_id"><code>instance_pool_id</code></a>, <a href="#parameter-instance_pool_name"><code>instance_pool_name</code></a>, <a href="#parameter-node_type_id"><code>node_type_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-instance_pool_id"><code>instance_pool_id</code></a>, <a href="#parameter-instance_pool_name"><code>instance_pool_name</code></a>, <a href="#parameter-node_type_id"><code>node_type_id</code></a></td>
     <td></td>
     <td>Modifies the configuration of an existing instance pool.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes the instance pool permanently. The idle instances in the pool are terminated asynchronously.</td>
 </tr>
@@ -675,12 +675,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-instance_pool_id">
     <td><CopyableCode code="instance_pool_id" /></td>
     <td><code>string</code></td>
     <td>The canonical unique identifier for the instance pool.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -708,7 +713,6 @@ azure_attributes,
 custom_tags,
 default_tags,
 disk_spec,
-enable_auto_alternate_node_types,
 enable_elastic_disk,
 gcp_attributes,
 idle_instance_autotermination_minutes,
@@ -725,6 +729,7 @@ total_initial_remote_disk_size
 FROM databricks_workspace.compute.instance_pools
 WHERE instance_pool_id = '{{ instance_pool_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -742,7 +747,6 @@ azure_attributes,
 custom_tags,
 default_tags,
 disk_spec,
-enable_auto_alternate_node_types,
 enable_elastic_disk,
 gcp_attributes,
 idle_instance_autotermination_minutes,
@@ -758,6 +762,7 @@ status,
 total_initial_remote_disk_size
 FROM databricks_workspace.compute.instance_pools
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -785,7 +790,6 @@ aws_attributes,
 azure_attributes,
 custom_tags,
 disk_spec,
-enable_auto_alternate_node_types,
 enable_elastic_disk,
 gcp_attributes,
 idle_instance_autotermination_minutes,
@@ -796,7 +800,8 @@ preloaded_docker_images,
 preloaded_spark_versions,
 remote_disk_throughput,
 total_initial_remote_disk_size,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ instance_pool_name }}' /* required */,
@@ -805,7 +810,6 @@ SELECT
 '{{ azure_attributes }}',
 '{{ custom_tags }}',
 '{{ disk_spec }}',
-{{ enable_auto_alternate_node_types }},
 {{ enable_elastic_disk }},
 '{{ gcp_attributes }}',
 {{ idle_instance_autotermination_minutes }},
@@ -816,7 +820,8 @@ SELECT
 '{{ preloaded_spark_versions }}',
 {{ remote_disk_throughput }},
 {{ total_initial_remote_disk_size }},
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 instance_pool_id
 ;
@@ -829,6 +834,9 @@ instance_pool_id
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the instance_pools resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the instance_pools resource.
     - name: instance_pool_name
       value: "{{ instance_pool_name }}"
@@ -868,10 +876,6 @@ instance_pool_id
         disk_type:
           azure_disk_volume_type: "{{ azure_disk_volume_type }}"
           ebs_volume_type: "{{ ebs_volume_type }}"
-    - name: enable_auto_alternate_node_types
-      value: {{ enable_auto_alternate_node_types }}
-      description: |
-        For pools with node type flexibility (Fleet-V2), whether auto generated alternate node type ids are enabled. This field should not be true if node_type_flexibility is set. DEPRECATED: This field was deprecated before entering PuPr and should no longer be used. TODO(CJ-71514): Remove this field after sufficient time has passed for all clients to migrate.
     - name: enable_elastic_disk
       value: {{ enable_elastic_disk }}
       description: |
@@ -901,6 +905,7 @@ instance_pool_id
       value:
         alternate_node_type_ids:
           - "{{ alternate_node_type_ids }}"
+        aws_context_id: "{{ aws_context_id }}"
     - name: preloaded_docker_images
       description: |
         Custom Docker Image BYOC
@@ -947,7 +952,6 @@ instance_pool_id = '{{ instance_pool_id }}',
 instance_pool_name = '{{ instance_pool_name }}',
 node_type_id = '{{ node_type_id }}',
 custom_tags = '{{ custom_tags }}',
-enable_auto_alternate_node_types = {{ enable_auto_alternate_node_types }},
 idle_instance_autotermination_minutes = {{ idle_instance_autotermination_minutes }},
 max_capacity = {{ max_capacity }},
 min_idle_instances = {{ min_idle_instances }},
@@ -955,6 +959,7 @@ remote_disk_throughput = {{ remote_disk_throughput }},
 total_initial_remote_disk_size = {{ total_initial_remote_disk_size }}
 WHERE 
 deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND instance_pool_id = '{{ instance_pool_id }}' --required
 AND instance_pool_name = '{{ instance_pool_name }}' --required
 AND node_type_id = '{{ node_type_id }}' --required;
@@ -978,6 +983,7 @@ Deletes the instance pool permanently. The idle instances in the pool are termin
 ```sql
 DELETE FROM databricks_workspace.compute.instance_pools
 WHERE deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

@@ -5,23 +5,36 @@
     "description": "OpenAPI specification for the Databricks aisearch service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.aisearch"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
   ],
   "paths": {
-    "/api/2.0/ai-search/{parent}/endpoints": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints": {
       "post": {
         "operationId": "ai_search_create_endpoint",
         "summary": "Create a new AI Search endpoint.",
@@ -32,13 +45,13 @@
         "description": "Create a new AI Search endpoint.\n\n:param parent: str\n  The Workspace where this Endpoint will be created. Format: ``workspaces/{workspace_id}``\n:param endpoint: :class:`Endpoint`\n  The Endpoint resource to create. Fields other than ``endpoint.name`` carry the desired\n  configuration; ``endpoint.name`` is server-assigned from ``parent`` and ``endpoint_id``.\n:param endpoint_id: str (optional)\n  The user-supplied short name for the Endpoint, per AIP-133. The server composes the full\n  ``Endpoint.name`` as ``{parent}/endpoints/{endpoint_id}``. AIP-133 does not list ``endpoint_id`` as\n  a fields-may-be-required entry, so we annotate it OPTIONAL on the wire; the server still rejects\n  empty values with INVALID_PARAMETER_VALUE.\n\n:returns: :class:`Endpoint`",
         "parameters": [
           {
-            "name": "parent",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "The Workspace where this Endpoint will be created. Format: ``workspaces/{workspace_id}``"
+            "description": "The `workspace_id` segment of the `parent` resource name (`workspaces/{workspace_id}`). The Workspace where this Endpoint will be created. Format: ``workspaces/{workspace_id}``"
           },
           {
             "name": "endpoint_id",
@@ -56,218 +69,182 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "endpoint": {
+                  "endpoint_type": {
+                    "type": "string",
+                    "x-enum": [
+                      "STANDARD",
+                      "STORAGE_OPTIMIZED"
+                    ],
+                    "description": "Type of endpoint. Required on create and immutable thereafter."
+                  },
+                  "budget_policy_id": {
+                    "type": "string",
+                    "description": "The user-selected budget policy id for the endpoint."
+                  },
+                  "create_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Time the endpoint was created."
+                  },
+                  "creator": {
+                    "type": "string",
+                    "description": "Creator of the endpoint"
+                  },
+                  "custom_tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string",
+                          "description": "Key field for an AI Search endpoint tag."
+                        },
+                        "value": {
+                          "type": "string",
+                          "description": "[Optional] Value field for an AI Search endpoint tag."
+                        }
+                      },
+                      "required": [
+                        "key"
+                      ],
+                      "description": "User-defined key/value tag attached to an AI Search endpoint for cost attribution and access\n    control."
+                    },
+                    "description": "The custom tags assigned to the endpoint"
+                  },
+                  "effective_budget_policy_id": {
+                    "type": "string",
+                    "description": "The budget policy id applied to the endpoint"
+                  },
+                  "endpoint_status": {
                     "type": "object",
                     "properties": {
-                      "endpoint_type": {
+                      "message": {
+                        "type": "string",
+                        "description": "Human-readable detail about the endpoint's current state or the reason for a state transition."
+                      },
+                      "state": {
                         "type": "string",
                         "x-enum": [
-                          "STANDARD",
-                          "STORAGE_OPTIMIZED"
+                          "DELETED",
+                          "OFFLINE",
+                          "ONLINE",
+                          "PROVISIONING",
+                          "RED_STATE",
+                          "STARTING",
+                          "STOPPED",
+                          "STOPPING",
+                          "YELLOW_STATE"
                         ],
-                        "description": "Type of endpoint. Required on create and immutable thereafter."
-                      },
-                      "budget_policy_id": {
-                        "type": "string",
-                        "description": "The user-selected budget policy id for the endpoint."
-                      },
-                      "create_time": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Time the endpoint was created."
-                      },
-                      "creator": {
-                        "type": "string",
-                        "description": "Creator of the endpoint"
-                      },
-                      "custom_tags": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "key": {
-                              "type": "string",
-                              "description": "Key field for an AI Search endpoint tag."
-                            },
-                            "value": {
-                              "type": "string",
-                              "description": "[Optional] Value field for an AI Search endpoint tag."
-                            }
-                          },
-                          "required": [
-                            "key"
-                          ],
-                          "description": "User-defined key/value tag attached to an AI Search endpoint for cost attribution and access\n    control."
-                        },
-                        "description": "The custom tags assigned to the endpoint"
-                      },
-                      "effective_budget_policy_id": {
-                        "type": "string",
-                        "description": "The budget policy id applied to the endpoint"
-                      },
-                      "endpoint_status": {
-                        "type": "object",
-                        "properties": {
-                          "message": {
-                            "type": "string",
-                            "description": "Human-readable detail about the endpoint's current state or the reason for a state transition."
-                          },
-                          "state": {
-                            "type": "string",
-                            "x-enum": [
-                              "DELETED",
-                              "OFFLINE",
-                              "ONLINE",
-                              "PROVISIONING",
-                              "RED_STATE",
-                              "YELLOW_STATE"
-                            ],
-                            "description": "Current lifecycle state of the endpoint. See ``State`` for the meaning of each value."
-                          }
-                        },
-                        "description": "Current status of the endpoint"
-                      },
-                      "id": {
-                        "type": "string",
-                        "description": "Unique identifier of the endpoint"
-                      },
-                      "index_count": {
-                        "type": "integer",
-                        "description": "Number of indexes on the endpoint"
-                      },
-                      "last_updated_user": {
-                        "type": "string",
-                        "description": "User who last updated the endpoint"
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "Name of the AI Search endpoint. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and returns it on the response."
-                      },
-                      "replica_count": {
-                        "type": "integer",
-                        "description": "The client-supplied desired number of replicas for the endpoint, applied at create/update time. Mutually exclusive with ``target_qps``."
-                      },
-                      "scaling_info": {
-                        "type": "object",
-                        "properties": {
-                          "requested_target_qps": {
-                            "type": "integer",
-                            "description": "The requested QPS target for the endpoint. Best-effort; the system does not guarantee this QPS will be achieved."
-                          },
-                          "state": {
-                            "type": "string",
-                            "x-enum": [
-                              "SCALING_CHANGE_APPLIED",
-                              "SCALING_CHANGE_IN_PROGRESS",
-                              "SCALING_CHANGE_UNSPECIFIED"
-                            ],
-                            "description": "The current state of the scaling change request."
-                          }
-                        },
-                        "description": "Scaling information for the endpoint"
-                      },
-                      "target_qps": {
-                        "type": "integer",
-                        "description": "Target QPS for the endpoint. Mutually exclusive with ``replica_count``. Best-effort; the system does not guarantee this QPS will be achieved."
-                      },
-                      "throughput_info": {
-                        "type": "object",
-                        "properties": {
-                          "change_request_message": {
-                            "type": "string",
-                            "description": "Additional information about the throughput change request"
-                          },
-                          "change_request_state": {
-                            "type": "string",
-                            "x-enum": [
-                              "CHANGE_ADJUSTED",
-                              "CHANGE_FAILED",
-                              "CHANGE_IN_PROGRESS",
-                              "CHANGE_REACHED_MAXIMUM",
-                              "CHANGE_REACHED_MINIMUM",
-                              "CHANGE_SUCCESS"
-                            ],
-                            "description": "The state of the most recent throughput change request"
-                          },
-                          "current_concurrency": {
-                            "type": "number",
-                            "description": "The current concurrency (total CPU) allocated to the endpoint"
-                          },
-                          "current_concurrency_utilization_percentage": {
-                            "type": "number",
-                            "description": "The current utilization of concurrency as a percentage (0-100)"
-                          },
-                          "current_num_replicas": {
-                            "type": "integer",
-                            "description": "The current number of replicas allocated to the endpoint"
-                          },
-                          "maximum_concurrency_allowed": {
-                            "type": "number",
-                            "description": "The maximum concurrency allowed for this endpoint"
-                          },
-                          "minimal_concurrency_allowed": {
-                            "type": "number",
-                            "description": "The minimum concurrency allowed for this endpoint"
-                          },
-                          "requested_concurrency": {
-                            "type": "number",
-                            "description": "The requested concurrency (total CPU) for the endpoint"
-                          },
-                          "requested_num_replicas": {
-                            "type": "integer",
-                            "description": "The requested number of replicas for the endpoint"
-                          }
-                        },
-                        "description": "Throughput information for the endpoint"
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Time the endpoint was last updated."
-                      },
-                      "usage_policy_id": {
-                        "type": "string",
-                        "description": "The usage policy id applied to the endpoint."
-                      },
-                      "warnings": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "index_names": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              },
-                              "description": "Indexes affected by this warning."
-                            },
-                            "message": {
-                              "type": "string",
-                              "description": "Human-readable detail about the warning."
-                            },
-                            "status_code": {
-                              "type": "string",
-                              "x-enum": [
-                                "ENDPOINT_HAS_INDEX_WITHOUT_OPTIMIZED_ROUTE",
-                                "ENDPOINT_HAS_MANAGED_INDEX",
-                                "RERANKER_TEMPORARILY_UNAVAILABLE"
-                              ],
-                              "description": "Status code categorizing the warning."
-                            }
-                          },
-                          "description": "Advisory warning surfaced on an AI Search endpoint \u2014 a non-fatal condition the customer should\n    be aware of (for example, a temporarily unavailable reranker or an index without an optimized\n    query route)."
-                        },
-                        "description": "Advisory warnings surfaced when target_qps is set on a Standard endpoint."
+                        "description": "Current lifecycle state of the endpoint. See ``State`` for the meaning of each value."
                       }
                     },
-                    "required": [
-                      "endpoint_type"
-                    ],
-                    "description": "The Endpoint resource to create. Fields other than ``endpoint.name`` carry the desired configuration; ``endpoint.name`` is server-assigned from ``parent`` and ``endpoint_id``."
+                    "description": "Current status of the endpoint"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier of the endpoint"
+                  },
+                  "index_count": {
+                    "type": "integer",
+                    "description": "Number of indexes on the endpoint"
+                  },
+                  "last_updated_user": {
+                    "type": "string",
+                    "description": "User who last updated the endpoint"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the AI Search endpoint. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and returns it on the response."
+                  },
+                  "replica_count": {
+                    "type": "integer",
+                    "description": "The client-supplied desired number of replicas for the endpoint, applied at create/update time. Mutually exclusive with ``target_qps``."
+                  },
+                  "scaling_info": {
+                    "type": "object",
+                    "properties": {
+                      "requested_target_qps": {
+                        "type": "integer",
+                        "description": "The requested QPS target for the endpoint. Best-effort; the system does not guarantee this QPS will be achieved."
+                      },
+                      "state": {
+                        "type": "string",
+                        "x-enum": [
+                          "SCALING_CHANGE_APPLIED",
+                          "SCALING_CHANGE_IN_PROGRESS",
+                          "SCALING_CHANGE_UNSPECIFIED"
+                        ],
+                        "description": "The current state of the scaling change request."
+                      }
+                    },
+                    "description": "Scaling information for the endpoint"
+                  },
+                  "target_qps": {
+                    "type": "integer",
+                    "description": "Target QPS for the endpoint. Mutually exclusive with ``replica_count``. Best-effort; the system does not guarantee this QPS will be achieved."
+                  },
+                  "throughput_info": {
+                    "type": "object",
+                    "properties": {
+                      "change_request_message": {
+                        "type": "string",
+                        "description": "Additional information about the throughput change request"
+                      },
+                      "change_request_state": {
+                        "type": "string",
+                        "x-enum": [
+                          "CHANGE_ADJUSTED",
+                          "CHANGE_FAILED",
+                          "CHANGE_IN_PROGRESS",
+                          "CHANGE_REACHED_MAXIMUM",
+                          "CHANGE_REACHED_MINIMUM",
+                          "CHANGE_SUCCESS"
+                        ],
+                        "description": "The state of the most recent throughput change request"
+                      },
+                      "current_concurrency": {
+                        "type": "number",
+                        "description": "The current concurrency (total CPU) allocated to the endpoint"
+                      },
+                      "current_concurrency_utilization_percentage": {
+                        "type": "number",
+                        "description": "The current utilization of concurrency as a percentage (0-100)"
+                      },
+                      "current_num_replicas": {
+                        "type": "integer",
+                        "description": "The current number of replicas allocated to the endpoint"
+                      },
+                      "maximum_concurrency_allowed": {
+                        "type": "number",
+                        "description": "The maximum concurrency allowed for this endpoint"
+                      },
+                      "minimal_concurrency_allowed": {
+                        "type": "number",
+                        "description": "The minimum concurrency allowed for this endpoint"
+                      },
+                      "requested_concurrency": {
+                        "type": "number",
+                        "description": "The requested concurrency (total CPU) for the endpoint"
+                      },
+                      "requested_num_replicas": {
+                        "type": "integer",
+                        "description": "The requested number of replicas for the endpoint"
+                      }
+                    },
+                    "description": "Throughput information for the endpoint"
+                  },
+                  "update_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Time the endpoint was last updated."
+                  },
+                  "usage_policy_id": {
+                    "type": "string",
+                    "description": "The usage policy id applied to the endpoint."
                   }
                 },
                 "required": [
-                  "endpoint"
+                  "endpoint_type"
                 ]
               }
             }
@@ -315,13 +292,13 @@
         "description": "List AI Search endpoints in a workspace.\n\n:param parent: str\n  The Workspace that owns this collection of endpoints. Format: ``workspaces/{workspace_id}``\n:param page_size: int (optional)\n  Best-effort upper bound on the number of results to return. Honored as an upper bound by the shim:\n  ``page_size`` only narrows the legacy backend's response, never widens it, so the practical cap is\n  ``min(page_size, legacy_fixed_page_size)``.\n:param page_token: str (optional)\n  Page token from a previous response. If not provided, returns the first page.\n\n:returns: Iterator over :class:`Endpoint`",
         "parameters": [
           {
-            "name": "parent",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "The Workspace that owns this collection of endpoints. Format: ``workspaces/{workspace_id}``"
+            "description": "The `workspace_id` segment of the `parent` resource name (`workspaces/{workspace_id}`). The Workspace that owns this collection of endpoints. Format: ``workspaces/{workspace_id}``"
           },
           {
             "name": "page_size",
@@ -375,7 +352,7 @@
         "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{parent}/indexes": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes": {
       "post": {
         "operationId": "ai_search_create_index",
         "summary": "Create a new AI Search index.",
@@ -386,13 +363,22 @@
         "description": "Create a new AI Search index.\n\n:param parent: str\n  The Endpoint where this Index will be created. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}``\n:param index: :class:`Index`\n  The Index resource to create. Fields other than ``index.name`` carry the desired configuration;\n  ``index.name`` is server-assigned from ``parent`` and ``index_id``.\n:param index_id: str (optional)\n  The user-supplied Unity Catalog table name for the Index, per AIP-133. The server composes the full\n  ``Index.name`` as ``{parent}/indexes/{index_id}``. AIP-133 does not list ``index_id`` as a\n  fields-may-be-required entry, so we annotate it OPTIONAL on the wire; the server still rejects empty\n  values with INVALID_PARAMETER_VALUE.\n\n:returns: :class:`Index`",
         "parameters": [
           {
-            "name": "parent",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "The Endpoint where this Index will be created. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+            "description": "The `workspace_id` segment of the `parent` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). The Endpoint where this Index will be created. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `parent` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). The Endpoint where this Index will be created. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
           },
           {
             "name": "index_id",
@@ -410,204 +396,191 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "index": {
+                  "primary_key": {
+                    "type": "string",
+                    "description": "Primary key of the index. Set on create and immutable thereafter."
+                  },
+                  "index_type": {
+                    "type": "string",
+                    "x-enum": [
+                      "DELTA_SYNC",
+                      "DIRECT_ACCESS"
+                    ],
+                    "description": "Type of index. Required on create and immutable thereafter."
+                  },
+                  "creator": {
+                    "type": "string",
+                    "description": "Creator of the index."
+                  },
+                  "delta_sync_index_spec": {
                     "type": "object",
                     "properties": {
-                      "primary_key": {
-                        "type": "string",
-                        "description": "Primary key of the index. Set on create and immutable thereafter."
-                      },
-                      "index_type": {
+                      "pipeline_type": {
                         "type": "string",
                         "x-enum": [
-                          "DELTA_SYNC",
-                          "DIRECT_ACCESS"
+                          "CONTINUOUS",
+                          "TRIGGERED"
                         ],
-                        "description": "Type of index. Required on create and immutable thereafter."
+                        "description": "Pipeline execution mode. Required on create \u2014 the backend rejects an unset value. Storage Optimized endpoints accept only ``TRIGGERED``; Standard endpoints accept both. No explicit ``stage`` \u2014 a REQUIRED field staged below its service would be dropped from combined specs while remaining in ``required``, tripping the OpenAPI required-vs-properties consistency check. The field inherits the service's launch stage."
                       },
-                      "creator": {
-                        "type": "string",
-                        "description": "Creator of the index."
-                      },
-                      "delta_sync_index_spec": {
-                        "type": "object",
-                        "properties": {
-                          "pipeline_type": {
-                            "type": "string",
-                            "x-enum": [
-                              "CONTINUOUS",
-                              "TRIGGERED"
-                            ],
-                            "description": "Pipeline execution mode. Required on create \u2014 the backend rejects an unset value. Storage Optimized endpoints accept only ``TRIGGERED``; Standard endpoints accept both. No explicit ``stage`` \u2014 a REQUIRED field staged below its service would be dropped from combined specs while remaining in ``required``, tripping the OpenAPI required-vs-properties consistency check. The field inherits the service's launch stage."
-                          },
-                          "columns_to_sync": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "[Optional] Select the columns to sync with the index. If left blank, all columns from the source table are synced. The primary key column and embedding source or vector column are always synced."
-                          },
-                          "embedding_source_columns": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "embedding_model_endpoint": {
-                                  "type": "string",
-                                  "description": "Name of the embedding model endpoint, used by default for both ingestion and querying."
-                                },
-                                "model_endpoint_name_for_query": {
-                                  "type": "string",
-                                  "description": "Name of the embedding model endpoint which, if specified, is used for querying (not ingestion)."
-                                },
-                                "name": {
-                                  "type": "string",
-                                  "description": "Name of the source column."
-                                }
-                              },
-                              "description": "Name of an embedding source column and its associated embedding model endpoint."
-                            },
-                            "description": "The columns that contain the embedding source."
-                          },
-                          "embedding_vector_columns": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "embedding_dimension": {
-                                  "type": "integer",
-                                  "description": "Dimension of the embedding vector."
-                                },
-                                "name": {
-                                  "type": "string",
-                                  "description": "Name of the column."
-                                }
-                              },
-                              "description": "Name and dimension of an embedding vector column."
-                            },
-                            "description": "The columns that contain the embedding vectors."
-                          },
-                          "embedding_writeback_table": {
-                            "type": "string",
-                            "description": "[Optional] Name of the Delta table to sync the index contents and computed embeddings to."
-                          },
-                          "pipeline_id": {
-                            "type": "string",
-                            "description": "The ID of the pipeline that is used to sync the index."
-                          },
-                          "source_table": {
-                            "type": "string",
-                            "description": "The full name of the source Delta table."
-                          }
+                      "columns_to_sync": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
                         },
-                        "required": [
-                          "pipeline_type"
-                        ],
-                        "description": "Specification for a Delta Sync index. Set when ``index_type`` is ``DELTA_SYNC``."
+                        "description": "[Optional] Select the columns to sync with the index. If left blank, all columns from the source table are synced. The primary key column and embedding source or vector column are always synced."
                       },
-                      "direct_access_index_spec": {
-                        "type": "object",
-                        "properties": {
-                          "embedding_source_columns": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "embedding_model_endpoint": {
-                                  "type": "string",
-                                  "description": "Name of the embedding model endpoint, used by default for both ingestion and querying."
-                                },
-                                "model_endpoint_name_for_query": {
-                                  "type": "string",
-                                  "description": "Name of the embedding model endpoint which, if specified, is used for querying (not ingestion)."
-                                },
-                                "name": {
-                                  "type": "string",
-                                  "description": "Name of the source column."
-                                }
-                              },
-                              "description": "Name of an embedding source column and its associated embedding model endpoint."
+                      "embedding_source_columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "embedding_model_endpoint": {
+                              "type": "string",
+                              "description": "Name of the embedding model endpoint, used by default for both ingestion and querying."
                             },
-                            "description": "The columns that contain the embedding source."
-                          },
-                          "embedding_vector_columns": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "embedding_dimension": {
-                                  "type": "integer",
-                                  "description": "Dimension of the embedding vector."
-                                },
-                                "name": {
-                                  "type": "string",
-                                  "description": "Name of the column."
-                                }
-                              },
-                              "description": "Name and dimension of an embedding vector column."
+                            "model_endpoint_name_for_query": {
+                              "type": "string",
+                              "description": "Name of the embedding model endpoint which, if specified, is used for querying (not ingestion)."
                             },
-                            "description": "The columns that contain the embedding vectors."
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the source column."
+                            }
                           },
-                          "requested_schema_json": {
-                            "type": "string",
-                            "description": "The index schema exactly as the user supplied it on create, preserving the original type spellings (e.g. ``integer``) rather than Unity Catalog's canonical names (e.g. ``int``) that ``schema_json`` returns."
-                          },
-                          "schema_json": {
-                            "type": "string",
-                            "description": "The schema of the index in JSON format. Supported types are ``integer``, ``long``, ``float``, ``double``, ``boolean``, ``string``, ``date``, ``timestamp``. Supported types for vector columns: ``array<float>``, ``array<double>``."
-                          }
+                          "description": "Name of an embedding source column and its associated embedding model endpoint."
                         },
-                        "description": "Specification for a Direct Access index. Set when ``index_type`` is ``DIRECT_ACCESS``."
+                        "description": "The columns that contain the embedding source."
                       },
-                      "endpoint": {
-                        "type": "string",
-                        "description": "Name of the endpoint associated with the index. Ignored on create \u2014 the endpoint is taken from ``CreateIndexRequest.parent``; populated only on output."
-                      },
-                      "index_subtype": {
-                        "type": "string",
-                        "x-enum": [
-                          "FULL_TEXT",
-                          "HYBRID",
-                          "VECTOR"
-                        ],
-                        "description": "The subtype of the index. Set on create and immutable thereafter."
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "Name of the AI Search index. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}/indexes/{index}``) on output, where ``{index}`` is the index's Unity Catalog table name. On create, the user-supplied UC table name is conveyed via ``CreateIndexRequest.index_id``; the server composes the full ``name`` and returns it on the response."
-                      },
-                      "status": {
-                        "type": "object",
-                        "properties": {
-                          "index_url": {
-                            "type": "string",
-                            "description": "Index API URL used to perform operations on the index."
+                      "embedding_vector_columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "embedding_dimension": {
+                              "type": "integer",
+                              "description": "Dimension of the embedding vector."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the column."
+                            }
                           },
-                          "indexed_row_count": {
-                            "type": "integer",
-                            "description": "Number of rows indexed."
-                          },
-                          "message": {
-                            "type": "string",
-                            "description": "Human-readable detail about the index's current state."
-                          },
-                          "ready": {
-                            "type": "boolean",
-                            "description": "Whether the index is ready for search."
-                          }
+                          "description": "Name and dimension of an embedding vector column."
                         },
-                        "description": "Current status of the index."
+                        "description": "The columns that contain the embedding vectors."
+                      },
+                      "embedding_writeback_table": {
+                        "type": "string",
+                        "description": "[Optional] Name of the Delta table to sync the index contents and computed embeddings to."
+                      },
+                      "pipeline_id": {
+                        "type": "string",
+                        "description": "The ID of the pipeline that is used to sync the index."
+                      },
+                      "source_table": {
+                        "type": "string",
+                        "description": "The full name of the source Delta table."
                       }
                     },
                     "required": [
-                      "primary_key",
-                      "index_type"
+                      "pipeline_type"
                     ],
-                    "description": "The Index resource to create. Fields other than ``index.name`` carry the desired configuration; ``index.name`` is server-assigned from ``parent`` and ``index_id``."
+                    "description": "Specification for a Delta Sync index. Set when ``index_type`` is ``DELTA_SYNC``."
+                  },
+                  "direct_access_index_spec": {
+                    "type": "object",
+                    "properties": {
+                      "embedding_source_columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "embedding_model_endpoint": {
+                              "type": "string",
+                              "description": "Name of the embedding model endpoint, used by default for both ingestion and querying."
+                            },
+                            "model_endpoint_name_for_query": {
+                              "type": "string",
+                              "description": "Name of the embedding model endpoint which, if specified, is used for querying (not ingestion)."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the source column."
+                            }
+                          },
+                          "description": "Name of an embedding source column and its associated embedding model endpoint."
+                        },
+                        "description": "The columns that contain the embedding source."
+                      },
+                      "embedding_vector_columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "embedding_dimension": {
+                              "type": "integer",
+                              "description": "Dimension of the embedding vector."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the column."
+                            }
+                          },
+                          "description": "Name and dimension of an embedding vector column."
+                        },
+                        "description": "The columns that contain the embedding vectors."
+                      },
+                      "schema_json": {
+                        "type": "string",
+                        "description": "The schema of the index in JSON format. Supported types are ``integer``, ``long``, ``float``, ``double``, ``boolean``, ``string``, ``date``, ``timestamp``. Supported types for vector columns: ``array<float>``, ``array<double>``."
+                      }
+                    },
+                    "description": "Specification for a Direct Access index. Set when ``index_type`` is ``DIRECT_ACCESS``."
+                  },
+                  "endpoint": {
+                    "type": "string",
+                    "description": "Name of the endpoint associated with the index. Ignored on create \u2014 the endpoint is taken from ``CreateIndexRequest.parent``; populated only on output."
+                  },
+                  "index_subtype": {
+                    "type": "string",
+                    "x-enum": [
+                      "FULL_TEXT",
+                      "HYBRID",
+                      "VECTOR"
+                    ],
+                    "description": "The subtype of the index. Set on create and immutable thereafter."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the AI Search index. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}/indexes/{index}``) on output, where ``{index}`` is the index's Unity Catalog table name. On create, the user-supplied UC table name is conveyed via ``CreateIndexRequest.index_id``; the server composes the full ``name`` and returns it on the response."
+                  },
+                  "status": {
+                    "type": "object",
+                    "properties": {
+                      "index_url": {
+                        "type": "string",
+                        "description": "Index API URL used to perform operations on the index."
+                      },
+                      "indexed_row_count": {
+                        "type": "integer",
+                        "description": "Number of rows indexed."
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "Human-readable detail about the index's current state."
+                      },
+                      "ready": {
+                        "type": "boolean",
+                        "description": "Whether the index is ready for search."
+                      }
+                    },
+                    "description": "Current status of the index."
                   }
                 },
                 "required": [
-                  "index"
+                  "primary_key",
+                  "index_type"
                 ]
               }
             }
@@ -652,25 +625,25 @@
           "aisearch",
           "ai_search"
         ],
-        "description": "List AI Search indexes on an endpoint.\n\n:param parent: str\n  The Endpoint that owns this collection of indexes. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}``\n:param debug_level: int (optional)\n  Opt-in debug level. When set to 1 or higher, the backend computes per-index routing eligibility and\n  populates ``can_use_optimized_route`` on each returned index. When unset (0), that field is left\n  unpopulated and the eligibility computation is skipped. Matches the ``debug_level`` convention on\n  the query path.\n:param page_size: int (optional)\n  Best-effort upper bound on the number of results to return. Honored as an upper bound by the shim:\n  ``page_size`` only narrows the legacy backend's response, never widens it, so the practical cap is\n  ``min(page_size, legacy_fixed_page_size)``.\n:param page_token: str (optional)\n  Page token from a previous response. If not provided, returns the first page.\n\n:returns: Iterator over :class:`Index`",
+        "description": "List AI Search indexes on an endpoint.\n\n:param parent: str\n  The Endpoint that owns this collection of indexes. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}``\n:param page_size: int (optional)\n  Best-effort upper bound on the number of results to return. Honored as an upper bound by the shim:\n  ``page_size`` only narrows the legacy backend's response, never widens it, so the practical cap is\n  ``min(page_size, legacy_fixed_page_size)``.\n:param page_token: str (optional)\n  Page token from a previous response. If not provided, returns the first page.\n\n:returns: Iterator over :class:`Index`",
         "parameters": [
           {
-            "name": "parent",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "The Endpoint that owns this collection of indexes. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+            "description": "The `workspace_id` segment of the `parent` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). The Endpoint that owns this collection of indexes. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
           },
           {
-            "name": "debug_level",
-            "in": "query",
-            "required": false,
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
             "schema": {
-              "type": "integer"
+              "type": "string"
             },
-            "description": "Opt-in debug level. When set to 1 or higher, the backend computes per-index routing eligibility and populates ``can_use_optimized_route`` on each returned index. When unset (0), that field is left unpopulated and the eligibility computation is skipped. Matches the ``debug_level`` convention on the query path."
+            "description": "The `endpoint_id` segment of the `parent` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). The Endpoint that owns this collection of indexes. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
           },
           {
             "name": "page_size",
@@ -724,7 +697,122 @@
         "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{name}": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}": {
+      "delete": {
+        "operationId": "ai_search_delete_endpoint",
+        "summary": "Delete an AI Search endpoint.",
+        "tags": [
+          "aisearch",
+          "ai_search"
+        ],
+        "description": "Delete an AI Search endpoint.\n\n:param name: str\n  Full resource name of the endpoint to delete. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}``",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). Full resource name of the endpoint to delete. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). Full resource name of the endpoint to delete. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-stackql-sdk-source": "AiSearchAPI"
+      },
+      "get": {
+        "operationId": "ai_search_get_endpoint",
+        "summary": "Get details for a single AI Search endpoint.",
+        "tags": [
+          "aisearch",
+          "ai_search"
+        ],
+        "description": "Get details for a single AI Search endpoint.\n\n:param name: str\n  Full resource name of the endpoint. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``\n\n:returns: :class:`Endpoint`",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). Full resource name of the endpoint. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}`). Full resource name of the endpoint. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}``"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Endpoint"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-stackql-sdk-source": "AiSearchAPI"
+      }
+    },
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}": {
       "delete": {
         "operationId": "ai_search_delete_index",
         "summary": "Delete an AI Search index.",
@@ -735,13 +823,31 @@
         "description": "Delete an AI Search index.\n\n:param name: str\n  Full resource name of the index to delete. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index to delete. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to delete. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to delete. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to delete. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "responses": {
@@ -779,13 +885,31 @@
         "description": "Get details for a single AI Search index.\n\n:param name: str\n  Full resource name of the index. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n\n:returns: :class:`Index`",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "responses": {
@@ -819,292 +943,9 @@
           }
         },
         "x-stackql-sdk-source": "AiSearchAPI"
-      },
-      "patch": {
-        "operationId": "ai_search_update_endpoint",
-        "summary": "Update an existing AI Search endpoint. Multi-bucket masks are supported and dispatched in",
-        "tags": [
-          "aisearch",
-          "ai_search"
-        ],
-        "description": "Update an existing AI Search endpoint. Multi-bucket masks are supported and dispatched in\ndeterministic bucket order: budget policy, custom tags, throughput, then scaling/replicas. Per-bucket\ndispatch is not atomic across buckets \u2014 if a later bucket fails, earlier buckets may already have\nbeen applied.\n\n:param name: str\n  Name of the AI Search endpoint. Server-assigned full resource path\n  (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name\n  is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and\n  returns it on the response.\n:param endpoint: :class:`Endpoint`\n  The Endpoint resource to update. ``endpoint.name`` carries the full resource path.\n:param update_mask: FieldMask\n  The list of fields to update.\n\n:returns: :class:`Endpoint`",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Name of the AI Search endpoint. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and returns it on the response."
-          },
-          {
-            "name": "update_mask",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "object"
-            },
-            "description": "The list of fields to update."
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "endpoint": {
-                    "type": "object",
-                    "properties": {
-                      "endpoint_type": {
-                        "type": "string",
-                        "x-enum": [
-                          "STANDARD",
-                          "STORAGE_OPTIMIZED"
-                        ],
-                        "description": "Type of endpoint. Required on create and immutable thereafter."
-                      },
-                      "budget_policy_id": {
-                        "type": "string",
-                        "description": "The user-selected budget policy id for the endpoint."
-                      },
-                      "create_time": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Time the endpoint was created."
-                      },
-                      "creator": {
-                        "type": "string",
-                        "description": "Creator of the endpoint"
-                      },
-                      "custom_tags": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "key": {
-                              "type": "string",
-                              "description": "Key field for an AI Search endpoint tag."
-                            },
-                            "value": {
-                              "type": "string",
-                              "description": "[Optional] Value field for an AI Search endpoint tag."
-                            }
-                          },
-                          "required": [
-                            "key"
-                          ],
-                          "description": "User-defined key/value tag attached to an AI Search endpoint for cost attribution and access\n    control."
-                        },
-                        "description": "The custom tags assigned to the endpoint"
-                      },
-                      "effective_budget_policy_id": {
-                        "type": "string",
-                        "description": "The budget policy id applied to the endpoint"
-                      },
-                      "endpoint_status": {
-                        "type": "object",
-                        "properties": {
-                          "message": {
-                            "type": "string",
-                            "description": "Human-readable detail about the endpoint's current state or the reason for a state transition."
-                          },
-                          "state": {
-                            "type": "string",
-                            "x-enum": [
-                              "DELETED",
-                              "OFFLINE",
-                              "ONLINE",
-                              "PROVISIONING",
-                              "RED_STATE",
-                              "YELLOW_STATE"
-                            ],
-                            "description": "Current lifecycle state of the endpoint. See ``State`` for the meaning of each value."
-                          }
-                        },
-                        "description": "Current status of the endpoint"
-                      },
-                      "id": {
-                        "type": "string",
-                        "description": "Unique identifier of the endpoint"
-                      },
-                      "index_count": {
-                        "type": "integer",
-                        "description": "Number of indexes on the endpoint"
-                      },
-                      "last_updated_user": {
-                        "type": "string",
-                        "description": "User who last updated the endpoint"
-                      },
-                      "name": {
-                        "type": "string",
-                        "description": "Name of the AI Search endpoint. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and returns it on the response."
-                      },
-                      "replica_count": {
-                        "type": "integer",
-                        "description": "The client-supplied desired number of replicas for the endpoint, applied at create/update time. Mutually exclusive with ``target_qps``."
-                      },
-                      "scaling_info": {
-                        "type": "object",
-                        "properties": {
-                          "requested_target_qps": {
-                            "type": "integer",
-                            "description": "The requested QPS target for the endpoint. Best-effort; the system does not guarantee this QPS will be achieved."
-                          },
-                          "state": {
-                            "type": "string",
-                            "x-enum": [
-                              "SCALING_CHANGE_APPLIED",
-                              "SCALING_CHANGE_IN_PROGRESS",
-                              "SCALING_CHANGE_UNSPECIFIED"
-                            ],
-                            "description": "The current state of the scaling change request."
-                          }
-                        },
-                        "description": "Scaling information for the endpoint"
-                      },
-                      "target_qps": {
-                        "type": "integer",
-                        "description": "Target QPS for the endpoint. Mutually exclusive with ``replica_count``. Best-effort; the system does not guarantee this QPS will be achieved."
-                      },
-                      "throughput_info": {
-                        "type": "object",
-                        "properties": {
-                          "change_request_message": {
-                            "type": "string",
-                            "description": "Additional information about the throughput change request"
-                          },
-                          "change_request_state": {
-                            "type": "string",
-                            "x-enum": [
-                              "CHANGE_ADJUSTED",
-                              "CHANGE_FAILED",
-                              "CHANGE_IN_PROGRESS",
-                              "CHANGE_REACHED_MAXIMUM",
-                              "CHANGE_REACHED_MINIMUM",
-                              "CHANGE_SUCCESS"
-                            ],
-                            "description": "The state of the most recent throughput change request"
-                          },
-                          "current_concurrency": {
-                            "type": "number",
-                            "description": "The current concurrency (total CPU) allocated to the endpoint"
-                          },
-                          "current_concurrency_utilization_percentage": {
-                            "type": "number",
-                            "description": "The current utilization of concurrency as a percentage (0-100)"
-                          },
-                          "current_num_replicas": {
-                            "type": "integer",
-                            "description": "The current number of replicas allocated to the endpoint"
-                          },
-                          "maximum_concurrency_allowed": {
-                            "type": "number",
-                            "description": "The maximum concurrency allowed for this endpoint"
-                          },
-                          "minimal_concurrency_allowed": {
-                            "type": "number",
-                            "description": "The minimum concurrency allowed for this endpoint"
-                          },
-                          "requested_concurrency": {
-                            "type": "number",
-                            "description": "The requested concurrency (total CPU) for the endpoint"
-                          },
-                          "requested_num_replicas": {
-                            "type": "integer",
-                            "description": "The requested number of replicas for the endpoint"
-                          }
-                        },
-                        "description": "Throughput information for the endpoint"
-                      },
-                      "update_time": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Time the endpoint was last updated."
-                      },
-                      "usage_policy_id": {
-                        "type": "string",
-                        "description": "The usage policy id applied to the endpoint."
-                      },
-                      "warnings": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "index_names": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              },
-                              "description": "Indexes affected by this warning."
-                            },
-                            "message": {
-                              "type": "string",
-                              "description": "Human-readable detail about the warning."
-                            },
-                            "status_code": {
-                              "type": "string",
-                              "x-enum": [
-                                "ENDPOINT_HAS_INDEX_WITHOUT_OPTIMIZED_ROUTE",
-                                "ENDPOINT_HAS_MANAGED_INDEX",
-                                "RERANKER_TEMPORARILY_UNAVAILABLE"
-                              ],
-                              "description": "Status code categorizing the warning."
-                            }
-                          },
-                          "description": "Advisory warning surfaced on an AI Search endpoint \u2014 a non-fatal condition the customer should\n    be aware of (for example, a temporarily unavailable reranker or an index without an optimized\n    query route)."
-                        },
-                        "description": "Advisory warnings surfaced when target_qps is set on a Standard endpoint."
-                      }
-                    },
-                    "required": [
-                      "endpoint_type"
-                    ],
-                    "description": "The Endpoint resource to update. ``endpoint.name`` carries the full resource path."
-                  }
-                },
-                "required": [
-                  "endpoint"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Endpoint"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{name}:query": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}:query": {
       "post": {
         "operationId": "ai_search_query_index",
         "summary": "Query (search) an AI Search index. Read-only, so a read-scoped token may invoke it.",
@@ -1112,16 +953,34 @@
           "aisearch",
           "ai_search"
         ],
-        "description": "Query (search) an AI Search index. Read-only, so a read-scoped token may invoke it.\n\n:param name: str\n  Full resource name of the index to query. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n:param columns: List[str]\n  Column names to include in each result row.\n:param columns_to_rerank: List[str] (optional)\n  Columns whose values are sent to the reranker.\n:param facets: List[str] (optional)\n  Facets to compute over the matched results (e.g. ``\"category TOP 5\"``).\n:param filters_json: str (optional)\n  JSON string describing query filters (e.g. ``{\"id >\": 5}``).\n:param max_results: int (optional)\n  Maximum number of results to return (the legacy ``num_results``). Defaults to 10.\n:param query_columns: List[str] (optional)\n  Text columns to search for ``query_text``. When empty, all text columns are searched.\n:param query_text: str (optional)\n  Query text. Required for Delta Sync indexes that compute embeddings from a model endpoint.\n:param query_type: str (optional)\n  Query type: ``ANN``, ``HYBRID``, or ``FULL_TEXT``. Defaults to ``ANN``.\n:param query_vector: List[float] (optional)\n  Query vector. Required for Direct Access indexes and Delta Sync indexes with self-managed vectors.\n:param reranker: :class:`RerankerConfig` (optional)\n  If set, results are reranked before being returned.\n:param score_threshold: float (optional)\n  Score threshold for the approximate nearest-neighbor search. Defaults to 0.0.\n:param sort_columns: List[str] (optional)\n  Sort clauses, e.g. ``[\"rating DESC\", \"price ASC\"]``. Overrides relevance ordering.\n\n:returns: :class:`QueryIndexResponse`",
+        "description": "Query (search) an AI Search index. Read-only, so a read-scoped token may invoke it.\n\n:param name: str\n  Full resource name of the index to query. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n:param columns: List[str]\n  Column names to include in each result row.\n:param columns_to_rerank: List[str] (optional)\n  Columns whose values are sent to the reranker.\n:param facets: List[str] (optional)\n  Facets to compute over the matched results (e.g. ``\"category TOP 5\"``).\n:param filters_json: str (optional)\n  JSON string describing query filters (e.g. ``{\"id >\": 5}``).\n:param max_results: int (optional)\n  Maximum number of results to return (the legacy ``num_results``). Defaults to 10. Prefer\n  ``page_size``; when both are set, ``page_size`` takes precedence.\n:param query_columns: List[str] (optional)\n  Text columns to search for ``query_text``. When empty, all text columns are searched.\n:param query_text: str (optional)\n  Query text. Required for Delta Sync indexes that compute embeddings from a model endpoint.\n:param query_type: str (optional)\n  Query type: ``ANN``, ``HYBRID``, or ``FULL_TEXT``. Defaults to ``ANN``.\n:param query_vector: List[float] (optional)\n  Query vector. Required for Direct Access indexes and Delta Sync indexes with self-managed vectors.\n:param reranker: :class:`RerankerConfig` (optional)\n  If set, results are reranked before being returned.\n:param score_threshold: float (optional)\n  Score threshold for the approximate nearest-neighbor search. Defaults to 0.0.\n:param sort_columns: List[str] (optional)\n  Sort clauses, e.g. ``[\"rating DESC\", \"price ASC\"]``. Overrides relevance ordering.\n\n:returns: :class:`QueryIndexResponse`",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index to query. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to query. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to query. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to query. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "requestBody": {
@@ -1157,7 +1016,7 @@
                   },
                   "max_results": {
                     "type": "integer",
-                    "description": "Maximum number of results to return (the legacy ``num_results``). Defaults to 10."
+                    "description": "Maximum number of results to return (the legacy ``num_results``). Defaults to 10. Prefer ``page_size``; when both are set, ``page_size`` takes precedence."
                   },
                   "query_columns": {
                     "type": "array",
@@ -1264,7 +1123,7 @@
         "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{name}:removeData": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}:removeData": {
       "post": {
         "operationId": "ai_search_remove_data",
         "summary": "Remove rows by primary key from a Direct Access AI Search index.",
@@ -1275,13 +1134,31 @@
         "description": "Remove rows by primary key from a Direct Access AI Search index.\n\n:param name: str\n  Full resource name of the index. Must be a Direct Access index. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n:param primary_keys: List[str]\n  Primary keys of the rows to remove.\n\n:returns: :class:`RemoveDataResponse`",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "requestBody": {
@@ -1338,7 +1215,7 @@
         "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{name}:scan": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}:scan": {
       "post": {
         "operationId": "ai_search_scan_index",
         "summary": "Scan (paginate over) the rows of an AI Search index.",
@@ -1349,13 +1226,31 @@
         "description": "Scan (paginate over) the rows of an AI Search index.\n\n:param name: str\n  Full resource name of the index to scan. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n:param page_size: int (optional)\n  Maximum number of rows to return in this page.\n:param page_token: str (optional)\n  Page token from a previous response; if unset, scanning starts from the beginning.\n\n:returns: :class:`ScanIndexResponse`",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index to scan. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to scan. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to scan. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to scan. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "requestBody": {
@@ -1410,7 +1305,7 @@
         "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{name}:sync": {
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}:sync": {
       "post": {
         "operationId": "ai_search_sync_index",
         "summary": "Synchronize a Delta Sync AI Search index with its source Delta table. Applies only to Delta Sync",
@@ -1421,13 +1316,31 @@
         "description": "Synchronize a Delta Sync AI Search index with its source Delta table. Applies only to Delta Sync\nindexes; Direct Access indexes are written via the data-plane upsert path.\n\n:param name: str\n  Full resource name of the index to synchronize. Must be a Delta Sync index. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n\n:returns: :class:`SyncIndexResponse`",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index to synchronize. Must be a Delta Sync index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to synchronize. Must be a Delta Sync index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to synchronize. Must be a Delta Sync index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index to synchronize. Must be a Delta Sync index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "responses": {
@@ -1463,7 +1376,78 @@
         "x-stackql-sdk-source": "AiSearchAPI"
       }
     },
-    "/api/2.0/ai-search/{name}:upsertData": {
+    "/api/2.0/ai-search/workspaces/{workspace}/endpoints/{endpoint}": {
+      "patch": {
+        "operationId": "ai_search_update_endpoint",
+        "summary": "Update an existing AI Search endpoint. Multi-bucket masks are supported and dispatched in",
+        "tags": [
+          "aisearch",
+          "ai_search"
+        ],
+        "description": "Update an existing AI Search endpoint. Multi-bucket masks are supported and dispatched in\ndeterministic bucket order: budget policy, custom tags, throughput, then scaling/replicas. Per-bucket\ndispatch is not atomic across buckets \u2014 if a later bucket fails, earlier buckets may already have\nbeen applied.\n\n:param name: str\n  Name of the AI Search endpoint. Server-assigned full resource path\n  (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name\n  is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and\n  returns it on the response.\n:param endpoint: :class:`Endpoint`\n  The Endpoint resource to update. ``endpoint.name`` carries the full resource path.\n:param update_mask: FieldMask\n  The list of fields to update.\n\n:returns: :class:`Endpoint`",
+        "parameters": [
+          {
+            "name": "workspace",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `workspace` segment of the `name` resource name (`workspaces/{workspace}/endpoints/{endpoint}`). Name of the AI Search endpoint. Server-assigned full resource path (``workspaces/{workspace}/endpoints/{endpoint}``) on output. On create, the user-supplied short name is conveyed via ``CreateEndpointRequest.endpoint_id``; the server composes the full ``name`` and returns it on the response."
+          },
+          {
+            "name": "endpoint",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Endpoint"
+            },
+            "description": "The Endpoint resource to update. ``endpoint.name`` carries the full resource path."
+          },
+          {
+            "name": "update_mask",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "object"
+            },
+            "description": "The list of fields to update."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Endpoint"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-stackql-sdk-source": "AiSearchAPI"
+      }
+    },
+    "/api/2.0/ai-search/workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}:upsertData": {
       "post": {
         "operationId": "ai_search_upsert_data",
         "summary": "Upsert rows into a Direct Access AI Search index.",
@@ -1474,13 +1458,31 @@
         "description": "Upsert rows into a Direct Access AI Search index.\n\n:param name: str\n  Full resource name of the index. Must be a Direct Access index. Format:\n  ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``\n:param inputs_json: str\n  JSON document describing the rows to upsert.\n\n:returns: :class:`UpsertDataResponse`",
         "parameters": [
           {
-            "name": "name",
+            "name": "workspace_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             },
-            "description": "Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+            "description": "The `workspace_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "endpoint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `endpoint_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
+          },
+          {
+            "name": "index_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `index_id` segment of the `name` resource name (`workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`). Full resource name of the index. Must be a Direct Access index. Format: ``workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}``"
           }
         ],
         "requestBody": {
@@ -1648,10 +1650,6 @@
             },
             "description": "The columns that contain the embedding vectors."
           },
-          "requested_schema_json": {
-            "type": "string",
-            "description": "The index schema exactly as the user supplied it on create, preserving the original type spellings (e.g. ``integer``) rather than Unity Catalog's canonical names (e.g. ``int``) that ``schema_json`` returns."
-          },
           "schema_json": {
             "type": "string",
             "description": "The schema of the index in JSON format. Supported types are ``integer``, ``long``, ``float``, ``double``, ``boolean``, ``string``, ``date``, ``timestamp``. Supported types for vector columns: ``array<float>``, ``array<double>``."
@@ -1766,13 +1764,6 @@
           "usage_policy_id": {
             "type": "string",
             "description": "The usage policy id applied to the endpoint."
-          },
-          "warnings": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Warning"
-            },
-            "description": "Advisory warnings surfaced when target_qps is set on a Standard endpoint."
           }
         },
         "required": [
@@ -1792,7 +1783,7 @@
             "description": "The current state of the scaling change request."
           }
         },
-        "description": "Scaling information for a Storage Optimized endpoint \u2014 current scaling state and the requested\n    QPS target the system is scaling toward."
+        "description": "Scaling information for a Standard endpoint: the current scaling state, the requested QPS\n    target, and the progress of an in-progress scaling change."
       },
       "EndpointStatus": {
         "type": "object",
@@ -2119,27 +2110,6 @@
         },
         "description": "Response for UpsertData."
       },
-      "Warning": {
-        "type": "object",
-        "properties": {
-          "index_names": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Indexes affected by this warning."
-          },
-          "message": {
-            "type": "string",
-            "description": "Human-readable detail about the warning."
-          },
-          "status_code": {
-            "$ref": "#/components/schemas/WarningStatusCode",
-            "description": "Status code categorizing the warning."
-          }
-        },
-        "description": "Advisory warning surfaced on an AI Search endpoint \u2014 a non-fatal condition the customer should\n    be aware of (for example, a temporarily unavailable reranker or an index without an optimized\n    query route)."
-      },
       "DataModificationStatus": {
         "type": "string",
         "x-enum": [
@@ -2157,6 +2127,9 @@
           "ONLINE",
           "PROVISIONING",
           "RED_STATE",
+          "STARTING",
+          "STOPPED",
+          "STOPPING",
           "YELLOW_STATE"
         ],
         "description": "Lifecycle state of an AI Search endpoint, used by both Standard and Storage Optimized SKUs."
@@ -2209,7 +2182,7 @@
           "SCALING_CHANGE_IN_PROGRESS",
           "SCALING_CHANGE_UNSPECIFIED"
         ],
-        "description": "State of the most recent scaling change request for a Storage Optimized endpoint."
+        "description": "State of the most recent scaling change request for a Standard endpoint."
       },
       "ThroughputChangeRequestState": {
         "type": "string",
@@ -2222,15 +2195,6 @@
           "CHANGE_SUCCESS"
         ],
         "description": "State of the most recent throughput change request issued against a Storage Optimized endpoint.\nSurfaced on ``EndpointThroughputInfo.change_request_state``."
-      },
-      "WarningStatusCode": {
-        "type": "string",
-        "x-enum": [
-          "ENDPOINT_HAS_INDEX_WITHOUT_OPTIMIZED_ROUTE",
-          "ENDPOINT_HAS_MANAGED_INDEX",
-          "RERANKER_TEMPORARILY_UNAVAILABLE"
-        ],
-        "description": "Status code categorizing an advisory warning surfaced on an AI Search endpoint."
       }
     }
   }

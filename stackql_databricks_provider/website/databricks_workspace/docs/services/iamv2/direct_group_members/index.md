@@ -46,7 +46,12 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "external_id",
     "type": "string",
-    "description": "The external ID of the principal in Databricks."
+    "description": "The external ID of the principal in the customer's IdP."
+  },
+  {
+    "name": "group_id",
+    "type": "integer",
+    "description": "The internal ID of the group this member belongs to."
   },
   {
     "name": "principal_id",
@@ -76,7 +81,12 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "external_id",
     "type": "string",
-    "description": "The external ID of the principal in Databricks."
+    "description": "The external ID of the principal in the customer's IdP."
+  },
+  {
+    "name": "group_id",
+    "type": "integer",
+    "description": "The internal ID of the group this member belongs to."
   },
   {
     "name": "principal_id",
@@ -120,28 +130,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a provisioned direct member of a group.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists provisioned direct members of a group with their membership source (internal or from identity</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-direct_group_member"><code>direct_group_member</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
     <td></td>
     <td>Creates a group membership (assigns a principal to a group).</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-group_id"><code>group_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a group membership (unassigns a principal from a group).</td>
 </tr>
@@ -164,7 +174,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-group_id">
     <td><CopyableCode code="group_id" /></td>
@@ -176,15 +186,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>integer</code></td>
     <td>Required. Internal ID of the principal to be unassigned from the group.</td>
 </tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of members to return. The service may return fewer than this value. If not provided, defaults to 1000 (also the maximum allowed).</td>
+    <td>The maximum number of members to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
     <td><code>string</code></td>
-    <td>A page token, received from a previous ListDirectGroupMembersProxy call. Provide this to retrieve the subsequent page.</td>
+    <td>A page token from a previous list call. Provide this to retrieve the subsequent page.</td>
 </tr>
 </tbody>
 </table>
@@ -205,6 +220,7 @@ Gets a provisioned direct member of a group.
 ```sql
 SELECT
 external_id,
+group_id,
 principal_id,
 display_name,
 membership_source,
@@ -213,6 +229,7 @@ FROM databricks_workspace.iamv2.direct_group_members
 WHERE group_id = '{{ group_id }}' -- required
 AND principal_id = '{{ principal_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -223,6 +240,7 @@ Lists provisioned direct members of a group with their membership source (intern
 ```sql
 SELECT
 external_id,
+group_id,
 principal_id,
 display_name,
 membership_source,
@@ -230,6 +248,7 @@ principal_type
 FROM databricks_workspace.iamv2.direct_group_members
 WHERE group_id = '{{ group_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -253,16 +272,29 @@ Creates a group membership (assigns a principal to a group).
 
 ```sql
 INSERT INTO databricks_workspace.iamv2.direct_group_members (
-direct_group_member,
+principal_id,
+display_name,
+external_id,
 group_id,
-deployment_name
+membership_source,
+principal_type,
+group_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ direct_group_member }}' /* required */,
-'{{ group_id }}',
-'{{ deployment_name }}'
+{{ principal_id }} /* required */,
+'{{ display_name }}',
+'{{ external_id }}',
+{{ group_id }},
+'{{ membership_source }}',
+'{{ principal_type }}',
+{{ group_id }},
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 external_id,
+group_id,
 principal_id,
 display_name,
 membership_source,
@@ -281,15 +313,33 @@ principal_type
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the direct_group_members resource.
-    - name: direct_group_member
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the direct_group_members resource.
+    - name: principal_id
+      value: {{ principal_id }}
       description: |
-        Required. The group membership to create.
-      value:
-        principal_id: {{ principal_id }}
-        display_name: "{{ display_name }}"
-        external_id: "{{ external_id }}"
-        membership_source: "{{ membership_source }}"
-        principal_type: "{{ principal_type }}"
+        Internal ID of the principal in Databricks.
+    - name: display_name
+      value: "{{ display_name }}"
+      description: |
+        Display name of the principal.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        The external ID of the principal in the customer's IdP.
+    - name: group_id
+      value: {{ group_id }}
+      description: |
+        The internal ID of the group this member belongs to.
+    - name: membership_source
+      value: "{{ membership_source }}"
+      description: |
+        The source of group membership (internal or from identity provider).
+    - name: principal_type
+      value: "{{ principal_type }}"
+      description: |
+        The type of the principal (user/service principal/group).
 `}</CodeBlock>
 
 </TabItem>
@@ -313,6 +363,7 @@ DELETE FROM databricks_workspace.iamv2.direct_group_members
 WHERE group_id = '{{ group_id }}' --required
 AND principal_id = '{{ principal_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

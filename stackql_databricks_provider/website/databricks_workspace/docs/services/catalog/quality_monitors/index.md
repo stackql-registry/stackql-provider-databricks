@@ -280,42 +280,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors). Gets a monitor for</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-output_schema_name"><code>output_schema_name</code></a>, <a href="#parameter-assets_dir"><code>assets_dir</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-output_schema_name"><code>output_schema_name</code></a>, <a href="#parameter-assets_dir"><code>assets_dir</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors). Creates a new</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-output_schema_name"><code>output_schema_name</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-output_schema_name"><code>output_schema_name</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors). Updates a monitor</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors). Deletes a monitor</td>
 </tr>
 <tr>
     <td><a href="#cancel_refresh"><CopyableCode code="cancel_refresh" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-refresh_id"><code>refresh_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors). Cancels an</td>
 </tr>
 <tr>
     <td><a href="#regenerate_dashboard"><CopyableCode code="regenerate_dashboard" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-table_name"><code>table_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors). Regenerates the</td>
 </tr>
@@ -338,7 +338,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-refresh_id">
     <td><CopyableCode code="refresh_id" /></td>
@@ -349,6 +349,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="table_name" /></td>
     <td><code>string</code></td>
     <td>UC table name in format ``catalog.schema.table_name``. This field corresponds to the &#123;full_table_name_arg&#125; arg in the endpoint path.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -388,6 +393,7 @@ time_series
 FROM databricks_workspace.catalog.quality_monitors
 WHERE table_name = '{{ table_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -424,7 +430,8 @@ snapshot,
 time_series,
 warehouse_id,
 table_name,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ output_schema_name }}' /* required */,
@@ -442,7 +449,8 @@ SELECT
 '{{ time_series }}',
 '{{ warehouse_id }}',
 '{{ table_name }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 dashboard_id,
 baseline_table_name,
@@ -475,6 +483,9 @@ time_series
       description: Required parameter for the quality_monitors resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the quality_monitors resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the quality_monitors resource.
     - name: output_schema_name
       value: "{{ output_schema_name }}"
@@ -593,6 +604,7 @@ time_series = '{{ time_series }}'
 WHERE 
 table_name = '{{ table_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND output_schema_name = '{{ output_schema_name }}' --required
 RETURNING
 dashboard_id,
@@ -634,6 +646,7 @@ Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors
 DELETE FROM databricks_workspace.catalog.quality_monitors
 WHERE table_name = '{{ table_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -657,7 +670,8 @@ Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors
 EXEC databricks_workspace.catalog.quality_monitors.cancel_refresh 
 @table_name='{{ table_name }}' --required, 
 @refresh_id='{{ refresh_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -668,7 +682,8 @@ Deprecated: Use Data Quality Monitors API instead (/api/data-quality/v1/monitors
 ```sql
 EXEC databricks_workspace.catalog.quality_monitors.regenerate_dashboard 
 @table_name='{{ table_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "warehouse_id": "{{ warehouse_id }}"

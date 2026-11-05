@@ -43,6 +43,11 @@ The following fields are returned by this view:
 </thead>
 <tbody>
 <tr>
+    <td><CopyableCode code="deployment_name" /></td>
+    <td><CopyableCode code="string" /></td>
+    <td>Workspace deployment name the settings belong to.</td>
+</tr>
+<tr>
     <td><CopyableCode code="key" /></td>
     <td><CopyableCode code="string" /></td>
     <td>The name of the workspace setting (only non-null values are included).</td>
@@ -80,6 +85,7 @@ The following parameters are required by this view:
 
 ```sql
 SELECT
+  deployment_name,
   key,
   value
 FROM databricks_workspace.settings.vw_all_settings
@@ -98,122 +104,118 @@ values={[
 <TabItem value="Sqlite3">
 
 ```sql
-SELECT key, value
-FROM (
-  SELECT
-    json_object(
-    'enableWebTerminal', enableWebTerminal,
-      'enableTokensConfig', enableTokensConfig,
-      'maxTokenLifetimeDays', maxTokenLifetimeDays,
-      'enableWorkspaceFilesystem', enableWorkspaceFilesystem,
-      'enableExportNotebook', enableExportNotebook,
-      'enableNotebookTableClipboard', enableNotebookTableClipboard,
-      'enableResultsDownloading', enableResultsDownloading,
-      'enableDcs', enableDcs,
-      'enableGp3', enableGp3,
-      'mlflowRunArtifactDownloadEnabled', mlflowRunArtifactDownloadEnabled,
-      'enableUploadDataUis', enableUploadDataUis,
-      'storeInteractiveNotebookResultsInCustomerAccount', storeInteractiveNotebookResultsInCustomerAccount,
-      'enableDeprecatedGlobalInitScripts', enableDeprecatedGlobalInitScripts,
-      'rStudioUserDefaultHomeBase', rStudioUserDefaultHomeBase,
-      'enforceUserIsolation', enforceUserIsolation,
-      'enableProjectsAllowList', enableProjectsAllowList,
-      'projectsAllowListPermissions', projectsAllowListPermissions,
-      'projectsAllowList', projectsAllowList,
-      'reposIpynbResultsExportPermissions', reposIpynbResultsExportPermissions,
-      'enableDbfsFileBrowser', enableDbfsFileBrowser,
-      'enableDatabricksAutologgingAdminConf', enableDatabricksAutologgingAdminConf,
-      'mlflowModelServingEndpointCreationEnabled', mlflowModelServingEndpointCreationEnabled,
-      'enableVerboseAuditLogs', enableVerboseAuditLogs,
-      'enableFileStoreEndpoint', enableFileStoreEndpoint,
-      'loginLogo', loginLogo,
-      'productName', productName,
-      'homePageLogo', homePageLogo,
-      'homePageLogoWidth', homePageLogoWidth,
-      'homePageWelcomeMessage', homePageWelcomeMessage,
-      'sidebarLogoText', sidebarLogoText,
-      'sidebarLogoActive', sidebarLogoActive,
-      'sidebarLogoInactive', sidebarLogoInactive,
-      'customReferences', customReferences,
-      'loginLogoWidth', loginLogoWidth,
-      'enforceWorkspaceViewAcls', enforceWorkspaceViewAcls,
-      'enforceClusterViewAcls', enforceClusterViewAcls,
-      'enableJobViewAcls', enableJobViewAcls,
-      'enableHlsRuntime', enableHlsRuntime,
-      'enableEnforceImdsV2', enableEnforceImdsV2,
-      'enableJobsEmailsV2', enableJobsEmailsV2,
-      'enableProjectTypeInWorkspace', enableProjectTypeInWorkspace,
-      'mlflowModelRegistryEmailNotificationsEnabled', mlflowModelRegistryEmailNotificationsEnabled,
-      'jobsListBackendPaginationEnabled', jobsListBackendPaginationEnabled,
-      'jobsListBackendPaginationOptOut', jobsListBackendPaginationOptOut
-    ) AS settings_object,
-    json_each.key,
-    json_each.value
-  FROM databricks_workspace.settings.workspace_config c,
-      json_each(settings_object)
-  WHERE keys='enableWebTerminal,enableTokensConfig,maxTokenLifetimeDays,enableWorkspaceFilesystem,enableExportNotebook,enableNotebookTableClipboard,enableResultsDownloading,enableDcs,enableGp3,mlflowRunArtifactDownloadEnabled,enableUploadDataUis,storeInteractiveNotebookResultsInCustomerAccount,enableDeprecatedGlobalInitScripts,rStudioUserDefaultHomeBase,enforceUserIsolation,enableProjectsAllowList,projectsAllowListPermissions,projectsAllowList,reposIpynbResultsExportPermissions,enableDbfsFileBrowser,enableDatabricksAutologgingAdminConf,mlflowModelServingEndpointCreationEnabled,enableVerboseAuditLogs,enableFileStoreEndpoint,loginLogo,productName,homePageLogo,homePageLogoWidth,homePageWelcomeMessage,sidebarLogoText,sidebarLogoActive,sidebarLogoInactive,customReferences,loginLogoWidth,enforceWorkspaceViewAcls,enforceClusterViewAcls,enableJobViewAcls,enableHlsRuntime,enableEnforceImdsV2,enableJobsEmailsV2,enableProjectTypeInWorkspace,mlflowModelRegistryEmailNotificationsEnabled,jobsListBackendPaginationEnabled,jobsListBackendPaginationOptOut'
-    AND deployment_name='{{ deployment_name }}'
-) t WHERE value IS NOT NULL;
+SELECT
+  c.deployment_name,
+  je.key,
+  je.value
+FROM databricks_workspace.settings.workspace_config c,
+  json_each(json_object(
+    'enableWebTerminal', c.enableWebTerminal,
+    'enableTokensConfig', c.enableTokensConfig,
+    'maxTokenLifetimeDays', c.maxTokenLifetimeDays,
+    'enableWorkspaceFilesystem', c.enableWorkspaceFilesystem,
+    'enableExportNotebook', c.enableExportNotebook,
+    'enableNotebookTableClipboard', c.enableNotebookTableClipboard,
+    'enableResultsDownloading', c.enableResultsDownloading,
+    'enableDcs', c.enableDcs,
+    'enableGp3', c.enableGp3,
+    'mlflowRunArtifactDownloadEnabled', c.mlflowRunArtifactDownloadEnabled,
+    'enableUploadDataUis', c.enableUploadDataUis,
+    'storeInteractiveNotebookResultsInCustomerAccount', c.storeInteractiveNotebookResultsInCustomerAccount,
+    'enableDeprecatedGlobalInitScripts', c.enableDeprecatedGlobalInitScripts,
+    'rStudioUserDefaultHomeBase', c.rStudioUserDefaultHomeBase,
+    'enforceUserIsolation', c.enforceUserIsolation,
+    'enableProjectsAllowList', c.enableProjectsAllowList,
+    'projectsAllowListPermissions', c.projectsAllowListPermissions,
+    'projectsAllowList', c.projectsAllowList,
+    'reposIpynbResultsExportPermissions', c.reposIpynbResultsExportPermissions,
+    'enableDbfsFileBrowser', c.enableDbfsFileBrowser,
+    'enableDatabricksAutologgingAdminConf', c.enableDatabricksAutologgingAdminConf,
+    'mlflowModelServingEndpointCreationEnabled', c.mlflowModelServingEndpointCreationEnabled,
+    'enableVerboseAuditLogs', c.enableVerboseAuditLogs,
+    'enableFileStoreEndpoint', c.enableFileStoreEndpoint,
+    'loginLogo', c.loginLogo,
+    'productName', c.productName,
+    'homePageLogo', c.homePageLogo,
+    'homePageLogoWidth', c.homePageLogoWidth,
+    'homePageWelcomeMessage', c.homePageWelcomeMessage,
+    'sidebarLogoText', c.sidebarLogoText,
+    'sidebarLogoActive', c.sidebarLogoActive,
+    'sidebarLogoInactive', c.sidebarLogoInactive,
+    'customReferences', c.customReferences,
+    'loginLogoWidth', c.loginLogoWidth,
+    'enforceWorkspaceViewAcls', c.enforceWorkspaceViewAcls,
+    'enforceClusterViewAcls', c.enforceClusterViewAcls,
+    'enableJobViewAcls', c.enableJobViewAcls,
+    'enableHlsRuntime', c.enableHlsRuntime,
+    'enableEnforceImdsV2', c.enableEnforceImdsV2,
+    'enableJobsEmailsV2', c.enableJobsEmailsV2,
+    'enableProjectTypeInWorkspace', c.enableProjectTypeInWorkspace,
+    'mlflowModelRegistryEmailNotificationsEnabled', c.mlflowModelRegistryEmailNotificationsEnabled,
+    'jobsListBackendPaginationEnabled', c.jobsListBackendPaginationEnabled,
+    'jobsListBackendPaginationOptOut', c.jobsListBackendPaginationOptOut
+  )) je
+WHERE c.keys = 'enableWebTerminal,enableTokensConfig,maxTokenLifetimeDays,enableWorkspaceFilesystem,enableExportNotebook,enableNotebookTableClipboard,enableResultsDownloading,enableDcs,enableGp3,mlflowRunArtifactDownloadEnabled,enableUploadDataUis,storeInteractiveNotebookResultsInCustomerAccount,enableDeprecatedGlobalInitScripts,rStudioUserDefaultHomeBase,enforceUserIsolation,enableProjectsAllowList,projectsAllowListPermissions,projectsAllowList,reposIpynbResultsExportPermissions,enableDbfsFileBrowser,enableDatabricksAutologgingAdminConf,mlflowModelServingEndpointCreationEnabled,enableVerboseAuditLogs,enableFileStoreEndpoint,loginLogo,productName,homePageLogo,homePageLogoWidth,homePageWelcomeMessage,sidebarLogoText,sidebarLogoActive,sidebarLogoInactive,customReferences,loginLogoWidth,enforceWorkspaceViewAcls,enforceClusterViewAcls,enableJobViewAcls,enableHlsRuntime,enableEnforceImdsV2,enableJobsEmailsV2,enableProjectTypeInWorkspace,mlflowModelRegistryEmailNotificationsEnabled,jobsListBackendPaginationEnabled,jobsListBackendPaginationOptOut'
+  AND je.value IS NOT NULL
 ```
 
 </TabItem>
 <TabItem value="Postgres">
 
 ```sql
-SELECT key, value
-FROM (
-  SELECT
-    (jsonb_build_object(
-      'enableWebTerminal', enableWebTerminal,
-      'enableTokensConfig', enableTokensConfig,
-      'maxTokenLifetimeDays', maxTokenLifetimeDays,
-      'enableWorkspaceFilesystem', enableWorkspaceFilesystem,
-      'enableExportNotebook', enableExportNotebook,
-      'enableNotebookTableClipboard', enableNotebookTableClipboard,
-      'enableResultsDownloading', enableResultsDownloading,
-      'enableDcs', enableDcs,
-      'enableGp3', enableGp3,
-      'mlflowRunArtifactDownloadEnabled', mlflowRunArtifactDownloadEnabled,
-      'enableUploadDataUis', enableUploadDataUis,
-      'storeInteractiveNotebookResultsInCustomerAccount', storeInteractiveNotebookResultsInCustomerAccount,
-      'enableDeprecatedGlobalInitScripts', enableDeprecatedGlobalInitScripts,
-      'rStudioUserDefaultHomeBase', rStudioUserDefaultHomeBase,
-      'enforceUserIsolation', enforceUserIsolation,
-      'enableProjectsAllowList', enableProjectsAllowList,
-      'projectsAllowListPermissions', projectsAllowListPermissions,
-      'projectsAllowList', projectsAllowList,
-      'reposIpynbResultsExportPermissions', reposIpynbResultsExportPermissions,
-      'enableDbfsFileBrowser', enableDbfsFileBrowser,
-      'enableDatabricksAutologgingAdminConf', enableDatabricksAutologgingAdminConf,
-      'mlflowModelServingEndpointCreationEnabled', mlflowModelServingEndpointCreationEnabled,
-      'enableVerboseAuditLogs', enableVerboseAuditLogs,
-      'enableFileStoreEndpoint', enableFileStoreEndpoint,
-      'loginLogo', loginLogo,
-      'productName', productName,
-      'homePageLogo', homePageLogo,
-      'homePageLogoWidth', homePageLogoWidth,
-      'homePageWelcomeMessage', homePageWelcomeMessage,
-      'sidebarLogoText', sidebarLogoText,
-      'sidebarLogoActive', sidebarLogoActive,
-      'sidebarLogoInactive', sidebarLogoInactive,
-      'customReferences', customReferences,
-      'loginLogoWidth', loginLogoWidth,
-      'enforceWorkspaceViewAcls', enforceWorkspaceViewAcls,
-      'enforceClusterViewAcls', enforceClusterViewAcls,
-      'enableJobViewAcls', enableJobViewAcls,
-      'enableHlsRuntime', enableHlsRuntime,
-      'enableEnforceImdsV2', enableEnforceImdsV2,
-      'enableJobsEmailsV2', enableJobsEmailsV2,
-      'enableProjectTypeInWorkspace', enableProjectTypeInWorkspace,
-      'mlflowModelRegistryEmailNotificationsEnabled', mlflowModelRegistryEmailNotificationsEnabled,
-        'jobsListBackendPaginationEnabled', jobsListBackendPaginationEnabled,
-      'jobsListBackendPaginationOptOut', jobsListBackendPaginationOptOut
-    )) AS settings_object
-  FROM databricks_workspace.settings.workspace_config c
-  WHERE keys='enableWebTerminal,enableTokensConfig,maxTokenLifetimeDays,enableWorkspaceFilesystem,enableExportNotebook,enableNotebookTableClipboard,enableResultsDownloading,enableDcs,enableGp3,mlflowRunArtifactDownloadEnabled,enableUploadDataUis,storeInteractiveNotebookResultsInCustomerAccount,enableDeprecatedGlobalInitScripts,rStudioUserDefaultHomeBase,enforceUserIsolation,enableProjectsAllowList,projectsAllowListPermissions,projectsAllowList,reposIpynbResultsExportPermissions,enableDbfsFileBrowser,enableDatabricksAutologgingAdminConf,mlflowModelServingEndpointCreationEnabled,enableVerboseAuditLogs,enableFileStoreEndpoint,loginLogo,productName,homePageLogo,homePageLogoWidth,homePageWelcomeMessage,sidebarLogoText,sidebarLogoActive,sidebarLogoInactive,customReferences,loginLogoWidth,enforceWorkspaceViewAcls,enforceClusterViewAcls,enableJobViewAcls,enableHlsRuntime,enableEnforceImdsV2,enableJobsEmailsV2,enableProjectTypeInWorkspace,mlflowModelRegistryEmailNotificationsEnabled,jobsListBackendPaginationEnabled,jobsListBackendPaginationOptOut'
-    AND deployment_name='{{ deployment_name }}'
-) t, LATERAL jsonb_each_text(t.settings_object)
-WHERE value IS NOT NULL;
+SELECT
+  c.deployment_name,
+  je.key,
+  je.value
+FROM databricks_workspace.settings.workspace_config c,
+  jsonb_each_text(jsonb_build_object(
+    'enableWebTerminal', c.enableWebTerminal,
+    'enableTokensConfig', c.enableTokensConfig,
+    'maxTokenLifetimeDays', c.maxTokenLifetimeDays,
+    'enableWorkspaceFilesystem', c.enableWorkspaceFilesystem,
+    'enableExportNotebook', c.enableExportNotebook,
+    'enableNotebookTableClipboard', c.enableNotebookTableClipboard,
+    'enableResultsDownloading', c.enableResultsDownloading,
+    'enableDcs', c.enableDcs,
+    'enableGp3', c.enableGp3,
+    'mlflowRunArtifactDownloadEnabled', c.mlflowRunArtifactDownloadEnabled,
+    'enableUploadDataUis', c.enableUploadDataUis,
+    'storeInteractiveNotebookResultsInCustomerAccount', c.storeInteractiveNotebookResultsInCustomerAccount,
+    'enableDeprecatedGlobalInitScripts', c.enableDeprecatedGlobalInitScripts,
+    'rStudioUserDefaultHomeBase', c.rStudioUserDefaultHomeBase,
+    'enforceUserIsolation', c.enforceUserIsolation,
+    'enableProjectsAllowList', c.enableProjectsAllowList,
+    'projectsAllowListPermissions', c.projectsAllowListPermissions,
+    'projectsAllowList', c.projectsAllowList,
+    'reposIpynbResultsExportPermissions', c.reposIpynbResultsExportPermissions,
+    'enableDbfsFileBrowser', c.enableDbfsFileBrowser,
+    'enableDatabricksAutologgingAdminConf', c.enableDatabricksAutologgingAdminConf,
+    'mlflowModelServingEndpointCreationEnabled', c.mlflowModelServingEndpointCreationEnabled,
+    'enableVerboseAuditLogs', c.enableVerboseAuditLogs,
+    'enableFileStoreEndpoint', c.enableFileStoreEndpoint,
+    'loginLogo', c.loginLogo,
+    'productName', c.productName,
+    'homePageLogo', c.homePageLogo,
+    'homePageLogoWidth', c.homePageLogoWidth,
+    'homePageWelcomeMessage', c.homePageWelcomeMessage,
+    'sidebarLogoText', c.sidebarLogoText,
+    'sidebarLogoActive', c.sidebarLogoActive,
+    'sidebarLogoInactive', c.sidebarLogoInactive,
+    'customReferences', c.customReferences,
+    'loginLogoWidth', c.loginLogoWidth,
+    'enforceWorkspaceViewAcls', c.enforceWorkspaceViewAcls,
+    'enforceClusterViewAcls', c.enforceClusterViewAcls,
+    'enableJobViewAcls', c.enableJobViewAcls,
+    'enableHlsRuntime', c.enableHlsRuntime,
+    'enableEnforceImdsV2', c.enableEnforceImdsV2,
+    'enableJobsEmailsV2', c.enableJobsEmailsV2,
+    'enableProjectTypeInWorkspace', c.enableProjectTypeInWorkspace,
+    'mlflowModelRegistryEmailNotificationsEnabled', c.mlflowModelRegistryEmailNotificationsEnabled,
+    'jobsListBackendPaginationEnabled', c.jobsListBackendPaginationEnabled,
+    'jobsListBackendPaginationOptOut', c.jobsListBackendPaginationOptOut
+  )) je
+WHERE c.keys = 'enableWebTerminal,enableTokensConfig,maxTokenLifetimeDays,enableWorkspaceFilesystem,enableExportNotebook,enableNotebookTableClipboard,enableResultsDownloading,enableDcs,enableGp3,mlflowRunArtifactDownloadEnabled,enableUploadDataUis,storeInteractiveNotebookResultsInCustomerAccount,enableDeprecatedGlobalInitScripts,rStudioUserDefaultHomeBase,enforceUserIsolation,enableProjectsAllowList,projectsAllowListPermissions,projectsAllowList,reposIpynbResultsExportPermissions,enableDbfsFileBrowser,enableDatabricksAutologgingAdminConf,mlflowModelServingEndpointCreationEnabled,enableVerboseAuditLogs,enableFileStoreEndpoint,loginLogo,productName,homePageLogo,homePageLogoWidth,homePageWelcomeMessage,sidebarLogoText,sidebarLogoActive,sidebarLogoInactive,customReferences,loginLogoWidth,enforceWorkspaceViewAcls,enforceClusterViewAcls,enableJobViewAcls,enableHlsRuntime,enableEnforceImdsV2,enableJobsEmailsV2,enableProjectTypeInWorkspace,mlflowModelRegistryEmailNotificationsEnabled,jobsListBackendPaginationEnabled,jobsListBackendPaginationOptOut'
+  AND je.value IS NOT NULL
 ```
 
 </TabItem>

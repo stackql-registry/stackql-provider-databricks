@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(w.value, '$.warning_message') AS warning_message
 FROM databricks_account.provisioning.networks n,
      JSON_EACH(n.warning_messages) w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   w.value->>'warning_message' AS warning_message
 FROM databricks_account.provisioning.networks n,
      jsonb_array_elements(n.warning_messages::jsonb) AS w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

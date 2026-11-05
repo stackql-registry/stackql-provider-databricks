@@ -124,7 +124,6 @@ SELECT
   w.value AS binding_workspace_id
 FROM databricks_account.billing.budget_policy p,
      JSON_EACH(p.binding_workspace_ids) w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -139,7 +138,6 @@ SELECT
   w.value AS binding_workspace_id
 FROM databricks_account.billing.budget_policy p,
      jsonb_array_elements(p.binding_workspace_ids::jsonb) AS w
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

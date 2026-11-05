@@ -166,7 +166,6 @@ SELECT
   a.value AS ip_address
 FROM databricks_account.settings.account_ip_access_lists l,
      JSON_EACH(l.ip_addresses) a
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -187,7 +186,6 @@ SELECT
   a.value AS ip_address
 FROM databricks_account.settings.account_ip_access_lists l,
      jsonb_array_elements(l.ip_addresses::jsonb) AS a
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

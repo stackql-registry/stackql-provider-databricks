@@ -79,28 +79,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>List the instance profiles that the calling user can use to launch a cluster.</td>
 </tr>
 <tr>
     <td><a href="#add"><CopyableCode code="add" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-instance_profile_arn"><code>instance_profile_arn</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-instance_profile_arn"><code>instance_profile_arn</code></a></td>
     <td></td>
     <td>Registers an instance profile in Databricks. In the UI, you can then give users the permission to use</td>
 </tr>
 <tr>
     <td><a href="#edit"><CopyableCode code="edit" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-instance_profile_arn"><code>instance_profile_arn</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-instance_profile_arn"><code>instance_profile_arn</code></a></td>
     <td></td>
     <td>The only supported field to change is the optional IAM role ARN associated with the instance profile.</td>
 </tr>
 <tr>
     <td><a href="#remove"><CopyableCode code="remove" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Remove the instance profile with the provided ARN. Existing clusters with this instance profile will</td>
 </tr>
@@ -123,7 +123,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -147,6 +152,7 @@ instance_profile_arn,
 is_meta_instance_profile
 FROM databricks_workspace.compute.instance_profiles
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -172,14 +178,16 @@ instance_profile_arn,
 iam_role_arn,
 is_meta_instance_profile,
 skip_validation,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ instance_profile_arn }}' /* required */,
 '{{ iam_role_arn }}',
 {{ is_meta_instance_profile }},
 {{ skip_validation }},
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 ;
 ```
 </TabItem>
@@ -190,6 +198,9 @@ SELECT
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the instance_profiles resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the instance_profiles resource.
     - name: instance_profile_arn
       value: "{{ instance_profile_arn }}"
@@ -233,6 +244,7 @@ iam_role_arn = '{{ iam_role_arn }}',
 is_meta_instance_profile = {{ is_meta_instance_profile }}
 WHERE 
 deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND instance_profile_arn = '{{ instance_profile_arn }}' --required;
 ```
 </TabItem>
@@ -254,6 +266,7 @@ Remove the instance profile with the provided ARN. Existing clusters with this i
 ```sql
 DELETE FROM databricks_workspace.compute.instance_profiles
 WHERE deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

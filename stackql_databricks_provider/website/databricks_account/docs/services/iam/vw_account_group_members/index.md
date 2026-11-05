@@ -138,7 +138,6 @@ SELECT
   JSON_EXTRACT(m.value, '$.type') AS member_type
 FROM databricks_account.iam.account_groups g,
      JSON_EACH(g.members) m
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -155,7 +154,6 @@ SELECT
   m.value->>'type' AS member_type
 FROM databricks_account.iam.account_groups g,
      jsonb_array_elements(g.members::jsonb) AS m
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

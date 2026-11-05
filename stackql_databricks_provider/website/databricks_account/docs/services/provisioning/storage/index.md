@@ -144,28 +144,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#storage_get"><CopyableCode code="storage_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-storage_configuration_id"><code>storage_configuration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-storage_configuration_id"><code>storage_configuration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a Databricks storage configuration for an account, both specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#storage_list"><CopyableCode code="storage_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Lists Databricks storage configurations for an account, specified by ID.</td>
 </tr>
 <tr>
     <td><a href="#storage_create"><CopyableCode code="storage_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-storage_configuration_name"><code>storage_configuration_name</code></a>, <a href="#parameter-root_bucket_info"><code>root_bucket_info</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-storage_configuration_name"><code>storage_configuration_name</code></a>, <a href="#parameter-root_bucket_info"><code>root_bucket_info</code></a></td>
     <td></td>
     <td>Creates a Databricks storage configuration for an account.</td>
 </tr>
 <tr>
     <td><a href="#storage_delete"><CopyableCode code="storage_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-storage_configuration_id"><code>storage_configuration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-storage_configuration_id"><code>storage_configuration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a Databricks storage configuration. You cannot delete a storage configuration that is</td>
 </tr>
@@ -185,6 +185,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -222,6 +227,7 @@ root_bucket_info
 FROM databricks_account.provisioning.storage
 WHERE account_id = '{{ account_id }}' -- required
 AND storage_configuration_id = '{{ storage_configuration_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -239,6 +245,7 @@ role_arn,
 root_bucket_info
 FROM databricks_account.provisioning.storage
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -263,13 +270,15 @@ INSERT INTO databricks_account.provisioning.storage (
 storage_configuration_name,
 root_bucket_info,
 role_arn,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ storage_configuration_name }}' /* required */,
 '{{ root_bucket_info }}' /* required */,
 '{{ role_arn }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 storage_configuration_id,
@@ -287,6 +296,9 @@ root_bucket_info
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the storage resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the storage resource.
     - name: storage_configuration_name
       value: "{{ storage_configuration_name }}"
@@ -323,6 +335,7 @@ Deletes a Databricks storage configuration. You cannot delete a storage configur
 DELETE FROM databricks_account.provisioning.storage
 WHERE account_id = '{{ account_id }}' --required
 AND storage_configuration_id = '{{ storage_configuration_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

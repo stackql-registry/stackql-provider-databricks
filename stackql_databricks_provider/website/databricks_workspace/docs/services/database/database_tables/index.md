@@ -56,11 +56,6 @@ The following fields are returned by `SELECT` queries:
     "name": "logical_database_name",
     "type": "string",
     "description": "Target Postgres database object (logical database) name for this table. When creating a table in a standard catalog, this field is required. In this scenario, specifying this field will allow targeting an arbitrary postgres database. Registration of database tables via /database/tables is currently only supported in standard catalogs."
-  },
-  {
-    "name": "table_serving_url",
-    "type": "string",
-    "description": "Data serving REST API URL for this table"
   }
 ]} />
 </TabItem>
@@ -84,21 +79,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a Database Table.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-table"><code>table</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Create a Database Table. Useful for registering pre-existing PG tables in UC. See</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a Database Table.</td>
 </tr>
@@ -121,12 +116,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td></td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -147,11 +147,11 @@ Get a Database Table.
 SELECT
 name,
 database_instance_name,
-logical_database_name,
-table_serving_url
+logical_database_name
 FROM databricks_workspace.database.database_tables
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -173,17 +173,22 @@ Create a Database Table. Useful for registering pre-existing PG tables in UC. Se
 
 ```sql
 INSERT INTO databricks_workspace.database.database_tables (
-table,
-deployment_name
-)
-SELECT 
-'{{ table }}' /* required */,
-'{{ deployment_name }}'
-RETURNING
 name,
 database_instance_name,
 logical_database_name,
-table_serving_url
+deployment_name,
+workspace_domain
+)
+SELECT 
+'{{ name }}' /* required */,
+'{{ database_instance_name }}',
+'{{ logical_database_name }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
+RETURNING
+name,
+database_instance_name,
+logical_database_name
 ;
 ```
 </TabItem>
@@ -195,12 +200,19 @@ table_serving_url
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the database_tables resource.
-    - name: table
-      value:
-        name: "{{ name }}"
-        database_instance_name: "{{ database_instance_name }}"
-        logical_database_name: "{{ logical_database_name }}"
-        table_serving_url: "{{ table_serving_url }}"
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the database_tables resource.
+    - name: name
+      value: "{{ name }}"
+    - name: database_instance_name
+      value: "{{ database_instance_name }}"
+      description: |
+        Name of the target database instance. This is required when creating database tables in standard catalogs. This is optional when creating database tables in registered catalogs. If this field is specified when creating database tables in registered catalogs, the database instance name MUST match that of the registered catalog (or the request will be rejected).
+    - name: logical_database_name
+      value: "{{ logical_database_name }}"
+      description: |
+        Target Postgres database object (logical database) name for this table. When creating a table in a standard catalog, this field is required. In this scenario, specifying this field will allow targeting an arbitrary postgres database. Registration of database tables via /database/tables is currently only supported in standard catalogs.
 `}</CodeBlock>
 
 </TabItem>
@@ -223,6 +235,7 @@ Delete a Database Table.
 DELETE FROM databricks_workspace.database.database_tables
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

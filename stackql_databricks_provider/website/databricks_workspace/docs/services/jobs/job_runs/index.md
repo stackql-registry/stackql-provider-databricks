@@ -148,9 +148,14 @@ The following fields are returned by `SELECT` queries:
     "description": "Description of the run"
   },
   {
+    "name": "duration_target",
+    "type": "string",
+    "description": "The window the run aims to finish within, in hours, for a Cost-optimized serverless run. Required only when ``performance_target`` is ``COST_OPTIMIZED``. Must be one of the supported values: ``NO_FLEXIBILITY``, ``4h``, ``12h``, ``24h``, ``72h``. ``NO_FLEXIBILITY`` means the run uses the default cost-optimized performance level without additional cost-saving optimizations."
+  },
+  {
     "name": "effective_performance_target",
     "type": "string",
-    "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. (PERFORMANCE_OPTIMIZED, STANDARD)"
+    "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``COST_OPTIMIZED``: Enables lower job costs by optimizing compute for your selected target duration time. Must provide a duration target. (PERFORMANCE_OPTIMIZED, STANDARD)"
   },
   {
     "name": "end_time",
@@ -160,7 +165,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "environment_variables",
     "type": "array",
-    "description": "Snapshot of ``JobSettings.environment_variables`` as it was at run launch — the full list of named env-var profiles the job defined. Per-profile resolved contents are not preserved here; only the customer-defined ``variables`` and ``files`` paths. To find which profile a given task ran with, look at ``RunTaskSettings.environment_variables_key``.",
+    "description": "Snapshot of ``JobSettings.environment_variables`` as it was at run launch — the full list of named environment-variable entries the job defined. To find which entry a given task ran with, look at ``RunTaskSettings.environment_variables_key``.",
     "children": [
       {
         "name": "environment_variables_key",
@@ -168,14 +173,21 @@ The following fields are returned by `SELECT` queries:
         "description": "Identifier for this entry. Must be unique within ``JobSettings.environment_variables``. Tasks reference it from ``TaskSettings.environment_variables_key``."
       },
       {
-        "name": "files",
-        "type": "array",
-        "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line must be exactly ``KEY=VALUE``. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no comments, no quoted values, no escape sequences, no variable interpolation. Any line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 1,048,576 bytes (1 MiB) per file on disk; maximum 131,072 bytes (128 KiB) per ``KEY=VALUE`` line combined. Caps are enforced at read time in jobs-runner — files exceeding the per-file cap, or lines exceeding the per-line cap, fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use these files to store raw secret values; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
-      },
-      {
-        "name": "variables",
+        "name": "spec",
         "type": "object",
-        "description": "Environment variables specified directly as key/value pairs (as opposed to ``files``, which are read from ``.env`` file paths). Maximum 100 entries. Each key must match ``^[A-Za-z_][A-Za-z0-9_]*$`` and be 1 to 256 characters long. Each value is up to 512 characters; larger values should be moved into a ``.env`` file referenced from ``files``. On a duplicate key, ``variables`` override values from any file in ``files``. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use this field to store a raw secret value; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
+        "description": "The environment variable specification.",
+        "children": [
+          {
+            "name": "files",
+            "type": "array",
+            "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line containing a variable must be exactly ``KEY=VALUE``. Empty and whitespace-only lines, and lines beginning with ``#``, are ignored. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no inline comments, no quoted values, no escape sequences, no variable interpolation. Any other line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 32,768 bytes (32 KiB) per file on disk; maximum 1,024 bytes (1 KiB) per ``KEY=VALUE`` line combined. Files or lines exceeding these limits fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file."
+          },
+          {
+            "name": "variables",
+            "type": "object",
+            "description": "Environment variables specified directly as key/value pairs. Maximum 20 entries. Each key must be 1 to 256 characters and match ``^[A-Za-z_][A-Za-z0-9_]*$``: it must start with an ASCII letter or underscore and contain only ASCII letters, digits, and underscores. Each value can be any Unicode string of up to 512 characters, including an empty string."
+          }
+        ]
       }
     ]
   },
@@ -278,123 +290,6 @@ The following fields are returned by `SELECT` queries:
         "description": "A unique name for the task. This field is used to refer to this task from other tasks. This field is required and must be unique within its parent job. On Update or Reset, this field is used to reference the tasks to be updated or reset."
       },
       {
-        "name": "agentic_task",
-        "type": "object",
-        "description": "Agentic Task for job-based multi-agent execution",
-        "children": [
-          {
-            "name": "context",
-            "type": "object",
-            "description": "Optional. Context input providing conversation history and instructions.",
-            "children": [
-              {
-                "name": "conversation_ids",
-                "type": "array",
-                "description": "Optional. Conversation IDs to load as context for the agent."
-              },
-              {
-                "name": "instructions",
-                "type": "array",
-                "description": "Optional. Additional instructions to guide the agent's behavior."
-              }
-            ]
-          },
-          {
-            "name": "genie_code_api",
-            "type": "object",
-            "description": "Inline Genie Code conversation driven by a single prompt. Mutually exclusive with the supervisor variants."
-          },
-          {
-            "name": "goal",
-            "type": "string",
-            "description": "Deprecated. Use ``input`` (field 7) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-          },
-          {
-            "name": "input",
-            "type": "string",
-            "description": "Optional. The user query / task input the agent must accomplish. Mirrors the OpenAI Responses API ``input`` field. Replaces the deprecated ``goal`` field; new callers should populate ``input`` going forward."
-          },
-          {
-            "name": "output_schema",
-            "type": "object",
-            "description": "Optional. JSON-Schema-style declaration of the structured output the agent should produce. Replaces the deprecated ``task_output_schema`` map; new callers should populate ``output_schema`` going forward.",
-            "children": [
-              {
-                "name": "properties",
-                "type": "object",
-                "description": "Map of property name to property definition."
-              }
-            ]
-          },
-          {
-            "name": "supervisor_agent",
-            "type": "object",
-            "description": "A Supervisor Agent that orchestrates sub-agents and tools, referenced by tile_id.",
-            "children": [
-              {
-                "name": "agent_id",
-                "type": "string",
-                "description": "Required. The ID of the supervisor agent (tile_id)."
-              }
-            ]
-          },
-          {
-            "name": "supervisor_api",
-            "type": "object",
-            "description": "Inlined Responses-API supervisor configuration (model + instructions + tools). Mutually exclusive with ``supervisor_agent``.",
-            "children": [
-              {
-                "name": "instructions",
-                "type": "string",
-                "description": "Optional. System instructions that guide how the supervisor routes queries across tools and synthesizes responses."
-              },
-              {
-                "name": "model",
-                "type": "string",
-                "description": "Required. Databricks-provided FMAPI model, e.g. \"databricks-claude-sonnet-4-5\"."
-              },
-              {
-                "name": "tools",
-                "type": "array",
-                "description": "Optional. The tools the inlined agent can use."
-              }
-            ]
-          },
-          {
-            "name": "task_output_schema",
-            "type": "object",
-            "description": "Deprecated. Use ``output_schema`` (field 8) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-          },
-          {
-            "name": "trace_destination",
-            "type": "object",
-            "description": "Optional. Where MLflow traces produced by this task run should be persisted. When unset, traces follow the workspace default destination.",
-            "children": [
-              {
-                "name": "catalog_name",
-                "type": "string",
-                "description": "Unity Catalog catalog name for the trace table."
-              },
-              {
-                "name": "experiment_id",
-                "type": "string",
-                "description": "MLflow experiment ID where traces are written."
-              },
-              {
-                "name": "schema_name",
-                "type": "string",
-                "description": "Unity Catalog schema name for the trace table."
-              },
-              {
-                "name": "table_prefix",
-                "type": "string",
-                "description": "Table-name prefix under ``&lt;catalog&gt;.&lt;schema&gt;``. Trace tables are created as ``&lt;catalog&gt;.&lt;schema&gt;.&lt;table_prefix&gt;_&lt;...&gt;``."
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "ai_runtime_task",
         "type": "object",
         "description": "The task runs a multi-gpu compute workload on Databricks AI Runtime. Specify the accelerator type and count, the command to run, and where the workload's code and MLflow output are stored.",
@@ -410,19 +305,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Deployment specs for this task. Exactly one deployment is currently supported (a single entry where every node runs the same command); this is a current-Preview constraint. Role-split workloads (driver + worker, parameter server, separate eval node, etc.) with multiple entries are the eventual intent but not yet supported.",
             "children": [
               {
-                "name": "command_path",
-                "type": "string",
-                "description": "Workspace path of the script to run on each node in this deployment. Upload the script to this path and supply the path here. When the task runs, the file at this path is run on each node; if it fails, the task fails with its exit code. Example script contents: Plain Python: python train.py --epochs 10 Multi-GPU via accelerate: accelerate launch train.py --config config.yaml Distributed via torchrun: torchrun --nproc_per_node=8 train.py"
-              },
-              {
                 "name": "compute",
                 "type": "object",
                 "description": "Compute resources allocated to each node in this deployment."
               },
               {
-                "name": "docker_image_url",
+                "name": "command_path",
                 "type": "string",
-                "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
+                "description": "Workspace path of the script to run on each node in this deployment. Upload the script to this path and supply the path here. When the task runs, the file at this path is run on each node; if it fails, the task fails with its exit code. Example script contents: .. code-block:: bash # Plain Python: python train.py --epochs 10 # Multi-GPU via accelerate: accelerate launch train.py --config config.yaml # Distributed via torchrun: torchrun --nproc_per_node=8 train.py"
               },
               {
                 "name": "name",
@@ -442,6 +332,11 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
           },
           {
+            "name": "mlflow_artifact_location",
+            "type": "string",
+            "description": "Optional root location for MLflow artifacts logged by the run. If this field isn't specified the default artifact location will be in dbfs i.e. ``dbfs:/databricks/mlflow-tracking/&lt;experiment_id&gt;/...`` If dbfs access is restricted or UC is preferred this can be a custom location in UC: ``dbfs:/Volumes/&lt;catalog&gt;/&lt;schema&gt;/&lt;volume&gt;/...`` The location should be unique for each experiment."
+          },
+          {
             "name": "mlflow_experiment_directory",
             "type": "string",
             "description": "Optional workspace directory under which the MLflow experiment named in ``experiment`` is created. Must start with ``/Workspace``. Set this when running as a service principal that has no default user directory; for regular users the experiment defaults to the user's home directory."
@@ -452,9 +347,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional display name for the MLflow run created under ``experiment``. If omitted, MLflow generates a default name."
           },
           {
-            "name": "parameters",
-            "type": "object",
-            "description": "Optional named parameters passed to each deployment's command. Keys are parameter names, values the corresponding arguments (for example, ``&#123;\"epochs\": \"3\", \"dataset\": \"s3://bucket/train\"&#125;``). Values may contain dynamic references such as ``&#123;&#123;job.trigger.time.iso_date&#125;&#125;`` or ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;``, which Jobs substitutes before execution (see ``AiRuntimeTaskResolvedValues.parameters`` in runs.proto)."
+            "name": "priority_class",
+            "type": "string",
+            "description": "Scheduling priority class for the workload. May only be set together with a pre-provisioned capacity reservation (a deployment's ``compute.provisioned_capacity_id``); it is rejected on a workload that runs on on-demand capacity. (BEST_EFFORT, CRITICAL, NORMAL)"
+          },
+          {
+            "name": "unity_catalog_image_path",
+            "type": "string",
+            "description": "Optional Unity Catalog path for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;catalog&#125;.&#123;schema&#125;.&#123;image_name&#125;:&#123;tag&#125;``"
           }
         ]
       },
@@ -616,9 +516,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional: subscription configuration for sending the dashboard snapshot.",
             "children": [
               {
+                "name": "attachment",
+                "type": "object",
+                "description": "The configuration for the files attached to the dashboard snapshot notification sent to<br />    subscribers. ``data_attachment`` describes the underlying data of dashboard widgets attached as<br />    data files, and ``page_attachment`` describes which dashboard pages are included in the attached<br />    PDF."
+              },
+              {
                 "name": "custom_subject",
                 "type": "string",
-                "description": ""
+                "description": "Optional: Allows users to specify a custom subject line on the email sent to subscribers."
               },
               {
                 "name": "paused",
@@ -750,7 +655,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "effective_performance_target",
         "type": "string",
-        "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. (PERFORMANCE_OPTIMIZED, STANDARD)"
+        "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``COST_OPTIMIZED``: Enables lower job costs by optimizing compute for your selected target duration time. Must provide a duration target. (PERFORMANCE_OPTIMIZED, STANDARD)"
       },
       {
         "name": "email_notifications",
@@ -807,12 +712,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "environment_key",
         "type": "string",
-        "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+        "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
       },
       {
         "name": "environment_variables_key",
         "type": "string",
-        "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``RunSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+        "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``RunSettings.environment_variables`` for one-time runs or preserved in ``Run.environment_variables`` for run snapshots. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
       },
       {
         "name": "execution_duration",
@@ -843,11 +748,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "task_key",
                 "type": "string",
                 "description": ""
-              },
-              {
-                "name": "agentic_task",
-                "type": "object",
-                "description": "Agentic Task for job-based multi-agent execution"
               },
               {
                 "name": "ai_runtime_task",
@@ -922,12 +822,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "environment_key",
                 "type": "string",
-                "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+                "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
               },
               {
                 "name": "environment_variables_key",
                 "type": "string",
-                "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+                "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
               },
               {
                 "name": "existing_cluster_id",
@@ -943,11 +843,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "gen_ai_compute_task",
                 "type": "object",
                 "description": "DEPRECATED — use ``AiRuntimeTask`` for all new BYOT multi-node GPU workloads (see<br />    ai_runtime_task.proto). ``AiRuntimeTask`` is the only supported BYOT task type for new<br />    workloads; this proto is retained only for AIR CLI (fka SGCLI) pywheel backwards compatibility<br />    and will be removed once the pywheel → databricks-cli migration completes (post- PuPr)."
-              },
-              {
-                "name": "genie_task",
-                "type": "object",
-                "description": "Runs a Genie or Genie Code agent task."
               },
               {
                 "name": "health",
@@ -1091,16 +986,6 @@ The following fields are returned by `SELECT` queries:
             "description": "Runtime image"
           },
           {
-            "name": "client_version",
-            "type": "string",
-            "description": "Version of the client (e.g., sgcli wheel) that submitted this task. Used by handlers to gate behavior or reject incompatible versions."
-          },
-          {
-            "name": "code_source_tar_path",
-            "type": "string",
-            "description": "Optional path to a tarball containing the user's workspace contents. When set, the entry script extracts the tarball into the working directory before running the training script, so the training script can import sibling modules and read packaged data files. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
-          },
-          {
             "name": "command",
             "type": "string",
             "description": "Command launcher to run the actual script, e.g. bash, python etc."
@@ -1128,24 +1013,9 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "docker_image_url",
-            "type": "string",
-            "description": "Optional custom Docker container image URL for running the training script. Format: organization/repository:tag (e.g., \"pytorch/pytorch:2.0.1\")"
-          },
-          {
             "name": "mlflow_experiment_name",
             "type": "string",
             "description": "Optional string containing the name of the MLflow experiment to log the run to. If name is not found, backend will create the mlflow experiment using the name."
-          },
-          {
-            "name": "mlflow_run_name",
-            "type": "string",
-            "description": "Optional name to assign to the MLflow run created for this task. If unset, MLflow auto-generates a name. Used alongside ``mlflow_experiment_name`` to identify the run in the MLflow UI."
-          },
-          {
-            "name": "requirements_yaml_path",
-            "type": "string",
-            "description": "Optional path to a requirements.yaml file describing pip dependencies to install before running the training script. Consumed by the entry script; format matches the runtime requirements.yaml convention used by sgcli. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
           },
           {
             "name": "source",
@@ -1166,18 +1036,6 @@ The following fields are returned by `SELECT` queries:
             "name": "yaml_parameters_file_path",
             "type": "string",
             "description": "Optional path to a YAML file containing model parameters passed to the training script."
-          }
-        ]
-      },
-      {
-        "name": "genie_task",
-        "type": "object",
-        "description": "Runs a Genie or Genie Code agent task.",
-        "children": [
-          {
-            "name": "configuration_id",
-            "type": "string",
-            "description": "Required. Resource name of the agent task configuration to run."
           }
         ]
       },
@@ -1386,48 +1244,6 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "incremental_refresh_config",
-            "type": "object",
-            "description": "Incremental refresh policy applied to all IMPORT mode tables in the model. Windows and mode are shared; partition columns are set per-table on PowerBiTable.",
-            "children": [
-              {
-                "name": "archive_window_granularity",
-                "type": "string",
-                "description": "Granularity for the archive window. Default: MONTH (REFRESH_GRANULARITY_DAY, REFRESH_GRANULARITY_MONTH, REFRESH_GRANULARITY_QUARTER, REFRESH_GRANULARITY_YEAR)"
-              },
-              {
-                "name": "archive_window_periods",
-                "type": "integer",
-                "description": "Number of periods in the archive window (total data retained). Must be greater than the refresh window when using the same granularity. Default: 3 (with YEAR granularity = 3 years)"
-              },
-              {
-                "name": "detect_data_changes",
-                "type": "boolean",
-                "description": "If true, Power BI will check whether data has changed in each partition before reimporting. Partitions with unchanged data are skipped, reducing refresh cost further. Uses MAX(datetime_column) as the change detector."
-              },
-              {
-                "name": "mode",
-                "type": "string",
-                "description": "The refresh policy mode. Hybrid adds a real-time DirectQuery partition for the most recent data; Import uses only batch-imported partitions. Default: HYBRID (REFRESH_POLICY_MODE_HYBRID, REFRESH_POLICY_MODE_IMPORT_ONLY)"
-              },
-              {
-                "name": "only_refresh_complete_periods",
-                "type": "boolean",
-                "description": "If true, only refresh complete periods (e.g., skip today's partial data)."
-              },
-              {
-                "name": "refresh_window_granularity",
-                "type": "string",
-                "description": "Granularity for the refresh window. Default: DAY (REFRESH_GRANULARITY_DAY, REFRESH_GRANULARITY_MONTH, REFRESH_GRANULARITY_QUARTER, REFRESH_GRANULARITY_YEAR)"
-              },
-              {
-                "name": "refresh_window_periods",
-                "type": "integer",
-                "description": "Number of periods in the rolling refresh window. Partitions within this window are re-imported on each refresh. Default: 1"
-              }
-            ]
-          },
-          {
             "name": "power_bi_model",
             "type": "object",
             "description": "The semantic model to update",
@@ -1475,11 +1291,6 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               },
               {
-                "name": "incremental_refresh_datetime_column",
-                "type": "string",
-                "description": "The datetime column used for incremental refresh partitioning on this table. e.g., \"order_date\", \"updated_at\" Only applicable when the task has incremental_refresh_config set and this table uses IMPORT storage mode."
-              },
-              {
                 "name": "name",
                 "type": "string",
                 "description": "The table name in Databricks"
@@ -1493,11 +1304,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "storage_mode",
                 "type": "string",
                 "description": "The Power BI storage mode of the table (DIRECT_QUERY, DUAL, IMPORT)"
-              },
-              {
-                "name": "table_type",
-                "type": "string",
-                "description": "The Unity Catalog table type of this table. When set, the server trusts it to classify the table during metric-view filtering and skips the server-side lookup. When unset, the server resolves the type on its own. (EXTERNAL, EXTERNAL_SHALLOW_CLONE, FOREIGN, MANAGED, MANAGED_SHALLOW_CLONE, MATERIALIZED_VIEW, METRIC_VIEW, STREAMING_TABLE, VIEW)"
               }
             ]
           },
@@ -1575,33 +1381,9 @@ The following fields are returned by `SELECT` queries:
         "description": "Parameter values including resolved references",
         "children": [
           {
-            "name": "agentic_task",
-            "type": "object",
-            "description": "Resolved values for an agentic task: the ``input`` prompt with parameter references such as<br />    ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;`` replaced by the concrete values produced by upstream<br />    tasks.",
-            "children": [
-              {
-                "name": "input",
-                "type": "string",
-                "description": "The fully-resolved ``input`` prompt sent to the agent."
-              }
-            ]
-          },
-          {
             "name": "ai_runtime_task",
             "type": "object",
-            "description": "Resolved values for an AI Runtime task — env_vars with ``&#123;&#123;tasks.&lt;key&gt;.values.&lt;name&gt;&#125;&#125;`` references substituted to concrete values before submission to the training service."
-          },
-          {
-            "name": "alert_task",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "parameters",
-                "type": "object",
-                "description": ""
-              }
-            ]
+            "description": "Resolved values for an AiRuntimeTask after dynamic-value substitution, so Jobs can expand<br />    ``&#123;&#123;tasks.&lt;key&gt;.values.&lt;name&gt;&#125;&#125;`` references before submission."
           },
           {
             "name": "condition_task",
@@ -2094,7 +1876,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "code",
                 "type": "string",
-                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
               },
               {
                 "name": "message",
@@ -2433,7 +2215,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "code",
                 "type": "string",
-                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
               },
               {
                 "name": "message",
@@ -2597,7 +2379,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "code",
             "type": "string",
-            "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+            "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
           },
           {
             "name": "message",
@@ -2624,123 +2406,6 @@ The following fields are returned by `SELECT` queries:
         "description": "A unique name for the task. This field is used to refer to this task from other tasks. This field is required and must be unique within its parent job. On Update or Reset, this field is used to reference the tasks to be updated or reset."
       },
       {
-        "name": "agentic_task",
-        "type": "object",
-        "description": "Agentic Task for job-based multi-agent execution",
-        "children": [
-          {
-            "name": "context",
-            "type": "object",
-            "description": "Optional. Context input providing conversation history and instructions.",
-            "children": [
-              {
-                "name": "conversation_ids",
-                "type": "array",
-                "description": "Optional. Conversation IDs to load as context for the agent."
-              },
-              {
-                "name": "instructions",
-                "type": "array",
-                "description": "Optional. Additional instructions to guide the agent's behavior."
-              }
-            ]
-          },
-          {
-            "name": "genie_code_api",
-            "type": "object",
-            "description": "Inline Genie Code conversation driven by a single prompt. Mutually exclusive with the supervisor variants."
-          },
-          {
-            "name": "goal",
-            "type": "string",
-            "description": "Deprecated. Use ``input`` (field 7) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-          },
-          {
-            "name": "input",
-            "type": "string",
-            "description": "Optional. The user query / task input the agent must accomplish. Mirrors the OpenAI Responses API ``input`` field. Replaces the deprecated ``goal`` field; new callers should populate ``input`` going forward."
-          },
-          {
-            "name": "output_schema",
-            "type": "object",
-            "description": "Optional. JSON-Schema-style declaration of the structured output the agent should produce. Replaces the deprecated ``task_output_schema`` map; new callers should populate ``output_schema`` going forward.",
-            "children": [
-              {
-                "name": "properties",
-                "type": "object",
-                "description": "Map of property name to property definition."
-              }
-            ]
-          },
-          {
-            "name": "supervisor_agent",
-            "type": "object",
-            "description": "A Supervisor Agent that orchestrates sub-agents and tools, referenced by tile_id.",
-            "children": [
-              {
-                "name": "agent_id",
-                "type": "string",
-                "description": "Required. The ID of the supervisor agent (tile_id)."
-              }
-            ]
-          },
-          {
-            "name": "supervisor_api",
-            "type": "object",
-            "description": "Inlined Responses-API supervisor configuration (model + instructions + tools). Mutually exclusive with ``supervisor_agent``.",
-            "children": [
-              {
-                "name": "instructions",
-                "type": "string",
-                "description": "Optional. System instructions that guide how the supervisor routes queries across tools and synthesizes responses."
-              },
-              {
-                "name": "model",
-                "type": "string",
-                "description": "Required. Databricks-provided FMAPI model, e.g. \"databricks-claude-sonnet-4-5\"."
-              },
-              {
-                "name": "tools",
-                "type": "array",
-                "description": "Optional. The tools the inlined agent can use."
-              }
-            ]
-          },
-          {
-            "name": "task_output_schema",
-            "type": "object",
-            "description": "Deprecated. Use ``output_schema`` (field 8) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-          },
-          {
-            "name": "trace_destination",
-            "type": "object",
-            "description": "Optional. Where MLflow traces produced by this task run should be persisted. When unset, traces follow the workspace default destination.",
-            "children": [
-              {
-                "name": "catalog_name",
-                "type": "string",
-                "description": "Unity Catalog catalog name for the trace table."
-              },
-              {
-                "name": "experiment_id",
-                "type": "string",
-                "description": "MLflow experiment ID where traces are written."
-              },
-              {
-                "name": "schema_name",
-                "type": "string",
-                "description": "Unity Catalog schema name for the trace table."
-              },
-              {
-                "name": "table_prefix",
-                "type": "string",
-                "description": "Table-name prefix under ``&lt;catalog&gt;.&lt;schema&gt;``. Trace tables are created as ``&lt;catalog&gt;.&lt;schema&gt;.&lt;table_prefix&gt;_&lt;...&gt;``."
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "ai_runtime_task",
         "type": "object",
         "description": "The task runs a multi-gpu compute workload on Databricks AI Runtime. Specify the accelerator type and count, the command to run, and where the workload's code and MLflow output are stored.",
@@ -2756,19 +2421,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Deployment specs for this task. Exactly one deployment is currently supported (a single entry where every node runs the same command); this is a current-Preview constraint. Role-split workloads (driver + worker, parameter server, separate eval node, etc.) with multiple entries are the eventual intent but not yet supported.",
             "children": [
               {
-                "name": "command_path",
-                "type": "string",
-                "description": "Workspace path of the script to run on each node in this deployment. Upload the script to this path and supply the path here. When the task runs, the file at this path is run on each node; if it fails, the task fails with its exit code. Example script contents: Plain Python: python train.py --epochs 10 Multi-GPU via accelerate: accelerate launch train.py --config config.yaml Distributed via torchrun: torchrun --nproc_per_node=8 train.py"
-              },
-              {
                 "name": "compute",
                 "type": "object",
                 "description": "Compute resources allocated to each node in this deployment."
               },
               {
-                "name": "docker_image_url",
+                "name": "command_path",
                 "type": "string",
-                "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
+                "description": "Workspace path of the script to run on each node in this deployment. Upload the script to this path and supply the path here. When the task runs, the file at this path is run on each node; if it fails, the task fails with its exit code. Example script contents: .. code-block:: bash # Plain Python: python train.py --epochs 10 # Multi-GPU via accelerate: accelerate launch train.py --config config.yaml # Distributed via torchrun: torchrun --nproc_per_node=8 train.py"
               },
               {
                 "name": "name",
@@ -2788,6 +2448,11 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
           },
           {
+            "name": "mlflow_artifact_location",
+            "type": "string",
+            "description": "Optional root location for MLflow artifacts logged by the run. If this field isn't specified the default artifact location will be in dbfs i.e. ``dbfs:/databricks/mlflow-tracking/&lt;experiment_id&gt;/...`` If dbfs access is restricted or UC is preferred this can be a custom location in UC: ``dbfs:/Volumes/&lt;catalog&gt;/&lt;schema&gt;/&lt;volume&gt;/...`` The location should be unique for each experiment."
+          },
+          {
             "name": "mlflow_experiment_directory",
             "type": "string",
             "description": "Optional workspace directory under which the MLflow experiment named in ``experiment`` is created. Must start with ``/Workspace``. Set this when running as a service principal that has no default user directory; for regular users the experiment defaults to the user's home directory."
@@ -2798,9 +2463,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional display name for the MLflow run created under ``experiment``. If omitted, MLflow generates a default name."
           },
           {
-            "name": "parameters",
-            "type": "object",
-            "description": "Optional named parameters passed to each deployment's command. Keys are parameter names, values the corresponding arguments (for example, ``&#123;\"epochs\": \"3\", \"dataset\": \"s3://bucket/train\"&#125;``). Values may contain dynamic references such as ``&#123;&#123;job.trigger.time.iso_date&#125;&#125;`` or ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;``, which Jobs substitutes before execution (see ``AiRuntimeTaskResolvedValues.parameters`` in runs.proto)."
+            "name": "priority_class",
+            "type": "string",
+            "description": "Scheduling priority class for the workload. May only be set together with a pre-provisioned capacity reservation (a deployment's ``compute.provisioned_capacity_id``); it is rejected on a workload that runs on on-demand capacity. (BEST_EFFORT, CRITICAL, NORMAL)"
+          },
+          {
+            "name": "unity_catalog_image_path",
+            "type": "string",
+            "description": "Optional Unity Catalog path for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;catalog&#125;.&#123;schema&#125;.&#123;image_name&#125;:&#123;tag&#125;``"
           }
         ]
       },
@@ -2962,9 +2632,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional: subscription configuration for sending the dashboard snapshot.",
             "children": [
               {
+                "name": "attachment",
+                "type": "object",
+                "description": "The configuration for the files attached to the dashboard snapshot notification sent to<br />    subscribers. ``data_attachment`` describes the underlying data of dashboard widgets attached as<br />    data files, and ``page_attachment`` describes which dashboard pages are included in the attached<br />    PDF."
+              },
+              {
                 "name": "custom_subject",
                 "type": "string",
-                "description": ""
+                "description": "Optional: Allows users to specify a custom subject line on the email sent to subscribers."
               },
               {
                 "name": "paused",
@@ -3096,7 +2771,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "effective_performance_target",
         "type": "string",
-        "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. (PERFORMANCE_OPTIMIZED, STANDARD)"
+        "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``COST_OPTIMIZED``: Enables lower job costs by optimizing compute for your selected target duration time. Must provide a duration target. (PERFORMANCE_OPTIMIZED, STANDARD)"
       },
       {
         "name": "email_notifications",
@@ -3153,12 +2828,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "environment_key",
         "type": "string",
-        "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+        "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
       },
       {
         "name": "environment_variables_key",
         "type": "string",
-        "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``RunSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+        "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``RunSettings.environment_variables`` for one-time runs or preserved in ``Run.environment_variables`` for run snapshots. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
       },
       {
         "name": "execution_duration",
@@ -3189,11 +2864,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "task_key",
                 "type": "string",
                 "description": ""
-              },
-              {
-                "name": "agentic_task",
-                "type": "object",
-                "description": "Agentic Task for job-based multi-agent execution"
               },
               {
                 "name": "ai_runtime_task",
@@ -3268,12 +2938,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "environment_key",
                 "type": "string",
-                "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+                "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
               },
               {
                 "name": "environment_variables_key",
                 "type": "string",
-                "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+                "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
               },
               {
                 "name": "existing_cluster_id",
@@ -3289,11 +2959,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "gen_ai_compute_task",
                 "type": "object",
                 "description": "DEPRECATED — use ``AiRuntimeTask`` for all new BYOT multi-node GPU workloads (see<br />    ai_runtime_task.proto). ``AiRuntimeTask`` is the only supported BYOT task type for new<br />    workloads; this proto is retained only for AIR CLI (fka SGCLI) pywheel backwards compatibility<br />    and will be removed once the pywheel → databricks-cli migration completes (post- PuPr)."
-              },
-              {
-                "name": "genie_task",
-                "type": "object",
-                "description": "Runs a Genie or Genie Code agent task."
               },
               {
                 "name": "health",
@@ -3437,16 +3102,6 @@ The following fields are returned by `SELECT` queries:
             "description": "Runtime image"
           },
           {
-            "name": "client_version",
-            "type": "string",
-            "description": "Version of the client (e.g., sgcli wheel) that submitted this task. Used by handlers to gate behavior or reject incompatible versions."
-          },
-          {
-            "name": "code_source_tar_path",
-            "type": "string",
-            "description": "Optional path to a tarball containing the user's workspace contents. When set, the entry script extracts the tarball into the working directory before running the training script, so the training script can import sibling modules and read packaged data files. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
-          },
-          {
             "name": "command",
             "type": "string",
             "description": "Command launcher to run the actual script, e.g. bash, python etc."
@@ -3474,24 +3129,9 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "docker_image_url",
-            "type": "string",
-            "description": "Optional custom Docker container image URL for running the training script. Format: organization/repository:tag (e.g., \"pytorch/pytorch:2.0.1\")"
-          },
-          {
             "name": "mlflow_experiment_name",
             "type": "string",
             "description": "Optional string containing the name of the MLflow experiment to log the run to. If name is not found, backend will create the mlflow experiment using the name."
-          },
-          {
-            "name": "mlflow_run_name",
-            "type": "string",
-            "description": "Optional name to assign to the MLflow run created for this task. If unset, MLflow auto-generates a name. Used alongside ``mlflow_experiment_name`` to identify the run in the MLflow UI."
-          },
-          {
-            "name": "requirements_yaml_path",
-            "type": "string",
-            "description": "Optional path to a requirements.yaml file describing pip dependencies to install before running the training script. Consumed by the entry script; format matches the runtime requirements.yaml convention used by sgcli. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
           },
           {
             "name": "source",
@@ -3512,18 +3152,6 @@ The following fields are returned by `SELECT` queries:
             "name": "yaml_parameters_file_path",
             "type": "string",
             "description": "Optional path to a YAML file containing model parameters passed to the training script."
-          }
-        ]
-      },
-      {
-        "name": "genie_task",
-        "type": "object",
-        "description": "Runs a Genie or Genie Code agent task.",
-        "children": [
-          {
-            "name": "configuration_id",
-            "type": "string",
-            "description": "Required. Resource name of the agent task configuration to run."
           }
         ]
       },
@@ -3732,48 +3360,6 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "incremental_refresh_config",
-            "type": "object",
-            "description": "Incremental refresh policy applied to all IMPORT mode tables in the model. Windows and mode are shared; partition columns are set per-table on PowerBiTable.",
-            "children": [
-              {
-                "name": "archive_window_granularity",
-                "type": "string",
-                "description": "Granularity for the archive window. Default: MONTH (REFRESH_GRANULARITY_DAY, REFRESH_GRANULARITY_MONTH, REFRESH_GRANULARITY_QUARTER, REFRESH_GRANULARITY_YEAR)"
-              },
-              {
-                "name": "archive_window_periods",
-                "type": "integer",
-                "description": "Number of periods in the archive window (total data retained). Must be greater than the refresh window when using the same granularity. Default: 3 (with YEAR granularity = 3 years)"
-              },
-              {
-                "name": "detect_data_changes",
-                "type": "boolean",
-                "description": "If true, Power BI will check whether data has changed in each partition before reimporting. Partitions with unchanged data are skipped, reducing refresh cost further. Uses MAX(datetime_column) as the change detector."
-              },
-              {
-                "name": "mode",
-                "type": "string",
-                "description": "The refresh policy mode. Hybrid adds a real-time DirectQuery partition for the most recent data; Import uses only batch-imported partitions. Default: HYBRID (REFRESH_POLICY_MODE_HYBRID, REFRESH_POLICY_MODE_IMPORT_ONLY)"
-              },
-              {
-                "name": "only_refresh_complete_periods",
-                "type": "boolean",
-                "description": "If true, only refresh complete periods (e.g., skip today's partial data)."
-              },
-              {
-                "name": "refresh_window_granularity",
-                "type": "string",
-                "description": "Granularity for the refresh window. Default: DAY (REFRESH_GRANULARITY_DAY, REFRESH_GRANULARITY_MONTH, REFRESH_GRANULARITY_QUARTER, REFRESH_GRANULARITY_YEAR)"
-              },
-              {
-                "name": "refresh_window_periods",
-                "type": "integer",
-                "description": "Number of periods in the rolling refresh window. Partitions within this window are re-imported on each refresh. Default: 1"
-              }
-            ]
-          },
-          {
             "name": "power_bi_model",
             "type": "object",
             "description": "The semantic model to update",
@@ -3821,11 +3407,6 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               },
               {
-                "name": "incremental_refresh_datetime_column",
-                "type": "string",
-                "description": "The datetime column used for incremental refresh partitioning on this table. e.g., \"order_date\", \"updated_at\" Only applicable when the task has incremental_refresh_config set and this table uses IMPORT storage mode."
-              },
-              {
                 "name": "name",
                 "type": "string",
                 "description": "The table name in Databricks"
@@ -3839,11 +3420,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "storage_mode",
                 "type": "string",
                 "description": "The Power BI storage mode of the table (DIRECT_QUERY, DUAL, IMPORT)"
-              },
-              {
-                "name": "table_type",
-                "type": "string",
-                "description": "The Unity Catalog table type of this table. When set, the server trusts it to classify the table during metric-view filtering and skips the server-side lookup. When unset, the server resolves the type on its own. (EXTERNAL, EXTERNAL_SHALLOW_CLONE, FOREIGN, MANAGED, MANAGED_SHALLOW_CLONE, MATERIALIZED_VIEW, METRIC_VIEW, STREAMING_TABLE, VIEW)"
               }
             ]
           },
@@ -3921,33 +3497,9 @@ The following fields are returned by `SELECT` queries:
         "description": "Parameter values including resolved references",
         "children": [
           {
-            "name": "agentic_task",
-            "type": "object",
-            "description": "Resolved values for an agentic task: the ``input`` prompt with parameter references such as<br />    ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;`` replaced by the concrete values produced by upstream<br />    tasks.",
-            "children": [
-              {
-                "name": "input",
-                "type": "string",
-                "description": "The fully-resolved ``input`` prompt sent to the agent."
-              }
-            ]
-          },
-          {
             "name": "ai_runtime_task",
             "type": "object",
-            "description": "Resolved values for an AI Runtime task — env_vars with ``&#123;&#123;tasks.&lt;key&gt;.values.&lt;name&gt;&#125;&#125;`` references substituted to concrete values before submission to the training service."
-          },
-          {
-            "name": "alert_task",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "parameters",
-                "type": "object",
-                "description": ""
-              }
-            ]
+            "description": "Resolved values for an AiRuntimeTask after dynamic-value substitution, so Jobs can expand<br />    ``&#123;&#123;tasks.&lt;key&gt;.values.&lt;name&gt;&#125;&#125;`` references before submission."
           },
           {
             "name": "condition_task",
@@ -4440,7 +3992,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "code",
                 "type": "string",
-                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
               },
               {
                 "name": "message",
@@ -4557,7 +4109,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "trigger",
     "type": "string",
-    "description": "The type of trigger that fired this run.<br /><br />- ``PERIODIC``: Schedules that periodically trigger runs, such as a cron scheduler.<br />- ``ONE_TIME``: One time triggers that fire a single run. This occurs you triggered a single run<br />  on demand through the UI or the API.<br />- ``RETRY``: Indicates a run that is triggered as a retry of a previously failed run. This<br />  occurs when you request to re-run the job in case of failures.<br />- ``RUN_JOB_TASK``: Indicates a run that is triggered using a Run Job task.<br />- ``FILE_ARRIVAL``: Indicates a run that is triggered by a file arrival.<br />- ``CONTINUOUS``: Indicates a run that is triggered by a continuous job.<br />- ``TABLE``: Indicates a run that is triggered by a table update.<br />- ``CONTINUOUS_RESTART``: Indicates a run created by user to manually restart a continuous job<br />  run.<br />- ``MODEL``: Indicates a run that is triggered by a model update. (CONTINUOUS, CONTINUOUS_RESTART, FILE_ARRIVAL, ONE_TIME, PERIODIC, RETRY, RUN_JOB_TASK, TABLE)"
+    "description": "The type of trigger that fired this run.<br /><br />- ``PERIODIC``: Schedules that periodically trigger runs, such as a cron scheduler.<br />- ``ONE_TIME``: One time triggers that fire a single run. This occurs you triggered a single run<br />  on demand through the UI or the API.<br />- ``RETRY``: Indicates a run that is triggered as a retry of a previously failed run. This<br />  occurs when you request to re-run the job in case of failures.<br />- ``RUN_JOB_TASK``: Indicates a run that is triggered using a Run Job task.<br />- ``FILE_ARRIVAL``: Indicates a run that is triggered by a file arrival.<br />- ``CONTINUOUS``: Indicates a run that is triggered by a continuous job.<br />- ``TABLE``: Indicates a run that is triggered by a table update.<br />- ``CONTINUOUS_RESTART``: Indicates a run created by user to manually restart a continuous job<br />  run.<br />- ``MODEL``: Indicates a run that is triggered by a model update.<br />- ``JOB_COMPLETION``: Indicates a run that is triggered by an upstream job completion. (CONTINUOUS, CONTINUOUS_RESTART, FILE_ARRIVAL, ONE_TIME, PERIODIC, RETRY, RUN_JOB_TASK, TABLE)"
   },
   {
     "name": "trigger_info",
@@ -4703,6 +4255,11 @@ The following fields are returned by `SELECT` queries:
     "description": "Description of the run"
   },
   {
+    "name": "duration_target",
+    "type": "string",
+    "description": "The window the run aims to finish within, in hours, for a Cost-optimized serverless run. Required only when ``performance_target`` is ``COST_OPTIMIZED``. Must be one of the supported values: ``NO_FLEXIBILITY``, ``4h``, ``12h``, ``24h``, ``72h``. ``NO_FLEXIBILITY`` means the run uses the default cost-optimized performance level without additional cost-saving optimizations."
+  },
+  {
     "name": "effective_performance_target",
     "type": "string",
     "description": "PerformanceTarget defines how performant (lower latency) or cost efficient the execution of run<br />on serverless compute should be. The performance mode on the job or pipeline should map to a<br />performance setting that is passed to Cluster Manager (see cluster-common PerformanceTarget). (PERFORMANCE_OPTIMIZED, STANDARD)"
@@ -4715,7 +4272,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "environment_variables",
     "type": "array",
-    "description": "Snapshot of ``JobSettings.environment_variables`` as it was at run launch — the full list of named env-var profiles the job defined. Per-profile resolved contents are not preserved here; only the customer-defined ``variables`` and ``files`` paths. To find which profile a given task ran with, look at ``RunTaskSettings.environment_variables_key``.",
+    "description": "Snapshot of ``JobSettings.environment_variables`` as it was at run launch — the full list of named environment-variable entries the job defined. To find which entry a given task ran with, look at ``RunTaskSettings.environment_variables_key``.",
     "children": [
       {
         "name": "environment_variables_key",
@@ -4723,14 +4280,21 @@ The following fields are returned by `SELECT` queries:
         "description": "Identifier for this entry. Must be unique within ``JobSettings.environment_variables``. Tasks reference it from ``TaskSettings.environment_variables_key``."
       },
       {
-        "name": "files",
-        "type": "array",
-        "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line must be exactly ``KEY=VALUE``. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no comments, no quoted values, no escape sequences, no variable interpolation. Any line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 1,048,576 bytes (1 MiB) per file on disk; maximum 131,072 bytes (128 KiB) per ``KEY=VALUE`` line combined. Caps are enforced at read time in jobs-runner — files exceeding the per-file cap, or lines exceeding the per-line cap, fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use these files to store raw secret values; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
-      },
-      {
-        "name": "variables",
+        "name": "spec",
         "type": "object",
-        "description": "Environment variables specified directly as key/value pairs (as opposed to ``files``, which are read from ``.env`` file paths). Maximum 100 entries. Each key must match ``^[A-Za-z_][A-Za-z0-9_]*$`` and be 1 to 256 characters long. Each value is up to 512 characters; larger values should be moved into a ``.env`` file referenced from ``files``. On a duplicate key, ``variables`` override values from any file in ``files``. Values may contain &#123;&#123;secrets/scope/key&#125;&#125; references; those are resolved at task execution time and never persisted in resolved form. Do not use this field to store a raw secret value; consult `secret management <https://docs.databricks.com/aws/en/security/secrets/>`__ for the right way to pass sensitive values."
+        "description": "The environment variable specification.",
+        "children": [
+          {
+            "name": "files",
+            "type": "array",
+            "description": "Workspace (``/Workspace/...``) or UC Volumes (``/Volumes/...``) paths to ``.env`` files. Maximum 5 files. Files are read, parsed, and merged at task execution time, not at job creation or update API call time. File format: each line containing a variable must be exactly ``KEY=VALUE``. Empty and whitespace-only lines, and lines beginning with ``#``, are ignored. Keys must match the same regex as inlined variable names (``^[A-Za-z_][A-Za-z0-9_]*$``); the value continues to the end of the line. No other syntax is supported — no inline comments, no quoted values, no escape sequences, no variable interpolation. Any other line that does not match the ``KEY=VALUE`` shape fails the run. Size limits: maximum 32,768 bytes (32 KiB) per file on disk; maximum 1,024 bytes (1 KiB) per ``KEY=VALUE`` line combined. Files or lines exceeding these limits fail the run. On a duplicate key, the later file wins; ``variables`` override values from any file."
+          },
+          {
+            "name": "variables",
+            "type": "object",
+            "description": "Environment variables specified directly as key/value pairs. Maximum 20 entries. Each key must be 1 to 256 characters and match ``^[A-Za-z_][A-Za-z0-9_]*$``: it must start with an ASCII letter or underscore and contain only ASCII letters, digits, and underscores. Each value can be any Unicode string of up to 512 characters, including an empty string."
+          }
+        ]
       }
     ]
   },
@@ -5042,7 +4606,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "code",
                 "type": "string",
-                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
               },
               {
                 "name": "message",
@@ -5206,7 +4770,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "code",
             "type": "string",
-            "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+            "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
           },
           {
             "name": "message",
@@ -5233,123 +4797,6 @@ The following fields are returned by `SELECT` queries:
         "description": "A unique name for the task. This field is used to refer to this task from other tasks. This field is required and must be unique within its parent job. On Update or Reset, this field is used to reference the tasks to be updated or reset."
       },
       {
-        "name": "agentic_task",
-        "type": "object",
-        "description": "Agentic Task for job-based multi-agent execution",
-        "children": [
-          {
-            "name": "context",
-            "type": "object",
-            "description": "Optional. Context input providing conversation history and instructions.",
-            "children": [
-              {
-                "name": "conversation_ids",
-                "type": "array",
-                "description": "Optional. Conversation IDs to load as context for the agent."
-              },
-              {
-                "name": "instructions",
-                "type": "array",
-                "description": "Optional. Additional instructions to guide the agent's behavior."
-              }
-            ]
-          },
-          {
-            "name": "genie_code_api",
-            "type": "object",
-            "description": "Inline Genie Code conversation driven by a single prompt. Mutually exclusive with the supervisor variants."
-          },
-          {
-            "name": "goal",
-            "type": "string",
-            "description": "Deprecated. Use ``input`` (field 7) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-          },
-          {
-            "name": "input",
-            "type": "string",
-            "description": "Optional. The user query / task input the agent must accomplish. Mirrors the OpenAI Responses API ``input`` field. Replaces the deprecated ``goal`` field; new callers should populate ``input`` going forward."
-          },
-          {
-            "name": "output_schema",
-            "type": "object",
-            "description": "Optional. JSON-Schema-style declaration of the structured output the agent should produce. Replaces the deprecated ``task_output_schema`` map; new callers should populate ``output_schema`` going forward.",
-            "children": [
-              {
-                "name": "properties",
-                "type": "object",
-                "description": "Map of property name to property definition."
-              }
-            ]
-          },
-          {
-            "name": "supervisor_agent",
-            "type": "object",
-            "description": "A Supervisor Agent that orchestrates sub-agents and tools, referenced by tile_id.",
-            "children": [
-              {
-                "name": "agent_id",
-                "type": "string",
-                "description": "Required. The ID of the supervisor agent (tile_id)."
-              }
-            ]
-          },
-          {
-            "name": "supervisor_api",
-            "type": "object",
-            "description": "Inlined Responses-API supervisor configuration (model + instructions + tools). Mutually exclusive with ``supervisor_agent``.",
-            "children": [
-              {
-                "name": "instructions",
-                "type": "string",
-                "description": "Optional. System instructions that guide how the supervisor routes queries across tools and synthesizes responses."
-              },
-              {
-                "name": "model",
-                "type": "string",
-                "description": "Required. Databricks-provided FMAPI model, e.g. \"databricks-claude-sonnet-4-5\"."
-              },
-              {
-                "name": "tools",
-                "type": "array",
-                "description": "Optional. The tools the inlined agent can use."
-              }
-            ]
-          },
-          {
-            "name": "task_output_schema",
-            "type": "object",
-            "description": "Deprecated. Use ``output_schema`` (field 8) instead. Kept for backwards compatibility with existing callers; will be removed in a future revision."
-          },
-          {
-            "name": "trace_destination",
-            "type": "object",
-            "description": "Optional. Where MLflow traces produced by this task run should be persisted. When unset, traces follow the workspace default destination.",
-            "children": [
-              {
-                "name": "catalog_name",
-                "type": "string",
-                "description": "Unity Catalog catalog name for the trace table."
-              },
-              {
-                "name": "experiment_id",
-                "type": "string",
-                "description": "MLflow experiment ID where traces are written."
-              },
-              {
-                "name": "schema_name",
-                "type": "string",
-                "description": "Unity Catalog schema name for the trace table."
-              },
-              {
-                "name": "table_prefix",
-                "type": "string",
-                "description": "Table-name prefix under ``&lt;catalog&gt;.&lt;schema&gt;``. Trace tables are created as ``&lt;catalog&gt;.&lt;schema&gt;.&lt;table_prefix&gt;_&lt;...&gt;``."
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "ai_runtime_task",
         "type": "object",
         "description": "The task runs a multi-gpu compute workload on Databricks AI Runtime. Specify the accelerator type and count, the command to run, and where the workload's code and MLflow output are stored.",
@@ -5365,19 +4812,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Deployment specs for this task. Exactly one deployment is currently supported (a single entry where every node runs the same command); this is a current-Preview constraint. Role-split workloads (driver + worker, parameter server, separate eval node, etc.) with multiple entries are the eventual intent but not yet supported.",
             "children": [
               {
-                "name": "command_path",
-                "type": "string",
-                "description": "Workspace path of the script to run on each node in this deployment. Upload the script to this path and supply the path here. When the task runs, the file at this path is run on each node; if it fails, the task fails with its exit code. Example script contents: Plain Python: python train.py --epochs 10 Multi-GPU via accelerate: accelerate launch train.py --config config.yaml Distributed via torchrun: torchrun --nproc_per_node=8 train.py"
-              },
-              {
                 "name": "compute",
                 "type": "object",
                 "description": "Compute resources allocated to each node in this deployment."
               },
               {
-                "name": "docker_image_url",
+                "name": "command_path",
                 "type": "string",
-                "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
+                "description": "Workspace path of the script to run on each node in this deployment. Upload the script to this path and supply the path here. When the task runs, the file at this path is run on each node; if it fails, the task fails with its exit code. Example script contents: .. code-block:: bash # Plain Python: python train.py --epochs 10 # Multi-GPU via accelerate: accelerate launch train.py --config config.yaml # Distributed via torchrun: torchrun --nproc_per_node=8 train.py"
               },
               {
                 "name": "name",
@@ -5397,6 +4839,11 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional Docker image URL for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;organization&#125;/&#123;repository&#125;:&#123;tag&#125;``"
           },
           {
+            "name": "mlflow_artifact_location",
+            "type": "string",
+            "description": "Optional root location for MLflow artifacts logged by the run. If this field isn't specified the default artifact location will be in dbfs i.e. ``dbfs:/databricks/mlflow-tracking/&lt;experiment_id&gt;/...`` If dbfs access is restricted or UC is preferred this can be a custom location in UC: ``dbfs:/Volumes/&lt;catalog&gt;/&lt;schema&gt;/&lt;volume&gt;/...`` The location should be unique for each experiment."
+          },
+          {
             "name": "mlflow_experiment_directory",
             "type": "string",
             "description": "Optional workspace directory under which the MLflow experiment named in ``experiment`` is created. Must start with ``/Workspace``. Set this when running as a service principal that has no default user directory; for regular users the experiment defaults to the user's home directory."
@@ -5407,9 +4854,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional display name for the MLflow run created under ``experiment``. If omitted, MLflow generates a default name."
           },
           {
-            "name": "parameters",
-            "type": "object",
-            "description": "Optional named parameters passed to each deployment's command. Keys are parameter names, values the corresponding arguments (for example, ``&#123;\"epochs\": \"3\", \"dataset\": \"s3://bucket/train\"&#125;``). Values may contain dynamic references such as ``&#123;&#123;job.trigger.time.iso_date&#125;&#125;`` or ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;``, which Jobs substitutes before execution (see ``AiRuntimeTaskResolvedValues.parameters`` in runs.proto)."
+            "name": "priority_class",
+            "type": "string",
+            "description": "Scheduling priority class for the workload. May only be set together with a pre-provisioned capacity reservation (a deployment's ``compute.provisioned_capacity_id``); it is rejected on a workload that runs on on-demand capacity. (BEST_EFFORT, CRITICAL, NORMAL)"
+          },
+          {
+            "name": "unity_catalog_image_path",
+            "type": "string",
+            "description": "Optional Unity Catalog path for a custom container image. When set, the task runs on the specified container image instead of the default Databricks client image. Format: ``&#123;catalog&#125;.&#123;schema&#125;.&#123;image_name&#125;:&#123;tag&#125;``"
           }
         ]
       },
@@ -5571,9 +5023,14 @@ The following fields are returned by `SELECT` queries:
             "description": "Optional: subscription configuration for sending the dashboard snapshot.",
             "children": [
               {
+                "name": "attachment",
+                "type": "object",
+                "description": "The configuration for the files attached to the dashboard snapshot notification sent to<br />    subscribers. ``data_attachment`` describes the underlying data of dashboard widgets attached as<br />    data files, and ``page_attachment`` describes which dashboard pages are included in the attached<br />    PDF."
+              },
+              {
                 "name": "custom_subject",
                 "type": "string",
-                "description": ""
+                "description": "Optional: Allows users to specify a custom subject line on the email sent to subscribers."
               },
               {
                 "name": "paused",
@@ -5705,7 +5162,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "effective_performance_target",
         "type": "string",
-        "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. (PERFORMANCE_OPTIMIZED, STANDARD)"
+        "description": "The actual performance target used by the serverless run during execution. This can differ from the client-set performance target on the request depending on whether the performance mode is supported by the job type. - ``PERFORMANCE_OPTIMIZED``: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. - ``STANDARD``: Enables cost-efficient execution of serverless workloads. - ``COST_OPTIMIZED``: Enables lower job costs by optimizing compute for your selected target duration time. Must provide a duration target. (PERFORMANCE_OPTIMIZED, STANDARD)"
       },
       {
         "name": "email_notifications",
@@ -5762,12 +5219,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "environment_key",
         "type": "string",
-        "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+        "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
       },
       {
         "name": "environment_variables_key",
         "type": "string",
-        "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``RunSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+        "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``RunSettings.environment_variables`` for one-time runs or preserved in ``Run.environment_variables`` for run snapshots. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
       },
       {
         "name": "execution_duration",
@@ -5798,11 +5255,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "task_key",
                 "type": "string",
                 "description": ""
-              },
-              {
-                "name": "agentic_task",
-                "type": "object",
-                "description": "Agentic Task for job-based multi-agent execution"
               },
               {
                 "name": "ai_runtime_task",
@@ -5877,12 +5329,12 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "environment_key",
                 "type": "string",
-                "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute."
+                "description": "The key that references an environment spec in a job. This field is required for Python script, Python wheel and dbt tasks when using serverless compute or a compute resource that uses Environments mode."
               },
               {
                 "name": "environment_variables_key",
                 "type": "string",
-                "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables and file contents are applied to this task at execution time. Length and pattern mirror ``environment_key`` so the two references look identical to customers reading task settings."
+                "description": "Reference to a ``JobEnvironmentVariables`` entry defined in ``JobSettings.environment_variables``. The selected entry's variables are applied to this task at execution time. This field supports serverless tasks using environment version 5 or later."
               },
               {
                 "name": "existing_cluster_id",
@@ -5898,11 +5350,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "gen_ai_compute_task",
                 "type": "object",
                 "description": "DEPRECATED — use ``AiRuntimeTask`` for all new BYOT multi-node GPU workloads (see<br />    ai_runtime_task.proto). ``AiRuntimeTask`` is the only supported BYOT task type for new<br />    workloads; this proto is retained only for AIR CLI (fka SGCLI) pywheel backwards compatibility<br />    and will be removed once the pywheel → databricks-cli migration completes (post- PuPr)."
-              },
-              {
-                "name": "genie_task",
-                "type": "object",
-                "description": "Runs a Genie or Genie Code agent task."
               },
               {
                 "name": "health",
@@ -6046,16 +5493,6 @@ The following fields are returned by `SELECT` queries:
             "description": "Runtime image"
           },
           {
-            "name": "client_version",
-            "type": "string",
-            "description": "Version of the client (e.g., sgcli wheel) that submitted this task. Used by handlers to gate behavior or reject incompatible versions."
-          },
-          {
-            "name": "code_source_tar_path",
-            "type": "string",
-            "description": "Optional path to a tarball containing the user's workspace contents. When set, the entry script extracts the tarball into the working directory before running the training script, so the training script can import sibling modules and read packaged data files. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
-          },
-          {
             "name": "command",
             "type": "string",
             "description": "Command launcher to run the actual script, e.g. bash, python etc."
@@ -6083,24 +5520,9 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "docker_image_url",
-            "type": "string",
-            "description": "Optional custom Docker container image URL for running the training script. Format: organization/repository:tag (e.g., \"pytorch/pytorch:2.0.1\")"
-          },
-          {
             "name": "mlflow_experiment_name",
             "type": "string",
             "description": "Optional string containing the name of the MLflow experiment to log the run to. If name is not found, backend will create the mlflow experiment using the name."
-          },
-          {
-            "name": "mlflow_run_name",
-            "type": "string",
-            "description": "Optional name to assign to the MLflow run created for this task. If unset, MLflow auto-generates a name. Used alongside ``mlflow_experiment_name`` to identify the run in the MLflow UI."
-          },
-          {
-            "name": "requirements_yaml_path",
-            "type": "string",
-            "description": "Optional path to a requirements.yaml file describing pip dependencies to install before running the training script. Consumed by the entry script; format matches the runtime requirements.yaml convention used by sgcli. Must be a workspace path (e.g. ``/Workspace/Users/...``) or volume; ``dbfs:/`` is not supported."
           },
           {
             "name": "source",
@@ -6121,18 +5543,6 @@ The following fields are returned by `SELECT` queries:
             "name": "yaml_parameters_file_path",
             "type": "string",
             "description": "Optional path to a YAML file containing model parameters passed to the training script."
-          }
-        ]
-      },
-      {
-        "name": "genie_task",
-        "type": "object",
-        "description": "Runs a Genie or Genie Code agent task.",
-        "children": [
-          {
-            "name": "configuration_id",
-            "type": "string",
-            "description": "Required. Resource name of the agent task configuration to run."
           }
         ]
       },
@@ -6341,48 +5751,6 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "incremental_refresh_config",
-            "type": "object",
-            "description": "Incremental refresh policy applied to all IMPORT mode tables in the model. Windows and mode are shared; partition columns are set per-table on PowerBiTable.",
-            "children": [
-              {
-                "name": "archive_window_granularity",
-                "type": "string",
-                "description": "Granularity for the archive window. Default: MONTH (REFRESH_GRANULARITY_DAY, REFRESH_GRANULARITY_MONTH, REFRESH_GRANULARITY_QUARTER, REFRESH_GRANULARITY_YEAR)"
-              },
-              {
-                "name": "archive_window_periods",
-                "type": "integer",
-                "description": "Number of periods in the archive window (total data retained). Must be greater than the refresh window when using the same granularity. Default: 3 (with YEAR granularity = 3 years)"
-              },
-              {
-                "name": "detect_data_changes",
-                "type": "boolean",
-                "description": "If true, Power BI will check whether data has changed in each partition before reimporting. Partitions with unchanged data are skipped, reducing refresh cost further. Uses MAX(datetime_column) as the change detector."
-              },
-              {
-                "name": "mode",
-                "type": "string",
-                "description": "The refresh policy mode. Hybrid adds a real-time DirectQuery partition for the most recent data; Import uses only batch-imported partitions. Default: HYBRID (REFRESH_POLICY_MODE_HYBRID, REFRESH_POLICY_MODE_IMPORT_ONLY)"
-              },
-              {
-                "name": "only_refresh_complete_periods",
-                "type": "boolean",
-                "description": "If true, only refresh complete periods (e.g., skip today's partial data)."
-              },
-              {
-                "name": "refresh_window_granularity",
-                "type": "string",
-                "description": "Granularity for the refresh window. Default: DAY (REFRESH_GRANULARITY_DAY, REFRESH_GRANULARITY_MONTH, REFRESH_GRANULARITY_QUARTER, REFRESH_GRANULARITY_YEAR)"
-              },
-              {
-                "name": "refresh_window_periods",
-                "type": "integer",
-                "description": "Number of periods in the rolling refresh window. Partitions within this window are re-imported on each refresh. Default: 1"
-              }
-            ]
-          },
-          {
             "name": "power_bi_model",
             "type": "object",
             "description": "The semantic model to update",
@@ -6430,11 +5798,6 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               },
               {
-                "name": "incremental_refresh_datetime_column",
-                "type": "string",
-                "description": "The datetime column used for incremental refresh partitioning on this table. e.g., \"order_date\", \"updated_at\" Only applicable when the task has incremental_refresh_config set and this table uses IMPORT storage mode."
-              },
-              {
                 "name": "name",
                 "type": "string",
                 "description": "The table name in Databricks"
@@ -6448,11 +5811,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "storage_mode",
                 "type": "string",
                 "description": "The Power BI storage mode of the table (DIRECT_QUERY, DUAL, IMPORT)"
-              },
-              {
-                "name": "table_type",
-                "type": "string",
-                "description": "The Unity Catalog table type of this table. When set, the server trusts it to classify the table during metric-view filtering and skips the server-side lookup. When unset, the server resolves the type on its own. (EXTERNAL, EXTERNAL_SHALLOW_CLONE, FOREIGN, MANAGED, MANAGED_SHALLOW_CLONE, MATERIALIZED_VIEW, METRIC_VIEW, STREAMING_TABLE, VIEW)"
               }
             ]
           },
@@ -6530,33 +5888,9 @@ The following fields are returned by `SELECT` queries:
         "description": "Parameter values including resolved references",
         "children": [
           {
-            "name": "agentic_task",
-            "type": "object",
-            "description": "Resolved values for an agentic task: the ``input`` prompt with parameter references such as<br />    ``&#123;&#123;tasks.&lt;task_key&gt;.values.&lt;name&gt;&#125;&#125;`` replaced by the concrete values produced by upstream<br />    tasks.",
-            "children": [
-              {
-                "name": "input",
-                "type": "string",
-                "description": "The fully-resolved ``input`` prompt sent to the agent."
-              }
-            ]
-          },
-          {
             "name": "ai_runtime_task",
             "type": "object",
-            "description": "Resolved values for an AI Runtime task — env_vars with ``&#123;&#123;tasks.&lt;key&gt;.values.&lt;name&gt;&#125;&#125;`` references substituted to concrete values before submission to the training service."
-          },
-          {
-            "name": "alert_task",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "parameters",
-                "type": "object",
-                "description": ""
-              }
-            ]
+            "description": "Resolved values for an AiRuntimeTask after dynamic-value substitution, so Jobs can expand<br />    ``&#123;&#123;tasks.&lt;key&gt;.values.&lt;name&gt;&#125;&#125;`` references before submission."
           },
           {
             "name": "condition_task",
@@ -7049,7 +6383,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "code",
                 "type": "string",
-                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, CLUSTER_TERMINATED_BY_USER, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
+                "description": "The code indicates why the run was terminated. Additional codes might be introduced in future<br />releases.<br /><br />- ``SUCCESS``: The run was completed successfully.<br />- ``SUCCESS_WITH_FAILURES``: The run was completed successfully but some child runs failed.<br />- ``USER_CANCELED``: The run was successfully canceled during execution by a user.<br />- ``CANCELED``: The run was canceled during execution by the Databricks platform; for example,<br />  if the maximum run duration was exceeded.<br />- ``SKIPPED``: Run was never executed, for example, if the upstream task run failed, the<br />  dependency type condition was not met, or there were no material tasks to execute.<br />- ``INTERNAL_ERROR``: The run encountered an unexpected error. Refer to the state message for<br />  further details.<br />- ``DRIVER_ERROR``: The run encountered an error while communicating with the Spark Driver.<br />- ``CLUSTER_ERROR``: The run failed due to a cluster error. Refer to the state message for<br />  further details.<br />- ``REPOSITORY_CHECKOUT_FAILED``: Failed to complete the checkout due to an error when<br />  communicating with the third party service.<br />- ``INVALID_CLUSTER_REQUEST``: The run failed because it issued an invalid request to start the<br />  cluster.<br />- ``WORKSPACE_RUN_LIMIT_EXCEEDED``: The workspace has reached the quota for the maximum number<br />  of concurrent active runs. Consider scheduling the runs over a larger time frame.<br />- ``FEATURE_DISABLED``: The run failed because it tried to access a feature unavailable for the<br />  workspace.<br />- ``CLUSTER_REQUEST_LIMIT_EXCEEDED``: The number of cluster creation, start, and upsize requests<br />  have exceeded the allotted rate limit. Consider spreading the run execution over a larger time<br />  frame.<br />- ``STORAGE_ACCESS_ERROR``: The run failed due to an error when accessing the customer blob<br />  storage. Refer to the state message for further details.<br />- ``RUN_EXECUTION_ERROR``: The run was completed with task failures. For more details, refer to<br />  the state message or run output.<br />- ``UNAUTHORIZED_ERROR``: The run failed due to a permission issue while accessing a resource.<br />  Refer to the state message for further details.<br />- ``LIBRARY_INSTALLATION_ERROR``: The run failed while installing the user-requested library.<br />  Refer to the state message for further details. The causes might include, but are not limited<br />  to: The provided library is invalid, there are insufficient permissions to install the<br />  library, and so forth.<br />- ``MAX_CONCURRENT_RUNS_EXCEEDED``: The scheduled run exceeds the limit of maximum concurrent<br />  runs set for the job.<br />- ``MAX_SPARK_CONTEXTS_EXCEEDED``: The run is scheduled on a cluster that has already reached<br />  the maximum number of contexts it is configured to create. See: `Link<br />  <https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now>`__.<br />- ``RESOURCE_NOT_FOUND``: A resource necessary for run execution does not exist. Refer to the<br />  state message for further details.<br />- ``INVALID_RUN_CONFIGURATION``: The run failed due to an invalid configuration. Refer to the<br />  state message for further details.<br />- ``CLOUD_FAILURE``: The run failed due to a cloud provider issue. Refer to the state message<br />  for further details.<br />- ``MAX_JOB_QUEUE_SIZE_EXCEEDED``: The run was skipped due to reaching the job level queue size<br />  limit.<br />- ``DISABLED``: The run was never executed because it was disabled explicitly by the user.<br />- ``BREAKING_CHANGE``: Run failed because of an intentional breaking change in Spark, but it<br />  will be retried with a mitigation config.<br />- ``CLUSTER_TERMINATED_BY_USER``: The run failed because the externally managed cluster entered<br />  an unusable state, likely due to the user terminating or restarting it outside the jobs<br />  service. (BREAKING_CHANGE, BUDGET_POLICY_LIMIT_EXCEEDED, CANCELED, CLOUD_FAILURE, CLUSTER_ERROR, CLUSTER_REQUEST_LIMIT_EXCEEDED, DISABLED, DRIVER_ERROR, FEATURE_DISABLED, INTERNAL_ERROR, INVALID_CLUSTER_REQUEST, INVALID_RUN_CONFIGURATION, LIBRARY_INSTALLATION_ERROR, MAX_CONCURRENT_RUNS_EXCEEDED, MAX_JOB_QUEUE_SIZE_EXCEEDED, MAX_SPARK_CONTEXTS_EXCEEDED, REPOSITORY_CHECKOUT_FAILED, RESOURCE_NOT_FOUND, RUN_EXECUTION_ERROR, SKIPPED, STORAGE_ACCESS_ERROR, SUCCESS, SUCCESS_WITH_FAILURES, UNAUTHORIZED_ERROR, USER_CANCELED, WORKSPACE_RUN_LIMIT_EXCEEDED)"
               },
               {
                 "name": "message",
@@ -7166,7 +6500,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "trigger",
     "type": "string",
-    "description": "The type of trigger that fired this run.<br /><br />- ``PERIODIC``: Schedules that periodically trigger runs, such as a cron scheduler.<br />- ``ONE_TIME``: One time triggers that fire a single run. This occurs you triggered a single run<br />  on demand through the UI or the API.<br />- ``RETRY``: Indicates a run that is triggered as a retry of a previously failed run. This<br />  occurs when you request to re-run the job in case of failures.<br />- ``RUN_JOB_TASK``: Indicates a run that is triggered using a Run Job task.<br />- ``FILE_ARRIVAL``: Indicates a run that is triggered by a file arrival.<br />- ``CONTINUOUS``: Indicates a run that is triggered by a continuous job.<br />- ``TABLE``: Indicates a run that is triggered by a table update.<br />- ``CONTINUOUS_RESTART``: Indicates a run created by user to manually restart a continuous job<br />  run.<br />- ``MODEL``: Indicates a run that is triggered by a model update. (CONTINUOUS, CONTINUOUS_RESTART, FILE_ARRIVAL, ONE_TIME, PERIODIC, RETRY, RUN_JOB_TASK, TABLE)"
+    "description": "The type of trigger that fired this run.<br /><br />- ``PERIODIC``: Schedules that periodically trigger runs, such as a cron scheduler.<br />- ``ONE_TIME``: One time triggers that fire a single run. This occurs you triggered a single run<br />  on demand through the UI or the API.<br />- ``RETRY``: Indicates a run that is triggered as a retry of a previously failed run. This<br />  occurs when you request to re-run the job in case of failures.<br />- ``RUN_JOB_TASK``: Indicates a run that is triggered using a Run Job task.<br />- ``FILE_ARRIVAL``: Indicates a run that is triggered by a file arrival.<br />- ``CONTINUOUS``: Indicates a run that is triggered by a continuous job.<br />- ``TABLE``: Indicates a run that is triggered by a table update.<br />- ``CONTINUOUS_RESTART``: Indicates a run created by user to manually restart a continuous job<br />  run.<br />- ``MODEL``: Indicates a run that is triggered by a model update.<br />- ``JOB_COMPLETION``: Indicates a run that is triggered by an upstream job completion. (CONTINUOUS, CONTINUOUS_RESTART, FILE_ARRIVAL, ONE_TIME, PERIODIC, RETRY, RUN_JOB_TASK, TABLE)"
   },
   {
     "name": "trigger_info",
@@ -7224,56 +6558,56 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_history"><code>include_history</code></a>, <a href="#parameter-include_resolved_values"><code>include_resolved_values</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Retrieves the metadata of a run.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-active_only"><code>active_only</code></a>, <a href="#parameter-completed_only"><code>completed_only</code></a>, <a href="#parameter-expand_tasks"><code>expand_tasks</code></a>, <a href="#parameter-job_id"><code>job_id</code></a>, <a href="#parameter-limit"><code>limit</code></a>, <a href="#parameter-offset"><code>offset</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-run_type"><code>run_type</code></a>, <a href="#parameter-start_time_from"><code>start_time_from</code></a>, <a href="#parameter-start_time_to"><code>start_time_to</code></a></td>
     <td>List runs in descending order by start time.</td>
 </tr>
 <tr>
     <td><a href="#submit"><CopyableCode code="submit" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Submit a one-time run. This endpoint allows you to submit a workload directly without creating a job.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a non-active run. Returns an error if the run is active.</td>
 </tr>
 <tr>
     <td><a href="#cancel_all"><CopyableCode code="cancel_all" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Cancels all active runs of a job. The runs are canceled asynchronously, so it doesn't prevent new runs</td>
 </tr>
 <tr>
     <td><a href="#cancel"><CopyableCode code="cancel" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
     <td></td>
     <td>Cancels a job run or a task run. The run is canceled asynchronously, so it may still be running when</td>
 </tr>
 <tr>
     <td><a href="#export"><CopyableCode code="export" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-run_id"><code>run_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-views_to_export"><code>views_to_export</code></a></td>
     <td>Export and retrieve the job run task.</td>
 </tr>
 <tr>
     <td><a href="#repair"><CopyableCode code="repair" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-run_id"><code>run_id</code></a></td>
     <td></td>
     <td>Re-run one or more tasks. Tasks are re-run as part of the original job run. They use the current job</td>
 </tr>
@@ -7296,12 +6630,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-run_id">
     <td><CopyableCode code="run_id" /></td>
     <td><code>integer</code></td>
     <td>The canonical identifier for the run. This field is required.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-active_only">
     <td><CopyableCode code="active_only" /></td>
@@ -7400,6 +6739,7 @@ cleanup_duration,
 cluster_instance,
 cluster_spec,
 description,
+duration_target,
 effective_performance_target,
 end_time,
 environment_variables,
@@ -7428,6 +6768,7 @@ trigger_info
 FROM databricks_workspace.jobs.job_runs
 WHERE run_id = '{{ run_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_history = '{{ include_history }}'
 AND include_resolved_values = '{{ include_resolved_values }}'
 AND page_token = '{{ page_token }}'
@@ -7454,6 +6795,7 @@ cleanup_duration,
 cluster_instance,
 cluster_spec,
 description,
+duration_target,
 effective_performance_target,
 end_time,
 environment_variables,
@@ -7479,6 +6821,7 @@ trigger,
 trigger_info
 FROM databricks_workspace.jobs.job_runs
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND active_only = '{{ active_only }}'
 AND completed_only = '{{ completed_only }}'
 AND expand_tasks = '{{ expand_tasks }}'
@@ -7512,6 +6855,7 @@ Submit a one-time run. This endpoint allows you to submit a workload directly wi
 INSERT INTO databricks_workspace.jobs.job_runs (
 access_control_list,
 budget_policy_id,
+duration_target,
 email_notifications,
 environment_variables,
 environments,
@@ -7523,16 +6867,17 @@ performance_target,
 queue,
 run_as,
 run_name,
-tags,
 tasks,
 timeout_seconds,
 usage_policy_id,
 webhook_notifications,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ access_control_list }}',
 '{{ budget_policy_id }}',
+'{{ duration_target }}',
 '{{ email_notifications }}',
 '{{ environment_variables }}',
 '{{ environments }}',
@@ -7544,12 +6889,12 @@ SELECT
 '{{ queue }}',
 '{{ run_as }}',
 '{{ run_name }}',
-'{{ tags }}',
 '{{ tasks }}',
 {{ timeout_seconds }},
 '{{ usage_policy_id }}',
 '{{ webhook_notifications }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 deployment_id,
 effective_usage_policy_id,
@@ -7565,6 +6910,7 @@ cleanup_duration,
 cluster_instance,
 cluster_spec,
 description,
+duration_target,
 effective_performance_target,
 end_time,
 environment_variables,
@@ -7601,6 +6947,9 @@ trigger_info
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the job_runs resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the job_runs resource.
     - name: access_control_list
       description: |
         List of permissions to set on the job.
@@ -7613,6 +6962,10 @@ trigger_info
       value: "{{ budget_policy_id }}"
       description: |
         The user specified id of the budget policy to use for this one-time run. If not specified, the run will be not be attributed to any budget policy.
+    - name: duration_target
+      value: "{{ duration_target }}"
+      description: |
+        The window the run aims to finish within, in hours, for a Cost-optimized serverless run. Required only when \`\`performance_target\`\` is \`\`COST_OPTIMIZED\`\`. Must be one of the supported values: \`\`NO_FLEXIBILITY\`\`, \`\`4h\`\`, \`\`12h\`\`, \`\`24h\`\`, \`\`72h\`\`. \`\`NO_FLEXIBILITY\`\` means the run uses the default cost-optimized performance level without additional cost-saving optimizations.
     - name: email_notifications
       description: |
         An optional set of email addresses notified when the run begins or completes.
@@ -7634,11 +6987,13 @@ trigger_info
           - "{{ on_success }}"
     - name: environment_variables
       description: |
-        Named environment-variable entries that tasks of this one-time run can reference by key from \`\`RunTaskSettings.environment_variables_key\`\`. Each entry holds inline \`\`variables\`\` plus optional \`\`.env\`\` \`\`files\`\`. Handled identically to \`\`JobSettings.environment_variables\`\`. Maximum 10 entries. Entries are independent of one another — there is no cross-entry merging.
+        Named environment-variable entries that tasks of this one-time run can reference by key from \`\`RunTaskSettings.environment_variables_key\`\`. Each entry's \`\`spec\`\` holds inline \`\`variables\`\` and optional \`\`.env\`\` \`\`files\`\`. Handled identically to \`\`JobSettings.environment_variables\`\`. Maximum 10 entries. Entries are independent of one another — there is no cross-entry merging.
       value:
         - environment_variables_key: "{{ environment_variables_key }}"
-          files: "{{ files }}"
-          variables: "{{ variables }}"
+          spec:
+            files:
+              - "{{ files }}"
+            variables: "{{ variables }}"
     - name: environments
       description: |
         A list of task execution environment specifications that can be referenced by tasks of this run.
@@ -7674,7 +7029,7 @@ trigger_info
     - name: idempotency_token
       value: "{{ idempotency_token }}"
       description: |
-        An optional token that can be used to guarantee the idempotency of job run requests. If a run with the provided token already exists, the request does not create a new run but returns the ID of the existing run instead. If a run with the provided token is deleted, an error is returned. If you specify the idempotency token, upon failure you can retry until the request succeeds. Databricks guarantees that exactly one run is launched with that idempotency token. This token must have at most 64 characters. For more information, see \`How to ensure idempotency for jobs <https://kb.databricks.com/jobs/jobs-idempotency.html>\`__.
+        An optional token that can be used to guarantee the idempotency of job run requests. If a run with the provided token already exists, the request does not create a new run but returns the ID of the existing run instead. If a run with the provided token is deleted, an error is returned. If you specify the idempotency token, upon failure you can retry until the request succeeds. Databricks guarantees that exactly one run is launched with that idempotency token. This token must have at most 64 characters.
     - name: notification_settings
       description: |
         Optional notification settings that are used when sending notifications to each of the \`\`email_notifications\`\` and \`\`webhook_notifications\`\` for this run.
@@ -7684,7 +7039,7 @@ trigger_info
     - name: performance_target
       value: "{{ performance_target }}"
       description: |
-        The performance mode on a serverless one-time run. This field determines the level of compute performance or cost-efficiency for the run. The performance target does not apply to tasks that run on Serverless GPU compute. - \`\`STANDARD\`\`: Enables cost-efficient execution of serverless workloads. - \`\`PERFORMANCE_OPTIMIZED\`\`: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
+        The performance mode on a serverless one-time run. This field determines the level of compute performance or cost-efficiency for the run. The performance target does not apply to tasks that run on Serverless GPU compute. - \`\`PERFORMANCE_OPTIMIZED\`\`: Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. - \`\`STANDARD\`\`: Enables cost-efficient execution of serverless workloads. - \`\`COST_OPTIMIZED\`\`: Enables lower job costs by optimizing compute for your selected target duration time. Must provide a duration target.
     - name: queue
       description: |
         The queue settings of the one-time run.
@@ -7701,81 +7056,25 @@ trigger_info
       value: "{{ run_name }}"
       description: |
         An optional name for the run. The default value is \`\`Untitled\`\`.
-    - name: tags
-      value: "{{ tags }}"
-      description: |
-        A map of tags associated with the one-time run, handled identically to job-level tags. The tags are forwarded to the cluster as cluster tags for the run's compute, attributed in billing, and surfaced in system tables. A maximum of 25 tags can be added.
     - name: tasks
       value:
         - task_key: "{{ task_key }}"
-          agentic_task:
-            context:
-              conversation_ids:
-                - "{{ conversation_ids }}"
-              instructions:
-                - "{{ instructions }}"
-            genie_code_api: "{{ genie_code_api }}"
-            goal: "{{ goal }}"
-            input: "{{ input }}"
-            output_schema:
-              properties: "{{ properties }}"
-            supervisor_agent:
-              agent_id: "{{ agent_id }}"
-            supervisor_api:
-              instructions: "{{ instructions }}"
-              model: "{{ model }}"
-              tools:
-                - app:
-                    name: "{{ name }}"
-                  catalog:
-                    name: "{{ name }}"
-                  dashboard:
-                    dashboard_id: "{{ dashboard_id }}"
-                  description: "{{ description }}"
-                  genie_space:
-                    space_id: "{{ space_id }}"
-                  knowledge_assistant:
-                    knowledge_assistant_id: "{{ knowledge_assistant_id }}"
-                  schema:
-                    name: "{{ name }}"
-                  serving_endpoint:
-                    name: "{{ name }}"
-                  supervisor_agent:
-                    supervisor_agent_id: "{{ supervisor_agent_id }}"
-                  table:
-                    name: "{{ name }}"
-                  tool_type: "{{ tool_type }}"
-                  uc_connection:
-                    name: "{{ name }}"
-                  uc_function:
-                    name: "{{ name }}"
-                  uc_mcp:
-                    name: "{{ name }}"
-                  vector_search_index:
-                    name: "{{ name }}"
-                  volume:
-                    name: "{{ name }}"
-                  web_search: "{{ web_search }}"
-            task_output_schema: "{{ task_output_schema }}"
-            trace_destination:
-              catalog_name: "{{ catalog_name }}"
-              experiment_id: "{{ experiment_id }}"
-              schema_name: "{{ schema_name }}"
-              table_prefix: "{{ table_prefix }}"
           ai_runtime_task:
             experiment: "{{ experiment }}"
             deployments:
-              - command_path: "{{ command_path }}"
-                compute:
+              - compute:
                   accelerator_type: "{{ accelerator_type }}"
                   accelerator_count: {{ accelerator_count }}
-                docker_image_url: "{{ docker_image_url }}"
+                  provisioned_capacity_id: "{{ provisioned_capacity_id }}"
+                command_path: "{{ command_path }}"
                 name: "{{ name }}"
             code_source_path: "{{ code_source_path }}"
             docker_image_url: "{{ docker_image_url }}"
+            mlflow_artifact_location: "{{ mlflow_artifact_location }}"
             mlflow_experiment_directory: "{{ mlflow_experiment_directory }}"
             mlflow_run: "{{ mlflow_run }}"
-            parameters: "{{ parameters }}"
+            priority_class: "{{ priority_class }}"
+            unity_catalog_image_path: "{{ unity_catalog_image_path }}"
           alert_task:
             alert_id: "{{ alert_id }}"
             parameters: "{{ parameters }}"
@@ -7799,6 +7098,14 @@ trigger_info
             dashboard_id: "{{ dashboard_id }}"
             filters: "{{ filters }}"
             subscription:
+              attachment:
+                data_attachment:
+                  widgets: "{{ widgets }}"
+                  file_format: "{{ file_format }}"
+                  include_applied_filters: {{ include_applied_filters }}
+                page_attachment:
+                  page_ids: "{{ page_ids }}"
+                  page_selection: "{{ page_selection }}"
               custom_subject: "{{ custom_subject }}"
               paused: {{ paused }}
               subscribers:
@@ -7847,41 +7154,22 @@ trigger_info
             inputs: "{{ inputs }}"
             task:
               task_key: "{{ task_key }}"
-              agentic_task:
-                context:
-                  conversation_ids: "{{ conversation_ids }}"
-                  instructions: "{{ instructions }}"
-                genie_code_api: "{{ genie_code_api }}"
-                goal: "{{ goal }}"
-                input: "{{ input }}"
-                output_schema:
-                  properties: "{{ properties }}"
-                supervisor_agent:
-                  agent_id: "{{ agent_id }}"
-                supervisor_api:
-                  instructions: "{{ instructions }}"
-                  model: "{{ model }}"
-                  tools: "{{ tools }}"
-                task_output_schema: "{{ task_output_schema }}"
-                trace_destination:
-                  catalog_name: "{{ catalog_name }}"
-                  experiment_id: "{{ experiment_id }}"
-                  schema_name: "{{ schema_name }}"
-                  table_prefix: "{{ table_prefix }}"
               ai_runtime_task:
                 experiment: "{{ experiment }}"
                 deployments:
-                  - command_path: "{{ command_path }}"
-                    compute:
+                  - compute:
                       accelerator_type: "{{ accelerator_type }}"
                       accelerator_count: {{ accelerator_count }}
-                    docker_image_url: "{{ docker_image_url }}"
+                      provisioned_capacity_id: "{{ provisioned_capacity_id }}"
+                    command_path: "{{ command_path }}"
                     name: "{{ name }}"
                 code_source_path: "{{ code_source_path }}"
                 docker_image_url: "{{ docker_image_url }}"
+                mlflow_artifact_location: "{{ mlflow_artifact_location }}"
                 mlflow_experiment_directory: "{{ mlflow_experiment_directory }}"
                 mlflow_run: "{{ mlflow_run }}"
-                parameters: "{{ parameters }}"
+                priority_class: "{{ priority_class }}"
+                unity_catalog_image_path: "{{ unity_catalog_image_path }}"
               alert_task:
                 alert_id: "{{ alert_id }}"
                 parameters: "{{ parameters }}"
@@ -7905,6 +7193,7 @@ trigger_info
                 dashboard_id: "{{ dashboard_id }}"
                 filters: "{{ filters }}"
                 subscription:
+                  attachment: "{{ attachment }}"
                   custom_subject: "{{ custom_subject }}"
                   paused: {{ paused }}
                   subscribers: "{{ subscribers }}"
@@ -7953,7 +7242,6 @@ trigger_info
                 inputs: "{{ inputs }}"
                 task:
                   task_key: "{{ task_key }}"
-                  agentic_task: "{{ agentic_task }}"
                   ai_runtime_task: "{{ ai_runtime_task }}"
                   alert_task: "{{ alert_task }}"
                   clean_rooms_notebook_task: "{{ clean_rooms_notebook_task }}"
@@ -7973,7 +7261,6 @@ trigger_info
                   existing_cluster_id: "{{ existing_cluster_id }}"
                   for_each_task: "{{ for_each_task }}"
                   gen_ai_compute_task: "{{ gen_ai_compute_task }}"
-                  genie_task: "{{ genie_task }}"
                   health: "{{ health }}"
                   job_cluster_key: "{{ job_cluster_key }}"
                   libraries: "{{ libraries }}"
@@ -7998,23 +7285,16 @@ trigger_info
                 concurrency: {{ concurrency }}
               gen_ai_compute_task:
                 dl_runtime_image: "{{ dl_runtime_image }}"
-                client_version: "{{ client_version }}"
-                code_source_tar_path: "{{ code_source_tar_path }}"
                 command: "{{ command }}"
                 compute:
                   num_gpus: {{ num_gpus }}
                   gpu_node_pool_id: "{{ gpu_node_pool_id }}"
                   gpu_type: "{{ gpu_type }}"
-                docker_image_url: "{{ docker_image_url }}"
                 mlflow_experiment_name: "{{ mlflow_experiment_name }}"
-                mlflow_run_name: "{{ mlflow_run_name }}"
-                requirements_yaml_path: "{{ requirements_yaml_path }}"
                 source: "{{ source }}"
                 training_script_path: "{{ training_script_path }}"
                 yaml_parameters: "{{ yaml_parameters }}"
                 yaml_parameters_file_path: "{{ yaml_parameters_file_path }}"
-              genie_task:
-                configuration_id: "{{ configuration_id }}"
               health:
                 rules:
                   - metric: "{{ metric }}"
@@ -8048,14 +7328,6 @@ trigger_info
                   - "{{ reset_checkpoint_selection }}"
               power_bi_task:
                 connection_resource_name: "{{ connection_resource_name }}"
-                incremental_refresh_config:
-                  archive_window_granularity: "{{ archive_window_granularity }}"
-                  archive_window_periods: {{ archive_window_periods }}
-                  detect_data_changes: {{ detect_data_changes }}
-                  mode: "{{ mode }}"
-                  only_refresh_complete_periods: {{ only_refresh_complete_periods }}
-                  refresh_window_granularity: "{{ refresh_window_granularity }}"
-                  refresh_window_periods: {{ refresh_window_periods }}
                 power_bi_model:
                   authentication_method: "{{ authentication_method }}"
                   model_name: "{{ model_name }}"
@@ -8065,11 +7337,9 @@ trigger_info
                 refresh_after_update: {{ refresh_after_update }}
                 tables:
                   - catalog: "{{ catalog }}"
-                    incremental_refresh_datetime_column: "{{ incremental_refresh_datetime_column }}"
                     name: "{{ name }}"
                     schema: "{{ schema }}"
                     storage_mode: "{{ storage_mode }}"
-                    table_type: "{{ table_type }}"
                 warehouse_id: "{{ warehouse_id }}"
               python_operator_task:
                 main: "{{ main }}"
@@ -8154,23 +7424,16 @@ trigger_info
             concurrency: {{ concurrency }}
           gen_ai_compute_task:
             dl_runtime_image: "{{ dl_runtime_image }}"
-            client_version: "{{ client_version }}"
-            code_source_tar_path: "{{ code_source_tar_path }}"
             command: "{{ command }}"
             compute:
               num_gpus: {{ num_gpus }}
               gpu_node_pool_id: "{{ gpu_node_pool_id }}"
               gpu_type: "{{ gpu_type }}"
-            docker_image_url: "{{ docker_image_url }}"
             mlflow_experiment_name: "{{ mlflow_experiment_name }}"
-            mlflow_run_name: "{{ mlflow_run_name }}"
-            requirements_yaml_path: "{{ requirements_yaml_path }}"
             source: "{{ source }}"
             training_script_path: "{{ training_script_path }}"
             yaml_parameters: "{{ yaml_parameters }}"
             yaml_parameters_file_path: "{{ yaml_parameters_file_path }}"
-          genie_task:
-            configuration_id: "{{ configuration_id }}"
           health:
             rules:
               - metric: "{{ metric }}"
@@ -8203,14 +7466,6 @@ trigger_info
               - "{{ reset_checkpoint_selection }}"
           power_bi_task:
             connection_resource_name: "{{ connection_resource_name }}"
-            incremental_refresh_config:
-              archive_window_granularity: "{{ archive_window_granularity }}"
-              archive_window_periods: {{ archive_window_periods }}
-              detect_data_changes: {{ detect_data_changes }}
-              mode: "{{ mode }}"
-              only_refresh_complete_periods: {{ only_refresh_complete_periods }}
-              refresh_window_granularity: "{{ refresh_window_granularity }}"
-              refresh_window_periods: {{ refresh_window_periods }}
             power_bi_model:
               authentication_method: "{{ authentication_method }}"
               model_name: "{{ model_name }}"
@@ -8220,11 +7475,9 @@ trigger_info
             refresh_after_update: {{ refresh_after_update }}
             tables:
               - catalog: "{{ catalog }}"
-                incremental_refresh_datetime_column: "{{ incremental_refresh_datetime_column }}"
                 name: "{{ name }}"
                 schema: "{{ schema }}"
                 storage_mode: "{{ storage_mode }}"
-                table_type: "{{ table_type }}"
             warehouse_id: "{{ warehouse_id }}"
           python_operator_task:
             main: "{{ main }}"
@@ -8361,6 +7614,7 @@ Deletes a non-active run. Returns an error if the run is active.
 ```sql
 DELETE FROM databricks_workspace.jobs.job_runs
 WHERE deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -8384,7 +7638,8 @@ Cancels all active runs of a job. The runs are canceled asynchronously, so it do
 
 ```sql
 EXEC databricks_workspace.jobs.job_runs.cancel_all 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "all_queued_runs": {{ all_queued_runs }}, 
@@ -8399,7 +7654,8 @@ Cancels a job run or a task run. The run is canceled asynchronously, so it may s
 
 ```sql
 EXEC databricks_workspace.jobs.job_runs.cancel 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": {{ run_id }}
@@ -8415,6 +7671,7 @@ Export and retrieve the job run task.
 EXEC databricks_workspace.jobs.job_runs.export 
 @run_id='{{ run_id }}' --required, 
 @deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required, 
 @views_to_export='{{ views_to_export }}'
 ;
 ```
@@ -8425,11 +7682,13 @@ Re-run one or more tasks. Tasks are re-run as part of the original job run. They
 
 ```sql
 EXEC databricks_workspace.jobs.job_runs.repair 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "run_id": {{ run_id }}, 
 "dbt_commands": "{{ dbt_commands }}", 
+"duration_target": "{{ duration_target }}", 
 "jar_params": "{{ jar_params }}", 
 "job_parameters": "{{ job_parameters }}", 
 "latest_repair_id": {{ latest_repair_id }}, 

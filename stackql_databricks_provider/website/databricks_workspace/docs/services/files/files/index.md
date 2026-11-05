@@ -94,42 +94,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list_directory_contents"><CopyableCode code="list_directory_contents" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-directory_path"><code>directory_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-directory_path"><code>directory_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Returns the contents of a directory. If there is no directory at the specified path, the API returns</td>
 </tr>
 <tr>
     <td><a href="#download"><CopyableCode code="download" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-file_path"><code>file_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-file_path"><code>file_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Downloads a file. The file contents are the response body. This is a standard HTTP file download, not</td>
 </tr>
 <tr>
     <td><a href="#create_directory"><CopyableCode code="create_directory" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-directory_path"><code>directory_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-directory_path"><code>directory_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates an empty directory. If necessary, also creates any parent directories of the new, empty</td>
 </tr>
 <tr>
     <td><a href="#upload"><CopyableCode code="upload" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-file_path"><code>file_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-contents"><code>contents</code></a></td>
+    <td><a href="#parameter-file_path"><code>file_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-contents"><code>contents</code></a></td>
     <td><a href="#parameter-overwrite"><code>overwrite</code></a></td>
     <td>Uploads a file of up to 5 GiB. The file contents should be sent as the request body as raw bytes (an</td>
 </tr>
 <tr>
     <td><a href="#delete_directory"><CopyableCode code="delete_directory" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-directory_path"><code>directory_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-directory_path"><code>directory_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes an empty directory.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-file_path"><code>file_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-file_path"><code>file_path</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a file. If the request is successful, there is no response body.</td>
 </tr>
@@ -152,7 +152,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-directory_path">
     <td><CopyableCode code="directory_path" /></td>
@@ -163,6 +163,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="file_path" /></td>
     <td><code>string</code></td>
     <td>The absolute path of the file.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-overwrite">
     <td><CopyableCode code="overwrite" /></td>
@@ -205,6 +210,7 @@ path
 FROM databricks_workspace.files.files
 WHERE directory_path = '{{ directory_path }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -220,6 +226,7 @@ SELECT
 FROM databricks_workspace.files.files
 WHERE file_path = '{{ file_path }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -245,7 +252,8 @@ SET
 -- No updatable properties
 WHERE 
 directory_path = '{{ directory_path }}' --required
-AND deployment_name = '{{ deployment_name }}' --required;
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required;
 ```
 </TabItem>
 <TabItem value="upload">
@@ -259,6 +267,7 @@ contents = '{{ contents }}'
 WHERE 
 file_path = '{{ file_path }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND contents = '{{ contents }}' --required
 AND overwrite = {{ overwrite}};
 ```
@@ -283,6 +292,7 @@ Deletes an empty directory.
 DELETE FROM databricks_workspace.files.files
 WHERE directory_path = '{{ directory_path }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -294,6 +304,7 @@ Deletes a file. If the request is successful, there is no response body.
 DELETE FROM databricks_workspace.files.files
 WHERE file_path = '{{ file_path }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

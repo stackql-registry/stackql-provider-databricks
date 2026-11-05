@@ -315,23 +315,6 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "effective_genie_chat_share_policy",
-    "type": "object",
-    "description": "Effective setting value for genie_chat_share_policy setting. This is the final effective value of setting. To set a value use genie_chat_share_policy.",
-    "children": [
-      {
-        "name": "disable_make_chat_private",
-        "type": "boolean",
-        "description": ""
-      },
-      {
-        "name": "disable_share_with_account_users",
-        "type": "boolean",
-        "description": ""
-      }
-    ]
-  },
-  {
     "name": "effective_integer_val",
     "type": "object",
     "description": "Effective setting value for integer type setting. This is the final effective value of setting. To set a value use integer_val.",
@@ -397,18 +380,18 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
-    "name": "genie_chat_share_policy",
+    "name": "effective_workspace_label",
     "type": "object",
-    "description": "Setting value for genie_chat_share_policy setting. This is the setting value set by consumers, check effective_genie_chat_share_policy for final setting value.",
+    "description": "Effective setting value for workspace_label setting. This is the final effective value of setting. To set a value use workspace_label.",
     "children": [
       {
-        "name": "disable_make_chat_private",
-        "type": "boolean",
+        "name": "color",
+        "type": "string",
         "description": ""
       },
       {
-        "name": "disable_share_with_account_users",
-        "type": "boolean",
+        "name": "label",
+        "type": "string",
         "description": ""
       }
     ]
@@ -477,6 +460,23 @@ The following fields are returned by `SELECT` queries:
         "description": ""
       }
     ]
+  },
+  {
+    "name": "workspace_label",
+    "type": "object",
+    "description": "Setting value for workspace_label setting. This is the setting value set by consumers, check effective_workspace_label for final setting value.",
+    "children": [
+      {
+        "name": "color",
+        "type": "string",
+        "description": ""
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "description": ""
+      }
+    ]
   }
 ]} />
 </TabItem>
@@ -535,21 +535,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a setting value at workspace level. See :method:settingsv2/listworkspacesettingsmetadata for list</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List valid setting keys and metadata. These settings are available to be referenced via GET</td>
 </tr>
 <tr>
     <td><a href="#patch"><CopyableCode code="patch" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-setting"><code>setting</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Patch a setting value at workspace level. See :method:settingsv2/listworkspacesettingsmetadata for</td>
 </tr>
@@ -572,12 +572,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Name of the setting</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -620,21 +625,22 @@ effective_allowed_apps_user_api_scopes,
 effective_automatic_cluster_update_workspace,
 effective_boolean_val,
 effective_collaboration_platform_connectivity,
-effective_genie_chat_share_policy,
 effective_integer_val,
 effective_operational_email_custom_recipient,
 effective_personal_compute,
 effective_restrict_workspace_admins,
 effective_string_val,
-genie_chat_share_policy,
+effective_workspace_label,
 integer_val,
 operational_email_custom_recipient,
 personal_compute,
 restrict_workspace_admins,
-string_val
+string_val,
+workspace_label
 FROM databricks_workspace.settingsv2.workspace_settings_v2
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -652,6 +658,7 @@ preview_phase,
 type
 FROM databricks_workspace.settingsv2.workspace_settings_v2
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -675,11 +682,35 @@ Patch a setting value at workspace level. See :method:settingsv2/listworkspacese
 ```sql
 UPDATE databricks_workspace.settingsv2.workspace_settings_v2
 SET 
-setting = '{{ setting }}'
+aibi_dashboard_embedding_access_policy = '{{ aibi_dashboard_embedding_access_policy }}',
+aibi_dashboard_embedding_approved_domains = '{{ aibi_dashboard_embedding_approved_domains }}',
+allowed_apps_user_api_scopes = '{{ allowed_apps_user_api_scopes }}',
+automatic_cluster_update_workspace = '{{ automatic_cluster_update_workspace }}',
+boolean_val = '{{ boolean_val }}',
+collaboration_platform_connectivity = '{{ collaboration_platform_connectivity }}',
+effective_aibi_dashboard_embedding_access_policy = '{{ effective_aibi_dashboard_embedding_access_policy }}',
+effective_aibi_dashboard_embedding_approved_domains = '{{ effective_aibi_dashboard_embedding_approved_domains }}',
+effective_allowed_apps_user_api_scopes = '{{ effective_allowed_apps_user_api_scopes }}',
+effective_automatic_cluster_update_workspace = '{{ effective_automatic_cluster_update_workspace }}',
+effective_boolean_val = '{{ effective_boolean_val }}',
+effective_collaboration_platform_connectivity = '{{ effective_collaboration_platform_connectivity }}',
+effective_integer_val = '{{ effective_integer_val }}',
+effective_operational_email_custom_recipient = '{{ effective_operational_email_custom_recipient }}',
+effective_personal_compute = '{{ effective_personal_compute }}',
+effective_restrict_workspace_admins = '{{ effective_restrict_workspace_admins }}',
+effective_string_val = '{{ effective_string_val }}',
+effective_workspace_label = '{{ effective_workspace_label }}',
+integer_val = '{{ integer_val }}',
+name = '{{ name }}',
+operational_email_custom_recipient = '{{ operational_email_custom_recipient }}',
+personal_compute = '{{ personal_compute }}',
+restrict_workspace_admins = '{{ restrict_workspace_admins }}',
+string_val = '{{ string_val }}',
+workspace_label = '{{ workspace_label }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND setting = '{{ setting }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 name,
 aibi_dashboard_embedding_access_policy,
@@ -694,18 +725,18 @@ effective_allowed_apps_user_api_scopes,
 effective_automatic_cluster_update_workspace,
 effective_boolean_val,
 effective_collaboration_platform_connectivity,
-effective_genie_chat_share_policy,
 effective_integer_val,
 effective_operational_email_custom_recipient,
 effective_personal_compute,
 effective_restrict_workspace_admins,
 effective_string_val,
-genie_chat_share_policy,
+effective_workspace_label,
 integer_val,
 operational_email_custom_recipient,
 personal_compute,
 restrict_workspace_admins,
-string_val;
+string_val,
+workspace_label;
 ```
 </TabItem>
 </Tabs>

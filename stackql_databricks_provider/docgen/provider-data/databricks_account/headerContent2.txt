@@ -19,7 +19,59 @@ Set the following environment variables:
 - <CopyableCode code="DATABRICKS_CLIENT_ID" /> - obtained after creating a service principal through the Databricks UI (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 - <CopyableCode code="DATABRICKS_CLIENT_SECRET" /> - obtained after creating a service principal secret through the Databricks UI, using the "Generate Secret" function (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 
-These are the same variables that Terraform, the Databricks SDKs, and CLI use.  
+These are the same variables that Terraform, the Databricks SDKs, and CLI use.
+
+### Cloud selection (AWS, Azure, GCP)
+
+The provider works against Databricks accounts on AWS, Azure and Google Cloud with the same statements and the same three credential variables. It defaults to Databricks on AWS; one more variable selects another cloud, and both the OAuth token endpoint and the account API host follow it:
+
+- <CopyableCode code="DATABRICKS_CLOUD" /> - `aws` (default), `azure` or `gcp`
+- <CopyableCode code="DATABRICKS_ACCOUNT_HOST" /> - optional, a bare account console host (no scheme) for accounts that are not on the standard hosts; overrides `DATABRICKS_CLOUD`
+
+| Cloud | `DATABRICKS_CLOUD` | Account console and API host | Token endpoint |
+|-------|--------------------|------------------------------|----------------|
+| AWS | `aws` (default) | `accounts.cloud.databricks.com` | `https://accounts.cloud.databricks.com/oidc/accounts/<account_id>/v1/token` |
+| Azure | `azure` | `accounts.azuredatabricks.net` | `https://accounts.azuredatabricks.net/oidc/accounts/<account_id>/v1/token` |
+| GCP | `gcp` | `accounts.gcp.databricks.com` | `https://accounts.gcp.databricks.com/oidc/accounts/<account_id>/v1/token` |
+
+Cloud selection needs stackql v1.0.888 or later. One cloud per process: the token endpoint follows the environment, so run a separate `stackql` process (or shell) for each account you work with.
+
+```bash
+# Azure Databricks account
+export DATABRICKS_CLOUD=azure
+export DATABRICKS_ACCOUNT_ID=...
+export DATABRICKS_CLIENT_ID=...
+export DATABRICKS_CLIENT_SECRET=...
+stackql exec "SELECT workspace_id, workspace_name, location, deployment_name FROM databricks_account.provisioning.workspaces WHERE account_id = '<account_id>'"
+```
+
+```powershell
+# Databricks on Google Cloud account (PowerShell)
+$env:DATABRICKS_CLOUD = "gcp"
+$env:DATABRICKS_ACCOUNT_ID = "..."
+$env:DATABRICKS_CLIENT_ID = "..."
+$env:DATABRICKS_CLIENT_SECRET = "..."
+stackql.exe exec "SELECT workspace_id, workspace_name, location, deployment_name FROM databricks_account.provisioning.workspaces WHERE account_id = '<account_id>'"
+```
+
+Queries are unchanged across clouds: `account_id` stays the only required predicate, and with no cloud variables set the provider behaves exactly as before (AWS).
+
+#### Service principal by cloud
+
+On every cloud the credential is a service principal with a Databricks OAuth secret, created in the account console under __User management > Service principals__ (add the principal, then __Generate secret__), with the __Account admin__ role for account-level operations. Cloud identity tokens (AWS IAM, Microsoft Entra ID, Google service accounts) are not used by the provider.
+
+| Cloud | Account console | Notes |
+|-------|-----------------|-------|
+| AWS | <a href="https://accounts.cloud.databricks.com">accounts.cloud.databricks.com</a> | Databricks-managed service principal (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">OAuth M2M on AWS</a>) |
+| Azure | <a href="https://accounts.azuredatabricks.net">accounts.azuredatabricks.net</a> | Sign in with the Microsoft Entra ID identity that administers the Databricks account. A Databricks-managed service principal, or an Entra ID application registered as a service principal, both work when the OAuth secret is generated in the Databricks account console (see <a href="https://learn.microsoft.com/en-us/azure/databricks/dev-tools/auth/oauth-m2m">OAuth M2M on Azure</a>) |
+| GCP | <a href="https://accounts.gcp.databricks.com">accounts.gcp.databricks.com</a> | Databricks-managed service principal; the Google service account that Databricks itself uses is not the principal (see <a href="https://docs.databricks.com/gcp/en/dev-tools/auth/oauth-m2m">OAuth M2M on GCP</a>) |
+
+#### What differs by cloud
+
+- `provisioning.workspaces` reports the region in `aws_region` on AWS and in `location` on Azure and GCP. Azure rows also carry `azure_workspace_info` (subscription and resource group); GCP rows carry `cloud_resource_container` (the Google project) and `network_id`. The `deployment_name` column is the workspace predicate for the `databricks_workspace` provider on every cloud: `dbc-...` on AWS, `adb-<workspace_id>.<n>` on Azure, `<workspace_id>.<n>` on GCP.
+- The infrastructure objects in `provisioning` (`credentials`, `storage`, `networks`, `vpc_endpoints`, `private_access`, `encryption_keys`) and the views over them (`vw_credentials`, `vw_storage_configurations`, `vw_networks`, `vw_network_errors`, `vw_network_warnings`, `vw_vpc_endpoints`, `vw_encryption_keys`) are the AWS and GCP account APIs. Azure Databricks workspaces are created through Azure Resource Manager, so none of these objects exist on an Azure account and Databricks answers those calls with an HTML error page rather than an empty list. On GCP, `credentials` is not offered (the API answers 503); `networks`, `vpc_endpoints`, `private_access`, `encryption_keys` and `workspaces` cover customer-managed VPCs, Private Service Connect, customer-managed keys and workspace creation as they do on AWS.
+- `billing.billable_usage` (the usage CSV download) returns data for AWS and GCP accounts. An Azure Databricks account returns no rows because consumption is billed and reported through the Azure subscription (Azure Cost Management). Budgets, budget policies and budget spend statuses work on all three clouds.
+- Identity (`iam`, `iamv2`), `settings` (network connectivity configurations, network policies, IP access lists), `oauth2`, `networking`, `catalog` and the remaining services are the same on all three clouds.
 
 ### Personal Access Token (Bearer)
 
@@ -43,7 +95,7 @@ Try the following queries using `stackql shell`, or run them from a script or CI
 
 ### Workspace inventory
 
-Every workspace in the account, with status, region and when it was created:
+Every workspace in the account, with status, region and when it was created (`aws_region` is populated on AWS, `location` on Azure and GCP):
 
 ```sql
 SELECT
@@ -51,6 +103,7 @@ SELECT
   workspace_name,
   workspace_status,
   aws_region,
+  location,
   deployment_name,
   datetime(creation_time/1000, 'unixepoch') AS created
 FROM databricks_account.provisioning.workspaces
@@ -120,7 +173,7 @@ stackql exec -o text --hideheaders -f billable_usage.csv \
 
 ### Network and storage configuration
 
-Audit the account's registered infrastructure - credentials, storage configurations, networks and encryption keys - using the built-in views:
+Audit the account's registered infrastructure - credentials, storage configurations, networks and encryption keys - using the built-in views (these are the AWS and GCP account APIs; on Azure the infrastructure is managed through Azure Resource Manager, see [What differs by cloud](#what-differs-by-cloud)):
 
 ```sql
 SELECT * FROM databricks_account.provisioning.vw_credentials WHERE account_id = '<account_id>';

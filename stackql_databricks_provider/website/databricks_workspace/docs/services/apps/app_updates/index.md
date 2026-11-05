@@ -53,29 +53,29 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "compatibility_flags",
-    "type": "array",
-    "description": "Echoes the compatibility flags submitted on the most recent update (the input set from ``App.compatibility_flags``). To see the flags currently in effect on the app, read ``App.effective_compatibility_flags`` via GetApp."
-  },
-  {
     "name": "compute_max_instances",
     "type": "integer",
-    "description": "Maximum number of app instances. Must be set together with ``compute_min_instances``."
+    "description": "Maximum number of app instances the app is configured to run. Must be set together with ``compute_min_instances``."
   },
   {
     "name": "compute_min_instances",
     "type": "integer",
-    "description": "Minimum number of app instances. Must be set together with ``compute_max_instances``."
+    "description": "Minimum number of app instances the app is configured to run. Must be set together with ``compute_max_instances``."
   },
   {
     "name": "compute_size",
     "type": "string",
-    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (LARGE, LIQUID, MEDIUM, XLARGE)"
+    "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (LARGE, MEDIUM, XLARGE)"
   },
   {
     "name": "description",
     "type": "string",
     "description": ""
+  },
+  {
+    "name": "forward_user_access_token",
+    "type": "boolean",
+    "description": "Forward the user's access token to the app. Requires stopping and starting app compute to take effect."
   },
   {
     "name": "git_repository",
@@ -305,7 +305,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "securable_type",
             "type": "string",
-            "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (CONNECTION, FUNCTION, TABLE, VOLUME)"
+            "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (CONNECTION, FUNCTION, MODEL_SERVICE, TABLE, VOLUME)"
           },
           {
             "name": "permission",
@@ -394,14 +394,14 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets the status of an app update.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a></td>
+    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td></td>
     <td>Creates an app update and starts the update process. The update process is asynchronous and the status</td>
 </tr>
@@ -429,7 +429,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -450,11 +455,11 @@ Gets the status of an app update.
 SELECT
 budget_policy_id,
 usage_policy_id,
-compatibility_flags,
 compute_max_instances,
 compute_min_instances,
 compute_size,
 description,
+forward_user_access_token,
 git_repository,
 resources,
 status,
@@ -463,6 +468,7 @@ user_api_scopes
 FROM databricks_workspace.apps.app_updates
 WHERE app_name = '{{ app_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -487,21 +493,23 @@ INSERT INTO databricks_workspace.apps.app_updates (
 update_mask,
 app,
 app_name,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ update_mask }}' /* required */,
 '{{ app }}',
 '{{ app_name }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 budget_policy_id,
 usage_policy_id,
-compatibility_flags,
 compute_max_instances,
 compute_min_instances,
 compute_size,
 description,
+forward_user_access_token,
 git_repository,
 resources,
 status,
@@ -520,6 +528,9 @@ user_api_scopes
       description: Required parameter for the app_updates resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the app_updates resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the app_updates resource.
     - name: update_mask
       value: "{{ update_mask }}"
@@ -551,6 +562,9 @@ user_api_scopes
             resolved_commit: "{{ resolved_commit }}"
             source_code_path: "{{ source_code_path }}"
             tag: "{{ tag }}"
+          health_check:
+            path: "{{ path }}"
+            timeout: "{{ timeout }}"
           mode: "{{ mode }}"
           source_code_path: "{{ source_code_path }}"
           status:
@@ -562,8 +576,6 @@ user_api_scopes
           running_instances: {{ running_instances }}
           state: "{{ state }}"
         budget_policy_id: "{{ budget_policy_id }}"
-        compatibility_flags:
-          - "{{ compatibility_flags }}"
         compute_max_instances: {{ compute_max_instances }}
         compute_min_instances: {{ compute_min_instances }}
         compute_size: "{{ compute_size }}"
@@ -587,50 +599,10 @@ user_api_scopes
         default_source_code_path: "{{ default_source_code_path }}"
         description: "{{ description }}"
         effective_budget_policy_id: "{{ effective_budget_policy_id }}"
-        effective_compatibility_flags:
-          - "{{ effective_compatibility_flags }}"
-        effective_resources:
-          - name: "{{ name }}"
-            app:
-              name: "{{ name }}"
-              permission: "{{ permission }}"
-            database:
-              instance_name: "{{ instance_name }}"
-              database_name: "{{ database_name }}"
-              permission: "{{ permission }}"
-            description: "{{ description }}"
-            experiment:
-              experiment_id: "{{ experiment_id }}"
-              permission: "{{ permission }}"
-            genie_space:
-              name: "{{ name }}"
-              space_id: "{{ space_id }}"
-              permission: "{{ permission }}"
-            job:
-              id: "{{ id }}"
-              permission: "{{ permission }}"
-            postgres:
-              branch: "{{ branch }}"
-              database: "{{ database }}"
-              permission: "{{ permission }}"
-            secret:
-              scope: "{{ scope }}"
-              key: "{{ key }}"
-              permission: "{{ permission }}"
-            serving_endpoint:
-              name: "{{ name }}"
-              permission: "{{ permission }}"
-            sql_warehouse:
-              id: "{{ id }}"
-              permission: "{{ permission }}"
-            uc_securable:
-              securable_full_name: "{{ securable_full_name }}"
-              securable_type: "{{ securable_type }}"
-              permission: "{{ permission }}"
-              securable_kind: "{{ securable_kind }}"
         effective_usage_policy_id: "{{ effective_usage_policy_id }}"
         effective_user_api_scopes:
           - "{{ effective_user_api_scopes }}"
+        forward_user_access_token: {{ forward_user_access_token }}
         git_repository:
           url: "{{ url }}"
           provider: "{{ provider }}"
@@ -648,7 +620,6 @@ user_api_scopes
           source_code_path: "{{ source_code_path }}"
           tag: "{{ tag }}"
         id: "{{ id }}"
-        last_deployment_id: "{{ last_deployment_id }}"
         oauth2_app_client_id: "{{ oauth2_app_client_id }}"
         oauth2_app_integration_id: "{{ oauth2_app_integration_id }}"
         pending_deployment:
@@ -674,6 +645,9 @@ user_api_scopes
             resolved_commit: "{{ resolved_commit }}"
             source_code_path: "{{ source_code_path }}"
             tag: "{{ tag }}"
+          health_check:
+            path: "{{ path }}"
+            timeout: "{{ timeout }}"
           mode: "{{ mode }}"
           source_code_path: "{{ source_code_path }}"
           status:
@@ -724,7 +698,6 @@ user_api_scopes
         service_principal_name: "{{ service_principal_name }}"
         source_code_path: "{{ source_code_path }}"
         space: "{{ space }}"
-        space_id: "{{ space_id }}"
         telemetry_export_destinations:
           - unity_catalog:
               logs_table: "{{ logs_table }}"

@@ -166,7 +166,6 @@ SELECT
   JSON_EXTRACT(e.value, '$.primary') AS is_primary
 FROM databricks_workspace.iam.users_v2 u,
      JSON_EACH(u.emails) e
-WHERE u.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -187,7 +186,6 @@ SELECT
   (e.value->>'primary')::boolean AS is_primary
 FROM databricks_workspace.iam.users_v2 u,
      jsonb_array_elements(u.emails::jsonb) AS e
-WHERE u.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

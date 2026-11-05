@@ -319,7 +319,6 @@ SELECT
   JSON_EXTRACT(a.pending_deployment, '$.status.state') AS pending_deployment_state,
   JSON_EXTRACT(a.pending_deployment, '$.status.message') AS pending_deployment_message
 FROM databricks_workspace.apps.apps a
-WHERE deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -361,7 +360,6 @@ SELECT
   a.pending_deployment->'status'->>'state' AS pending_deployment_state,
   a.pending_deployment->'status'->>'message' AS pending_deployment_message
 FROM databricks_workspace.apps.apps a
-WHERE deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

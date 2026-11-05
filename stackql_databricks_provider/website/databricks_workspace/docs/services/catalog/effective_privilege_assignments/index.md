@@ -60,12 +60,12 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "inherited_from_type",
         "type": "string",
-        "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+        "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
       },
       {
         "name": "privilege",
         "type": "string",
-        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ACCESS, ALL_PRIVILEGES, APPLY_TAG, BROWSE, CREATE, CREATE_CASE_COLLECTION, CREATE_CATALOG, CREATE_CLEAN_ROOM, CREATE_CONNECTION, CREATE_DATASOURCE, CREATE_EXTERNAL_LOCATION, CREATE_EXTERNAL_TABLE, CREATE_EXTERNAL_VOLUME, CREATE_FEATURE, CREATE_FLOW, CREATE_FOREIGN_CATALOG, CREATE_FOREIGN_SECURABLE, CREATE_FUNCTION, CREATE_MANAGED_STORAGE, CREATE_MATERIALIZED_VIEW, CREATE_MEMORY_STORE, CREATE_MODEL, CREATE_PROVIDER, CREATE_RECIPIENT, CREATE_RULE, CREATE_SCHEMA, CREATE_SEMANTIC_GRAPH, CREATE_SERVICE, CREATE_SERVICE_CREDENTIAL, CREATE_SHARE, CREATE_SKILL, CREATE_STORAGE_CREDENTIAL, CREATE_STREAM, CREATE_TABLE, CREATE_VIEW, CREATE_VOLUME, DELETE, DELETE_EVENTS, DELETE_SECURITY_DATA, EXECUTE, EXECUTE_CLEAN_ROOM_TASK, EXTERNAL_USE_SCHEMA, INSERT, INSERT_SECURITY_DATA, MANAGE, MANAGE_ACCESS, MANAGE_ACCESS_CONTROL, MANAGE_ALLOWLIST, MANAGE_GRANTS, MODIFY, MODIFY_CLEAN_ROOM, READ_EVENTS, READ_FEATURE, READ_FILES, READ_FLOW, READ_MEMORY_STORE, READ_METADATA, READ_PRIVATE_FILES, READ_SECURITY_DATA, READ_SEMANTIC_GRAPH, READ_SKILL, READ_STREAM, READ_VOLUME, REFRESH, SELECT, SET_SHARE_PERMISSION, UPDATE, UPDATE_EVENTS, UPDATE_SECURITY_DATA, USAGE, USE_CATALOG, USE_CONNECTION, USE_MARKETPLACE_ASSETS, USE_PROVIDER, USE_RECIPIENT, USE_SCHEMA, USE_SHARE, USE_VOLUME, VIEW_ADMIN_METADATA, VIEW_METADATA, VIEW_OBJECT, WRITE_FILES, WRITE_FLOW, WRITE_MEMORY_STORE, WRITE_PRIVATE_FILES, WRITE_SEMANTIC_GRAPH, WRITE_SKILL, WRITE_VOLUME)"
+        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (ACCESS, ALL_PRIVILEGES, APPLY_TAG, BROWSE, CREATE, CREATE_CATALOG, CREATE_CLEAN_ROOM, CREATE_CONNECTION, CREATE_EXTERNAL_LOCATION, CREATE_EXTERNAL_TABLE, CREATE_EXTERNAL_VOLUME, CREATE_FOREIGN_CATALOG, CREATE_FOREIGN_SECURABLE, CREATE_FUNCTION, CREATE_MANAGED_STORAGE, CREATE_MATERIALIZED_VIEW, CREATE_MODEL, CREATE_PROVIDER, CREATE_RECIPIENT, CREATE_SCHEMA, CREATE_SERVICE_CREDENTIAL, CREATE_SHARE, CREATE_STORAGE_CREDENTIAL, CREATE_TABLE, CREATE_VIEW, CREATE_VOLUME, EXECUTE, EXECUTE_CLEAN_ROOM_TASK, EXTERNAL_USE_LOCATION, EXTERNAL_USE_SCHEMA, MANAGE, MANAGE_ALLOWLIST, MODIFY, MODIFY_CLEAN_ROOM, READ_FILES, READ_METADATA, READ_PRIVATE_FILES, READ_VOLUME, REFRESH, SELECT, SET_SHARE_PERMISSION, USAGE, USE_CATALOG, USE_CONNECTION, USE_MARKETPLACE_ASSETS, USE_PROVIDER, USE_RECIPIENT, USE_SCHEMA, USE_SHARE, WRITE_FILES, WRITE_PRIVATE_FILES, WRITE_VOLUME)"
       }
     ]
   }
@@ -91,7 +91,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-securable_type"><code>securable_type</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-securable_type"><code>securable_type</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-principal"><code>principal</code></a></td>
     <td>Lists the effective privilege assignments for a securable. Includes inherited privileges. Paginated</td>
 </tr>
@@ -114,7 +114,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-full_name">
     <td><CopyableCode code="full_name" /></td>
@@ -125,6 +125,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="securable_type" /></td>
     <td><code>string</code></td>
     <td>Type of securable.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -164,6 +169,7 @@ FROM databricks_workspace.catalog.effective_privilege_assignments
 WHERE securable_type = '{{ securable_type }}' -- required
 AND full_name = '{{ full_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 AND principal = '{{ principal }}'

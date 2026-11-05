@@ -110,35 +110,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Returns the default warehouse override for a user. Users can fetch their own override. Admins can</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists all default warehouse overrides in the workspace. Only workspace administrators can list all</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-default_warehouse_override"><code>default_warehouse_override</code></a></td>
+    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-type"><code>type</code></a></td>
     <td></td>
     <td>Creates a new default warehouse override for a user. Users can create their own override. Admins can</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-default_warehouse_override"><code>default_warehouse_override</code></a></td>
+    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-type"><code>type</code></a></td>
     <td><a href="#parameter-allow_missing"><code>allow_missing</code></a></td>
     <td>Updates an existing default warehouse override for a user. Users can update their own override. Admins</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-default_warehouse_override_id"><code>default_warehouse_override_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes the default warehouse override for a user. Users can delete their own override. Admins can</td>
 </tr>
@@ -161,22 +161,22 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-default_warehouse_override_id">
     <td><CopyableCode code="default_warehouse_override_id" /></td>
     <td><code>string</code></td>
-    <td>Required. The ID to use for the override, which will become the final component of the override's resource name. Can be a numeric user ID or the literal string "me" for the current user.</td>
+    <td>The `default_warehouse_override_id` segment of the `name` resource name (`default-warehouse-overrides/&#123;default_warehouse_override_id&#125;`). Required. The resource name of the default warehouse override to delete. Format: default-warehouse-overrides/&#123;default_warehouse_override_id&#125; The default_warehouse_override_id can be a numeric user ID or the literal string "me" for the current user.</td>
 </tr>
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
-</tr>
-<tr id="parameter-name">
-    <td><CopyableCode code="name" /></td>
-    <td><code>string</code></td>
-    <td>Required. The resource name of the default warehouse override to delete. Format: default-warehouse-overrides/&#123;default_warehouse_override_id&#125; The default_warehouse_override_id can be a numeric user ID or the literal string "me" for the current user.</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>object</code></td>
     <td>Required. Field mask specifying which fields to update. Only the fields specified in the mask will be updated. Use "*" to update all fields. When allow_missing is true, this field is ignored and all fields are applied.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-allow_missing">
     <td><CopyableCode code="allow_missing" /></td>
@@ -216,8 +216,9 @@ default_warehouse_override_id,
 warehouse_id,
 type
 FROM databricks_workspace.sql.default_warehouse_overrides
-WHERE name = '{{ name }}' -- required
+WHERE default_warehouse_override_id = '{{ default_warehouse_override_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -233,6 +234,7 @@ warehouse_id,
 type
 FROM databricks_workspace.sql.default_warehouse_overrides
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -256,14 +258,22 @@ Creates a new default warehouse override for a user. Users can create their own 
 
 ```sql
 INSERT INTO databricks_workspace.sql.default_warehouse_overrides (
-default_warehouse_override,
+type,
 default_warehouse_override_id,
-deployment_name
+name,
+warehouse_id,
+default_warehouse_override_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ default_warehouse_override }}' /* required */,
+'{{ type }}' /* required */,
 '{{ default_warehouse_override_id }}',
-'{{ deployment_name }}'
+'{{ name }}',
+'{{ warehouse_id }}',
+'{{ default_warehouse_override_id }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 default_warehouse_override_id,
@@ -283,14 +293,25 @@ type
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the default_warehouse_overrides resource.
-    - name: default_warehouse_override
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the default_warehouse_overrides resource.
+    - name: type
+      value: "{{ type }}"
       description: |
-        Required. The default warehouse override to create.
-      value:
-        type: "{{ type }}"
-        default_warehouse_override_id: "{{ default_warehouse_override_id }}"
-        name: "{{ name }}"
-        warehouse_id: "{{ warehouse_id }}"
+        The type of override behavior.
+    - name: default_warehouse_override_id
+      value: "{{ default_warehouse_override_id }}"
+      description: |
+        The ID component of the resource name (user ID).
+    - name: name
+      value: "{{ name }}"
+      description: |
+        The resource name of the default warehouse override. Format: default-warehouse-overrides/{default_warehouse_override_id}
+    - name: warehouse_id
+      value: "{{ warehouse_id }}"
+      description: |
+        The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED type.
 `}</CodeBlock>
 
 </TabItem>
@@ -312,12 +333,16 @@ Updates an existing default warehouse override for a user. Users can update thei
 ```sql
 UPDATE databricks_workspace.sql.default_warehouse_overrides
 SET 
-default_warehouse_override = '{{ default_warehouse_override }}'
+type = '{{ type }}',
+default_warehouse_override_id = '{{ default_warehouse_override_id }}',
+name = '{{ name }}',
+warehouse_id = '{{ warehouse_id }}'
 WHERE 
-name = '{{ name }}' --required
+default_warehouse_override_id = '{{ default_warehouse_override_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND default_warehouse_override = '{{ default_warehouse_override }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND type = '{{ type }}' --required
 AND allow_missing = {{ allow_missing}}
 RETURNING
 name,
@@ -343,8 +368,9 @@ Deletes the default warehouse override for a user. Users can delete their own ov
 
 ```sql
 DELETE FROM databricks_workspace.sql.default_warehouse_overrides
-WHERE name = '{{ name }}' --required
+WHERE default_warehouse_override_id = '{{ default_warehouse_override_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

@@ -20,9 +20,12 @@ stackql
 stackql.exe
 stackql-*.sh
 stackql-server.log
+stackql_mcp_server_*.log
 stackql-zip
 .stackql-smoke
 .stackql-smoke-live
 .venv-win
 billable_usage.csv
 pyrefly.toml
+.env.*
+!.env.*.example

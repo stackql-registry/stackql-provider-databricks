@@ -157,6 +157,23 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
+    "name": "health_check",
+    "type": "object",
+    "description": "Deploy-time health check for the app. Verifies the app is responding to HTTP requests before considering the deployment successful.",
+    "children": [
+      {
+        "name": "path",
+        "type": "string",
+        "description": "HTTP path to probe, e.g. \"/health\" or \"/api/status\"."
+      },
+      {
+        "name": "timeout",
+        "type": "string",
+        "description": "Timeout to wait for the health check to pass before failing the deployment. If not set, a default timeout is used."
+      }
+    ]
+  },
+  {
     "name": "mode",
     "type": "string",
     "description": "The mode of which the deployment will manage the source code. (AUTO_SYNC, SNAPSHOT)"
@@ -307,6 +324,23 @@ The following fields are returned by `SELECT` queries:
     ]
   },
   {
+    "name": "health_check",
+    "type": "object",
+    "description": "Deploy-time health check for the app. Verifies the app is responding to HTTP requests before considering the deployment successful.",
+    "children": [
+      {
+        "name": "path",
+        "type": "string",
+        "description": "HTTP path to probe, e.g. \"/health\" or \"/api/status\"."
+      },
+      {
+        "name": "timeout",
+        "type": "string",
+        "description": "Timeout to wait for the health check to pass before failing the deployment. If not set, a default timeout is used."
+      }
+    ]
+  },
+  {
     "name": "mode",
     "type": "string",
     "description": "The mode of which the deployment will manage the source code. (AUTO_SYNC, SNAPSHOT)"
@@ -360,21 +394,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_id"><code>deployment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Retrieves information for the app deployment with the supplied name and deployment id.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists all app deployments for the app with the supplied name.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-app_deployment"><code>app_deployment</code></a></td>
+    <td><a href="#parameter-app_name"><code>app_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates an app deployment for the app with the supplied name.</td>
 </tr>
@@ -407,7 +441,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -444,6 +483,7 @@ creator,
 deployment_artifacts,
 env_vars,
 git_source,
+health_check,
 mode,
 source_code_path,
 status,
@@ -452,6 +492,7 @@ FROM databricks_workspace.apps.app_deployments
 WHERE app_name = '{{ app_name }}' -- required
 AND deployment_id = '{{ deployment_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -468,6 +509,7 @@ creator,
 deployment_artifacts,
 env_vars,
 git_source,
+health_check,
 mode,
 source_code_path,
 status,
@@ -475,6 +517,7 @@ update_time
 FROM databricks_workspace.apps.app_deployments
 WHERE app_name = '{{ app_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -498,14 +541,38 @@ Creates an app deployment for the app with the supplied name.
 
 ```sql
 INSERT INTO databricks_workspace.apps.app_deployments (
-app_deployment,
+command,
+create_time,
+creator,
+deployment_artifacts,
+deployment_id,
+env_vars,
+git_source,
+health_check,
+mode,
+source_code_path,
+status,
+update_time,
 app_name,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ app_deployment }}' /* required */,
+'{{ command }}',
+'{{ create_time }}',
+'{{ creator }}',
+'{{ deployment_artifacts }}',
+'{{ deployment_id }}',
+'{{ env_vars }}',
+'{{ git_source }}',
+'{{ health_check }}',
+'{{ mode }}',
+'{{ source_code_path }}',
+'{{ status }}',
+'{{ update_time }}',
 '{{ app_name }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 deployment_id,
 command,
@@ -514,6 +581,7 @@ creator,
 deployment_artifacts,
 env_vars,
 git_source,
+health_check,
 mode,
 source_code_path,
 status,
@@ -532,38 +600,74 @@ update_time
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the app_deployments resource.
-    - name: app_deployment
-      description: |
-        The app deployment configuration.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the app_deployments resource.
+    - name: command
       value:
-        command:
-          - "{{ command }}"
-        create_time: "{{ create_time }}"
-        creator: "{{ creator }}"
-        deployment_artifacts:
-          source_code_path: "{{ source_code_path }}"
-        deployment_id: "{{ deployment_id }}"
-        env_vars:
-          - name: "{{ name }}"
-            value: "{{ value }}"
-            value_from: "{{ value_from }}"
-        git_source:
-          branch: "{{ branch }}"
-          commit: "{{ commit }}"
-          git_repository:
-            url: "{{ url }}"
-            provider: "{{ provider }}"
-            auto_deploy: {{ auto_deploy }}
-            caller_credential_id: {{ caller_credential_id }}
-          resolved_commit: "{{ resolved_commit }}"
-          source_code_path: "{{ source_code_path }}"
-          tag: "{{ tag }}"
-        mode: "{{ mode }}"
+        - "{{ command }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The creation time of the deployment. Formatted timestamp in ISO 6801.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The email of the user creates the deployment.
+    - name: deployment_artifacts
+      description: |
+        The deployment artifacts for an app.
+      value:
         source_code_path: "{{ source_code_path }}"
-        status:
-          message: "{{ message }}"
-          state: "{{ state }}"
-        update_time: "{{ update_time }}"
+    - name: deployment_id
+      value: "{{ deployment_id }}"
+      description: |
+        The unique id of the deployment.
+    - name: env_vars
+      description: |
+        The environment variables to set in the app runtime environment. This will override the environment variables specified in the app.yaml file.
+      value:
+        - name: "{{ name }}"
+          value: "{{ value }}"
+          value_from: "{{ value_from }}"
+    - name: git_source
+      description: |
+        Git repository to use as the source for the app deployment.
+      value:
+        branch: "{{ branch }}"
+        commit: "{{ commit }}"
+        git_repository:
+          url: "{{ url }}"
+          provider: "{{ provider }}"
+          auto_deploy: {{ auto_deploy }}
+          caller_credential_id: {{ caller_credential_id }}
+        resolved_commit: "{{ resolved_commit }}"
+        source_code_path: "{{ source_code_path }}"
+        tag: "{{ tag }}"
+    - name: health_check
+      description: |
+        Deploy-time health check for the app. Verifies the app is responding to HTTP requests before considering the deployment successful.
+      value:
+        path: "{{ path }}"
+        timeout: "{{ timeout }}"
+    - name: mode
+      value: "{{ mode }}"
+      description: |
+        The mode of which the deployment will manage the source code.
+    - name: source_code_path
+      value: "{{ source_code_path }}"
+      description: |
+        The workspace file system path of the source code used to create the app deployment. This is different from \`\`deployment_artifacts.source_code_path\`\`, which is the path used by the deployed app. The former refers to the original source code location of the app in the workspace during deployment creation, whereas the latter provides a system generated stable snapshotted source code path used by the deployment.
+    - name: status
+      description: |
+        Status and status message of the deployment
+      value:
+        message: "{{ message }}"
+        state: "{{ state }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The update time of the deployment. Formatted timestamp in ISO 6801.
 `}</CodeBlock>
 
 </TabItem>

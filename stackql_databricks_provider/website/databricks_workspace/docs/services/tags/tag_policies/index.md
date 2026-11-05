@@ -49,11 +49,6 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "account_id",
-    "type": "string",
-    "description": "The account ID that owns this tag policy."
-  },
-  {
     "name": "create_time",
     "type": "string",
     "description": "Timestamp when the tag policy was created"
@@ -62,37 +57,6 @@ The following fields are returned by `SELECT` queries:
     "name": "description",
     "type": "string",
     "description": ""
-  },
-  {
-    "name": "propagation_config",
-    "type": "object",
-    "description": "Configuration that controls how tags are automatically propagated through data lineage.",
-    "children": [
-      {
-        "name": "conflict_resolution",
-        "type": "object",
-        "description": "Policy that determines how to resolve conflicts when multiple upstream sources have different tag values.",
-        "children": [
-          {
-            "name": "default_value_override",
-            "type": "object",
-            "description": "Uses a specified default value to override when conflicts happen.",
-            "children": [
-              {
-                "name": "default_value",
-                "type": "string",
-                "description": "The tag value to apply when conflicts are detected. This value must be one of the allowed values defined in the tag policy."
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "enabled",
-        "type": "boolean",
-        "description": "Determines whether this tag should automatically propagate through lineage."
-      }
-    ]
   },
   {
     "name": "tag_key",
@@ -127,11 +91,6 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "account_id",
-    "type": "string",
-    "description": "The account ID that owns this tag policy."
-  },
-  {
     "name": "create_time",
     "type": "string",
     "description": "Timestamp when the tag policy was created"
@@ -140,37 +99,6 @@ The following fields are returned by `SELECT` queries:
     "name": "description",
     "type": "string",
     "description": ""
-  },
-  {
-    "name": "propagation_config",
-    "type": "object",
-    "description": "Configuration that controls how tags are automatically propagated through data lineage.",
-    "children": [
-      {
-        "name": "conflict_resolution",
-        "type": "object",
-        "description": "Policy that determines how to resolve conflicts when multiple upstream sources have different tag values.",
-        "children": [
-          {
-            "name": "default_value_override",
-            "type": "object",
-            "description": "Uses a specified default value to override when conflicts happen.",
-            "children": [
-              {
-                "name": "default_value",
-                "type": "string",
-                "description": "The tag value to apply when conflicts are detected. This value must be one of the allowed values defined in the tag policy."
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "enabled",
-        "type": "boolean",
-        "description": "Determines whether this tag should automatically propagate through lineage."
-      }
-    ]
   },
   {
     "name": "tag_key",
@@ -216,35 +144,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a single tag policy by its associated governed tag's key. For Terraform usage, see the `Tag</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists the tag policies for all governed tags in the account. For Terraform usage, see the `Tag Policy</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-tag_policy"><code>tag_policy</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Creates a new tag policy, making the associated tag key governed. For Terraform usage, see the `Tag</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-tag_policy"><code>tag_policy</code></a></td>
+    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a></td>
     <td></td>
     <td>Updates an existing tag policy for a single governed tag. For Terraform usage, see the `Tag Policy</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a tag policy by its associated governed tag's key, leaving that tag key ungoverned. For</td>
 </tr>
@@ -267,7 +195,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-tag_key">
     <td><CopyableCode code="tag_key" /></td>
@@ -278,6 +206,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The field mask must be a single string, with multiple fields separated by commas (no spaces). The field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g., ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only the entire collection field can be specified. Field names must exactly match the resource field names. A field mask of ``*`` indicates full replacement. It’s recommended to always explicitly list the fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the API changes in the future.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -308,16 +241,15 @@ Gets a single tag policy by its associated governed tag's key. For Terraform usa
 ```sql
 SELECT
 id,
-account_id,
 create_time,
 description,
-propagation_config,
 tag_key,
 update_time,
 values
 FROM databricks_workspace.tags.tag_policies
 WHERE tag_key = '{{ tag_key }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -328,15 +260,14 @@ Lists the tag policies for all governed tags in the account. For Terraform usage
 ```sql
 SELECT
 id,
-account_id,
 create_time,
 description,
-propagation_config,
 tag_key,
 update_time,
 values
 FROM databricks_workspace.tags.tag_policies
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -360,18 +291,28 @@ Creates a new tag policy, making the associated tag key governed. For Terraform 
 
 ```sql
 INSERT INTO databricks_workspace.tags.tag_policies (
-tag_policy,
-deployment_name
-)
-SELECT 
-'{{ tag_policy }}' /* required */,
-'{{ deployment_name }}'
-RETURNING
-id,
-account_id,
+tag_key,
 create_time,
 description,
-propagation_config,
+id,
+update_time,
+values,
+deployment_name,
+workspace_domain
+)
+SELECT 
+'{{ tag_key }}' /* required */,
+'{{ create_time }}',
+'{{ description }}',
+'{{ id }}',
+'{{ update_time }}',
+'{{ values }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
+RETURNING
+id,
+create_time,
+description,
 tag_key,
 update_time,
 values
@@ -386,21 +327,26 @@ values
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the tag_policies resource.
-    - name: tag_policy
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the tag_policies resource.
+    - name: tag_key
+      value: "{{ tag_key }}"
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        Timestamp when the tag policy was created
+    - name: description
+      value: "{{ description }}"
+    - name: id
+      value: "{{ id }}"
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        Timestamp when the tag policy was last updated
+    - name: values
       value:
-        tag_key: "{{ tag_key }}"
-        account_id: "{{ account_id }}"
-        create_time: "{{ create_time }}"
-        description: "{{ description }}"
-        id: "{{ id }}"
-        propagation_config:
-          conflict_resolution:
-            default_value_override:
-              default_value: "{{ default_value }}"
-          enabled: {{ enabled }}
-        update_time: "{{ update_time }}"
-        values:
-          - name: "{{ name }}"
+        - name: "{{ name }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -422,18 +368,22 @@ Updates an existing tag policy for a single governed tag. For Terraform usage, s
 ```sql
 UPDATE databricks_workspace.tags.tag_policies
 SET 
-tag_policy = '{{ tag_policy }}'
+tag_key = '{{ tag_key }}',
+create_time = '{{ create_time }}',
+description = '{{ description }}',
+id = '{{ id }}',
+update_time = '{{ update_time }}',
+values = '{{ values }}'
 WHERE 
 tag_key = '{{ tag_key }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND tag_policy = '{{ tag_policy }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND tag_key = '{{ tag_key }}' --required
 RETURNING
 id,
-account_id,
 create_time,
 description,
-propagation_config,
 tag_key,
 update_time,
 values;
@@ -458,6 +408,7 @@ Deletes a tag policy by its associated governed tag's key, leaving that tag key 
 DELETE FROM databricks_workspace.tags.tag_policies
 WHERE tag_key = '{{ tag_key }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

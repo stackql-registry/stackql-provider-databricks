@@ -54,16 +54,9 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Update an endpoint</td>
-</tr>
-<tr>
-    <td><a href="#patch_throughput"><CopyableCode code="patch_throughput" /></a></td>
-    <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-endpoint_name"><code>endpoint_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td></td>
-    <td>Update the throughput (concurrency) of an endpoint</td>
 </tr>
 </tbody>
 </table>
@@ -84,12 +77,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-endpoint_name">
     <td><CopyableCode code="endpoint_name" /></td>
     <td><code>string</code></td>
     <td>Name of the AI Search endpoint</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -109,11 +107,11 @@ Update an endpoint
 ```sql
 UPDATE databricks_workspace.vectorsearch.vector_search_endpoints
 SET 
-replication_factor = {{ replication_factor }},
 target_qps = {{ target_qps }}
 WHERE 
 endpoint_name = '{{ endpoint_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 id,
 name,
@@ -127,38 +125,7 @@ endpoint_type,
 last_updated_timestamp,
 last_updated_user,
 num_indexes,
-scaling_info,
-throughput_info;
-```
-</TabItem>
-</Tabs>
-
-
-## Lifecycle Methods
-
-<Tabs
-    defaultValue="patch_throughput"
-    values={[
-        { label: 'patch_throughput', value: 'patch_throughput' }
-    ]}
->
-<TabItem value="patch_throughput">
-
-Update the throughput (concurrency) of an endpoint
-
-```sql
-EXEC databricks_workspace.vectorsearch.vector_search_endpoints.patch_throughput 
-@endpoint_name='{{ endpoint_name }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
-@@json=
-'{
-"all_or_nothing": {{ all_or_nothing }}, 
-"concurrency": {{ concurrency }}, 
-"maximum_concurrency_allowed": {{ maximum_concurrency_allowed }}, 
-"minimal_concurrency_allowed": {{ minimal_concurrency_allowed }}, 
-"num_replicas": {{ num_replicas }}
-}'
-;
+scaling_info;
 ```
 </TabItem>
 </Tabs>

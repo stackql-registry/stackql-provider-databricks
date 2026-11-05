@@ -4,18 +4,22 @@
 # to strip the fat-import header below; ignoring F401 would defeat that.
 
 from __future__ import annotations
-
-import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Dict, List, Any, Iterator, Optional
+
+
+import logging
 
 from databricks.sdk.service._internal import (
     _enum,
     _from_dict,
+    _int64,
     _repeated_dict,
     _repeated_enum,
+    _repeated_int64,
 )
+
 
 _LOG = logging.getLogger("databricks.sdk")
 
@@ -42,72 +46,47 @@ class AggregationGranularity(Enum):
 class AnomalyDetectionConfig:
     """Anomaly Detection Configurations."""
 
-    anomaly_detection_workflow_id: Optional[int] = None
-    """The id of the workflow that detects the anomaly. This field will only be returned in the
-    Get/Update response, if the request comes from the workspace where this anomaly detection job is
-    created."""
-
     excluded_table_full_names: Optional[List[str]] = None
     """List of fully qualified table names to exclude from anomaly detection."""
 
-    job_type: Optional[AnomalyDetectionJobType] = None
-    """The type of the last run of the workflow."""
-
-    publish_health_indicator: Optional[bool] = None
-    """If the health indicator should be shown."""
-
-    validity_check_configurations: Optional[List[ValidityCheckConfiguration]] = None
-    """Validity check configurations for anomaly detection."""
+    notification_settings: Optional[NotificationSettings] = None
+    """Who to alert when anomaly detection finds unhealthy tables in this schema. Applicable to
+    ``schema`` monitors only. This is the same schema alert you manage from **Manage alerts** in the
+    Data Quality Monitoring UI, so a change made in either place shows in both.
+    
+    Set the recipients in ``on_unhealthy_table``; ``on_failure`` is not supported here. Only
+    ``destination_ids`` and ``destination_user_ids`` are supported.
+    
+    On update, an update mask of ``*``, ``anomaly_detection_config``, or
+    ``anomaly_detection_config.notification_settings`` replaces the alert's recipients with the ones
+    in the request; omitting the field, or leaving both recipient lists empty, removes the alert.
+    Other masks leave the alert unchanged."""
 
     def as_dict(self) -> dict:
         """Serializes the AnomalyDetectionConfig into a dictionary suitable for use as a JSON request body."""
         body = {}
-        if self.anomaly_detection_workflow_id is not None:
-            body["anomaly_detection_workflow_id"] = self.anomaly_detection_workflow_id
         if self.excluded_table_full_names:
             body["excluded_table_full_names"] = [v for v in self.excluded_table_full_names]
-        if self.job_type is not None:
-            body["job_type"] = self.job_type.value
-        if self.publish_health_indicator is not None:
-            body["publish_health_indicator"] = self.publish_health_indicator
-        if self.validity_check_configurations:
-            body["validity_check_configurations"] = [v.as_dict() for v in self.validity_check_configurations]
+        if self.notification_settings:
+            body["notification_settings"] = self.notification_settings.as_dict()
         return body
 
     def as_shallow_dict(self) -> dict:
         """Serializes the AnomalyDetectionConfig into a shallow dictionary of its immediate attributes."""
         body = {}
-        if self.anomaly_detection_workflow_id is not None:
-            body["anomaly_detection_workflow_id"] = self.anomaly_detection_workflow_id
         if self.excluded_table_full_names:
             body["excluded_table_full_names"] = self.excluded_table_full_names
-        if self.job_type is not None:
-            body["job_type"] = self.job_type
-        if self.publish_health_indicator is not None:
-            body["publish_health_indicator"] = self.publish_health_indicator
-        if self.validity_check_configurations:
-            body["validity_check_configurations"] = self.validity_check_configurations
+        if self.notification_settings:
+            body["notification_settings"] = self.notification_settings
         return body
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> AnomalyDetectionConfig:
         """Deserializes the AnomalyDetectionConfig from a dictionary."""
         return cls(
-            anomaly_detection_workflow_id=d.get("anomaly_detection_workflow_id", None),
             excluded_table_full_names=d.get("excluded_table_full_names", None),
-            job_type=_enum(d, "job_type", AnomalyDetectionJobType),
-            publish_health_indicator=d.get("publish_health_indicator", None),
-            validity_check_configurations=_repeated_dict(
-                d, "validity_check_configurations", ValidityCheckConfiguration
-            ),
+            notification_settings=_from_dict(d, "notification_settings", NotificationSettings),
         )
-
-
-class AnomalyDetectionJobType(Enum):
-    """Anomaly Detection job type."""
-
-    ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN = "ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN"
-    ANOMALY_DETECTION_JOB_TYPE_NORMAL = "ANOMALY_DETECTION_JOB_TYPE_NORMAL"
 
 
 @dataclass
@@ -369,7 +348,7 @@ class DataProfilingConfig:
             effective_warehouse_id=d.get("effective_warehouse_id", None),
             inference_log=_from_dict(d, "inference_log", InferenceLogConfig),
             latest_monitor_failure_message=d.get("latest_monitor_failure_message", None),
-            monitor_version=d.get("monitor_version", None),
+            monitor_version=_int64(d, "monitor_version"),
             monitored_table_name=d.get("monitored_table_name", None),
             notification_settings=_from_dict(d, "notification_settings", NotificationSettings),
             output_schema_id=d.get("output_schema_id", None),
@@ -488,9 +467,6 @@ class InferenceLogConfig:
     label_column: Optional[str] = None
     """Column for the label."""
 
-    prediction_probability_column: Optional[str] = None
-    """Column for prediction probabilities"""
-
     def as_dict(self) -> dict:
         """Serializes the InferenceLogConfig into a dictionary suitable for use as a JSON request body."""
         body = {}
@@ -502,8 +478,6 @@ class InferenceLogConfig:
             body["model_id_column"] = self.model_id_column
         if self.prediction_column is not None:
             body["prediction_column"] = self.prediction_column
-        if self.prediction_probability_column is not None:
-            body["prediction_probability_column"] = self.prediction_probability_column
         if self.problem_type is not None:
             body["problem_type"] = self.problem_type.value
         if self.timestamp_column is not None:
@@ -521,8 +495,6 @@ class InferenceLogConfig:
             body["model_id_column"] = self.model_id_column
         if self.prediction_column is not None:
             body["prediction_column"] = self.prediction_column
-        if self.prediction_probability_column is not None:
-            body["prediction_probability_column"] = self.prediction_probability_column
         if self.problem_type is not None:
             body["problem_type"] = self.problem_type
         if self.timestamp_column is not None:
@@ -537,7 +509,6 @@ class InferenceLogConfig:
             label_column=d.get("label_column", None),
             model_id_column=d.get("model_id_column", None),
             prediction_column=d.get("prediction_column", None),
-            prediction_probability_column=d.get("prediction_probability_column", None),
             problem_type=_enum(d, "problem_type", InferenceProblemType),
             timestamp_column=d.get("timestamp_column", None),
         )
@@ -687,6 +658,16 @@ class Monitor:
 class NotificationDestination:
     """Destination of the data quality monitoring notification."""
 
+    destination_ids: Optional[List[str]] = None
+    """The notification-destination IDs (Slack / Teams / webhook) to send the notification to. The
+    destinations must already exist in the workspace; a workspace admin creates them. A maximum of
+    25 destination IDs is supported. Only supported on schema monitors, via
+    ``anomaly_detection_config``; rejected on table monitors."""
+
+    destination_user_ids: Optional[List[int]] = None
+    """The IDs of the workspace users to notify by email. A maximum of 25 user IDs is supported. Only
+    supported on schema monitors, via ``anomaly_detection_config``; rejected on table monitors."""
+
     email_addresses: Optional[List[str]] = None
     """The list of email addresses to send the notification to. A maximum of 5 email addresses is
     supported."""
@@ -694,6 +675,10 @@ class NotificationDestination:
     def as_dict(self) -> dict:
         """Serializes the NotificationDestination into a dictionary suitable for use as a JSON request body."""
         body = {}
+        if self.destination_ids:
+            body["destination_ids"] = [v for v in self.destination_ids]
+        if self.destination_user_ids:
+            body["destination_user_ids"] = [v for v in self.destination_user_ids]
         if self.email_addresses:
             body["email_addresses"] = [v for v in self.email_addresses]
         return body
@@ -701,6 +686,10 @@ class NotificationDestination:
     def as_shallow_dict(self) -> dict:
         """Serializes the NotificationDestination into a shallow dictionary of its immediate attributes."""
         body = {}
+        if self.destination_ids:
+            body["destination_ids"] = self.destination_ids
+        if self.destination_user_ids:
+            body["destination_user_ids"] = self.destination_user_ids
         if self.email_addresses:
             body["email_addresses"] = self.email_addresses
         return body
@@ -708,7 +697,11 @@ class NotificationDestination:
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> NotificationDestination:
         """Deserializes the NotificationDestination from a dictionary."""
-        return cls(email_addresses=d.get("email_addresses", None))
+        return cls(
+            destination_ids=d.get("destination_ids", None),
+            destination_user_ids=_repeated_int64(d, "destination_user_ids"),
+            email_addresses=d.get("email_addresses", None),
+        )
 
 
 @dataclass
@@ -718,11 +711,18 @@ class NotificationSettings:
     on_failure: Optional[NotificationDestination] = None
     """Destinations to send notifications on failure/timeout."""
 
+    on_unhealthy_table: Optional[NotificationDestination] = None
+    """Recipients to notify when anomaly detection finds unhealthy tables in the schema. Each recipient
+    gets one notification per important unhealthy table. Only supported on schema monitors, via
+    ``anomaly_detection_config``."""
+
     def as_dict(self) -> dict:
         """Serializes the NotificationSettings into a dictionary suitable for use as a JSON request body."""
         body = {}
         if self.on_failure:
             body["on_failure"] = self.on_failure.as_dict()
+        if self.on_unhealthy_table:
+            body["on_unhealthy_table"] = self.on_unhealthy_table.as_dict()
         return body
 
     def as_shallow_dict(self) -> dict:
@@ -730,86 +730,16 @@ class NotificationSettings:
         body = {}
         if self.on_failure:
             body["on_failure"] = self.on_failure
+        if self.on_unhealthy_table:
+            body["on_unhealthy_table"] = self.on_unhealthy_table
         return body
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> NotificationSettings:
         """Deserializes the NotificationSettings from a dictionary."""
-        return cls(on_failure=_from_dict(d, "on_failure", NotificationDestination))
-
-
-@dataclass
-class PercentNullValidityCheck:
-    column_names: Optional[List[str]] = None
-    """List of column names to check for null percentage"""
-
-    upper_bound: Optional[float] = None
-    """Optional upper bound; we should use auto determined bounds for now"""
-
-    def as_dict(self) -> dict:
-        """Serializes the PercentNullValidityCheck into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.column_names:
-            body["column_names"] = [v for v in self.column_names]
-        if self.upper_bound is not None:
-            body["upper_bound"] = self.upper_bound
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the PercentNullValidityCheck into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.column_names:
-            body["column_names"] = self.column_names
-        if self.upper_bound is not None:
-            body["upper_bound"] = self.upper_bound
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> PercentNullValidityCheck:
-        """Deserializes the PercentNullValidityCheck from a dictionary."""
-        return cls(column_names=d.get("column_names", None), upper_bound=d.get("upper_bound", None))
-
-
-@dataclass
-class RangeValidityCheck:
-    column_names: Optional[List[str]] = None
-    """List of column names to check for range validity"""
-
-    lower_bound: Optional[float] = None
-    """Lower bound for the range"""
-
-    upper_bound: Optional[float] = None
-    """Upper bound for the range"""
-
-    def as_dict(self) -> dict:
-        """Serializes the RangeValidityCheck into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.column_names:
-            body["column_names"] = [v for v in self.column_names]
-        if self.lower_bound is not None:
-            body["lower_bound"] = self.lower_bound
-        if self.upper_bound is not None:
-            body["upper_bound"] = self.upper_bound
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the RangeValidityCheck into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.column_names:
-            body["column_names"] = self.column_names
-        if self.lower_bound is not None:
-            body["lower_bound"] = self.lower_bound
-        if self.upper_bound is not None:
-            body["upper_bound"] = self.upper_bound
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> RangeValidityCheck:
-        """Deserializes the RangeValidityCheck from a dictionary."""
         return cls(
-            column_names=d.get("column_names", None),
-            lower_bound=d.get("lower_bound", None),
-            upper_bound=d.get("upper_bound", None),
+            on_failure=_from_dict(d, "on_failure", NotificationDestination),
+            on_unhealthy_table=_from_dict(d, "on_unhealthy_table", NotificationDestination),
         )
 
 
@@ -903,12 +833,12 @@ class Refresh:
     def from_dict(cls, d: Dict[str, Any]) -> Refresh:
         """Deserializes the Refresh from a dictionary."""
         return cls(
-            end_time_ms=d.get("end_time_ms", None),
+            end_time_ms=_int64(d, "end_time_ms"),
             message=d.get("message", None),
             object_id=d.get("object_id", None),
             object_type=d.get("object_type", None),
-            refresh_id=d.get("refresh_id", None),
-            start_time_ms=d.get("start_time_ms", None),
+            refresh_id=_int64(d, "refresh_id"),
+            start_time_ms=_int64(d, "start_time_ms"),
             state=_enum(d, "state", RefreshState),
             trigger=_enum(d, "trigger", RefreshTrigger),
         )
@@ -988,79 +918,6 @@ class TimeSeriesConfig:
         return cls(
             granularities=_repeated_enum(d, "granularities", AggregationGranularity),
             timestamp_column=d.get("timestamp_column", None),
-        )
-
-
-@dataclass
-class UniquenessValidityCheck:
-    column_names: Optional[List[str]] = None
-    """List of column names to check for uniqueness"""
-
-    def as_dict(self) -> dict:
-        """Serializes the UniquenessValidityCheck into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.column_names:
-            body["column_names"] = [v for v in self.column_names]
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the UniquenessValidityCheck into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.column_names:
-            body["column_names"] = self.column_names
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> UniquenessValidityCheck:
-        """Deserializes the UniquenessValidityCheck from a dictionary."""
-        return cls(column_names=d.get("column_names", None))
-
-
-@dataclass
-class ValidityCheckConfiguration:
-    name: Optional[str] = None
-    """Can be set by system. Does not need to be user facing."""
-
-    percent_null_validity_check: Optional[PercentNullValidityCheck] = None
-
-    range_validity_check: Optional[RangeValidityCheck] = None
-
-    uniqueness_validity_check: Optional[UniquenessValidityCheck] = None
-
-    def as_dict(self) -> dict:
-        """Serializes the ValidityCheckConfiguration into a dictionary suitable for use as a JSON request body."""
-        body = {}
-        if self.name is not None:
-            body["name"] = self.name
-        if self.percent_null_validity_check:
-            body["percent_null_validity_check"] = self.percent_null_validity_check.as_dict()
-        if self.range_validity_check:
-            body["range_validity_check"] = self.range_validity_check.as_dict()
-        if self.uniqueness_validity_check:
-            body["uniqueness_validity_check"] = self.uniqueness_validity_check.as_dict()
-        return body
-
-    def as_shallow_dict(self) -> dict:
-        """Serializes the ValidityCheckConfiguration into a shallow dictionary of its immediate attributes."""
-        body = {}
-        if self.name is not None:
-            body["name"] = self.name
-        if self.percent_null_validity_check:
-            body["percent_null_validity_check"] = self.percent_null_validity_check
-        if self.range_validity_check:
-            body["range_validity_check"] = self.range_validity_check
-        if self.uniqueness_validity_check:
-            body["uniqueness_validity_check"] = self.uniqueness_validity_check
-        return body
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> ValidityCheckConfiguration:
-        """Deserializes the ValidityCheckConfiguration from a dictionary."""
-        return cls(
-            name=d.get("name", None),
-            percent_null_validity_check=_from_dict(d, "percent_null_validity_check", PercentNullValidityCheck),
-            range_validity_check=_from_dict(d, "range_validity_check", RangeValidityCheck),
-            uniqueness_validity_check=_from_dict(d, "uniqueness_validity_check", UniquenessValidityCheck),
         )
 
 

@@ -202,7 +202,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "content",
             "type": "string",
-            "description": ""
+            "description": "AI generated message"
           },
           {
             "name": "id",
@@ -210,31 +210,9 @@ The following fields are returned by `SELECT` queries:
             "description": ""
           },
           {
-            "name": "phase",
-            "type": "string",
-            "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (RESPONSE_PHASE_THINKING, RESPONSE_PHASE_VERIFYING)"
-          },
-          {
             "name": "purpose",
             "type": "string",
-            "description": "Purpose/intent of this text attachment (FOLLOW_UP_QUESTION)"
-          },
-          {
-            "name": "verification_metadata",
-            "type": "object",
-            "description": "Metadata for verification phase attachments. Only set when phase = RESPONSE_PHASE_VERIFYING.",
-            "children": [
-              {
-                "name": "index",
-                "type": "integer",
-                "description": "Optional index to help order attachments within the same section"
-              },
-              {
-                "name": "section",
-                "type": "string",
-                "description": "Verification workflow section - indicates which stage of verification this attachment belongs to<br />These sections are used for grouping and ordering attachments in the frontend UI (VERIFICATION_SECTION_FINAL_DECISION, VERIFICATION_SECTION_PROPOSED_IMPROVEMENT, VERIFICATION_SECTION_SQL_EXAMPLES_VALIDATION, VERIFICATION_SECTION_VERIFICATION_QUERIES)"
-              }
-            ]
+            "description": "Purpose of this text attachment. A completed message may contain more than one text attachment (for example a clarifying follow-up question alongside the final answer); use this field to tell them apart. ``TEXT_ATTACHMENT_PURPOSE_ANSWER`` marks the final answer/summary and ``FOLLOW_UP_QUESTION`` marks a clarifying question. (FOLLOW_UP_QUESTION, TEXT_ATTACHMENT_PURPOSE_ANSWER)"
           }
         ]
       },
@@ -280,7 +258,7 @@ The following fields are returned by `SELECT` queries:
       {
         "name": "type",
         "type": "string",
-        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (BLOCK_MULTIPLE_EXECUTIONS_EXCEPTION, BUDGET_EXCEEDED_EXCEPTION, CERTIFIED_ANSWERS_MISSING_EXCEPTION, CHAT_COMPLETION_CLIENT_EXCEPTION, CHAT_COMPLETION_CLIENT_TIMEOUT_EXCEPTION, CHAT_COMPLETION_NETWORK_EXCEPTION, CONTENT_FILTER_EXCEPTION, CONTEXT_EXCEEDED_EXCEPTION, COULD_NOT_GET_DASHBOARD_SCHEMA_EXCEPTION, COULD_NOT_GET_MODEL_DEPLOYMENTS_EXCEPTION, COULD_NOT_GET_UC_SCHEMA_EXCEPTION, DASHBOARD_PERMISSION_DENIED_EXCEPTION, DELEGATION_NOT_FOUND_EXCEPTION, DEPLOYMENT_NOT_FOUND_EXCEPTION, DESCRIBE_QUERY_INVALID_SQL_ERROR, DESCRIBE_QUERY_TIMEOUT, DESCRIBE_QUERY_UNEXPECTED_FAILURE, EXCEEDED_MAX_TOKEN_LENGTH_EXCEPTION, FUNCTIONS_NOT_AVAILABLE_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_JSON_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_TYPE_EXCEPTION, FUNCTION_CALL_MISSING_PARAMETER_EXCEPTION, GENERATED_SQL_QUERY_TOO_LONG_EXCEPTION, GENERIC_CHAT_COMPLETION_EXCEPTION, GENERIC_CHAT_COMPLETION_SERVICE_EXCEPTION, GENERIC_SQL_EXEC_API_CALL_EXCEPTION, ILLEGAL_PARAMETER_DEFINITION_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_FAILED_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_ONGOING_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_UNSUPPORTED_EXCEPTION, INTERNAL_CATALOG_MISSING_UC_PATH_EXCEPTION, INTERNAL_CATALOG_PATH_OVERLAP_EXCEPTION, INVALID_CERTIFIED_ANSWER_FUNCTION_EXCEPTION, INVALID_CERTIFIED_ANSWER_IDENTIFIER_EXCEPTION, INVALID_CHAT_COMPLETION_ARGUMENTS_JSON_EXCEPTION, INVALID_CHAT_COMPLETION_JSON_EXCEPTION, INVALID_COMPLETION_REQUEST_EXCEPTION, INVALID_FUNCTION_CALL_EXCEPTION, INVALID_SQL_MULTIPLE_DATASET_REFERENCES_EXCEPTION, INVALID_SQL_MULTIPLE_STATEMENTS_EXCEPTION, INVALID_SQL_UNKNOWN_TABLE_EXCEPTION, INVALID_TABLE_IDENTIFIER_EXCEPTION, LOCAL_CONTEXT_EXCEEDED_EXCEPTION, MESSAGE_ATTACHMENT_TOO_LONG_ERROR, MESSAGE_CANCELLED_WHILE_EXECUTING_EXCEPTION, MESSAGE_DELETED_WHILE_EXECUTING_EXCEPTION, MESSAGE_UPDATED_WHILE_EXECUTING_EXCEPTION, MISSING_SQL_QUERY_EXCEPTION, NO_DEPLOYMENTS_AVAILABLE_TO_WORKSPACE, NO_QUERY_TO_VISUALIZE_EXCEPTION, NO_TABLES_TO_QUERY_EXCEPTION, PAY_PER_TOKEN_DISABLED_EXCEPTION, RATE_LIMIT_EXCEEDED_GENERIC_EXCEPTION, RATE_LIMIT_EXCEEDED_SPECIFIED_WAIT_EXCEPTION, REPLY_PROCESS_TIMEOUT_EXCEPTION, RETRYABLE_PROCESSING_EXCEPTION, SQL_EXECUTION_EXCEPTION, STOP_PROCESS_DUE_TO_AUTO_REGENERATE, TABLES_MISSING_EXCEPTION, TOO_MANY_CERTIFIED_ANSWERS_EXCEPTION, TOO_MANY_TABLES_EXCEPTION, UNEXPECTED_REPLY_PROCESS_EXCEPTION, UNKNOWN_AI_MODEL, UNSUPPORTED_CONVERSATION_TYPE_EXCEPTION, WAREHOUSE_ACCESS_MISSING_EXCEPTION, WAREHOUSE_NOT_FOUND_EXCEPTION)"
+        "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (BLOCK_MULTIPLE_EXECUTIONS_EXCEPTION, CHAT_COMPLETION_CLIENT_EXCEPTION, CHAT_COMPLETION_CLIENT_TIMEOUT_EXCEPTION, CHAT_COMPLETION_NETWORK_EXCEPTION, CONTENT_FILTER_EXCEPTION, CONTEXT_EXCEEDED_EXCEPTION, COULD_NOT_GET_DASHBOARD_SCHEMA_EXCEPTION, COULD_NOT_GET_MODEL_DEPLOYMENTS_EXCEPTION, COULD_NOT_GET_UC_SCHEMA_EXCEPTION, DEPLOYMENT_NOT_FOUND_EXCEPTION, DESCRIBE_QUERY_INVALID_SQL_ERROR, DESCRIBE_QUERY_TIMEOUT, DESCRIBE_QUERY_UNEXPECTED_FAILURE, EXCEEDED_MAX_TOKEN_LENGTH_EXCEPTION, FUNCTIONS_NOT_AVAILABLE_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_JSON_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_TYPE_EXCEPTION, FUNCTION_CALL_MISSING_PARAMETER_EXCEPTION, GENERATED_SQL_QUERY_TOO_LONG_EXCEPTION, GENERIC_CHAT_COMPLETION_EXCEPTION, GENERIC_CHAT_COMPLETION_SERVICE_EXCEPTION, GENERIC_SQL_EXEC_API_CALL_EXCEPTION, ILLEGAL_PARAMETER_DEFINITION_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_FAILED_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_ONGOING_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_UNSUPPORTED_EXCEPTION, INTERNAL_CATALOG_MISSING_UC_PATH_EXCEPTION, INTERNAL_CATALOG_PATH_OVERLAP_EXCEPTION, INVALID_CERTIFIED_ANSWER_FUNCTION_EXCEPTION, INVALID_CERTIFIED_ANSWER_IDENTIFIER_EXCEPTION, INVALID_CHAT_COMPLETION_JSON_EXCEPTION, INVALID_COMPLETION_REQUEST_EXCEPTION, INVALID_FUNCTION_CALL_EXCEPTION, INVALID_SQL_MULTIPLE_DATASET_REFERENCES_EXCEPTION, INVALID_SQL_MULTIPLE_STATEMENTS_EXCEPTION, INVALID_SQL_UNKNOWN_TABLE_EXCEPTION, INVALID_TABLE_IDENTIFIER_EXCEPTION, LOCAL_CONTEXT_EXCEEDED_EXCEPTION, MESSAGE_ATTACHMENT_TOO_LONG_ERROR, MESSAGE_CANCELLED_WHILE_EXECUTING_EXCEPTION, MESSAGE_DELETED_WHILE_EXECUTING_EXCEPTION, MESSAGE_UPDATED_WHILE_EXECUTING_EXCEPTION, MISSING_SQL_QUERY_EXCEPTION, NO_DEPLOYMENTS_AVAILABLE_TO_WORKSPACE, NO_QUERY_TO_VISUALIZE_EXCEPTION, NO_TABLES_TO_QUERY_EXCEPTION, RATE_LIMIT_EXCEEDED_GENERIC_EXCEPTION, RATE_LIMIT_EXCEEDED_SPECIFIED_WAIT_EXCEPTION, REPLY_PROCESS_TIMEOUT_EXCEPTION, RETRYABLE_PROCESSING_EXCEPTION, SQL_EXECUTION_EXCEPTION, STOP_PROCESS_DUE_TO_AUTO_REGENERATE, TABLES_MISSING_EXCEPTION, TOO_MANY_CERTIFIED_ANSWERS_EXCEPTION, TOO_MANY_TABLES_EXCEPTION, UNEXPECTED_REPLY_PROCESS_EXCEPTION, UNKNOWN_AI_MODEL, UNSUPPORTED_CONVERSATION_TYPE_EXCEPTION, WAREHOUSE_ACCESS_MISSING_EXCEPTION, WAREHOUSE_NOT_FOUND_EXCEPTION)"
       }
     ]
   },
@@ -450,7 +428,7 @@ The following fields are returned by `SELECT` queries:
               {
                 "name": "content",
                 "type": "string",
-                "description": ""
+                "description": "AI generated message"
               },
               {
                 "name": "id",
@@ -458,19 +436,9 @@ The following fields are returned by `SELECT` queries:
                 "description": ""
               },
               {
-                "name": "phase",
-                "type": "string",
-                "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (RESPONSE_PHASE_THINKING, RESPONSE_PHASE_VERIFYING)"
-              },
-              {
                 "name": "purpose",
                 "type": "string",
-                "description": "Purpose/intent of this text attachment (FOLLOW_UP_QUESTION)"
-              },
-              {
-                "name": "verification_metadata",
-                "type": "object",
-                "description": "Metadata for verification phase attachments. Only set when phase = RESPONSE_PHASE_VERIFYING."
+                "description": "Purpose of this text attachment. A completed message may contain more than one text attachment (for example a clarifying follow-up question alongside the final answer); use this field to tell them apart. ``TEXT_ATTACHMENT_PURPOSE_ANSWER`` marks the final answer/summary and ``FOLLOW_UP_QUESTION`` marks a clarifying question. (FOLLOW_UP_QUESTION, TEXT_ATTACHMENT_PURPOSE_ANSWER)"
               }
             ]
           },
@@ -511,7 +479,7 @@ The following fields are returned by `SELECT` queries:
           {
             "name": "type",
             "type": "string",
-            "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (BLOCK_MULTIPLE_EXECUTIONS_EXCEPTION, BUDGET_EXCEEDED_EXCEPTION, CERTIFIED_ANSWERS_MISSING_EXCEPTION, CHAT_COMPLETION_CLIENT_EXCEPTION, CHAT_COMPLETION_CLIENT_TIMEOUT_EXCEPTION, CHAT_COMPLETION_NETWORK_EXCEPTION, CONTENT_FILTER_EXCEPTION, CONTEXT_EXCEEDED_EXCEPTION, COULD_NOT_GET_DASHBOARD_SCHEMA_EXCEPTION, COULD_NOT_GET_MODEL_DEPLOYMENTS_EXCEPTION, COULD_NOT_GET_UC_SCHEMA_EXCEPTION, DASHBOARD_PERMISSION_DENIED_EXCEPTION, DELEGATION_NOT_FOUND_EXCEPTION, DEPLOYMENT_NOT_FOUND_EXCEPTION, DESCRIBE_QUERY_INVALID_SQL_ERROR, DESCRIBE_QUERY_TIMEOUT, DESCRIBE_QUERY_UNEXPECTED_FAILURE, EXCEEDED_MAX_TOKEN_LENGTH_EXCEPTION, FUNCTIONS_NOT_AVAILABLE_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_JSON_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_TYPE_EXCEPTION, FUNCTION_CALL_MISSING_PARAMETER_EXCEPTION, GENERATED_SQL_QUERY_TOO_LONG_EXCEPTION, GENERIC_CHAT_COMPLETION_EXCEPTION, GENERIC_CHAT_COMPLETION_SERVICE_EXCEPTION, GENERIC_SQL_EXEC_API_CALL_EXCEPTION, ILLEGAL_PARAMETER_DEFINITION_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_FAILED_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_ONGOING_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_UNSUPPORTED_EXCEPTION, INTERNAL_CATALOG_MISSING_UC_PATH_EXCEPTION, INTERNAL_CATALOG_PATH_OVERLAP_EXCEPTION, INVALID_CERTIFIED_ANSWER_FUNCTION_EXCEPTION, INVALID_CERTIFIED_ANSWER_IDENTIFIER_EXCEPTION, INVALID_CHAT_COMPLETION_ARGUMENTS_JSON_EXCEPTION, INVALID_CHAT_COMPLETION_JSON_EXCEPTION, INVALID_COMPLETION_REQUEST_EXCEPTION, INVALID_FUNCTION_CALL_EXCEPTION, INVALID_SQL_MULTIPLE_DATASET_REFERENCES_EXCEPTION, INVALID_SQL_MULTIPLE_STATEMENTS_EXCEPTION, INVALID_SQL_UNKNOWN_TABLE_EXCEPTION, INVALID_TABLE_IDENTIFIER_EXCEPTION, LOCAL_CONTEXT_EXCEEDED_EXCEPTION, MESSAGE_ATTACHMENT_TOO_LONG_ERROR, MESSAGE_CANCELLED_WHILE_EXECUTING_EXCEPTION, MESSAGE_DELETED_WHILE_EXECUTING_EXCEPTION, MESSAGE_UPDATED_WHILE_EXECUTING_EXCEPTION, MISSING_SQL_QUERY_EXCEPTION, NO_DEPLOYMENTS_AVAILABLE_TO_WORKSPACE, NO_QUERY_TO_VISUALIZE_EXCEPTION, NO_TABLES_TO_QUERY_EXCEPTION, PAY_PER_TOKEN_DISABLED_EXCEPTION, RATE_LIMIT_EXCEEDED_GENERIC_EXCEPTION, RATE_LIMIT_EXCEEDED_SPECIFIED_WAIT_EXCEPTION, REPLY_PROCESS_TIMEOUT_EXCEPTION, RETRYABLE_PROCESSING_EXCEPTION, SQL_EXECUTION_EXCEPTION, STOP_PROCESS_DUE_TO_AUTO_REGENERATE, TABLES_MISSING_EXCEPTION, TOO_MANY_CERTIFIED_ANSWERS_EXCEPTION, TOO_MANY_TABLES_EXCEPTION, UNEXPECTED_REPLY_PROCESS_EXCEPTION, UNKNOWN_AI_MODEL, UNSUPPORTED_CONVERSATION_TYPE_EXCEPTION, WAREHOUSE_ACCESS_MISSING_EXCEPTION, WAREHOUSE_NOT_FOUND_EXCEPTION)"
+            "description": "Create a collection of name/value pairs.<br /><br />Example enumeration:<br /><br />&gt;&gt;&gt; class Color(Enum):<br />...     RED = 1<br />...     BLUE = 2<br />...     GREEN = 3<br /><br />Access them by:<br /><br />- attribute access:<br /><br />  &gt;&gt;&gt; Color.RED<br />  &lt;Color.RED: 1&gt;<br /><br />- value lookup:<br /><br />  &gt;&gt;&gt; Color(1)<br />  &lt;Color.RED: 1&gt;<br /><br />- name lookup:<br /><br />  &gt;&gt;&gt; Color['RED']<br />  &lt;Color.RED: 1&gt;<br /><br />Enumerations can be iterated over, and know how many members they have:<br /><br />&gt;&gt;&gt; len(Color)<br />3<br /><br />&gt;&gt;&gt; list(Color)<br />[&lt;Color.RED: 1&gt;, &lt;Color.BLUE: 2&gt;, &lt;Color.GREEN: 3&gt;]<br /><br />Methods can be added to enumerations, and members can have their own<br />attributes -- see the documentation for details. (BLOCK_MULTIPLE_EXECUTIONS_EXCEPTION, CHAT_COMPLETION_CLIENT_EXCEPTION, CHAT_COMPLETION_CLIENT_TIMEOUT_EXCEPTION, CHAT_COMPLETION_NETWORK_EXCEPTION, CONTENT_FILTER_EXCEPTION, CONTEXT_EXCEEDED_EXCEPTION, COULD_NOT_GET_DASHBOARD_SCHEMA_EXCEPTION, COULD_NOT_GET_MODEL_DEPLOYMENTS_EXCEPTION, COULD_NOT_GET_UC_SCHEMA_EXCEPTION, DEPLOYMENT_NOT_FOUND_EXCEPTION, DESCRIBE_QUERY_INVALID_SQL_ERROR, DESCRIBE_QUERY_TIMEOUT, DESCRIBE_QUERY_UNEXPECTED_FAILURE, EXCEEDED_MAX_TOKEN_LENGTH_EXCEPTION, FUNCTIONS_NOT_AVAILABLE_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_JSON_EXCEPTION, FUNCTION_ARGUMENTS_INVALID_TYPE_EXCEPTION, FUNCTION_CALL_MISSING_PARAMETER_EXCEPTION, GENERATED_SQL_QUERY_TOO_LONG_EXCEPTION, GENERIC_CHAT_COMPLETION_EXCEPTION, GENERIC_CHAT_COMPLETION_SERVICE_EXCEPTION, GENERIC_SQL_EXEC_API_CALL_EXCEPTION, ILLEGAL_PARAMETER_DEFINITION_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_FAILED_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_ONGOING_EXCEPTION, INTERNAL_CATALOG_ASSET_CREATION_UNSUPPORTED_EXCEPTION, INTERNAL_CATALOG_MISSING_UC_PATH_EXCEPTION, INTERNAL_CATALOG_PATH_OVERLAP_EXCEPTION, INVALID_CERTIFIED_ANSWER_FUNCTION_EXCEPTION, INVALID_CERTIFIED_ANSWER_IDENTIFIER_EXCEPTION, INVALID_CHAT_COMPLETION_JSON_EXCEPTION, INVALID_COMPLETION_REQUEST_EXCEPTION, INVALID_FUNCTION_CALL_EXCEPTION, INVALID_SQL_MULTIPLE_DATASET_REFERENCES_EXCEPTION, INVALID_SQL_MULTIPLE_STATEMENTS_EXCEPTION, INVALID_SQL_UNKNOWN_TABLE_EXCEPTION, INVALID_TABLE_IDENTIFIER_EXCEPTION, LOCAL_CONTEXT_EXCEEDED_EXCEPTION, MESSAGE_ATTACHMENT_TOO_LONG_ERROR, MESSAGE_CANCELLED_WHILE_EXECUTING_EXCEPTION, MESSAGE_DELETED_WHILE_EXECUTING_EXCEPTION, MESSAGE_UPDATED_WHILE_EXECUTING_EXCEPTION, MISSING_SQL_QUERY_EXCEPTION, NO_DEPLOYMENTS_AVAILABLE_TO_WORKSPACE, NO_QUERY_TO_VISUALIZE_EXCEPTION, NO_TABLES_TO_QUERY_EXCEPTION, RATE_LIMIT_EXCEEDED_GENERIC_EXCEPTION, RATE_LIMIT_EXCEEDED_SPECIFIED_WAIT_EXCEPTION, REPLY_PROCESS_TIMEOUT_EXCEPTION, RETRYABLE_PROCESSING_EXCEPTION, SQL_EXECUTION_EXCEPTION, STOP_PROCESS_DUE_TO_AUTO_REGENERATE, TABLES_MISSING_EXCEPTION, TOO_MANY_CERTIFIED_ANSWERS_EXCEPTION, TOO_MANY_TABLES_EXCEPTION, UNEXPECTED_REPLY_PROCESS_EXCEPTION, UNKNOWN_AI_MODEL, UNSUPPORTED_CONVERSATION_TYPE_EXCEPTION, WAREHOUSE_ACCESS_MISSING_EXCEPTION, WAREHOUSE_NOT_FOUND_EXCEPTION)"
           }
         ]
       },
@@ -608,58 +576,65 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_query_result_by_attachment"><CopyableCode code="get_query_result_by_attachment" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-attachment_id"><code>attachment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-attachment_id"><code>attachment_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>DEPRECATED: Use [Get Message Attachment Query Result](:method:genie/getmessageattachmentqueryresult)</td>
 </tr>
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
-    <td>Get message from conversation.</td>
+    <td>Gets a message from a chat-mode or agent-mode conversation. For a complete agent-mode transcript, use</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
-    <td>List messages in a conversation</td>
+    <td>Lists messages in a chat-mode or agent-mode conversation. Agent-mode messages are returned as</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-content"><code>content</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-content"><code>content</code></a></td>
     <td></td>
-    <td>Create new message in a [conversation](:method:genie/startconversation). The AI response uses all</td>
+    <td>Sends a new message in a chat-mode [conversation](:method:genie/startconversation). The AI response</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete a conversation message.</td>
 </tr>
 <tr>
     <td><a href="#execute_query"><CopyableCode code="execute_query" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>DEPRECATED: Use [Execute Message Attachment Query](:method:genie/executemessageattachmentquery)</td>
 </tr>
 <tr>
+    <td><a href="#cancel_response"><CopyableCode code="cancel_response" /></a></td>
+    <td><CopyableCode code="exec" /></td>
+    <td><a href="#parameter-agent_id"><code>agent_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-response_id"><code>response_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Cancels an in-flight agent-mode response. ``response_id`` is the id returned in the</td>
+</tr>
+<tr>
     <td><a href="#get_query_result_deprecated"><CopyableCode code="get_query_result_deprecated" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>DEPRECATED: Use [Get Message Attachment Query Result](:method:genie/getmessageattachmentqueryresult)</td>
 </tr>
 <tr>
     <td><a href="#send_feedback"><CopyableCode code="send_feedback" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-rating"><code>rating</code></a></td>
+    <td><a href="#parameter-space_id"><code>space_id</code></a>, <a href="#parameter-conversation_id"><code>conversation_id</code></a>, <a href="#parameter-message_id"><code>message_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-rating"><code>rating</code></a></td>
     <td></td>
-    <td>Send feedback for a message.</td>
+    <td>Sends feedback for a message in a chat-mode or agent-mode conversation.</td>
 </tr>
 </tbody>
 </table>
@@ -677,6 +652,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-agent_id">
+    <td><CopyableCode code="agent_id" /></td>
+    <td><code>string</code></td>
+    <td>The ID of the Genie agent (synonymous with the Genie space ID).</td>
+</tr>
 <tr id="parameter-attachment_id">
     <td><CopyableCode code="attachment_id" /></td>
     <td><code>string</code></td>
@@ -690,17 +670,27 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-message_id">
     <td><CopyableCode code="message_id" /></td>
     <td><code>string</code></td>
     <td>The ID associated with the message to provide feedback for.</td>
 </tr>
+<tr id="parameter-response_id">
+    <td><CopyableCode code="response_id" /></td>
+    <td><code>string</code></td>
+    <td>The ID of the response to cancel (the id from the ``response.created`` event).</td>
+</tr>
 <tr id="parameter-space_id">
     <td><CopyableCode code="space_id" /></td>
     <td><code>string</code></td>
     <td>The ID associated with the Genie space where the message is located.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -738,12 +728,13 @@ AND conversation_id = '{{ conversation_id }}' -- required
 AND message_id = '{{ message_id }}' -- required
 AND attachment_id = '{{ attachment_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
 <TabItem value="get">
 
-Get message from conversation.
+Gets a message from a chat-mode or agent-mode conversation. For a complete agent-mode transcript, use
 
 ```sql
 SELECT
@@ -765,12 +756,13 @@ WHERE space_id = '{{ space_id }}' -- required
 AND conversation_id = '{{ conversation_id }}' -- required
 AND message_id = '{{ message_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
 <TabItem value="list">
 
-List messages in a conversation
+Lists messages in a chat-mode or agent-mode conversation. Agent-mode messages are returned as
 
 ```sql
 SELECT
@@ -780,6 +772,7 @@ FROM databricks_workspace.dashboards.genie_messages
 WHERE space_id = '{{ space_id }}' -- required
 AND conversation_id = '{{ conversation_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -799,7 +792,7 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Create new message in a [conversation](:method:genie/startconversation). The AI response uses all
+Sends a new message in a chat-mode [conversation](:method:genie/startconversation). The AI response
 
 ```sql
 INSERT INTO databricks_workspace.dashboards.genie_messages (
@@ -807,14 +800,16 @@ content,
 enable_visualization,
 space_id,
 conversation_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ content }}' /* required */,
 {{ enable_visualization }},
 '{{ space_id }}',
 '{{ conversation_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 id,
 conversation_id,
@@ -845,6 +840,9 @@ status
       description: Required parameter for the genie_messages resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the genie_messages resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the genie_messages resource.
     - name: content
       value: "{{ content }}"
@@ -878,6 +876,7 @@ WHERE space_id = '{{ space_id }}' --required
 AND conversation_id = '{{ conversation_id }}' --required
 AND message_id = '{{ message_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -890,6 +889,7 @@ AND deployment_name = '{{ deployment_name }}' --required
     defaultValue="execute_query"
     values={[
         { label: 'execute_query', value: 'execute_query' },
+        { label: 'cancel_response', value: 'cancel_response' },
         { label: 'get_query_result_deprecated', value: 'get_query_result_deprecated' },
         { label: 'send_feedback', value: 'send_feedback' }
     ]}
@@ -903,7 +903,22 @@ EXEC databricks_workspace.dashboards.genie_messages.execute_query
 @space_id='{{ space_id }}' --required, 
 @conversation_id='{{ conversation_id }}' --required, 
 @message_id='{{ message_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
+;
+```
+</TabItem>
+<TabItem value="cancel_response">
+
+Cancels an in-flight agent-mode response. ``response_id`` is the id returned in the
+
+```sql
+EXEC databricks_workspace.dashboards.genie_messages.cancel_response 
+@agent_id='{{ agent_id }}' --required, 
+@conversation_id='{{ conversation_id }}' --required, 
+@response_id='{{ response_id }}' --required, 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
@@ -916,20 +931,22 @@ EXEC databricks_workspace.dashboards.genie_messages.get_query_result_deprecated
 @space_id='{{ space_id }}' --required, 
 @conversation_id='{{ conversation_id }}' --required, 
 @message_id='{{ message_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>
 <TabItem value="send_feedback">
 
-Send feedback for a message.
+Sends feedback for a message in a chat-mode or agent-mode conversation.
 
 ```sql
 EXEC databricks_workspace.dashboards.genie_messages.send_feedback 
 @space_id='{{ space_id }}' --required, 
 @conversation_id='{{ conversation_id }}' --required, 
 @message_id='{{ message_id }}' --required, 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "rating": "{{ rating }}", 

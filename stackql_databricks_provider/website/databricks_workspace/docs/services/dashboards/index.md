@@ -30,15 +30,15 @@ total resources: __13__
 <a href="/services/dashboards/genie_eval_results/">genie_eval_results</a><br />
 <a href="/services/dashboards/genie_eval_runs/">genie_eval_runs</a><br />
 <a href="/services/dashboards/genie_message_attachment_downloads/">genie_message_attachment_downloads</a><br />
-<a href="/services/dashboards/genie_message_attachments/">genie_message_attachments</a><br />
-<a href="/services/dashboards/genie_messages/">genie_messages</a>
+<a href="/services/dashboards/genie_message_attachment_visualizations/">genie_message_attachment_visualizations</a><br />
+<a href="/services/dashboards/genie_message_attachments/">genie_message_attachments</a>
 </div>
 <div class="providerDocColumn">
+<a href="/services/dashboards/genie_messages/">genie_messages</a><br />
 <a href="/services/dashboards/lakeview/">lakeview</a><br />
 <a href="/services/dashboards/lakeview_embedded/">lakeview_embedded</a><br />
 <a href="/services/dashboards/lakeview_published/">lakeview_published</a><br />
 <a href="/services/dashboards/lakeview_schedules/">lakeview_schedules</a><br />
-<a href="/services/dashboards/lakeview_subscriptions/">lakeview_subscriptions</a><br />
-<a href="/services/dashboards/published_dashboard_embedded/">published_dashboard_embedded</a>
+<a href="/services/dashboards/lakeview_subscriptions/">lakeview_subscriptions</a>
 </div>
 </div>

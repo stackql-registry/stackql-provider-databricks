@@ -5,17 +5,30 @@
     "description": "OpenAPI specification for the Databricks marketplace service (workspace-level APIs), generated from the Databricks Python SDK.",
     "version": "0.1.0",
     "x-stackql-sdk-version": "0.123.0",
-    "x-stackql-date-generated": "2026-07-31",
+    "x-stackql-date-generated": "2026-11-01",
     "x-stackql-sdk-namespace": "databricks.sdk.service.marketplace"
   },
   "servers": [
     {
-      "url": "https://{workspace}.cloud.databricks.com",
-      "description": "Databricks workspace",
+      "url": "https://{deployment_name}.{workspace_domain}",
       "variables": {
-        "workspace": {
-          "default": "your-workspace",
-          "description": "Your Databricks workspace name"
+        "deployment_name": {
+          "description": "The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session.",
+          "default": "dbc-abcd0123-a1bc",
+          "x-stackQL-envVar": "DATABRICKS_DEPLOYMENT_NAME"
+        },
+        "workspace_domain": {
+          "description": "The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws).",
+          "default": "cloud.databricks.com",
+          "x-stackQL-envVarSelector": {
+            "envVar": "DATABRICKS_CLOUD",
+            "default": "aws",
+            "values": {
+              "aws": "cloud.databricks.com",
+              "azure": "azuredatabricks.net",
+              "gcp": "gcp.databricks.com"
+            }
+          }
         }
       }
     }
@@ -165,7 +178,7 @@
           "marketplace",
           "consumer_installations"
         ],
-        "description": "Install payload associated with a Databricks Marketplace listing.\n\n:param listing_id: str\n:param accepted_consumer_terms: :class:`ConsumerTerms` (optional)\n:param catalog_name: str (optional)\n:param mcp_connection_detail: :class:`InstallListingMcpConnectionDetail` (optional)\n:param recipient_type: :class:`DeltaSharingRecipientType` (optional)\n:param repo_detail: :class:`RepoInstallation` (optional)\n  for git repo installations\n:param share_name: str (optional)\n\n:returns: :class:`Installation`",
+        "description": "Install payload associated with a Databricks Marketplace listing.\n\n:param listing_id: str\n:param accepted_consumer_terms: :class:`ConsumerTerms` (optional)\n:param catalog_name: str (optional)\n:param recipient_type: :class:`DeltaSharingRecipientType` (optional)\n:param repo_detail: :class:`RepoInstallation` (optional)\n  for git repo installations\n:param share_name: str (optional)\n\n:returns: :class:`Installation`",
         "parameters": [
           {
             "name": "listing_id",
@@ -195,57 +208,6 @@
                   },
                   "catalog_name": {
                     "type": "string"
-                  },
-                  "mcp_connection_detail": {
-                    "type": "object",
-                    "properties": {
-                      "connection_name": {
-                        "type": "string",
-                        "description": "Name of the Unity Catalog connection to create for the MCP server."
-                      },
-                      "base_path": {
-                        "type": "string",
-                        "description": "Optional override of the MCP server base path. Defaults to the base path on the listing."
-                      },
-                      "bearer_token": {
-                        "type": "string",
-                        "description": "Bearer token supplied by the consumer, for bearer-token authentication."
-                      },
-                      "catalog": {
-                        "type": "string",
-                        "description": "Catalog the MCP service (and its schema-scoped UC connection) is created under. The consumer must hold the privileges to create a service and connection in this catalog/schema."
-                      },
-                      "host": {
-                        "type": "string",
-                        "description": "Optional override of the MCP server host. Defaults to the host configured on the listing."
-                      },
-                      "oauth_credentials": {
-                        "type": "object",
-                        "properties": {
-                          "client_id": {
-                            "type": "string",
-                            "description": "OAuth client id. Identifies the credential; not the secret itself."
-                          },
-                          "client_secret": {
-                            "type": "string",
-                            "description": "OAuth client secret supplied by the consumer."
-                          }
-                        },
-                        "required": [
-                          "client_id",
-                          "client_secret"
-                        ],
-                        "description": "OAuth client credentials supplied by the consumer, for OAuth (U2M/M2M) authentication."
-                      },
-                      "schema": {
-                        "type": "string",
-                        "description": "Schema (within ``catalog``) the MCP service and its UC connection are created under."
-                      }
-                    },
-                    "required": [
-                      "connection_name"
-                    ],
-                    "description": "Consumer-supplied details for creating the Unity Catalog HTTP connection when installing an MCP\n    listing. Values the provider configures on the listing (port, credential type, OAuth\n    token/authorization endpoints, scope, exchange method) are not repeated here."
                   },
                   "recipient_type": {
                     "type": "string",
@@ -2485,11 +2447,8 @@
                     "type": "string",
                     "x-enum": [
                       "APP",
-                      "COMMIT_DRAWDOWN_REQUEST_ATTACHMENT",
-                      "EMBEDDED_MARKDOWN",
                       "EMBEDDED_NOTEBOOK",
-                      "PROVIDER_ICON",
-                      "SCREENSHOT"
+                      "PROVIDER_ICON"
                     ],
                     "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
                   },
@@ -2754,7 +2713,6 @@
                                 "LOOKUP_TABLES",
                                 "MANUFACTURING",
                                 "MEDIA",
-                                "OPEN_SOURCE",
                                 "OTHER",
                                 "PUBLIC_SECTOR",
                                 "RETAIL",
@@ -2988,11 +2946,8 @@
                                   "type": "string",
                                   "x-enum": [
                                     "APP",
-                                    "COMMIT_DRAWDOWN_REQUEST_ATTACHMENT",
-                                    "EMBEDDED_MARKDOWN",
                                     "EMBEDDED_NOTEBOOK",
-                                    "PROVIDER_ICON",
-                                    "SCREENSHOT"
+                                    "PROVIDER_ICON"
                                   ],
                                   "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
                                 },
@@ -3002,7 +2957,6 @@
                                 "status": {
                                   "type": "string",
                                   "x-enum": [
-                                    "FILE_STATUS_COMMIT_DRAWDOWN",
                                     "FILE_STATUS_PUBLISHED",
                                     "FILE_STATUS_SANITIZATION_FAILED",
                                     "FILE_STATUS_SANITIZING",
@@ -3308,7 +3262,6 @@
                                 "LOOKUP_TABLES",
                                 "MANUFACTURING",
                                 "MEDIA",
-                                "OPEN_SOURCE",
                                 "OTHER",
                                 "PUBLIC_SECTOR",
                                 "RETAIL",
@@ -3542,11 +3495,8 @@
                                   "type": "string",
                                   "x-enum": [
                                     "APP",
-                                    "COMMIT_DRAWDOWN_REQUEST_ATTACHMENT",
-                                    "EMBEDDED_MARKDOWN",
                                     "EMBEDDED_NOTEBOOK",
-                                    "PROVIDER_ICON",
-                                    "SCREENSHOT"
+                                    "PROVIDER_ICON"
                                   ],
                                   "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
                                 },
@@ -3556,7 +3506,6 @@
                                 "status": {
                                   "type": "string",
                                   "x-enum": [
-                                    "FILE_STATUS_COMMIT_DRAWDOWN",
                                     "FILE_STATUS_PUBLISHED",
                                     "FILE_STATUS_SANITIZATION_FAILED",
                                     "FILE_STATUS_SANITIZING",
@@ -4896,61 +4845,6 @@
           }
         }
       },
-      "InstallListingMcpConnectionDetail": {
-        "type": "object",
-        "properties": {
-          "connection_name": {
-            "type": "string",
-            "description": "Name of the Unity Catalog connection to create for the MCP server."
-          },
-          "base_path": {
-            "type": "string",
-            "description": "Optional override of the MCP server base path. Defaults to the base path on the listing."
-          },
-          "bearer_token": {
-            "type": "string",
-            "description": "Bearer token supplied by the consumer, for bearer-token authentication."
-          },
-          "catalog": {
-            "type": "string",
-            "description": "Catalog the MCP service (and its schema-scoped UC connection) is created under. The consumer must hold the privileges to create a service and connection in this catalog/schema."
-          },
-          "host": {
-            "type": "string",
-            "description": "Optional override of the MCP server host. Defaults to the host configured on the listing."
-          },
-          "oauth_credentials": {
-            "$ref": "#/components/schemas/InstallListingMcpConnectionDetailOauthCredentials",
-            "description": "OAuth client credentials supplied by the consumer, for OAuth (U2M/M2M) authentication."
-          },
-          "schema": {
-            "type": "string",
-            "description": "Schema (within ``catalog``) the MCP service and its UC connection are created under."
-          }
-        },
-        "required": [
-          "connection_name"
-        ],
-        "description": "Consumer-supplied details for creating the Unity Catalog HTTP connection when installing an MCP\n    listing. Values the provider configures on the listing (port, credential type, OAuth\n    token/authorization endpoints, scope, exchange method) are not repeated here."
-      },
-      "InstallListingMcpConnectionDetailOauthCredentials": {
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "description": "OAuth client id. Identifies the credential; not the secret itself."
-          },
-          "client_secret": {
-            "type": "string",
-            "description": "OAuth client secret supplied by the consumer."
-          }
-        },
-        "required": [
-          "client_id",
-          "client_secret"
-        ],
-        "description": "OAuth client credentials supplied by the consumer for an MCP connection."
-      },
       "Installation": {
         "type": "object",
         "properties": {
@@ -5754,7 +5648,6 @@
           "LOOKUP_TABLES",
           "MANUFACTURING",
           "MEDIA",
-          "OPEN_SOURCE",
           "OTHER",
           "PUBLIC_SECTOR",
           "RETAIL",
@@ -5816,7 +5709,6 @@
       "FileStatus": {
         "type": "string",
         "x-enum": [
-          "FILE_STATUS_COMMIT_DRAWDOWN",
           "FILE_STATUS_PUBLISHED",
           "FILE_STATUS_SANITIZATION_FAILED",
           "FILE_STATUS_SANITIZING",
@@ -5878,11 +5770,8 @@
         "type": "string",
         "x-enum": [
           "APP",
-          "COMMIT_DRAWDOWN_REQUEST_ATTACHMENT",
-          "EMBEDDED_MARKDOWN",
           "EMBEDDED_NOTEBOOK",
-          "PROVIDER_ICON",
-          "SCREENSHOT"
+          "PROVIDER_ICON"
         ],
         "description": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
       },

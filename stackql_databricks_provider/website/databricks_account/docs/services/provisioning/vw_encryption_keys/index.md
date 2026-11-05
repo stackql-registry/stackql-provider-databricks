@@ -199,7 +199,6 @@ SELECT
   END AS cloud_type
 FROM databricks_account.provisioning.encryption_keys k,
      JSON_EACH(k.use_cases) uc
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -229,7 +228,6 @@ SELECT
   END AS cloud_type
 FROM databricks_account.provisioning.encryption_keys k,
      jsonb_array_elements(k.use_cases::jsonb) AS uc
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

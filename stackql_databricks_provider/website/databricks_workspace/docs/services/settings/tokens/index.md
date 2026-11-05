@@ -78,11 +78,6 @@ The following fields are returned by `SELECT` queries:
     "description": "Output only. Inferred API path scopes collected for this token when autoscope is enabled."
   },
   {
-    "name": "last_accessed_time",
-    "type": "integer",
-    "description": "Server time (in epoch milliseconds) when the token was accessed most recently."
-  },
-  {
     "name": "scopes",
     "type": "array",
     "description": "Scope of the token was created with, if applicable."
@@ -109,28 +104,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Lists all the valid tokens for a user-workspace pair.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Creates and returns a token for a user. If this call is made through token authentication, it creates</td>
 </tr>
 <tr>
     <td><a href="#tokens_update"><CopyableCode code="tokens_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-token_id"><code>token_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-token"><code>token</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a></td>
+    <td><a href="#parameter-token_id"><code>token_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-token"><code>token</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a></td>
     <td></td>
     <td>Updates the comment or scopes of a token.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-token_id"><code>token_id</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-token_id"><code>token_id</code></a></td>
     <td></td>
     <td>Revokes an access token.</td>
 </tr>
@@ -153,12 +148,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-token_id">
     <td><CopyableCode code="token_id" /></td>
     <td><code>string</code></td>
     <td>The SHA-256 hash of the token to be updated.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -184,10 +184,10 @@ comment,
 creation_time,
 expiry_time,
 inferred_scopes,
-last_accessed_time,
 scopes
 FROM databricks_workspace.settings.tokens
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -213,14 +213,16 @@ autoscope_enabled,
 comment,
 lifetime_seconds,
 scopes,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 {{ autoscope_enabled }},
 '{{ comment }}',
 {{ lifetime_seconds }},
 '{{ scopes }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 token_info,
 token_value
@@ -234,6 +236,9 @@ token_value
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the tokens resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the tokens resource.
     - name: autoscope_enabled
       value: {{ autoscope_enabled }}
@@ -278,6 +283,7 @@ update_mask = '{{ update_mask }}'
 WHERE 
 token_id = '{{ token_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND token = '{{ token }}' --required
 AND update_mask = '{{ update_mask }}' --required;
 ```
@@ -299,7 +305,8 @@ Revokes an access token.
 
 ```sql
 EXEC databricks_workspace.settings.tokens.delete 
-@deployment_name='{{ deployment_name }}' --required 
+@deployment_name='{{ deployment_name }}' --required, 
+@workspace_domain='{{ workspace_domain }}' --required 
 @@json=
 '{
 "token_id": "{{ token_id }}"

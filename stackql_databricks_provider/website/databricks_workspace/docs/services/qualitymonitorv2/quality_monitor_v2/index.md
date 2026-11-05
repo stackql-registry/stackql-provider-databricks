@@ -54,48 +54,9 @@ The following fields are returned by `SELECT` queries:
     "description": "",
     "children": [
       {
-        "name": "custom_check_configurations",
-        "type": "array",
-        "description": "",
-        "children": [
-          {
-            "name": "scalar_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "check_name",
-                "type": "string",
-                "description": ""
-              },
-              {
-                "name": "column_matchers",
-                "type": "array",
-                "description": "Column matchers to determine which tables to apply this check to"
-              },
-              {
-                "name": "sql_query",
-                "type": "string",
-                "description": "Templated SQL query for this check"
-              },
-              {
-                "name": "thresholds",
-                "type": "object",
-                "description": "Upper/lower thresholds for the output of the query"
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "excluded_table_full_names",
         "type": "array",
-        "description": "List of fully qualified table names to exclude from anomaly detection."
-      },
-      {
-        "name": "job_type",
-        "type": "string",
-        "description": "The type of the last run of the workflow. (ANOMALY_DETECTION_JOB_TYPE_BACKGROUND_COMPUTE_WORKER, ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN, ANOMALY_DETECTION_JOB_TYPE_NORMAL)"
+        "description": ""
       },
       {
         "name": "last_run_id",
@@ -106,88 +67,6 @@ The following fields are returned by `SELECT` queries:
         "name": "latest_run_status",
         "type": "string",
         "description": "The status of the last run of the workflow. (ANOMALY_DETECTION_RUN_STATUS_CANCELED, ANOMALY_DETECTION_RUN_STATUS_FAILED, ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED, ANOMALY_DETECTION_RUN_STATUS_PENDING, ANOMALY_DETECTION_RUN_STATUS_RUNNING, ANOMALY_DETECTION_RUN_STATUS_SUCCESS, ANOMALY_DETECTION_RUN_STATUS_UNKNOWN, ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR)"
-      },
-      {
-        "name": "slicing_config",
-        "type": "object",
-        "description": "Per-schema completeness slicing configuration.",
-        "children": [
-          {
-            "name": "slice_specs",
-            "type": "array",
-            "description": "The set of slice dimensions to monitor.",
-            "children": [
-              {
-                "name": "column_group",
-                "type": "array",
-                "description": "The columns to group by for slicing."
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "validity_check_configurations",
-        "type": "array",
-        "description": "",
-        "children": [
-          {
-            "name": "name",
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "percent_null_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
-                "type": "array",
-                "description": ""
-              },
-              {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Optional upper bound; we should use auto determined bounds for now"
-              }
-            ]
-          },
-          {
-            "name": "range_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
-                "type": "array",
-                "description": ""
-              },
-              {
-                "name": "lower_bound",
-                "type": "number",
-                "description": "Lower bound for the range"
-              },
-              {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Upper bound for the range"
-              }
-            ]
-          },
-          {
-            "name": "uniqueness_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
-                "type": "array",
-                "description": ""
-              }
-            ]
-          }
-        ]
       }
     ]
   },
@@ -275,48 +154,9 @@ The following fields are returned by `SELECT` queries:
     "description": "",
     "children": [
       {
-        "name": "custom_check_configurations",
-        "type": "array",
-        "description": "",
-        "children": [
-          {
-            "name": "scalar_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "check_name",
-                "type": "string",
-                "description": ""
-              },
-              {
-                "name": "column_matchers",
-                "type": "array",
-                "description": "Column matchers to determine which tables to apply this check to"
-              },
-              {
-                "name": "sql_query",
-                "type": "string",
-                "description": "Templated SQL query for this check"
-              },
-              {
-                "name": "thresholds",
-                "type": "object",
-                "description": "Upper/lower thresholds for the output of the query"
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "excluded_table_full_names",
         "type": "array",
-        "description": "List of fully qualified table names to exclude from anomaly detection."
-      },
-      {
-        "name": "job_type",
-        "type": "string",
-        "description": "The type of the last run of the workflow. (ANOMALY_DETECTION_JOB_TYPE_BACKGROUND_COMPUTE_WORKER, ANOMALY_DETECTION_JOB_TYPE_INTERNAL_HIDDEN, ANOMALY_DETECTION_JOB_TYPE_NORMAL)"
+        "description": ""
       },
       {
         "name": "last_run_id",
@@ -327,88 +167,6 @@ The following fields are returned by `SELECT` queries:
         "name": "latest_run_status",
         "type": "string",
         "description": "The status of the last run of the workflow. (ANOMALY_DETECTION_RUN_STATUS_CANCELED, ANOMALY_DETECTION_RUN_STATUS_FAILED, ANOMALY_DETECTION_RUN_STATUS_JOB_DELETED, ANOMALY_DETECTION_RUN_STATUS_PENDING, ANOMALY_DETECTION_RUN_STATUS_RUNNING, ANOMALY_DETECTION_RUN_STATUS_SUCCESS, ANOMALY_DETECTION_RUN_STATUS_UNKNOWN, ANOMALY_DETECTION_RUN_STATUS_WORKSPACE_MISMATCH_ERROR)"
-      },
-      {
-        "name": "slicing_config",
-        "type": "object",
-        "description": "Per-schema completeness slicing configuration.",
-        "children": [
-          {
-            "name": "slice_specs",
-            "type": "array",
-            "description": "The set of slice dimensions to monitor.",
-            "children": [
-              {
-                "name": "column_group",
-                "type": "array",
-                "description": "The columns to group by for slicing."
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "validity_check_configurations",
-        "type": "array",
-        "description": "",
-        "children": [
-          {
-            "name": "name",
-            "type": "string",
-            "description": ""
-          },
-          {
-            "name": "percent_null_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
-                "type": "array",
-                "description": ""
-              },
-              {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Optional upper bound; we should use auto determined bounds for now"
-              }
-            ]
-          },
-          {
-            "name": "range_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
-                "type": "array",
-                "description": ""
-              },
-              {
-                "name": "lower_bound",
-                "type": "number",
-                "description": "Lower bound for the range"
-              },
-              {
-                "name": "upper_bound",
-                "type": "number",
-                "description": "Upper bound for the range"
-              }
-            ]
-          },
-          {
-            "name": "uniqueness_validity_check",
-            "type": "object",
-            "description": "",
-            "children": [
-              {
-                "name": "column_names",
-                "type": "array",
-                "description": ""
-              }
-            ]
-          }
-        ]
       }
     ]
   },
@@ -502,35 +260,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). Read a quality</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). (Unimplemented)</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-quality_monitor"><code>quality_monitor</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). Create a quality</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-quality_monitor"><code>quality_monitor</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). (Unimplemented)</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-object_type"><code>object_type</code></a>, <a href="#parameter-object_id"><code>object_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monitors). Delete a quality</td>
 </tr>
@@ -553,7 +311,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-object_id">
     <td><CopyableCode code="object_id" /></td>
@@ -564,6 +322,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="object_type" /></td>
     <td><code>string</code></td>
     <td>The type of the monitored object. Can be one of the following: schema.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -601,6 +364,7 @@ FROM databricks_workspace.qualitymonitorv2.quality_monitor_v2
 WHERE object_type = '{{ object_type }}' -- required
 AND object_id = '{{ object_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -616,6 +380,7 @@ object_type,
 validity_check_configurations
 FROM databricks_workspace.qualitymonitorv2.quality_monitor_v2
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -639,12 +404,20 @@ Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monito
 
 ```sql
 INSERT INTO databricks_workspace.qualitymonitorv2.quality_monitor_v2 (
-quality_monitor,
-deployment_name
+object_type,
+object_id,
+anomaly_detection_config,
+validity_check_configurations,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ quality_monitor }}' /* required */,
-'{{ deployment_name }}'
+'{{ object_type }}' /* required */,
+'{{ object_id }}' /* required */,
+'{{ anomaly_detection_config }}',
+'{{ validity_check_configurations }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 object_id,
 anomaly_detection_config,
@@ -661,57 +434,38 @@ validity_check_configurations
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the quality_monitor_v2 resource.
-    - name: quality_monitor
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the quality_monitor_v2 resource.
+    - name: object_type
+      value: "{{ object_type }}"
+    - name: object_id
+      value: "{{ object_id }}"
+      description: |
+        The uuid of the request object. For example, schema id.
+    - name: anomaly_detection_config
       value:
-        object_type: "{{ object_type }}"
-        object_id: "{{ object_id }}"
-        anomaly_detection_config:
-          custom_check_configurations:
-            - scalar_check:
-                check_name: "{{ check_name }}"
-                column_matchers:
-                  - column_names: "{{ column_names }}"
-                    variable_name: "{{ variable_name }}"
-                sql_query: "{{ sql_query }}"
-                thresholds:
-                  lower_bound: "{{ lower_bound }}"
-                  upper_bound: "{{ upper_bound }}"
-          excluded_table_full_names:
-            - "{{ excluded_table_full_names }}"
-          job_type: "{{ job_type }}"
-          last_run_id: "{{ last_run_id }}"
-          latest_run_status: "{{ latest_run_status }}"
-          slicing_config:
-            slice_specs:
-              - column_group: "{{ column_group }}"
-          validity_check_configurations:
-            - name: "{{ name }}"
-              percent_null_validity_check:
-                column_names:
-                  - "{{ column_names }}"
-                upper_bound: {{ upper_bound }}
-              range_validity_check:
-                column_names:
-                  - "{{ column_names }}"
-                lower_bound: {{ lower_bound }}
-                upper_bound: {{ upper_bound }}
-              uniqueness_validity_check:
-                column_names:
-                  - "{{ column_names }}"
-        validity_check_configurations:
-          - name: "{{ name }}"
-            percent_null_validity_check:
-              column_names:
-                - "{{ column_names }}"
-              upper_bound: {{ upper_bound }}
-            range_validity_check:
-              column_names:
-                - "{{ column_names }}"
-              lower_bound: {{ lower_bound }}
-              upper_bound: {{ upper_bound }}
-            uniqueness_validity_check:
-              column_names:
-                - "{{ column_names }}"
+        excluded_table_full_names:
+          - "{{ excluded_table_full_names }}"
+        last_run_id: "{{ last_run_id }}"
+        latest_run_status: "{{ latest_run_status }}"
+    - name: validity_check_configurations
+      description: |
+        Validity check configurations for anomaly detection.
+      value:
+        - name: "{{ name }}"
+          percent_null_validity_check:
+            column_names:
+              - "{{ column_names }}"
+            upper_bound: {{ upper_bound }}
+          range_validity_check:
+            column_names:
+              - "{{ column_names }}"
+            lower_bound: {{ lower_bound }}
+            upper_bound: {{ upper_bound }}
+          uniqueness_validity_check:
+            column_names:
+              - "{{ column_names }}"
 `}</CodeBlock>
 
 </TabItem>
@@ -733,12 +487,17 @@ Deprecated: Use Data Quality Monitoring API instead (/api/data-quality/v1/monito
 ```sql
 REPLACE databricks_workspace.qualitymonitorv2.quality_monitor_v2
 SET 
-quality_monitor = '{{ quality_monitor }}'
+object_type = '{{ object_type }}',
+object_id = '{{ object_id }}',
+anomaly_detection_config = '{{ anomaly_detection_config }}',
+validity_check_configurations = '{{ validity_check_configurations }}'
 WHERE 
 object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND quality_monitor = '{{ quality_monitor }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND object_type = '{{ object_type }}' --required
+AND object_id = '{{ object_id }}' --required
 RETURNING
 object_id,
 anomaly_detection_config,
@@ -766,6 +525,7 @@ DELETE FROM databricks_workspace.qualitymonitorv2.quality_monitor_v2
 WHERE object_type = '{{ object_type }}' --required
 AND object_id = '{{ object_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

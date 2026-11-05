@@ -131,7 +131,6 @@ SELECT
   JSON_EXTRACT(e.value, '$.value') AS entitlement
 FROM databricks_workspace.iam.service_principals_v2 sp,
      JSON_EACH(sp.entitlements) e
-WHERE sp.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -147,7 +146,6 @@ SELECT
   e.value->>'value' AS entitlement
 FROM databricks_workspace.iam.service_principals_v2 sp,
      jsonb_array_elements(sp.entitlements::jsonb) AS e
-WHERE sp.deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

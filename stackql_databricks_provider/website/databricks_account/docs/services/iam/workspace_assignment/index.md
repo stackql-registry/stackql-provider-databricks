@@ -106,21 +106,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#workspace_assignment_list"><CopyableCode code="workspace_assignment_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a></td>
-    <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td></td>
     <td>Get the permission assignments for the specified Databricks account and Databricks workspace.</td>
 </tr>
 <tr>
     <td><a href="#workspace_assignment_update"><CopyableCode code="workspace_assignment_update" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates or updates the workspace permissions assignment in a given account and workspace for the</td>
 </tr>
 <tr>
     <td><a href="#workspace_assignment_delete"><CopyableCode code="workspace_assignment_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-workspace_id"><code>workspace_id</code></a>, <a href="#parameter-principal_id"><code>principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes the workspace permissions assignment in a given account and workspace for the specified</td>
 </tr>
@@ -140,6 +140,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -154,21 +159,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="workspace_id" /></td>
     <td><code>integer</code></td>
     <td>The workspace ID for the account.</td>
-</tr>
-<tr id="parameter-filter">
-    <td><CopyableCode code="filter" /></td>
-    <td><code>string</code></td>
-    <td>Filter string to search principals.</td>
-</tr>
-<tr id="parameter-max_results">
-    <td><CopyableCode code="max_results" /></td>
-    <td><code>integer</code></td>
-    <td>Maximum number of permission assignments to return.</td>
-</tr>
-<tr id="parameter-page_token">
-    <td><CopyableCode code="page_token" /></td>
-    <td><code>string</code></td>
-    <td>Page token returned by previous call to retrieve the next page of results.</td>
 </tr>
 </tbody>
 </table>
@@ -194,9 +184,7 @@ principal
 FROM databricks_account.iam.workspace_assignment
 WHERE account_id = '{{ account_id }}' -- required
 AND workspace_id = '{{ workspace_id }}' -- required
-AND filter = '{{ filter }}'
-AND max_results = '{{ max_results }}'
-AND page_token = '{{ page_token }}'
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -245,6 +233,7 @@ WHERE
 account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
 AND principal_id = '{{ principal_id }}' --required
+AND account_host = '{{ account_host }}' --required
 RETURNING
 error,
 permissions,
@@ -271,6 +260,7 @@ DELETE FROM databricks_account.iam.workspace_assignment
 WHERE account_id = '{{ account_id }}' --required
 AND workspace_id = '{{ workspace_id }}' --required
 AND principal_id = '{{ principal_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

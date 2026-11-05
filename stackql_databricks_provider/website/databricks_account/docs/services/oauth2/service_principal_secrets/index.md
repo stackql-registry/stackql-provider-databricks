@@ -99,21 +99,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#service_principal_secrets_list"><CopyableCode code="service_principal_secrets_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all secrets associated with the given service principal. This operation only returns information</td>
 </tr>
 <tr>
     <td><a href="#service_principal_secrets_create"><CopyableCode code="service_principal_secrets_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Create a secret for the given service principal.</td>
 </tr>
 <tr>
     <td><a href="#service_principal_secrets_delete"><CopyableCode code="service_principal_secrets_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-secret_id"><code>secret_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-service_principal_id"><code>service_principal_id</code></a>, <a href="#parameter-secret_id"><code>secret_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Delete a secret from the given service principal.</td>
 </tr>
@@ -133,6 +133,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -185,6 +190,7 @@ update_time
 FROM databricks_account.oauth2.service_principal_secrets
 WHERE account_id = '{{ account_id }}' -- required
 AND service_principal_id = '{{ service_principal_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -211,13 +217,15 @@ INSERT INTO databricks_account.oauth2.service_principal_secrets (
 lifetime,
 scopes,
 account_id,
-service_principal_id
+service_principal_id,
+account_host
 )
 SELECT 
 '{{ lifetime }}',
 '{{ scopes }}',
 '{{ account_id }}',
-'{{ service_principal_id }}'
+'{{ service_principal_id }}',
+'{{ account_host }}'
 RETURNING
 id,
 create_time,
@@ -240,6 +248,9 @@ update_time
       description: Required parameter for the service_principal_secrets resource.
     - name: service_principal_id
       value: "{{ service_principal_id }}"
+      description: Required parameter for the service_principal_secrets resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the service_principal_secrets resource.
     - name: lifetime
       value: "{{ lifetime }}"
@@ -273,6 +284,7 @@ DELETE FROM databricks_account.oauth2.service_principal_secrets
 WHERE account_id = '{{ account_id }}' --required
 AND service_principal_id = '{{ service_principal_id }}' --required
 AND secret_id = '{{ secret_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

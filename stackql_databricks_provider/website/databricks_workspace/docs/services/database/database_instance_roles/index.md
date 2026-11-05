@@ -198,28 +198,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a role for a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
-    <td>START OF PG ROLE APIs Section These APIs are marked a PUBLIC with stage &lt; PUBLIC_PREVIEW. With more</td>
+    <td>List roles for a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-database_instance_role"><code>database_instance_role</code></a></td>
+    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td><a href="#parameter-database_instance_name"><code>database_instance_name</code></a></td>
     <td>Create a role for a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-allow_missing"><code>allow_missing</code></a>, <a href="#parameter-reassign_owned_to"><code>reassign_owned_to</code></a></td>
     <td>Deletes a role for a Database Instance.</td>
 </tr>
@@ -242,7 +242,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-instance_name">
     <td><CopyableCode code="instance_name" /></td>
@@ -253,6 +253,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td></td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-allow_missing">
     <td><CopyableCode code="allow_missing" /></td>
@@ -307,12 +312,13 @@ FROM databricks_workspace.database.database_instance_roles
 WHERE instance_name = '{{ instance_name }}' -- required
 AND name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
 <TabItem value="list">
 
-START OF PG ROLE APIs Section These APIs are marked a PUBLIC with stage &lt; PUBLIC_PREVIEW. With more
+List roles for a Database Instance.
 
 ```sql
 SELECT
@@ -325,6 +331,7 @@ membership_role
 FROM databricks_workspace.database.database_instance_roles
 WHERE instance_name = '{{ instance_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -348,15 +355,27 @@ Create a role for a Database Instance.
 
 ```sql
 INSERT INTO databricks_workspace.database.database_instance_roles (
-database_instance_role,
+name,
+attributes,
+effective_attributes,
+identity_type,
+instance_name,
+membership_role,
 instance_name,
 deployment_name,
+workspace_domain,
 database_instance_name
 )
 SELECT 
-'{{ database_instance_role }}' /* required */,
+'{{ name }}' /* required */,
+'{{ attributes }}',
+'{{ effective_attributes }}',
+'{{ identity_type }}',
+'{{ instance_name }}',
+'{{ membership_role }}',
 '{{ instance_name }}',
 '{{ deployment_name }}',
+'{{ workspace_domain }}',
 '{{ database_instance_name }}'
 RETURNING
 name,
@@ -379,22 +398,37 @@ membership_role
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the database_instance_roles resource.
-    - name: database_instance_role
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the database_instance_roles resource.
+    - name: name
+      value: "{{ name }}"
       description: |
-        A DatabaseInstanceRole represents a Postgres role in a database instance.
+        The name of the role. This is the unique identifier for the role in an instance.
+    - name: attributes
+      description: |
+        The desired API-exposed Postgres role attribute to associate with the role. Optional.
       value:
-        name: "{{ name }}"
-        attributes:
-          bypassrls: {{ bypassrls }}
-          createdb: {{ createdb }}
-          createrole: {{ createrole }}
-        effective_attributes:
-          bypassrls: {{ bypassrls }}
-          createdb: {{ createdb }}
-          createrole: {{ createrole }}
-        identity_type: "{{ identity_type }}"
-        instance_name: "{{ instance_name }}"
-        membership_role: "{{ membership_role }}"
+        bypassrls: {{ bypassrls }}
+        createdb: {{ createdb }}
+        createrole: {{ createrole }}
+    - name: effective_attributes
+      description: |
+        The attributes that are applied to the role. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+      value:
+        bypassrls: {{ bypassrls }}
+        createdb: {{ createdb }}
+        createrole: {{ createrole }}
+    - name: identity_type
+      value: "{{ identity_type }}"
+      description: |
+        The type of the role.
+    - name: instance_name
+      value: "{{ instance_name }}"
+    - name: membership_role
+      value: "{{ membership_role }}"
+      description: |
+        An enum value for a standard role that this role is a member of.
     - name: database_instance_name
       value: "{{ database_instance_name }}"
 `}</CodeBlock>
@@ -420,6 +454,7 @@ DELETE FROM databricks_workspace.database.database_instance_roles
 WHERE instance_name = '{{ instance_name }}' --required
 AND name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND allow_missing = '{{ allow_missing }}'
 AND reassign_owned_to = '{{ reassign_owned_to }}'
 ;

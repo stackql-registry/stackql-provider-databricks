@@ -178,23 +178,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -203,18 +186,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -391,23 +362,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -416,18 +370,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -604,23 +546,6 @@ The following fields are returned by `SELECT` queries:
             ]
           },
           {
-            "name": "metastore_name",
-            "type": "string",
-            "description": "Metastore context for the dependency. Global UC server responses currently populate this with the metastore UUID string so clients can disambiguate dependencies with identical names across metastores."
-          },
-          {
-            "name": "secret",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog secret.",
-            "children": [
-              {
-                "name": "secret_full_name",
-                "type": "string",
-                "description": "Full name of the dependent secret, in the form of **catalog_name**.**schema_name**.**secret_name**."
-              }
-            ]
-          },
-          {
             "name": "table",
             "type": "object",
             "description": "A table that is dependent on a SQL object.",
@@ -629,18 +554,6 @@ The following fields are returned by `SELECT` queries:
                 "name": "table_full_name",
                 "type": "string",
                 "description": "Full name of the dependent table, in the form of **catalog_name**.**schema_name**.**table_name**."
-              }
-            ]
-          },
-          {
-            "name": "volume",
-            "type": "object",
-            "description": "A dependency on a Unity Catalog volume.",
-            "children": [
-              {
-                "name": "volume_full_name",
-                "type": "string",
-                "description": "Full name of the dependent volume, in the form of **catalog_name**.**schema_name**.**volume_name**."
               }
             ]
           }
@@ -700,35 +613,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-version"><code>version</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-version"><code>version</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_aliases"><code>include_aliases</code></a>, <a href="#parameter-include_browse"><code>include_browse</code></a></td>
     <td>Get a model version.</td>
 </tr>
 <tr>
     <td><a href="#get_by_alias"><CopyableCode code="get_by_alias" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-alias"><code>alias</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-alias"><code>alias</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_aliases"><code>include_aliases</code></a></td>
     <td>Get a model version by alias.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-include_browse"><code>include_browse</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
-    <td>List model versions. You can list model versions under a particular schema, or list all model versions</td>
+    <td>List the model versions of the specified registered model, identified by its full three-level name</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-version"><code>version</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-version"><code>version</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Updates the specified model version.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-version"><code>version</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-version"><code>version</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a model version from the specified registered model. Any aliases assigned to the model version</td>
 </tr>
@@ -756,7 +669,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-full_name">
     <td><CopyableCode code="full_name" /></td>
@@ -767,6 +680,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="version" /></td>
     <td><code>integer</code></td>
     <td>The integer version number of the model version</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-include_aliases">
     <td><CopyableCode code="include_aliases" /></td>
@@ -829,6 +747,7 @@ FROM databricks_workspace.catalog.model_versions
 WHERE full_name = '{{ full_name }}' -- required
 AND version = '{{ version }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_aliases = '{{ include_aliases }}'
 AND include_browse = '{{ include_browse }}'
 ;
@@ -862,13 +781,14 @@ FROM databricks_workspace.catalog.model_versions
 WHERE full_name = '{{ full_name }}' -- required
 AND alias = '{{ alias }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_aliases = '{{ include_aliases }}'
 ;
 ```
 </TabItem>
 <TabItem value="list">
 
-List model versions. You can list model versions under a particular schema, or list all model versions
+List the model versions of the specified registered model, identified by its full three-level name
 
 ```sql
 SELECT
@@ -893,6 +813,7 @@ version
 FROM databricks_workspace.catalog.model_versions
 WHERE full_name = '{{ full_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND include_browse = '{{ include_browse }}'
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
@@ -938,6 +859,7 @@ WHERE
 full_name = '{{ full_name }}' --required
 AND version = '{{ version }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 RETURNING
 id,
 metastore_id,
@@ -979,6 +901,7 @@ DELETE FROM databricks_workspace.catalog.model_versions
 WHERE full_name = '{{ full_name }}' --required
 AND version = '{{ version }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

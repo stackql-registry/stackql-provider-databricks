@@ -158,7 +158,6 @@ SELECT
   JSON_EXTRACT(ncc.egress_config, '$.default_rules.azure_service_endpoint_rule.subnets') AS azure_svc_endpoint_subnets,
   JSON_EXTRACT(ncc.egress_config, '$.default_rules.azure_service_endpoint_rule.target_services') AS azure_svc_endpoint_services
 FROM databricks_account.settings.network_connectivity ncc
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -177,7 +176,6 @@ SELECT
   ncc.egress_config->'default_rules'->'azure_service_endpoint_rule'->'subnets' AS azure_svc_endpoint_subnets,
   ncc.egress_config->'default_rules'->'azure_service_endpoint_rule'->'target_services' AS azure_svc_endpoint_services
 FROM databricks_account.settings.network_connectivity ncc
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

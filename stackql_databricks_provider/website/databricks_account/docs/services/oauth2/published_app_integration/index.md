@@ -174,35 +174,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#published_app_integration_get"><CopyableCode code="published_app_integration_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets the Published OAuth App Integration for the given integration id.</td>
 </tr>
 <tr>
     <td><a href="#published_app_integration_list"><CopyableCode code="published_app_integration_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
-    <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-search_keyword"><code>search_keyword</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
+    <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Get the list of published OAuth app integrations for the specified Databricks account</td>
 </tr>
 <tr>
     <td><a href="#published_app_integration_create"><CopyableCode code="published_app_integration_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Create Published OAuth App Integration.</td>
 </tr>
 <tr>
     <td><a href="#published_app_integration_update"><CopyableCode code="published_app_integration_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing published OAuth App Integration. You can retrieve the published OAuth app</td>
 </tr>
 <tr>
     <td><a href="#published_app_integration_delete"><CopyableCode code="published_app_integration_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-integration_id"><code>integration_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Delete an existing Published OAuth App Integration. You can retrieve the published OAuth app</td>
 </tr>
@@ -222,6 +222,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -241,11 +246,6 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="page_token" /></td>
     <td><code>string</code></td>
     <td></td>
-</tr>
-<tr id="parameter-search_keyword">
-    <td><CopyableCode code="search_keyword" /></td>
-    <td><code>string</code></td>
-    <td>Search term to filter app integrations (case-insensitive substring match). Matches if the display name, the OAuth client_id, or the integration id contains the term.</td>
 </tr>
 </tbody>
 </table>
@@ -274,6 +274,7 @@ token_access_policy
 FROM databricks_account.oauth2.published_app_integration
 WHERE account_id = '{{ account_id }}' -- required
 AND integration_id = '{{ integration_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -291,9 +292,9 @@ created_by,
 token_access_policy
 FROM databricks_account.oauth2.published_app_integration
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
-AND search_keyword = '{{ search_keyword }}'
 ;
 ```
 </TabItem>
@@ -317,12 +318,14 @@ Create Published OAuth App Integration.
 INSERT INTO databricks_account.oauth2.published_app_integration (
 app_id,
 token_access_policy,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ app_id }}',
 '{{ token_access_policy }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 integration_id
 ;
@@ -335,6 +338,9 @@ integration_id
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the published_app_integration resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the published_app_integration resource.
     - name: app_id
       value: "{{ app_id }}"
@@ -372,7 +378,8 @@ SET
 token_access_policy = '{{ token_access_policy }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND integration_id = '{{ integration_id }}' --required;
+AND integration_id = '{{ integration_id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -394,6 +401,7 @@ Delete an existing Published OAuth App Integration. You can retrieve the publish
 DELETE FROM databricks_account.oauth2.published_app_integration
 WHERE account_id = '{{ account_id }}' --required
 AND integration_id = '{{ integration_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

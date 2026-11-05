@@ -207,7 +207,6 @@ SELECT
   JSON_EXTRACT(ld.log_delivery_status, '$.last_successful_attempt_time') AS last_successful_attempt_time,
   ld.workspace_ids_filter
 FROM databricks_account.billing.log_delivery ld
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>
@@ -233,7 +232,6 @@ SELECT
   ld.log_delivery_status->>'last_successful_attempt_time' AS last_successful_attempt_time,
   ld.workspace_ids_filter
 FROM databricks_account.billing.log_delivery ld
-WHERE account_id = '{{ account_id }}'
 ```
 
 </TabItem>

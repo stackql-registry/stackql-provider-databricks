@@ -290,8 +290,6 @@ SELECT
     ELSE 'UNKNOWN'
   END AS cloud_type
 FROM databricks_account.catalog.account_storage_credentials sc
-WHERE account_id = '{{ account_id }}'
-AND metastore_id = '{{ metastore_id }}'
 ```
 
 </TabItem>
@@ -334,8 +332,6 @@ SELECT
     ELSE 'UNKNOWN'
   END AS cloud_type
 FROM databricks_account.catalog.account_storage_credentials sc
-WHERE account_id = '{{ account_id }}'
-AND metastore_id = '{{ metastore_id }}'
 ```
 
 </TabItem>

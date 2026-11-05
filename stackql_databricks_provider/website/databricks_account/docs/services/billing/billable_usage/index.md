@@ -69,9 +69,9 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#billable_usage_download"><CopyableCode code="billable_usage_download" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-start_month"><code>start_month</code></a>, <a href="#parameter-end_month"><code>end_month</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-start_month"><code>start_month</code></a>, <a href="#parameter-end_month"><code>end_month</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-personal_data"><code>personal_data</code></a></td>
-    <td>Returns billable usage logs in CSV format for the specified account and date range. For the data</td>
+    <td>Returns billable usage logs in CSV format for the specified account and date range.</td>
 </tr>
 </tbody>
 </table>
@@ -89,6 +89,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -123,7 +128,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 >
 <TabItem value="billable_usage_download">
 
-Returns billable usage logs in CSV format for the specified account and date range. For the data
+Returns billable usage logs in CSV format for the specified account and date range.
 
 ```sql
 SELECT
@@ -132,6 +137,7 @@ FROM databricks_account.billing.billable_usage
 WHERE account_id = '{{ account_id }}' -- required
 AND start_month = '{{ start_month }}' -- required
 AND end_month = '{{ end_month }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND personal_data = '{{ personal_data }}'
 ;
 ```

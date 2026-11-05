@@ -18,7 +18,7 @@ vectorsearch service documentation.
 
 :::info[Service Summary]
 
-total resources: __6__  
+total resources: __5__  
 
 :::
 
@@ -31,7 +31,6 @@ total resources: __6__
 </div>
 <div class="providerDocColumn">
 <a href="/services/vectorsearch/vector_search_endpoint_permissions/">vector_search_endpoint_permissions</a><br />
-<a href="/services/vectorsearch/vector_search_endpoints/">vector_search_endpoints</a><br />
-<a href="/services/vectorsearch/vector_search_indexes/">vector_search_indexes</a>
+<a href="/services/vectorsearch/vector_search_endpoints/">vector_search_endpoints</a>
 </div>
 </div>

@@ -212,28 +212,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-subscription_id"><code>subscription_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-subscription_id"><code>subscription_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get schedule subscription.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List schedule subscriptions.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-subscription"><code>subscription</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-subscriber"><code>subscriber</code></a></td>
     <td></td>
     <td>Create schedule subscription.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-subscription_id"><code>subscription_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-dashboard_id"><code>dashboard_id</code></a>, <a href="#parameter-schedule_id"><code>schedule_id</code></a>, <a href="#parameter-subscription_id"><code>subscription_id</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-etag"><code>etag</code></a></td>
     <td>Delete schedule subscription.</td>
 </tr>
@@ -261,7 +261,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-schedule_id">
     <td><CopyableCode code="schedule_id" /></td>
@@ -272,6 +272,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="subscription_id" /></td>
     <td><code>string</code></td>
     <td>UUID identifying the subscription.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-etag">
     <td><CopyableCode code="etag" /></td>
@@ -320,6 +325,7 @@ WHERE dashboard_id = '{{ dashboard_id }}' -- required
 AND schedule_id = '{{ schedule_id }}' -- required
 AND subscription_id = '{{ subscription_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -342,6 +348,7 @@ FROM databricks_workspace.dashboards.lakeview_subscriptions
 WHERE dashboard_id = '{{ dashboard_id }}' -- required
 AND schedule_id = '{{ schedule_id }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -365,16 +372,34 @@ Create schedule subscription.
 
 ```sql
 INSERT INTO databricks_workspace.dashboards.lakeview_subscriptions (
-subscription,
+subscriber,
+create_time,
+created_by_user_id,
+dashboard_id,
+etag,
+schedule_id,
+skip_notify,
+subscription_id,
+update_time,
 dashboard_id,
 schedule_id,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ subscription }}' /* required */,
+'{{ subscriber }}' /* required */,
+'{{ create_time }}',
+{{ created_by_user_id }},
+'{{ dashboard_id }}',
+'{{ etag }}',
+'{{ schedule_id }}',
+{{ skip_notify }},
+'{{ subscription_id }}',
+'{{ update_time }}',
 '{{ dashboard_id }}',
 '{{ schedule_id }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 created_by_user_id,
 dashboard_id,
@@ -402,23 +427,47 @@ update_time
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the lakeview_subscriptions resource.
-    - name: subscription
-      description: |
-        The subscription to create. A schedule is limited to 100 subscriptions.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the lakeview_subscriptions resource.
+    - name: subscriber
       value:
-        subscriber:
-          destination_subscriber:
-            destination_id: "{{ destination_id }}"
-          user_subscriber:
-            user_id: {{ user_id }}
-        create_time: "{{ create_time }}"
-        created_by_user_id: {{ created_by_user_id }}
-        dashboard_id: "{{ dashboard_id }}"
-        etag: "{{ etag }}"
-        schedule_id: "{{ schedule_id }}"
-        skip_notify: {{ skip_notify }}
-        subscription_id: "{{ subscription_id }}"
-        update_time: "{{ update_time }}"
+        destination_subscriber:
+          destination_id: "{{ destination_id }}"
+        user_subscriber:
+          user_id: {{ user_id }}
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        A timestamp indicating when the subscription was created.
+    - name: created_by_user_id
+      value: {{ created_by_user_id }}
+      description: |
+        UserId of the user who adds subscribers (users or notification destinations) to the dashboard's schedule.
+    - name: dashboard_id
+      value: "{{ dashboard_id }}"
+      description: |
+        UUID identifying the dashboard to which the subscription belongs.
+    - name: etag
+      value: "{{ etag }}"
+      description: |
+        The etag for the subscription. Must be left empty on create, can be optionally provided on delete to ensure that the subscription has not been deleted since the last read.
+    - name: schedule_id
+      value: "{{ schedule_id }}"
+      description: |
+        UUID identifying the schedule to which the subscription belongs.
+    - name: skip_notify
+      value: {{ skip_notify }}
+      description: |
+        Controls whether notifications are sent to the subscriber for scheduled dashboard refreshes. If not defined, defaults to false in the backend to match the current behavior (refresh and notify)
+    - name: subscription_id
+      value: "{{ subscription_id }}"
+      description: |
+        UUID identifying the subscription.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        A timestamp indicating when the subscription was last updated.
 `}</CodeBlock>
 
 </TabItem>
@@ -443,6 +492,7 @@ WHERE dashboard_id = '{{ dashboard_id }}' --required
 AND schedule_id = '{{ schedule_id }}' --required
 AND subscription_id = '{{ subscription_id }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND etag = '{{ etag }}'
 ;
 ```

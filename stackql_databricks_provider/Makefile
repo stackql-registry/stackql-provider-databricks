@@ -1,7 +1,7 @@
 # Makefile for the StackQL Databricks provider workflow.
 #
 # Run from this directory (stackql_databricks_provider/) in a POSIX shell
-# (Linux, macOS, or WSL on Windows). See CLAUDE.md at the repo root for the
+# (Linux, macOS, or WSL on Windows). See AGENTS.md at the repo root for the
 # full workflow description.
 #
 #   make upstream-pull   pull the latest upstream Databricks SDK changes
@@ -17,13 +17,17 @@ PYTHON ?= $(shell test -x $(ROOT_DIR)/.venv/bin/python && echo $(ROOT_DIR)/.venv
 
 STACKQL_BIN ?= $(PROVIDER_DIR)/stackql
 
-ACCOUNT_SERVERS := [{"url": "https://accounts.cloud.databricks.com"}]
-WORKSPACE_SERVERS := [{"url":"https://{deployment_name}.cloud.databricks.com","variables":{"deployment_name":{"description":"The Databricks Workspace Deployment Name","default":"dbc-abcd0123-a1bc"}}}]
-PROVIDER_CONFIG := {"auth":{"type":"oauth2","client_id_env_var":"DATABRICKS_CLIENT_ID","client_secret_env_var":"DATABRICKS_CLIENT_SECRET","grant_type":"client_credentials","token_url":"https://accounts.cloud.databricks.com/oidc/accounts/{{ .__env__DATABRICKS_ACCOUNT_ID }}/v1/token","scopes":["all-apis"]}}
-SERVICE_CONFIG := {"pagination":{"requestToken":{"key":"page_token","location":"query"},"responseToken":{"key":"next_page_token","location":"body"}}}
+# Hosts, auth and pagination are mastered in provider-config/*.json (the only
+# place the Databricks hosts are written; see AGENTS.md "Multi-cloud hosts").
+# provider-utils takes them as JSON strings, so they are read here.
+CONFIG_DIR := $(PROVIDER_DIR)/provider-config
+ACCOUNT_SERVERS := $(shell cat $(CONFIG_DIR)/account_servers.json)
+WORKSPACE_SERVERS := $(shell cat $(CONFIG_DIR)/workspace_servers.json)
+PROVIDER_CONFIG := $(shell cat $(CONFIG_DIR)/provider_config.json)
+SERVICE_CONFIG := $(shell cat $(CONFIG_DIR)/service_config.json)
 
 .PHONY: help deps upstream-pull specs inventory unit-test provider-account provider-workspace \
-        transforms merge-views providers test-meta stackql smoke smoke-live docs docs-build all clean
+        transforms merge-views providers test-meta stackql smoke smoke-read-only smoke-live docs docs-build all clean
 
 help:
 	@echo "StackQL Databricks provider workflow"
@@ -36,8 +40,10 @@ help:
 	@echo "  make providers         generate both providers + transforms + views"
 	@echo "  make test-meta         run meta-route tests against both providers"
 	@echo "  make stackql           download the stackql binary (POSIX)"
-	@echo "  make smoke             smoke tests against the locally generated provider"
+	@echo "  make smoke             live smoke tests (resource queries, self-cleaning lifecycles, views) against the local provider"
+	@echo "  make smoke-read-only   the same without the create/delete lifecycles"
 	@echo "  make smoke-live        smoke tests against the latest published providers"
+	@echo "                         (CLOUD=aws|azure|gcp reads .env.<cloud>, see .env.<cloud>.example; ENV_FILE=... and SMOKE_ARGS=... override)"
 	@echo "  make docs              generate docusaurus doc sources for both providers"
 	@echo "  make docs-build        build both docusaurus microsites"
 	@echo "  make all               end-to-end: everything above except upstream-pull"
@@ -118,11 +124,27 @@ stackql:
 	fi
 	@$(STACKQL_BIN) --version
 
+# Live smoke tests (authenticated; resource queries, self-cleaning lifecycles,
+# views). Credentials come from an env file (gitignored; copy the matching
+# .env.<cloud>.example): .env by default, .env.$(CLOUD) when CLOUD=aws|azure|gcp
+# is given, or any file via ENV_FILE=... The cloud itself comes from CLOUD or
+# DATABRICKS_CLOUD (aws is the provider default). Extra harness flags go in
+# SMOKE_ARGS, e.g.
+#   make smoke CLOUD=azure
+#   make smoke SMOKE_ARGS="--skip-views --scope account"
+CLOUD ?=
+ENV_FILE ?= $(if $(CLOUD),$(PROVIDER_DIR)/.env.$(CLOUD),$(PROVIDER_DIR)/.env)
+SMOKE_ARGS ?=
+smoke_cloud = $(if $(CLOUD),--cloud $(CLOUD),)
+
 smoke: stackql
-	cd $(PROVIDER_DIR) && $(PYTHON) smoke_tests/smoke.py --stackql-bin $(STACKQL_BIN)
+	cd $(PROVIDER_DIR) && $(PYTHON) smoke_tests/smoke.py --stackql-bin $(STACKQL_BIN) --env-file $(ENV_FILE) $(smoke_cloud) $(SMOKE_ARGS)
+
+smoke-read-only: stackql
+	cd $(PROVIDER_DIR) && $(PYTHON) smoke_tests/smoke.py --stackql-bin $(STACKQL_BIN) --env-file $(ENV_FILE) $(smoke_cloud) --read-only $(SMOKE_ARGS)
 
 smoke-live: stackql
-	cd $(PROVIDER_DIR) && $(PYTHON) smoke_tests/smoke.py --live --stackql-bin $(STACKQL_BIN)
+	cd $(PROVIDER_DIR) && $(PYTHON) smoke_tests/smoke.py --live --stackql-bin $(STACKQL_BIN) --env-file $(ENV_FILE) $(smoke_cloud) $(SMOKE_ARGS)
 
 docs:
 	cd $(PROVIDER_DIR) && npm run generate-docs -- \

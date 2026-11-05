@@ -220,35 +220,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#secrets_uc_get_secret"><CopyableCode code="secrets_uc_get_secret" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-include_value"><code>include_value</code></a></td>
     <td>Gets a secret by its three-level (fully qualified) name.</td>
 </tr>
 <tr>
     <td><a href="#secrets_uc_list_secrets"><CopyableCode code="secrets_uc_list_secrets" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a></td>
     <td>Lists secrets in Unity Catalog.</td>
 </tr>
 <tr>
     <td><a href="#secrets_uc_create_secret"><CopyableCode code="secrets_uc_create_secret" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-secret"><code>secret</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-value"><code>value</code></a></td>
     <td></td>
     <td>Creates a new secret in Unity Catalog.</td>
 </tr>
 <tr>
     <td><a href="#secrets_uc_update_secret"><CopyableCode code="secrets_uc_update_secret" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-secret"><code>secret</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-catalog_name"><code>catalog_name</code></a>, <a href="#parameter-schema_name"><code>schema_name</code></a>, <a href="#parameter-value"><code>value</code></a></td>
     <td></td>
     <td>Updates an existing secret in Unity Catalog.</td>
 </tr>
 <tr>
     <td><a href="#secrets_uc_delete_secret"><CopyableCode code="secrets_uc_delete_secret" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a secret by its three-level (fully qualified) name.</td>
 </tr>
@@ -271,7 +271,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-full_name">
     <td><CopyableCode code="full_name" /></td>
@@ -283,10 +283,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>object</code></td>
     <td>The field mask specifying which fields of the secret to update. - If **update_mask** is **"*"**, all fields specified in **secret** are updated. - If **update_mask** specifies one or more fields, only those fields are updated. Each specified field must be set in **secret**. Supported fields: **value**, **comment**, **owner**, **expire_time**. To change the secret name, delete and recreate the secret.</td>
 </tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-catalog_name">
     <td><CopyableCode code="catalog_name" /></td>
     <td><code>string</code></td>
     <td>The name of the catalog under which to list secrets. Both **catalog_name** and **schema_name** must be specified together.</td>
+</tr>
+<tr id="parameter-include_value">
+    <td><CopyableCode code="include_value" /></td>
+    <td><code>boolean</code></td>
+    <td>Whether to include the secret value in the response. Defaults to false. Requires the **READ_SECRET** privilege.</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -339,6 +349,8 @@ value
 FROM databricks_workspace.catalog.secrets_uc
 WHERE full_name = '{{ full_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
+AND include_value = '{{ include_value }}'
 ;
 ```
 </TabItem>
@@ -365,6 +377,7 @@ updated_by,
 value
 FROM databricks_workspace.catalog.secrets_uc
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND catalog_name = '{{ catalog_name }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -390,12 +403,42 @@ Creates a new secret in Unity Catalog.
 
 ```sql
 INSERT INTO databricks_workspace.catalog.secrets_uc (
-secret,
-deployment_name
+name,
+catalog_name,
+schema_name,
+value,
+comment,
+create_time,
+created_by,
+effective_owner,
+effective_value,
+expire_time,
+full_name,
+metastore_id,
+owner,
+update_time,
+updated_by,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ secret }}' /* required */,
-'{{ deployment_name }}'
+'{{ name }}' /* required */,
+'{{ catalog_name }}' /* required */,
+'{{ schema_name }}' /* required */,
+'{{ value }}' /* required */,
+'{{ comment }}',
+'{{ create_time }}',
+'{{ created_by }}',
+'{{ effective_owner }}',
+'{{ effective_value }}',
+'{{ expire_time }}',
+'{{ full_name }}',
+'{{ metastore_id }}',
+'{{ owner }}',
+'{{ update_time }}',
+'{{ updated_by }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 metastore_id,
@@ -423,25 +466,69 @@ value
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the secrets_uc resource.
-    - name: secret
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the secrets_uc resource.
+    - name: name
+      value: "{{ name }}"
       description: |
-        The secret object to create. The **name**, **catalog_name**, **schema_name**, and **value** fields are required.
-      value:
-        name: "{{ name }}"
-        catalog_name: "{{ catalog_name }}"
-        schema_name: "{{ schema_name }}"
-        value: "{{ value }}"
-        comment: "{{ comment }}"
-        create_time: "{{ create_time }}"
-        created_by: "{{ created_by }}"
-        effective_owner: "{{ effective_owner }}"
-        effective_value: "{{ effective_value }}"
-        expire_time: "{{ expire_time }}"
-        full_name: "{{ full_name }}"
-        metastore_id: "{{ metastore_id }}"
-        owner: "{{ owner }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+        The name of the secret, relative to its parent schema.
+    - name: catalog_name
+      value: "{{ catalog_name }}"
+      description: |
+        The name of the catalog where the schema and the secret reside.
+    - name: schema_name
+      value: "{{ schema_name }}"
+      description: |
+        The name of the schema where the secret resides.
+    - name: value
+      value: "{{ value }}"
+      description: |
+        The secret value to store. This field is input-only and is not returned in responses — use the **effective_value** field (via GetSecret with **include_value** set to true) to read the secret value. The maximum size is 60 KiB (pre-encryption). Accepted content includes passwords, tokens, keys, and other sensitive credential data.
+    - name: comment
+      value: "{{ comment }}"
+      description: |
+        User-provided free-form text description of the secret.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        The time at which this secret was created.
+    - name: created_by
+      value: "{{ created_by }}"
+      description: |
+        The principal that created the secret.
+    - name: effective_owner
+      value: "{{ effective_owner }}"
+      description: |
+        The effective owner of the secret, which may differ from the directly-set **owner** due to inheritance.
+    - name: effective_value
+      value: "{{ effective_value }}"
+      description: |
+        The secret value. Only populated in responses when you have the **READ_SECRET** privilege and **include_value** is set to true in the request. The maximum size is 60 KiB.
+    - name: expire_time
+      value: "{{ expire_time }}"
+      description: |
+        User-provided expiration time of the secret. This field indicates when the secret should no longer be used and may be displayed as a warning in the UI. It is purely informational and does not trigger any automatic actions or affect the secret's lifecycle.
+    - name: full_name
+      value: "{{ full_name }}"
+      description: |
+        The three-level (fully qualified) name of the secret, in the form of **catalog_name.schema_name.secret_name**.
+    - name: metastore_id
+      value: "{{ metastore_id }}"
+      description: |
+        Unique identifier of the metastore hosting the secret.
+    - name: owner
+      value: "{{ owner }}"
+      description: |
+        The owner of the secret. Defaults to the creating principal on creation. Can be updated to transfer ownership of the secret to another principal.
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The time at which this secret was last updated.
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        The principal that last updated the secret.
 `}</CodeBlock>
 
 </TabItem>
@@ -463,12 +550,30 @@ Updates an existing secret in Unity Catalog.
 ```sql
 UPDATE databricks_workspace.catalog.secrets_uc
 SET 
-secret = '{{ secret }}'
+name = '{{ name }}',
+catalog_name = '{{ catalog_name }}',
+schema_name = '{{ schema_name }}',
+value = '{{ value }}',
+comment = '{{ comment }}',
+create_time = '{{ create_time }}',
+created_by = '{{ created_by }}',
+effective_owner = '{{ effective_owner }}',
+effective_value = '{{ effective_value }}',
+expire_time = '{{ expire_time }}',
+full_name = '{{ full_name }}',
+metastore_id = '{{ metastore_id }}',
+owner = '{{ owner }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 full_name = '{{ full_name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND secret = '{{ secret }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND name = '{{ name }}' --required
+AND catalog_name = '{{ catalog_name }}' --required
+AND schema_name = '{{ schema_name }}' --required
+AND value = '{{ value }}' --required
 RETURNING
 name,
 metastore_id,
@@ -506,6 +611,7 @@ Deletes a secret by its three-level (fully qualified) name.
 DELETE FROM databricks_workspace.catalog.secrets_uc
 WHERE full_name = '{{ full_name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

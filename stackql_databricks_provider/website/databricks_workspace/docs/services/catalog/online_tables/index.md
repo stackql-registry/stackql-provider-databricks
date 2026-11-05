@@ -292,21 +292,21 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get information about an existing online table and its status.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-table"><code>table</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Create a new Online Table.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Delete an online table. Warning: This will delete all the data in the online table. If the source</td>
 </tr>
@@ -329,12 +329,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>Full three-part (catalog, schema, table) name of the table.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 </tbody>
 </table>
@@ -361,6 +366,7 @@ unity_catalog_provisioning_state
 FROM databricks_workspace.catalog.online_tables
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -382,12 +388,22 @@ Create a new Online Table.
 
 ```sql
 INSERT INTO databricks_workspace.catalog.online_tables (
-table,
-deployment_name
+name,
+spec,
+status,
+table_serving_url,
+unity_catalog_provisioning_state,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ table }}' /* required */,
-'{{ deployment_name }}'
+'{{ name }}',
+'{{ spec }}',
+'{{ status }}',
+'{{ table_serving_url }}',
+'{{ unity_catalog_provisioning_state }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 spec,
@@ -405,53 +421,67 @@ unity_catalog_provisioning_state
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the online_tables resource.
-    - name: table
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the online_tables resource.
+    - name: name
+      value: "{{ name }}"
       description: |
-        Specification of the online table to be created.
+        Full three-part (catalog, schema, table) name of the table.
+    - name: spec
+      description: |
+        Specification of the online table.
       value:
-        name: "{{ name }}"
-        spec:
-          perform_full_copy: {{ perform_full_copy }}
-          pipeline_id: "{{ pipeline_id }}"
-          primary_key_columns:
-            - "{{ primary_key_columns }}"
-          run_continuously: "{{ run_continuously }}"
-          run_triggered: "{{ run_triggered }}"
-          source_table_full_name: "{{ source_table_full_name }}"
-          timeseries_key: "{{ timeseries_key }}"
-        status:
-          continuous_update_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          detailed_state: "{{ detailed_state }}"
-          failed_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          message: "{{ message }}"
-          provisioning_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-          triggered_update_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-            triggered_update_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-        table_serving_url: "{{ table_serving_url }}"
-        unity_catalog_provisioning_state: "{{ unity_catalog_provisioning_state }}"
+        perform_full_copy: {{ perform_full_copy }}
+        pipeline_id: "{{ pipeline_id }}"
+        primary_key_columns:
+          - "{{ primary_key_columns }}"
+        run_continuously: "{{ run_continuously }}"
+        run_triggered: "{{ run_triggered }}"
+        source_table_full_name: "{{ source_table_full_name }}"
+        timeseries_key: "{{ timeseries_key }}"
+    - name: status
+      description: |
+        Online Table data synchronization status
+      value:
+        continuous_update_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        detailed_state: "{{ detailed_state }}"
+        failed_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        message: "{{ message }}"
+        provisioning_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+        triggered_update_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+          triggered_update_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+    - name: table_serving_url
+      value: "{{ table_serving_url }}"
+      description: |
+        Data serving REST API URL for this table
+    - name: unity_catalog_provisioning_state
+      value: "{{ unity_catalog_provisioning_state }}"
+      description: |
+        The provisioning state of the online table entity in Unity Catalog. This is distinct from the state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it runs asynchronously).
 `}</CodeBlock>
 
 </TabItem>
@@ -474,6 +504,7 @@ Delete an online table. Warning: This will delete all the data in the online tab
 DELETE FROM databricks_workspace.catalog.online_tables
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

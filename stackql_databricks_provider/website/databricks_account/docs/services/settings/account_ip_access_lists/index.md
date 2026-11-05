@@ -170,42 +170,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#account_ip_access_lists_get"><CopyableCode code="account_ip_access_lists_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets an IP access list, specified by its list ID.</td>
 </tr>
 <tr>
     <td><a href="#account_ip_access_lists_list"><CopyableCode code="account_ip_access_lists_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets all IP access lists for the specified account.</td>
 </tr>
 <tr>
     <td><a href="#account_ip_access_lists_create"><CopyableCode code="account_ip_access_lists_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-label"><code>label</code></a>, <a href="#parameter-list_type"><code>list_type</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-label"><code>label</code></a>, <a href="#parameter-list_type"><code>list_type</code></a></td>
     <td></td>
     <td>Creates an IP access list for the account.</td>
 </tr>
 <tr>
     <td><a href="#account_ip_access_lists_update"><CopyableCode code="account_ip_access_lists_update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Updates an existing IP access list, specified by its ID.</td>
 </tr>
 <tr>
     <td><a href="#account_ip_access_lists_replace"><CopyableCode code="account_ip_access_lists_replace" /></a></td>
     <td><CopyableCode code="replace" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a>, <a href="#parameter-label"><code>label</code></a>, <a href="#parameter-list_type"><code>list_type</code></a>, <a href="#parameter-enabled"><code>enabled</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-label"><code>label</code></a>, <a href="#parameter-list_type"><code>list_type</code></a>, <a href="#parameter-enabled"><code>enabled</code></a></td>
     <td></td>
     <td>Replaces an IP access list, specified by its ID.</td>
 </tr>
 <tr>
     <td><a href="#account_ip_access_lists_delete"><CopyableCode code="account_ip_access_lists_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-ip_access_list_id"><code>ip_access_list_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes an IP access list, specified by its list ID.</td>
 </tr>
@@ -225,6 +225,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -266,6 +271,7 @@ updated_by
 FROM databricks_account.settings.account_ip_access_lists
 WHERE account_id = '{{ account_id }}' -- required
 AND ip_access_list_id = '{{ ip_access_list_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -287,6 +293,7 @@ updated_at,
 updated_by
 FROM databricks_account.settings.account_ip_access_lists
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -311,13 +318,15 @@ INSERT INTO databricks_account.settings.account_ip_access_lists (
 label,
 list_type,
 ip_addresses,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ label }}' /* required */,
 '{{ list_type }}' /* required */,
 '{{ ip_addresses }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 ip_access_list
 ;
@@ -330,6 +339,9 @@ ip_access_list
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the account_ip_access_lists resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the account_ip_access_lists resource.
     - name: label
       value: "{{ label }}"
@@ -372,7 +384,8 @@ label = '{{ label }}',
 list_type = '{{ list_type }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND ip_access_list_id = '{{ ip_access_list_id }}' --required;
+AND ip_access_list_id = '{{ ip_access_list_id }}' --required
+AND account_host = '{{ account_host }}' --required;
 ```
 </TabItem>
 </Tabs>
@@ -400,6 +413,7 @@ ip_addresses = '{{ ip_addresses }}'
 WHERE 
 account_id = '{{ account_id }}' --required
 AND ip_access_list_id = '{{ ip_access_list_id }}' --required
+AND account_host = '{{ account_host }}' --required
 AND label = '{{ label }}' --required
 AND list_type = '{{ list_type }}' --required
 AND enabled = {{ enabled }} --required;
@@ -424,6 +438,7 @@ Deletes an IP access list, specified by its list ID.
 DELETE FROM databricks_account.settings.account_ip_access_lists
 WHERE account_id = '{{ account_id }}' --required
 AND ip_access_list_id = '{{ ip_access_list_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

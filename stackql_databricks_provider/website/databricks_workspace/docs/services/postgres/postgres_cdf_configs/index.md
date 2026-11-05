@@ -34,11 +34,47 @@ Creates, updates, deletes, gets or lists a <code>postgres_cdf_configs</code> res
 The following fields are returned by `SELECT` queries:
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+<SchemaTable fields={[
+  {
+    "name": "name",
+    "type": "string",
+    "description": "Output only. The full resource name of the CdfConfig. Format: projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;"
+  },
+  {
+    "name": "cdf_config_id",
+    "type": "string",
+    "description": "The user-specified id; equals the final segment of ``name``. Defaults to the Postgres schema name for configs without an explicit id."
+  },
+  {
+    "name": "catalog",
+    "type": "string",
+    "description": "The Unity Catalog catalog that replicated tables are written into. Set at creation; the CdfConfig is immutable."
+  },
+  {
+    "name": "create_time",
+    "type": "string (date-time)",
+    "description": "When the CdfConfig was created."
+  },
+  {
+    "name": "postgres_schema",
+    "type": "string",
+    "description": "The Postgres schema this CdfConfig replicates from. Unique within the parent database. Set at creation; the CdfConfig is immutable."
+  },
+  {
+    "name": "schema",
+    "type": "string",
+    "description": "The Unity Catalog schema that replicated tables are written into. Set at creation; the CdfConfig is immutable."
+  }
+]} />
+</TabItem>
 <TabItem value="list">
 
 <SchemaTable fields={[
@@ -92,18 +128,32 @@ The following methods are available for this resource:
 </thead>
 <tbody>
 <tr>
+    <td><a href="#get"><CopyableCode code="get" /></a></td>
+    <td><CopyableCode code="select" /></td>
+    <td><a href="#parameter-project"><code>project</code></a>, <a href="#parameter-branch"><code>branch</code></a>, <a href="#parameter-database"><code>database</code></a>, <a href="#parameter-cdf_config"><code>cdf_config</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
+    <td>Get a single Lakebase CDF configuration, including the source Postgres schema and target Unity Catalog</td>
+</tr>
+<tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-project"><code>project</code></a>, <a href="#parameter-branch"><code>branch</code></a>, <a href="#parameter-database"><code>database</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List all CDF configurations for a Lakebase database. Each configuration maps a Postgres schema to a</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-parent"><code>parent</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-cdf_config"><code>cdf_config</code></a></td>
+    <td><a href="#parameter-project"><code>project</code></a>, <a href="#parameter-branch"><code>branch</code></a>, <a href="#parameter-database"><code>database</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-catalog"><code>catalog</code></a>, <a href="#parameter-schema"><code>schema</code></a>, <a href="#parameter-postgres_schema"><code>postgres_schema</code></a></td>
     <td><a href="#parameter-cdf_config_id"><code>cdf_config_id</code></a></td>
     <td>Create a CDF configuration that materializes the change data feed for all tables in a Postgres schema</td>
+</tr>
+<tr>
+    <td><a href="#delete"><CopyableCode code="delete" /></a></td>
+    <td><CopyableCode code="delete" /></td>
+    <td><a href="#parameter-project"><code>project</code></a>, <a href="#parameter-branch"><code>branch</code></a>, <a href="#parameter-database"><code>database</code></a>, <a href="#parameter-cdf_config"><code>cdf_config</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-force"><code>force</code></a></td>
+    <td>Delete a CDF configuration and stop materializing the change data feed. When force=true, also drops</td>
 </tr>
 </tbody>
 </table>
@@ -121,20 +171,45 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-branch">
+    <td><CopyableCode code="branch" /></td>
+    <td><code>string</code></td>
+    <td>The `branch` segment of the `name` resource name (`projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;`). The resource name of the CdfConfig to delete. Format: projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;</td>
+</tr>
+<tr id="parameter-cdf_config">
+    <td><CopyableCode code="cdf_config" /></td>
+    <td><code>string</code></td>
+    <td>The `cdf_config` segment of the `name` resource name (`projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;`). The resource name of the CdfConfig to delete. Format: projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;</td>
+</tr>
+<tr id="parameter-database">
+    <td><CopyableCode code="database" /></td>
+    <td><code>string</code></td>
+    <td>The `database` segment of the `name` resource name (`projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;`). The resource name of the CdfConfig to delete. Format: projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;</td>
+</tr>
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
-<tr id="parameter-parent">
-    <td><CopyableCode code="parent" /></td>
+<tr id="parameter-project">
+    <td><CopyableCode code="project" /></td>
     <td><code>string</code></td>
-    <td>The parent database under which to create the CdfConfig. Format: projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;</td>
+    <td>The `project` segment of the `name` resource name (`projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;`). The resource name of the CdfConfig to delete. Format: projects/&#123;project&#125;/branches/&#123;branch&#125;/databases/&#123;database&#125;/cdf-configs/&#123;cdf_config&#125;</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-cdf_config_id">
     <td><CopyableCode code="cdf_config_id" /></td>
     <td><code>string</code></td>
     <td>The user-specified id for the CdfConfig, forming the final segment of its resource name. Must match the pattern ``[a-z][a-z0-9_]&#123;0,62&#125;``. Defaults to the Postgres schema name when omitted.</td>
+</tr>
+<tr id="parameter-force">
+    <td><CopyableCode code="force" /></td>
+    <td><code>boolean</code></td>
+    <td>When true, also drops the replicated Delta tables in Unity Catalog. When false (the default), the replicated tables are preserved at their last synced state.</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -152,11 +227,34 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 ## `SELECT` examples
 
 <Tabs
-    defaultValue="list"
+    defaultValue="get"
     values={[
+        { label: 'get', value: 'get' },
         { label: 'list', value: 'list' }
     ]}
 >
+<TabItem value="get">
+
+Get a single Lakebase CDF configuration, including the source Postgres schema and target Unity Catalog
+
+```sql
+SELECT
+name,
+cdf_config_id,
+catalog,
+create_time,
+postgres_schema,
+schema
+FROM databricks_workspace.postgres.postgres_cdf_configs
+WHERE project = '{{ project }}' -- required
+AND branch = '{{ branch }}' -- required
+AND database = '{{ database }}' -- required
+AND cdf_config = '{{ cdf_config }}' -- required
+AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
+;
+```
+</TabItem>
 <TabItem value="list">
 
 List all CDF configurations for a Lakebase database. Each configuration maps a Postgres schema to a
@@ -170,8 +268,11 @@ create_time,
 postgres_schema,
 schema
 FROM databricks_workspace.postgres.postgres_cdf_configs
-WHERE parent = '{{ parent }}' -- required
+WHERE project = '{{ project }}' -- required
+AND branch = '{{ branch }}' -- required
+AND database = '{{ database }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -195,15 +296,31 @@ Create a CDF configuration that materializes the change data feed for all tables
 
 ```sql
 INSERT INTO databricks_workspace.postgres.postgres_cdf_configs (
-cdf_config,
-parent,
+catalog,
+schema,
+postgres_schema,
+cdf_config_id,
+create_time,
+name,
+project,
+branch,
+database,
 deployment_name,
+workspace_domain,
 cdf_config_id
 )
 SELECT 
-'{{ cdf_config }}' /* required */,
-'{{ parent }}',
+'{{ catalog }}' /* required */,
+'{{ schema }}' /* required */,
+'{{ postgres_schema }}' /* required */,
+'{{ cdf_config_id }}',
+'{{ create_time }}',
+'{{ name }}',
+'{{ project }}',
+'{{ branch }}',
+'{{ database }}',
 '{{ deployment_name }}',
+'{{ workspace_domain }}',
 '{{ cdf_config_id }}'
 ;
 ```
@@ -213,27 +330,77 @@ SELECT
 <CodeBlock language="yaml">{`# Description fields are for documentation purposes
 - name: postgres_cdf_configs
   props:
-    - name: parent
-      value: "{{ parent }}"
+    - name: project
+      value: "{{ project }}"
+      description: Required parameter for the postgres_cdf_configs resource.
+    - name: branch
+      value: "{{ branch }}"
+      description: Required parameter for the postgres_cdf_configs resource.
+    - name: database
+      value: "{{ database }}"
       description: Required parameter for the postgres_cdf_configs resource.
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the postgres_cdf_configs resource.
-    - name: cdf_config
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the postgres_cdf_configs resource.
+    - name: catalog
+      value: "{{ catalog }}"
       description: |
-        The CdfConfig to create. The catalog, schema, and postgres_schema fields are required; all other fields are output only and ignored on input.
-      value:
-        catalog: "{{ catalog }}"
-        schema: "{{ schema }}"
-        postgres_schema: "{{ postgres_schema }}"
-        cdf_config_id: "{{ cdf_config_id }}"
-        create_time: "{{ create_time }}"
-        name: "{{ name }}"
+        The Unity Catalog catalog that replicated tables are written into. Set at creation; the CdfConfig is immutable.
+    - name: schema
+      value: "{{ schema }}"
+      description: |
+        The Unity Catalog schema that replicated tables are written into. Set at creation; the CdfConfig is immutable.
+    - name: postgres_schema
+      value: "{{ postgres_schema }}"
+      description: |
+        The Postgres schema this CdfConfig replicates from. Unique within the parent database. Set at creation; the CdfConfig is immutable.
+    - name: cdf_config_id
+      value: "{{ cdf_config_id }}"
+      description: |
+        The user-specified id; equals the final segment of \`\`name\`\`. Defaults to the Postgres schema name for configs without an explicit id.
+    - name: create_time
+      value: "{{ create_time }}"
+      description: |
+        When the CdfConfig was created.
+    - name: name
+      value: "{{ name }}"
+      description: |
+        Output only. The full resource name of the CdfConfig. Format: projects/{project}/branches/{branch}/databases/{database}/cdf-configs/{cdf_config}
     - name: cdf_config_id
       value: "{{ cdf_config_id }}"
       description: The user-specified id for the CdfConfig, forming the final segment of its resource name. Must match the pattern \`\`[a-z][a-z0-9_]{0,62}\`\`. Defaults to the Postgres schema name when omitted.
       description: The user-specified id for the CdfConfig, forming the final segment of its resource name. Must match the pattern \`\`[a-z][a-z0-9_]{0,62}\`\`. Defaults to the Postgres schema name when omitted.
 `}</CodeBlock>
 
+</TabItem>
+</Tabs>
+
+
+## `DELETE` examples
+
+<Tabs
+    defaultValue="delete"
+    values={[
+        { label: 'delete', value: 'delete' }
+    ]}
+>
+<TabItem value="delete">
+
+Delete a CDF configuration and stop materializing the change data feed. When force=true, also drops
+
+```sql
+DELETE FROM databricks_workspace.postgres.postgres_cdf_configs
+WHERE project = '{{ project }}' --required
+AND branch = '{{ branch }}' --required
+AND database = '{{ database }}' --required
+AND cdf_config = '{{ cdf_config }}' --required
+AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND force = '{{ force }}'
+;
+```
 </TabItem>
 </Tabs>

@@ -76,6 +76,15 @@ These dataclasses are used in the SDK to represent API requests and responses fo
    .. py:attribute:: RED_STATE
       :value: "RED_STATE"
 
+   .. py:attribute:: STARTING
+      :value: "STARTING"
+
+   .. py:attribute:: STOPPED
+      :value: "STOPPED"
+
+   .. py:attribute:: STOPPING
+      :value: "STOPPING"
+
    .. py:attribute:: YELLOW_STATE
       :value: "YELLOW_STATE"
 
@@ -185,7 +194,7 @@ These dataclasses are used in the SDK to represent API requests and responses fo
 
 .. py:class:: ScalingChangeState
 
-   State of the most recent scaling change request for a Storage Optimized endpoint.
+   State of the most recent scaling change request for a Standard endpoint.
 
    .. py:attribute:: SCALING_CHANGE_APPLIED
       :value: "SCALING_CHANGE_APPLIED"
@@ -229,20 +238,3 @@ These dataclasses are used in the SDK to represent API requests and responses fo
 .. autoclass:: UpsertDataResponse
    :members:
    :undoc-members:
-
-.. autoclass:: Warning
-   :members:
-   :undoc-members:
-
-.. py:class:: WarningStatusCode
-
-   Status code categorizing an advisory warning surfaced on an AI Search endpoint.
-
-   .. py:attribute:: ENDPOINT_HAS_INDEX_WITHOUT_OPTIMIZED_ROUTE
-      :value: "ENDPOINT_HAS_INDEX_WITHOUT_OPTIMIZED_ROUTE"
-
-   .. py:attribute:: ENDPOINT_HAS_MANAGED_INDEX
-      :value: "ENDPOINT_HAS_MANAGED_INDEX"
-
-   .. py:attribute:: RERANKER_TEMPORARILY_UNAVAILABLE
-      :value: "RERANKER_TEMPORARILY_UNAVAILABLE"

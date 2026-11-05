@@ -240,7 +240,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "state",
     "type": "string",
-    "description": "The current state of the instance. (AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING, UPGRADING)"
+    "description": "The current state of the instance. (AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING)"
   },
   {
     "name": "stopped",
@@ -453,7 +453,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "state",
     "type": "string",
-    "description": "The current state of the instance. (AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING, UPGRADING)"
+    "description": "The current state of the instance. (AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING)"
   },
   {
     "name": "stopped",
@@ -666,7 +666,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "state",
     "type": "string",
-    "description": "The current state of the instance. (AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING, UPGRADING)"
+    "description": "The current state of the instance. (AVAILABLE, DELETING, FAILING_OVER, STARTING, STOPPED, UPDATING)"
   },
   {
     "name": "stopped",
@@ -700,42 +700,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List Database Instances.</td>
 </tr>
 <tr>
     <td><a href="#find_by_uid"><CopyableCode code="find_by_uid" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-uid"><code>uid</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-uid"><code>uid</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Find a Database Instance by uid.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-database_instance"><code>database_instance</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Create a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-database_instance"><code>database_instance</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Update a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-force"><code>force</code></a>, <a href="#parameter-purge"><code>purge</code></a></td>
     <td>Delete a Database Instance.</td>
 </tr>
@@ -758,7 +758,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -774,6 +774,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The list of fields to update. If unspecified, all fields will be updated when possible. To wipe out custom_tags, specify custom_tags in the update_mask with an empty custom_tags map.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-force">
     <td><CopyableCode code="force" /></td>
@@ -843,6 +848,7 @@ uid
 FROM databricks_workspace.database.database_instances
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -880,6 +886,7 @@ stopped,
 uid
 FROM databricks_workspace.database.database_instances
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -920,6 +927,7 @@ uid
 FROM databricks_workspace.database.database_instances
 WHERE uid = '{{ uid }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -941,12 +949,64 @@ Create a Database Instance.
 
 ```sql
 INSERT INTO databricks_workspace.database.database_instances (
-database_instance,
-deployment_name
+name,
+capacity,
+child_instance_refs,
+creation_time,
+creator,
+custom_tags,
+effective_capacity,
+effective_custom_tags,
+effective_enable_pg_native_login,
+effective_enable_readable_secondaries,
+effective_node_count,
+effective_retention_window_in_days,
+effective_stopped,
+effective_usage_policy_id,
+enable_pg_native_login,
+enable_readable_secondaries,
+node_count,
+parent_instance_ref,
+pg_version,
+read_only_dns,
+read_write_dns,
+retention_window_in_days,
+state,
+stopped,
+uid,
+usage_policy_id,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ database_instance }}' /* required */,
-'{{ deployment_name }}'
+'{{ name }}' /* required */,
+'{{ capacity }}',
+'{{ child_instance_refs }}',
+'{{ creation_time }}',
+'{{ creator }}',
+'{{ custom_tags }}',
+'{{ effective_capacity }}',
+'{{ effective_custom_tags }}',
+{{ effective_enable_pg_native_login }},
+{{ effective_enable_readable_secondaries }},
+{{ effective_node_count }},
+{{ effective_retention_window_in_days }},
+{{ effective_stopped }},
+'{{ effective_usage_policy_id }}',
+{{ enable_pg_native_login }},
+{{ enable_readable_secondaries }},
+{{ node_count }},
+'{{ parent_instance_ref }}',
+'{{ pg_version }}',
+'{{ read_only_dns }}',
+'{{ read_write_dns }}',
+{{ retention_window_in_days }},
+'{{ state }}',
+{{ stopped }},
+'{{ uid }}',
+'{{ usage_policy_id }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 effective_usage_policy_id,
@@ -985,50 +1045,127 @@ uid
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the database_instances resource.
-    - name: database_instance
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the database_instances resource.
+    - name: name
+      value: "{{ name }}"
       description: |
-        Instance to create.
+        The name of the instance. This is the unique identifier for the instance.
+    - name: capacity
+      value: "{{ capacity }}"
+      description: |
+        The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
+    - name: child_instance_refs
+      description: |
+        The refs of the child instances. This is only available if the instance is parent instance.
       value:
-        name: "{{ name }}"
-        capacity: "{{ capacity }}"
-        child_instance_refs:
-          - branch_time: "{{ branch_time }}"
-            effective_lsn: "{{ effective_lsn }}"
-            lsn: "{{ lsn }}"
-            name: "{{ name }}"
-            uid: "{{ uid }}"
-        creation_time: "{{ creation_time }}"
-        creator: "{{ creator }}"
-        custom_tags:
-          - key: "{{ key }}"
-            value: "{{ value }}"
-        effective_capacity: "{{ effective_capacity }}"
-        effective_custom_tags:
-          - key: "{{ key }}"
-            value: "{{ value }}"
-        effective_enable_pg_native_login: {{ effective_enable_pg_native_login }}
-        effective_enable_readable_secondaries: {{ effective_enable_readable_secondaries }}
-        effective_node_count: {{ effective_node_count }}
-        effective_retention_window_in_days: {{ effective_retention_window_in_days }}
-        effective_stopped: {{ effective_stopped }}
-        effective_usage_policy_id: "{{ effective_usage_policy_id }}"
-        enable_pg_native_login: {{ enable_pg_native_login }}
-        enable_readable_secondaries: {{ enable_readable_secondaries }}
-        node_count: {{ node_count }}
-        parent_instance_ref:
-          branch_time: "{{ branch_time }}"
+        - branch_time: "{{ branch_time }}"
           effective_lsn: "{{ effective_lsn }}"
           lsn: "{{ lsn }}"
           name: "{{ name }}"
           uid: "{{ uid }}"
-        pg_version: "{{ pg_version }}"
-        read_only_dns: "{{ read_only_dns }}"
-        read_write_dns: "{{ read_write_dns }}"
-        retention_window_in_days: {{ retention_window_in_days }}
-        state: "{{ state }}"
-        stopped: {{ stopped }}
+    - name: creation_time
+      value: "{{ creation_time }}"
+      description: |
+        The timestamp when the instance was created.
+    - name: creator
+      value: "{{ creator }}"
+      description: |
+        The email of the creator of the instance.
+    - name: custom_tags
+      description: |
+        Custom tags associated with the instance. This field is only included on create and update responses.
+      value:
+        - key: "{{ key }}"
+          value: "{{ value }}"
+    - name: effective_capacity
+      value: "{{ effective_capacity }}"
+      description: |
+        Deprecated. The sku of the instance; this field will always match the value of capacity. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_custom_tags
+      description: |
+        The recorded custom tags associated with the instance. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+      value:
+        - key: "{{ key }}"
+          value: "{{ value }}"
+    - name: effective_enable_pg_native_login
+      value: {{ effective_enable_pg_native_login }}
+      description: |
+        Whether the instance has PG native password login enabled. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_enable_readable_secondaries
+      value: {{ effective_enable_readable_secondaries }}
+      description: |
+        Whether secondaries serving read-only traffic are enabled. Defaults to false. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_node_count
+      value: {{ effective_node_count }}
+      description: |
+        The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to 1 primary and 0 secondaries. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_retention_window_in_days
+      value: {{ effective_retention_window_in_days }}
+      description: |
+        The retention window for the instance. This is the time window in days for which the historical data is retained. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_stopped
+      value: {{ effective_stopped }}
+      description: |
+        Whether the instance is stopped. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_usage_policy_id
+      value: "{{ effective_usage_policy_id }}"
+      description: |
+        The policy that is applied to the instance. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: enable_pg_native_login
+      value: {{ enable_pg_native_login }}
+      description: |
+        Whether to enable PG native password login on the instance. Defaults to false.
+    - name: enable_readable_secondaries
+      value: {{ enable_readable_secondaries }}
+      description: |
+        Whether to enable secondaries to serve read-only traffic. Defaults to false.
+    - name: node_count
+      value: {{ node_count }}
+      description: |
+        The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to 1 primary and 0 secondaries. This field is input only, see effective_node_count for the output.
+    - name: parent_instance_ref
+      description: |
+        The ref of the parent instance. This is only available if the instance is child instance. Input: For specifying the parent instance to create a child instance. Optional. Output: Only populated if provided as input to create a child instance.
+      value:
+        branch_time: "{{ branch_time }}"
+        effective_lsn: "{{ effective_lsn }}"
+        lsn: "{{ lsn }}"
+        name: "{{ name }}"
         uid: "{{ uid }}"
-        usage_policy_id: "{{ usage_policy_id }}"
+    - name: pg_version
+      value: "{{ pg_version }}"
+      description: |
+        The version of Postgres running on the instance.
+    - name: read_only_dns
+      value: "{{ read_only_dns }}"
+      description: |
+        The DNS endpoint to connect to the instance for read only access. This is only available if enable_readable_secondaries is true.
+    - name: read_write_dns
+      value: "{{ read_write_dns }}"
+      description: |
+        The DNS endpoint to connect to the instance for read+write access.
+    - name: retention_window_in_days
+      value: {{ retention_window_in_days }}
+      description: |
+        The retention window for the instance. This is the time window in days for which the historical data is retained. The default value is 7 days. Valid values are 2 to 35 days.
+    - name: state
+      value: "{{ state }}"
+      description: |
+        The current state of the instance.
+    - name: stopped
+      value: {{ stopped }}
+      description: |
+        Whether to stop the instance. An input only param, see effective_stopped for the output.
+    - name: uid
+      value: "{{ uid }}"
+      description: |
+        An immutable UUID identifier for the instance.
+    - name: usage_policy_id
+      value: "{{ usage_policy_id }}"
+      description: |
+        The desired usage policy to associate with the instance.
 `}</CodeBlock>
 
 </TabItem>
@@ -1050,12 +1187,38 @@ Update a Database Instance.
 ```sql
 UPDATE databricks_workspace.database.database_instances
 SET 
-database_instance = '{{ database_instance }}'
+name = '{{ name }}',
+capacity = '{{ capacity }}',
+child_instance_refs = '{{ child_instance_refs }}',
+creation_time = '{{ creation_time }}',
+creator = '{{ creator }}',
+custom_tags = '{{ custom_tags }}',
+effective_capacity = '{{ effective_capacity }}',
+effective_custom_tags = '{{ effective_custom_tags }}',
+effective_enable_pg_native_login = {{ effective_enable_pg_native_login }},
+effective_enable_readable_secondaries = {{ effective_enable_readable_secondaries }},
+effective_node_count = {{ effective_node_count }},
+effective_retention_window_in_days = {{ effective_retention_window_in_days }},
+effective_stopped = {{ effective_stopped }},
+effective_usage_policy_id = '{{ effective_usage_policy_id }}',
+enable_pg_native_login = {{ enable_pg_native_login }},
+enable_readable_secondaries = {{ enable_readable_secondaries }},
+node_count = {{ node_count }},
+parent_instance_ref = '{{ parent_instance_ref }}',
+pg_version = '{{ pg_version }}',
+read_only_dns = '{{ read_only_dns }}',
+read_write_dns = '{{ read_write_dns }}',
+retention_window_in_days = {{ retention_window_in_days }},
+state = '{{ state }}',
+stopped = {{ stopped }},
+uid = '{{ uid }}',
+usage_policy_id = '{{ usage_policy_id }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND database_instance = '{{ database_instance }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND name = '{{ name }}' --required
 RETURNING
 name,
 effective_usage_policy_id,
@@ -1104,6 +1267,7 @@ Delete a Database Instance.
 DELETE FROM databricks_workspace.database.database_instances
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND force = '{{ force }}'
 AND purge = '{{ purge }}'
 ;

@@ -12,9 +12,16 @@ from typing import Dict, List, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
-# All service module names under databricks.sdk.service
+# Service modules under databricks.sdk.service whose API classes are wired
+# into WorkspaceClient / AccountClient (databricks/sdk/__init__.py).
+# Deliberately excluded: ``bundle`` (not wired into either client) and
+# ``_internal``. Modules using Google-style resource names
+# (``/api/2.0/{name}`` with ``name="domains/{domain_id}"``) are supported
+# through the resource-name expansion in ``extract.py``.
 SERVICE_MODULES = [
     "agentbricks",
+    "agentkit",
+    "aifunctions",
     "aisearch",
     "apps",
     "billing",
@@ -24,19 +31,25 @@ SERVICE_MODULES = [
     "compute",
     "dashboards",
     "database",
+    "dataclassification",
     "dataquality",
     "disasterrecovery",
+    "domains",
+    "environments",
     "files",
     "iam",
     "iamv2",
     "jobs",
+    "knowledgeassistants",
     "marketplace",
     "ml",
+    "networking",
     "oauth2",
     "pipelines",
     "postgres",
     "provisioning",
     "qualitymonitorv2",
+    "sandbox",
     "serving",
     "settings",
     "settingsv2",
@@ -59,6 +72,8 @@ ACCOUNT_API_CLASSES: Set[str] = {
     "CustomAppIntegrationAPI",
     "DisasterRecoveryAPI",
     "EncryptionKeysAPI",
+    "EndpointsAPI",  # networking.EndpointsAPI
+    "PrivateNetworkGatewaysAPI",  # networking.PrivateNetworkGatewaysAPI
     "AccountFederationPolicyAPI",
     "AccountGroupsV2API",
     "AccountIamV2API",
@@ -80,7 +95,6 @@ ACCOUNT_API_CLASSES: Set[str] = {
     "StorageAPI",
     "AccountStorageCredentialsAPI",
     "UsageDashboardsAPI",
-    "UsagePolicyAPI",
     "AccountUsersV2API",
     "VpcEndpointsAPI",
     "WorkspaceAssignmentAPI",

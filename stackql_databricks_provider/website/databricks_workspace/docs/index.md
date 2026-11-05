@@ -27,8 +27,8 @@ For Databricks account operations use the [__`databricks_account`__](https://dat
 
 :::info[Provider Summary]
 
-total services: __29__  
-total resources: __342__  
+total services: __36__  
+total resources: __372__  
 source project: __[stackql-provider-databricks](https://github.com/stackql-registry/stackql-provider-databricks)__  
 
 :::
@@ -55,7 +55,77 @@ Set the following environment variables:
 - <CopyableCode code="DATABRICKS_CLIENT_ID" /> - obtained after creating a service principal through the Databricks UI (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 - <CopyableCode code="DATABRICKS_CLIENT_SECRET" /> - obtained after creating a service principal secret through the Databricks UI, using the "Generate Secret" function (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">Authenticate access to Databricks with a service principal using OAuth</a>)
 
-These are the same variables that Terraform, the Databricks SDKs, and CLI use.  
+These are the same variables that Terraform, the Databricks SDKs, and CLI use.
+
+### Cloud selection (AWS, Azure, GCP)
+
+The provider works against Databricks workspaces on AWS, Azure and Google Cloud with the same statements and the same three credential variables. It defaults to Databricks on AWS; one more variable selects another cloud, and both the OAuth token endpoint and the workspace host domain follow it:
+
+- <CopyableCode code="DATABRICKS_CLOUD" /> - `aws` (default), `azure` or `gcp`
+- <CopyableCode code="DATABRICKS_ACCOUNT_HOST" /> - optional, a bare account console host (no scheme) that issues the tokens, for accounts that are not on the standard hosts; overrides `DATABRICKS_CLOUD`
+- <CopyableCode code="DATABRICKS_DEPLOYMENT_NAME" /> - optional, defaults the `deployment_name` predicate for the session
+
+| Cloud | `DATABRICKS_CLOUD` | Workspace URL | `deployment_name` | Token endpoint host |
+|-------|--------------------|---------------|-------------------|---------------------|
+| AWS | `aws` (default) | `https://dbc-abcd0123-a1bc.cloud.databricks.com` | `dbc-abcd0123-a1bc` | `accounts.cloud.databricks.com` |
+| Azure | `azure` | `https://adb-1234567890123456.7.azuredatabricks.net` | `adb-1234567890123456.7` | `accounts.azuredatabricks.net` |
+| GCP | `gcp` | `https://1234567890123456.7.gcp.databricks.com` | `1234567890123456.7` | `accounts.gcp.databricks.com` |
+
+`deployment_name` is the host prefix of the workspace URL on every cloud (everything before `.cloud.databricks.com`, `.azuredatabricks.net` or `.gcp.databricks.com`). The `databricks_account` provider lists it for every workspace in the account:
+
+```sql
+SELECT workspace_name, deployment_name, workspace_status
+FROM databricks_account.provisioning.workspaces
+WHERE account_id = '<account_id>';
+```
+
+Cloud selection needs stackql v1.0.888 or later. One cloud per process: the token endpoint follows the environment, so run a separate `stackql` process (or shell) for each cloud you work with.
+
+```bash
+# Azure Databricks workspace
+export DATABRICKS_CLOUD=azure
+export DATABRICKS_ACCOUNT_ID=...
+export DATABRICKS_CLIENT_ID=...
+export DATABRICKS_CLIENT_SECRET=...
+export DATABRICKS_DEPLOYMENT_NAME=adb-1234567890123456.7
+stackql exec "SELECT id, name, state, cluster_size, auto_stop_mins FROM databricks_workspace.sql.warehouses"
+```
+
+```powershell
+# Databricks on Google Cloud workspace (PowerShell)
+$env:DATABRICKS_CLOUD = "gcp"
+$env:DATABRICKS_ACCOUNT_ID = "..."
+$env:DATABRICKS_CLIENT_ID = "..."
+$env:DATABRICKS_CLIENT_SECRET = "..."
+stackql.exe exec "SELECT * FROM databricks_workspace.iam.current_user WHERE deployment_name = '1234567890123456.7'"
+```
+
+With no cloud variables set, queries behave exactly as before: AWS hosts and the AWS token endpoint.
+
+#### Service principal by cloud
+
+On every cloud the credential is a service principal with a Databricks OAuth secret, created in the account console under __User management > Service principals__ (add the principal, then __Generate secret__). Cloud identity tokens (AWS IAM, Microsoft Entra ID, Google service accounts) are not used by the provider.
+
+| Cloud | Account console | Notes |
+|-------|-----------------|-------|
+| AWS | <a href="https://accounts.cloud.databricks.com">accounts.cloud.databricks.com</a> | Databricks-managed service principal (see <a href="https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html">OAuth M2M on AWS</a>) |
+| Azure | <a href="https://accounts.azuredatabricks.net">accounts.azuredatabricks.net</a> | Sign in with the Microsoft Entra ID identity that administers the Databricks account. A Databricks-managed service principal, or an Entra ID application registered as a service principal, both work when the OAuth secret is generated in the Databricks account console (see <a href="https://learn.microsoft.com/en-us/azure/databricks/dev-tools/auth/oauth-m2m">OAuth M2M on Azure</a>) |
+| GCP | <a href="https://accounts.gcp.databricks.com">accounts.gcp.databricks.com</a> | Databricks-managed service principal; the Google service account that Databricks itself uses is not the principal (see <a href="https://docs.databricks.com/gcp/en/dev-tools/auth/oauth-m2m">OAuth M2M on GCP</a>) |
+
+The service principal needs access to each workspace it queries. Add it to the workspace from the account console (__Workspaces > Permissions__), or with the `databricks_account` provider, as a user, or as an admin for admin-only resources such as workspace configuration (`settings.vw_all_settings`) and other users' query history:
+
+```sql
+REPLACE databricks_account.iam.workspace_assignment
+SET permissions = '["USER"]'
+WHERE account_id = '<account_id>'
+AND workspace_id = '<workspace_id>'
+AND principal_id = '<service_principal_id>';
+```
+
+#### What differs by cloud
+
+- The workspace APIs are the same on all three clouds, so resources, columns and statements do not change. Resources tied to one cloud's primitives exist only there (for example AWS instance profiles under `compute.instance_profiles`, or the AWS availability zones from `compute.clusters` `list_zones`); node types and Spark versions are cloud-specific values. Where a workspace's cloud or region does not offer a feature (serverless, Lakebase, some AI services), Databricks answers with an error rather than an empty list, and the provider surfaces that error as is.
+- Workspace-level settings and compute policies that reference cloud storage or identities take the cloud's own identifiers (S3 paths and IAM roles on AWS, ABFSS paths and managed identities on Azure, GCS paths and service accounts on GCP); the provider passes them through verbatim.
 
 ### Personal Access Token (Bearer)
 
@@ -191,6 +261,8 @@ WHERE deployment_name = '<deployment_name>';
 <div class="row">
 <div class="providerDocColumn">
 <a href="/services/agentbricks/">agentbricks</a><br />
+<a href="/services/agentkit/">agentkit</a><br />
+<a href="/services/aifunctions/">aifunctions</a><br />
 <a href="/services/aisearch/">aisearch</a><br />
 <a href="/services/apps/">apps</a><br />
 <a href="/services/bundledeployments/">bundledeployments</a><br />
@@ -199,19 +271,24 @@ WHERE deployment_name = '<deployment_name>';
 <a href="/services/compute/">compute</a><br />
 <a href="/services/dashboards/">dashboards</a><br />
 <a href="/services/database/">database</a><br />
+<a href="/services/dataclassification/">dataclassification</a><br />
 <a href="/services/dataquality/">dataquality</a><br />
+<a href="/services/domains/">domains</a><br />
+<a href="/services/environments/">environments</a><br />
 <a href="/services/files/">files</a><br />
 <a href="/services/iam/">iam</a><br />
 <a href="/services/iamv2/">iamv2</a><br />
-<a href="/services/jobs/">jobs</a><br />
-<a href="/services/marketplace/">marketplace</a><br />
 </div>
 <div class="providerDocColumn">
+<a href="/services/jobs/">jobs</a><br />
+<a href="/services/knowledgeassistants/">knowledgeassistants</a><br />
+<a href="/services/marketplace/">marketplace</a><br />
 <a href="/services/ml/">ml</a><br />
 <a href="/services/oauth2/">oauth2</a><br />
 <a href="/services/pipelines/">pipelines</a><br />
 <a href="/services/postgres/">postgres</a><br />
 <a href="/services/qualitymonitorv2/">qualitymonitorv2</a><br />
+<a href="/services/sandbox/">sandbox</a><br />
 <a href="/services/serving/">serving</a><br />
 <a href="/services/settings/">settings</a><br />
 <a href="/services/settingsv2/">settingsv2</a><br />

@@ -305,7 +305,7 @@ class TestGenerateInventoryForSpec:
             with open(spec_path, "w", encoding="utf-8") as f:
                 json.dump(SAMPLE_SPEC, f)
 
-            csv_path, new_count, existing_count, _ = generate_inventory_for_spec(
+            csv_path, new_count, existing_count, _, _, _ = generate_inventory_for_spec(
                 spec_path, tmpdir, "workspace"
             )
             assert os.path.exists(csv_path)
@@ -318,7 +318,7 @@ class TestGenerateInventoryForSpec:
             with open(spec_path, "w", encoding="utf-8") as f:
                 json.dump(SAMPLE_SPEC, f)
 
-            csv_path, _, _, _ = generate_inventory_for_spec(spec_path, tmpdir, "workspace")
+            csv_path, _, _, _, _, _ = generate_inventory_for_spec(spec_path, tmpdir, "workspace")
             with open(csv_path, encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 assert list(reader.fieldnames) == CSV_COLUMNS
@@ -347,7 +347,7 @@ class TestGenerateInventoryForSpec:
                 writer.writerows(rows)
 
             # Second run - should preserve the modification
-            csv_path2, new_count, existing_count, _ = generate_inventory_for_spec(
+            csv_path2, new_count, existing_count, _, _, _ = generate_inventory_for_spec(
                 spec_path, tmpdir, "workspace"
             )
             assert new_count == 0
@@ -390,18 +390,153 @@ class TestGenerateInventoryForSpec:
                 json.dump(small_spec, f)
 
             # Second run
-            _, new_count, existing_count, _ = generate_inventory_for_spec(
+            _, new_count, existing_count, _, _, _ = generate_inventory_for_spec(
                 spec_path, tmpdir, "workspace"
             )
             assert existing_count == 1  # test_get preserved
             assert new_count == 1  # test_create added
+
+    def test_drops_operations_removed_upstream(self):
+        """A row whose operation left the spec is dropped and reported."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            spec = {
+                "paths": {
+                    "/api/test": {
+                        "get": {"operationId": "test_get", "tags": ["svc"], "responses": {}},
+                        "post": {"operationId": "test_create", "tags": ["svc"], "responses": {}},
+                    }
+                }
+            }
+            spec_path = os.path.join(tmpdir, "test.json")
+            with open(spec_path, "w", encoding="utf-8") as f:
+                json.dump(spec, f)
+            generate_inventory_for_spec(spec_path, tmpdir, "workspace")
+
+            # Upstream removes the POST
+            del spec["paths"]["/api/test"]["post"]
+            with open(spec_path, "w", encoding="utf-8") as f:
+                json.dump(spec, f)
+
+            csv_path, new_count, existing_count, _, removed, _ = generate_inventory_for_spec(
+                spec_path, tmpdir, "workspace"
+            )
+            assert new_count == 0
+            assert existing_count == 1
+            assert [r["operationId"] for r in removed] == ["test_create"]
+            with open(csv_path, encoding="utf-8") as f:
+                ids = [row["operationId"] for row in csv.DictReader(f)]
+            assert ids == ["test_get"]
+
+    def test_path_change_keeps_curated_mapping(self):
+        """An operation whose path changes keeps its curated routing via operationId."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            spec = {
+                "paths": {
+                    "/api/2.0/{name}": {
+                        "get": {"operationId": "domains_get_domain", "tags": ["svc"], "responses": {}},
+                    },
+                    "/api/2.0/other": {
+                        "get": {"operationId": "other_list", "tags": ["svc"], "responses": {}},
+                    },
+                }
+            }
+            spec_path = os.path.join(tmpdir, "test.json")
+            with open(spec_path, "w", encoding="utf-8") as f:
+                json.dump(spec, f)
+            csv_path, _, _, _, _, _ = generate_inventory_for_spec(spec_path, tmpdir, "workspace")
+
+            # Curate the row
+            with open(csv_path, encoding="utf-8") as f:
+                rows = list(csv.DictReader(f))
+            for row in rows:
+                if row["operationId"] == "domains_get_domain":
+                    row["stackql_resource_name"] = "domains"
+                    row["stackql_method_name"] = "get"
+                    row["stackql_object_key"] = "$.domain"
+            with open(csv_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+                writer.writeheader()
+                writer.writerows(rows)
+
+            # The resource-name expansion moves the operation to a real path
+            spec["paths"]["/api/2.0/domains/{domain_id}"] = spec["paths"].pop("/api/2.0/{name}")
+            with open(spec_path, "w", encoding="utf-8") as f:
+                json.dump(spec, f)
+
+            csv_path, new_count, existing_count, new_ops, removed, migrated = generate_inventory_for_spec(
+                spec_path, tmpdir, "workspace"
+            )
+            assert (new_count, existing_count, new_ops, removed) == (0, 2, [], [])
+            assert [m["operationId"] for m in migrated] == ["domains_get_domain"]
+            assert migrated[0]["_old_path"] == "/api/2.0/{name}"
+            with open(csv_path, encoding="utf-8") as f:
+                rows = {row["operationId"]: row for row in csv.DictReader(f)}
+            moved = rows["domains_get_domain"]
+            assert moved["path"] == "/api/2.0/domains/{domain_id}"
+            assert moved["stackql_resource_name"] == "domains"
+            assert moved["stackql_method_name"] == "get"
+            assert moved["stackql_object_key"] == "$.domain"
+            assert "_old_path" not in moved
+            # order preserved: the migrated row stays first
+            with open(csv_path, encoding="utf-8") as f:
+                ids = [row["operationId"] for row in csv.DictReader(f)]
+            assert ids == ["domains_get_domain", "other_list"]
+
+    def test_key_reused_by_another_operation_is_not_mistaken_for_preserved(self):
+        """Before expansion two operations shared GET /api/2.0/{name}; the CSV row at that
+        key belonged to one of them. When that operation moves to its own path and a
+        different operation now sits on the old key, the curated row follows its
+        operationId and the newcomer is reported as new."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            spec = {
+                "paths": {
+                    "/api/2.0/{name}": {
+                        "get": {"operationId": "postgres_get_role", "tags": ["svc"], "responses": {}},
+                    },
+                }
+            }
+            spec_path = os.path.join(tmpdir, "test.json")
+            with open(spec_path, "w", encoding="utf-8") as f:
+                json.dump(spec, f)
+            csv_path, _, _, _, _, _ = generate_inventory_for_spec(spec_path, tmpdir, "workspace")
+            with open(csv_path, encoding="utf-8") as f:
+                rows = list(csv.DictReader(f))
+            rows[0]["stackql_resource_name"] = "postgres_roles"
+            rows[0]["stackql_method_name"] = "get"
+            with open(csv_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+                writer.writeheader()
+                writer.writerows(rows)
+
+            spec["paths"] = {
+                "/api/2.0/projects/{project_id}/branches/{branch_id}/roles/{role_id}": {
+                    "get": {"operationId": "postgres_get_role", "tags": ["svc"], "responses": {}},
+                },
+                "/api/2.0/{name}": {
+                    "get": {"operationId": "postgres_get_synced_table", "tags": ["svc"], "responses": {}},
+                },
+            }
+            with open(spec_path, "w", encoding="utf-8") as f:
+                json.dump(spec, f)
+            csv_path, new_count, existing_count, new_ops, removed, migrated = generate_inventory_for_spec(
+                spec_path, tmpdir, "workspace"
+            )
+            assert (new_count, existing_count, removed) == (1, 1, [])
+            assert [m["operationId"] for m in migrated] == ["postgres_get_role"]
+            assert [n["operationId"] for n in new_ops] == ["postgres_get_synced_table"]
+            with open(csv_path, encoding="utf-8") as f:
+                rows = {row["operationId"]: row for row in csv.DictReader(f)}
+            assert rows["postgres_get_role"]["stackql_resource_name"] == "postgres_roles"
+            assert rows["postgres_get_role"]["path"].endswith("/roles/{role_id}")
+            assert rows["postgres_get_synced_table"]["path"] == "/api/2.0/{name}"
+            assert rows["postgres_get_synced_table"]["stackql_resource_name"] == "svc"
 
 
 class TestGenerateAllInventories:
     def test_generates_from_real_specs(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             summary = generate_all_inventories(output_dir=tmpdir)
-            assert summary["files_generated"] == 38
+            assert summary["files_generated"] == 46
             assert summary["total_new"] > 500
 
             # Check directory structure

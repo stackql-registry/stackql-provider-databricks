@@ -49,26 +49,6 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "database_branch_id",
-    "type": "string",
-    "description": "The branch_id of the database branch associated with the table."
-  },
-  {
-    "name": "database_project_id",
-    "type": "string",
-    "description": "The project_id of the database project associated with the table."
-  },
-  {
-    "name": "effective_database_branch_id",
-    "type": "string",
-    "description": "The branch_id of the database branch associated with the table. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value."
-  },
-  {
-    "name": "effective_database_project_id",
-    "type": "string",
-    "description": "The project_id of the database project associated with the table. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value."
-  },
-  {
     "name": "database_instance_name",
     "type": "string",
     "description": "Name of the target database instance. This is required when creating synced database tables in standard catalogs. This is optional when creating synced database tables in registered catalogs. If this field is specified when creating synced database tables in registered catalogs, the database instance name MUST match that of the registered catalog (or the request will be rejected)."
@@ -334,55 +314,6 @@ The following fields are returned by `SELECT` queries:
         "description": "At most one of existing_pipeline_id and new_pipeline_spec should be defined. If existing_pipeline_id is defined, the synced table will be bin packed into the existing pipeline referenced. This avoids creating a new pipeline and allows sharing existing compute. In this case, the scheduling_policy of this synced table must match the scheduling policy of the existing pipeline."
       },
       {
-        "name": "extra_columns",
-        "type": "array",
-        "description": "Extra PostgreSQL-only columns to add to the synced table.",
-        "children": [
-          {
-            "name": "column_name",
-            "type": "string",
-            "description": "Name of the column."
-          },
-          {
-            "name": "column_type",
-            "type": "string",
-            "description": "PostgreSQL type of the column, for example \"tsvector\" or \"vector(1024)\"."
-          },
-          {
-            "name": "compute",
-            "type": "string",
-            "description": "SQL expression used to compute the column's value, for example \"to_tsvector('english', content)\"."
-          },
-          {
-            "name": "maintenance",
-            "type": "string",
-            "description": "How the column's value is populated and kept up to date. (DEFAULT_VALUE, STORED_GENERATED)"
-          }
-        ]
-      },
-      {
-        "name": "extra_index_definitions",
-        "type": "array",
-        "description": "Secondary indexes to create on the synced table.",
-        "children": [
-          {
-            "name": "name",
-            "type": "string",
-            "description": "Name of the index as it will appear in PostgreSQL."
-          },
-          {
-            "name": "definition",
-            "type": "string",
-            "description": "The definition portion of a CREATE INDEX statement, placed after ON table_name. For example: USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)."
-          },
-          {
-            "name": "creation_point",
-            "type": "string",
-            "description": "When the index should be created relative to the initial data load. (CREATION_POINT_AFTER_DATA_LOAD)"
-          }
-        ]
-      },
-      {
         "name": "new_pipeline_spec",
         "type": "object",
         "description": "At most one of existing_pipeline_id and new_pipeline_spec should be defined. If new_pipeline_spec is defined, a new pipeline is created for this synced table. The location pointed to is used to store intermediate files (checkpoints, event logs etc). The caller must have write permissions to create Delta tables in the specified catalog and schema. Again, note this requires write permissions, whereas the source table only requires read permissions.",
@@ -391,11 +322,6 @@ The following fields are returned by `SELECT` queries:
             "name": "budget_policy_id",
             "type": "string",
             "description": "Budget policy to set on the newly created pipeline."
-          },
-          {
-            "name": "pipeline_channel",
-            "type": "string",
-            "description": "Release channel of the underlying pipeline's runtime. Some source table configurations (e.g., read-time CDF) require PREVIEW. Defaults to CURRENT if not specified. (CURRENT, PREVIEW)"
           },
           {
             "name": "storage_catalog",
@@ -452,11 +378,6 @@ The following fields are returned by `SELECT` queries:
         ]
       }
     ]
-  },
-  {
-    "name": "table_serving_url",
-    "type": "string",
-    "description": "Data serving REST API URL for this table"
   },
   {
     "name": "unity_catalog_provisioning_state",
@@ -474,26 +395,6 @@ The following fields are returned by `SELECT` queries:
     "description": ""
   },
   {
-    "name": "database_branch_id",
-    "type": "string",
-    "description": "The branch_id of the database branch associated with the table."
-  },
-  {
-    "name": "database_project_id",
-    "type": "string",
-    "description": "The project_id of the database project associated with the table."
-  },
-  {
-    "name": "effective_database_branch_id",
-    "type": "string",
-    "description": "The branch_id of the database branch associated with the table. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value."
-  },
-  {
-    "name": "effective_database_project_id",
-    "type": "string",
-    "description": "The project_id of the database project associated with the table. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value."
-  },
-  {
     "name": "database_instance_name",
     "type": "string",
     "description": "Name of the target database instance. This is required when creating synced database tables in standard catalogs. This is optional when creating synced database tables in registered catalogs. If this field is specified when creating synced database tables in registered catalogs, the database instance name MUST match that of the registered catalog (or the request will be rejected)."
@@ -759,55 +660,6 @@ The following fields are returned by `SELECT` queries:
         "description": "At most one of existing_pipeline_id and new_pipeline_spec should be defined. If existing_pipeline_id is defined, the synced table will be bin packed into the existing pipeline referenced. This avoids creating a new pipeline and allows sharing existing compute. In this case, the scheduling_policy of this synced table must match the scheduling policy of the existing pipeline."
       },
       {
-        "name": "extra_columns",
-        "type": "array",
-        "description": "Extra PostgreSQL-only columns to add to the synced table.",
-        "children": [
-          {
-            "name": "column_name",
-            "type": "string",
-            "description": "Name of the column."
-          },
-          {
-            "name": "column_type",
-            "type": "string",
-            "description": "PostgreSQL type of the column, for example \"tsvector\" or \"vector(1024)\"."
-          },
-          {
-            "name": "compute",
-            "type": "string",
-            "description": "SQL expression used to compute the column's value, for example \"to_tsvector('english', content)\"."
-          },
-          {
-            "name": "maintenance",
-            "type": "string",
-            "description": "How the column's value is populated and kept up to date. (DEFAULT_VALUE, STORED_GENERATED)"
-          }
-        ]
-      },
-      {
-        "name": "extra_index_definitions",
-        "type": "array",
-        "description": "Secondary indexes to create on the synced table.",
-        "children": [
-          {
-            "name": "name",
-            "type": "string",
-            "description": "Name of the index as it will appear in PostgreSQL."
-          },
-          {
-            "name": "definition",
-            "type": "string",
-            "description": "The definition portion of a CREATE INDEX statement, placed after ON table_name. For example: USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)."
-          },
-          {
-            "name": "creation_point",
-            "type": "string",
-            "description": "When the index should be created relative to the initial data load. (CREATION_POINT_AFTER_DATA_LOAD)"
-          }
-        ]
-      },
-      {
         "name": "new_pipeline_spec",
         "type": "object",
         "description": "At most one of existing_pipeline_id and new_pipeline_spec should be defined. If new_pipeline_spec is defined, a new pipeline is created for this synced table. The location pointed to is used to store intermediate files (checkpoints, event logs etc). The caller must have write permissions to create Delta tables in the specified catalog and schema. Again, note this requires write permissions, whereas the source table only requires read permissions.",
@@ -816,11 +668,6 @@ The following fields are returned by `SELECT` queries:
             "name": "budget_policy_id",
             "type": "string",
             "description": "Budget policy to set on the newly created pipeline."
-          },
-          {
-            "name": "pipeline_channel",
-            "type": "string",
-            "description": "Release channel of the underlying pipeline's runtime. Some source table configurations (e.g., read-time CDF) require PREVIEW. Defaults to CURRENT if not specified. (CURRENT, PREVIEW)"
           },
           {
             "name": "storage_catalog",
@@ -877,11 +724,6 @@ The following fields are returned by `SELECT` queries:
         ]
       }
     ]
-  },
-  {
-    "name": "table_serving_url",
-    "type": "string",
-    "description": "Data serving REST API URL for this table"
   },
   {
     "name": "unity_catalog_provisioning_state",
@@ -910,35 +752,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Get a Synced Database Table.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-instance_name"><code>instance_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
-    <td>This API is currently unimplemented, but exposed for Terraform support.</td>
+    <td>List synced database tables in a Database Instance.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-synced_table"><code>synced_table</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>Create a Synced Database Table.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-synced_table"><code>synced_table</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a></td>
     <td></td>
     <td>This API is currently unimplemented, but exposed for Terraform support.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-purge_data"><code>purge_data</code></a></td>
     <td>Delete a Synced Database Table.</td>
 </tr>
@@ -961,7 +803,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-instance_name">
     <td><CopyableCode code="instance_name" /></td>
@@ -977,6 +819,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
     <td>The list of fields to update. Setting this field is not yet supported.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
@@ -1012,46 +859,38 @@ Get a Synced Database Table.
 ```sql
 SELECT
 name,
-database_branch_id,
-database_project_id,
-effective_database_branch_id,
-effective_database_project_id,
 database_instance_name,
 effective_database_instance_name,
 effective_logical_database_name,
 logical_database_name,
 data_synchronization_status,
 spec,
-table_serving_url,
 unity_catalog_provisioning_state
 FROM databricks_workspace.database.synced_database_tables
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
 <TabItem value="list">
 
-This API is currently unimplemented, but exposed for Terraform support.
+List synced database tables in a Database Instance.
 
 ```sql
 SELECT
 name,
-database_branch_id,
-database_project_id,
-effective_database_branch_id,
-effective_database_project_id,
 database_instance_name,
 effective_database_instance_name,
 effective_logical_database_name,
 logical_database_name,
 data_synchronization_status,
 spec,
-table_serving_url,
 unity_catalog_provisioning_state
 FROM databricks_workspace.database.synced_database_tables
 WHERE instance_name = '{{ instance_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -1075,25 +914,36 @@ Create a Synced Database Table.
 
 ```sql
 INSERT INTO databricks_workspace.database.synced_database_tables (
-synced_table,
-deployment_name
+name,
+data_synchronization_status,
+database_instance_name,
+effective_database_instance_name,
+effective_logical_database_name,
+logical_database_name,
+spec,
+unity_catalog_provisioning_state,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ synced_table }}' /* required */,
-'{{ deployment_name }}'
+'{{ name }}' /* required */,
+'{{ data_synchronization_status }}',
+'{{ database_instance_name }}',
+'{{ effective_database_instance_name }}',
+'{{ effective_logical_database_name }}',
+'{{ logical_database_name }}',
+'{{ spec }}',
+'{{ unity_catalog_provisioning_state }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
-database_branch_id,
-database_project_id,
-effective_database_branch_id,
-effective_database_project_id,
 database_instance_name,
 effective_database_instance_name,
 effective_logical_database_name,
 logical_database_name,
 data_synchronization_status,
 spec,
-table_serving_url,
 unity_catalog_provisioning_state
 ;
 ```
@@ -1106,87 +956,95 @@ unity_catalog_provisioning_state
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the synced_database_tables resource.
-    - name: synced_table
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the synced_database_tables resource.
+    - name: name
+      value: "{{ name }}"
+    - name: data_synchronization_status
+      description: |
+        Synced Table data synchronization status
       value:
-        name: "{{ name }}"
-        data_synchronization_status:
-          continuous_update_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              provisioning_phase: "{{ provisioning_phase }}"
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          detailed_state: "{{ detailed_state }}"
-          failed_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-          last_sync:
-            delta_table_sync_info:
-              delta_commit_timestamp: "{{ delta_commit_timestamp }}"
-              delta_commit_version: {{ delta_commit_version }}
-            sync_end_timestamp: "{{ sync_end_timestamp }}"
-            sync_start_timestamp: "{{ sync_start_timestamp }}"
-          message: "{{ message }}"
-          pipeline_id: "{{ pipeline_id }}"
-          provisioning_status:
-            initial_pipeline_sync_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              provisioning_phase: "{{ provisioning_phase }}"
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-          triggered_update_status:
-            last_processed_commit_version: {{ last_processed_commit_version }}
-            timestamp: "{{ timestamp }}"
-            triggered_update_progress:
-              estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
-              latest_version_currently_processing: {{ latest_version_currently_processing }}
-              provisioning_phase: "{{ provisioning_phase }}"
-              sync_progress_completion: {{ sync_progress_completion }}
-              synced_row_count: {{ synced_row_count }}
-              total_row_count: {{ total_row_count }}
-        database_branch_id: "{{ database_branch_id }}"
-        database_instance_name: "{{ database_instance_name }}"
-        database_project_id: "{{ database_project_id }}"
-        effective_database_branch_id: "{{ effective_database_branch_id }}"
-        effective_database_instance_name: "{{ effective_database_instance_name }}"
-        effective_database_project_id: "{{ effective_database_project_id }}"
-        effective_logical_database_name: "{{ effective_logical_database_name }}"
-        logical_database_name: "{{ logical_database_name }}"
-        spec:
-          accelerated_sync: {{ accelerated_sync }}
-          create_database_objects_if_missing: {{ create_database_objects_if_missing }}
-          existing_pipeline_id: "{{ existing_pipeline_id }}"
-          extra_columns:
-            - column_name: "{{ column_name }}"
-              column_type: "{{ column_type }}"
-              compute: "{{ compute }}"
-              maintenance: "{{ maintenance }}"
-          extra_index_definitions:
-            - name: "{{ name }}"
-              definition: "{{ definition }}"
-              creation_point: "{{ creation_point }}"
-          new_pipeline_spec:
-            budget_policy_id: "{{ budget_policy_id }}"
-            pipeline_channel: "{{ pipeline_channel }}"
-            storage_catalog: "{{ storage_catalog }}"
-            storage_schema: "{{ storage_schema }}"
-          primary_key_columns:
-            - "{{ primary_key_columns }}"
-          scheduling_policy: "{{ scheduling_policy }}"
-          source_table_full_name: "{{ source_table_full_name }}"
-          timeseries_key: "{{ timeseries_key }}"
-          type_overrides:
-            - column_name: "{{ column_name }}"
-              pg_type: "{{ pg_type }}"
-              size: {{ size }}
-        table_serving_url: "{{ table_serving_url }}"
-        unity_catalog_provisioning_state: "{{ unity_catalog_provisioning_state }}"
+        continuous_update_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            provisioning_phase: "{{ provisioning_phase }}"
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        detailed_state: "{{ detailed_state }}"
+        failed_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+        last_sync:
+          delta_table_sync_info:
+            delta_commit_timestamp: "{{ delta_commit_timestamp }}"
+            delta_commit_version: {{ delta_commit_version }}
+          sync_end_timestamp: "{{ sync_end_timestamp }}"
+          sync_start_timestamp: "{{ sync_start_timestamp }}"
+        message: "{{ message }}"
+        pipeline_id: "{{ pipeline_id }}"
+        provisioning_status:
+          initial_pipeline_sync_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            provisioning_phase: "{{ provisioning_phase }}"
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+        triggered_update_status:
+          last_processed_commit_version: {{ last_processed_commit_version }}
+          timestamp: "{{ timestamp }}"
+          triggered_update_progress:
+            estimated_completion_time_seconds: {{ estimated_completion_time_seconds }}
+            latest_version_currently_processing: {{ latest_version_currently_processing }}
+            provisioning_phase: "{{ provisioning_phase }}"
+            sync_progress_completion: {{ sync_progress_completion }}
+            synced_row_count: {{ synced_row_count }}
+            total_row_count: {{ total_row_count }}
+    - name: database_instance_name
+      value: "{{ database_instance_name }}"
+      description: |
+        Name of the target database instance. This is required when creating synced database tables in standard catalogs. This is optional when creating synced database tables in registered catalogs. If this field is specified when creating synced database tables in registered catalogs, the database instance name MUST match that of the registered catalog (or the request will be rejected).
+    - name: effective_database_instance_name
+      value: "{{ effective_database_instance_name }}"
+      description: |
+        The name of the database instance that this table is registered to. This field is always returned, and for tables inside database catalogs is inferred database instance associated with the catalog. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: effective_logical_database_name
+      value: "{{ effective_logical_database_name }}"
+      description: |
+        The name of the logical database that this table is registered to. This is an output only field that contains the value computed from the input field combined with server side defaults. Use the field without the effective_ prefix to set the value.
+    - name: logical_database_name
+      value: "{{ logical_database_name }}"
+      description: |
+        Target Postgres database object (logical database) name for this table. When creating a synced table in a registered Postgres catalog, the target Postgres database name is inferred to be that of the registered catalog. If this field is specified in this scenario, the Postgres database name MUST match that of the registered catalog (or the request will be rejected). When creating a synced table in a standard catalog, this field is required. In this scenario, specifying this field will allow targeting an arbitrary postgres database. Note that this has implications for the \`\`create_database_objects_is_missing\`\` field in \`\`spec\`\`.
+    - name: spec
+      description: |
+        Specification of a synced database table.
+      value:
+        accelerated_sync: {{ accelerated_sync }}
+        create_database_objects_if_missing: {{ create_database_objects_if_missing }}
+        existing_pipeline_id: "{{ existing_pipeline_id }}"
+        new_pipeline_spec:
+          budget_policy_id: "{{ budget_policy_id }}"
+          storage_catalog: "{{ storage_catalog }}"
+          storage_schema: "{{ storage_schema }}"
+        primary_key_columns:
+          - "{{ primary_key_columns }}"
+        scheduling_policy: "{{ scheduling_policy }}"
+        source_table_full_name: "{{ source_table_full_name }}"
+        timeseries_key: "{{ timeseries_key }}"
+        type_overrides:
+          - column_name: "{{ column_name }}"
+            pg_type: "{{ pg_type }}"
+            size: {{ size }}
+    - name: unity_catalog_provisioning_state
+      value: "{{ unity_catalog_provisioning_state }}"
+      description: |
+        The provisioning state of the synced table entity in Unity Catalog. This is distinct from the state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it runs asynchronously).
 `}</CodeBlock>
 
 </TabItem>
@@ -1208,25 +1066,28 @@ This API is currently unimplemented, but exposed for Terraform support.
 ```sql
 UPDATE databricks_workspace.database.synced_database_tables
 SET 
-synced_table = '{{ synced_table }}'
+name = '{{ name }}',
+data_synchronization_status = '{{ data_synchronization_status }}',
+database_instance_name = '{{ database_instance_name }}',
+effective_database_instance_name = '{{ effective_database_instance_name }}',
+effective_logical_database_name = '{{ effective_logical_database_name }}',
+logical_database_name = '{{ logical_database_name }}',
+spec = '{{ spec }}',
+unity_catalog_provisioning_state = '{{ unity_catalog_provisioning_state }}'
 WHERE 
 name = '{{ name }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND synced_table = '{{ synced_table }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND name = '{{ name }}' --required
 RETURNING
 name,
-database_branch_id,
-database_project_id,
-effective_database_branch_id,
-effective_database_project_id,
 database_instance_name,
 effective_database_instance_name,
 effective_logical_database_name,
 logical_database_name,
 data_synchronization_status,
 spec,
-table_serving_url,
 unity_catalog_provisioning_state;
 ```
 </TabItem>
@@ -1249,6 +1110,7 @@ Delete a Synced Database Table.
 DELETE FROM databricks_workspace.database.synced_database_tables
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND purge_data = '{{ purge_data }}'
 ;
 ```

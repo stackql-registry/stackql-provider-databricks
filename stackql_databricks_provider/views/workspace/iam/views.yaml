@@ -59,7 +59,6 @@
                 JSON_EXTRACT(e.value, '$.primary') AS is_primary
               FROM databricks_workspace.iam.users_v2 u,
                    JSON_EACH(u.emails) e
-              WHERE u.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -77,7 +76,6 @@
                   (e.value->>'primary')::boolean AS is_primary
                 FROM databricks_workspace.iam.users_v2 u,
                      jsonb_array_elements(u.emails::jsonb) AS e
-                WHERE u.deployment_name = '{{ deployment_name }}'
 
     vw_user_roles:
       name: vw_user_roles
@@ -116,7 +114,6 @@
                 JSON_EXTRACT(r.value, '$.value') AS role
               FROM databricks_workspace.iam.users_v2 u,
                    JSON_EACH(u.roles) r
-              WHERE u.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -128,7 +125,6 @@
                   r.value->>'value' AS role
                 FROM databricks_workspace.iam.users_v2 u,
                      jsonb_array_elements(u.roles::jsonb) AS r
-                WHERE u.deployment_name = '{{ deployment_name }}'
 
     vw_user_entitlements:
       name: vw_user_entitlements
@@ -167,7 +163,6 @@
                 JSON_EXTRACT(e.value, '$.value') AS entitlement
               FROM databricks_workspace.iam.users_v2 u,
                    JSON_EACH(u.entitlements) e
-              WHERE u.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -179,7 +174,6 @@
                   e.value->>'value' AS entitlement
                 FROM databricks_workspace.iam.users_v2 u,
                      jsonb_array_elements(u.entitlements::jsonb) AS e
-                WHERE u.deployment_name = '{{ deployment_name }}'
 
     vw_user_groups:
       name: vw_user_groups
@@ -230,7 +224,6 @@
                 JSON_EXTRACT(g.value, '$.type') AS group_type
               FROM databricks_workspace.iam.users_v2 u,
                    JSON_EACH(u.groups) g
-              WHERE u.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -245,7 +238,6 @@
                   g.value->>'type' AS group_type
                 FROM databricks_workspace.iam.users_v2 u,
                      jsonb_array_elements(u.groups::jsonb) AS g
-                WHERE u.deployment_name = '{{ deployment_name }}'
 
     vw_group_members:
       name: vw_group_members
@@ -292,7 +284,6 @@
                 JSON_EXTRACT(m.value, '$.type') AS member_type
               FROM databricks_workspace.iam.groups_v2 g,
                    JSON_EACH(g.members) m
-              WHERE g.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -306,7 +297,6 @@
                   m.value->>'type' AS member_type
                 FROM databricks_workspace.iam.groups_v2 g,
                      jsonb_array_elements(g.members::jsonb) AS m
-                WHERE g.deployment_name = '{{ deployment_name }}'
 
     vw_group_entitlements:
       name: vw_group_entitlements
@@ -341,7 +331,6 @@
                 JSON_EXTRACT(e.value, '$.value') AS entitlement
               FROM databricks_workspace.iam.groups_v2 g,
                    JSON_EACH(g.entitlements) e
-              WHERE g.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -352,7 +341,6 @@
                   e.value->>'value' AS entitlement
                 FROM databricks_workspace.iam.groups_v2 g,
                      jsonb_array_elements(g.entitlements::jsonb) AS e
-                WHERE g.deployment_name = '{{ deployment_name }}'
 
     vw_group_roles:
       name: vw_group_roles
@@ -387,7 +375,6 @@
                 JSON_EXTRACT(r.value, '$.value') AS role
               FROM databricks_workspace.iam.groups_v2 g,
                    JSON_EACH(g.roles) r
-              WHERE g.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -398,7 +385,6 @@
                   r.value->>'value' AS role
                 FROM databricks_workspace.iam.groups_v2 g,
                      jsonb_array_elements(g.roles::jsonb) AS r
-                WHERE g.deployment_name = '{{ deployment_name }}'
 
     vw_service_principal_entitlements:
       name: vw_service_principal_entitlements
@@ -441,7 +427,6 @@
                 JSON_EXTRACT(e.value, '$.value') AS entitlement
               FROM databricks_workspace.iam.service_principals_v2 sp,
                    JSON_EACH(sp.entitlements) e
-              WHERE sp.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -454,7 +439,6 @@
                   e.value->>'value' AS entitlement
                 FROM databricks_workspace.iam.service_principals_v2 sp,
                      jsonb_array_elements(sp.entitlements::jsonb) AS e
-                WHERE sp.deployment_name = '{{ deployment_name }}'
 
     vw_service_principal_roles:
       name: vw_service_principal_roles
@@ -497,7 +481,6 @@
                 JSON_EXTRACT(r.value, '$.value') AS role
               FROM databricks_workspace.iam.service_principals_v2 sp,
                    JSON_EACH(sp.roles) r
-              WHERE sp.deployment_name = '{{ deployment_name }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -510,7 +493,6 @@
                   r.value->>'value' AS role
                 FROM databricks_workspace.iam.service_principals_v2 sp,
                      jsonb_array_elements(sp.roles::jsonb) AS r
-                WHERE sp.deployment_name = '{{ deployment_name }}'
 
     vw_permissions:
       name: vw_permissions
@@ -584,9 +566,6 @@
               FROM databricks_workspace.iam.permissions p,
                    JSON_EACH(p.access_control_list) acl,
                    JSON_EACH(JSON_EXTRACT(acl.value, '$.all_permissions')) perm
-              WHERE p.deployment_name = '{{ deployment_name }}'
-              AND p.request_object_type = '{{ request_object_type }}'
-              AND p.request_object_id = '{{ request_object_id }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -606,9 +585,6 @@
                 FROM databricks_workspace.iam.permissions p,
                      jsonb_array_elements(p.access_control_list::jsonb) AS acl,
                      jsonb_array_elements((acl.value->'all_permissions')::jsonb) AS perm
-                WHERE p.deployment_name = '{{ deployment_name }}'
-                AND p.request_object_type = '{{ request_object_type }}'
-                AND p.request_object_id = '{{ request_object_id }}'
 
     vw_rule_set_grant_principals:
       name: vw_rule_set_grant_principals
@@ -654,9 +630,6 @@
               FROM databricks_workspace.iam.rule_sets rs,
                    JSON_EACH(rs.grant_rules) gr,
                    JSON_EACH(JSON_EXTRACT(gr.value, '$.principals')) pr
-              WHERE rs.deployment_name = '{{ deployment_name }}'
-              AND rs.name = '{{ name }}'
-              AND rs.etag = '{{ etag }}'
             fallback:
               predicate: sqlDialect == "postgres"
               ddl: |-
@@ -669,6 +642,3 @@
                 FROM databricks_workspace.iam.rule_sets rs,
                      jsonb_array_elements(rs.grant_rules::jsonb) AS gr,
                      jsonb_array_elements((gr.value->'principals')::jsonb) AS pr
-                WHERE rs.deployment_name = '{{ deployment_name }}'
-                AND rs.name = '{{ name }}'
-                AND rs.etag = '{{ etag }}'

@@ -336,28 +336,28 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#networks_get"><CopyableCode code="networks_get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_id"><code>network_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_id"><code>network_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets a Databricks network configuration, which represents a cloud VPC and its resources.</td>
 </tr>
 <tr>
     <td><a href="#networks_list"><CopyableCode code="networks_list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Lists Databricks network configurations for an account.</td>
 </tr>
 <tr>
     <td><a href="#networks_create"><CopyableCode code="networks_create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Creates a Databricks network configuration that represents an VPC and its resources. The VPC will be</td>
 </tr>
 <tr>
     <td><a href="#networks_delete"><CopyableCode code="networks_delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_id"><code>network_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-network_id"><code>network_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a Databricks network configuration, which represents a cloud VPC and its resources. You cannot</td>
 </tr>
@@ -377,6 +377,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -421,6 +426,7 @@ warning_messages
 FROM databricks_account.provisioning.networks
 WHERE account_id = '{{ account_id }}' -- required
 AND network_id = '{{ network_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -445,6 +451,7 @@ vpc_status,
 warning_messages
 FROM databricks_account.provisioning.networks
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -472,7 +479,8 @@ security_group_ids,
 subnet_ids,
 vpc_endpoints,
 vpc_id,
-account_id
+account_id,
+account_host
 )
 SELECT 
 '{{ gcp_network_info }}',
@@ -481,7 +489,8 @@ SELECT
 '{{ subnet_ids }}',
 '{{ vpc_endpoints }}',
 '{{ vpc_id }}',
-'{{ account_id }}'
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 network_id,
@@ -506,6 +515,9 @@ warning_messages
   props:
     - name: account_id
       value: "{{ account_id }}"
+      description: Required parameter for the networks resource.
+    - name: account_host
+      value: "{{ account_host }}"
       description: Required parameter for the networks resource.
     - name: gcp_network_info
       value:
@@ -561,6 +573,7 @@ Deletes a Databricks network configuration, which represents a cloud VPC and its
 DELETE FROM databricks_account.provisioning.networks
 WHERE account_id = '{{ account_id }}' --required
 AND network_id = '{{ network_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>

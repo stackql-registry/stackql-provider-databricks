@@ -76,7 +76,7 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get_assignable_roles_for_resource"><CopyableCode code="get_assignable_roles_for_resource" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-resource"><code>resource</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-resource"><code>resource</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Gets all the roles that can be granted on an account level resource. A role is grantable if the rule</td>
 </tr>
@@ -96,6 +96,11 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
@@ -127,6 +132,7 @@ roles
 FROM databricks_account.iam.account_assignable_roles
 WHERE account_id = '{{ account_id }}' -- required
 AND resource = '{{ resource }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>

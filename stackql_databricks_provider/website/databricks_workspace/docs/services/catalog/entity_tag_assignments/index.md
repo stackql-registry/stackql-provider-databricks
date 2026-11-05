@@ -54,11 +54,6 @@ The following fields are returned by `SELECT` queries:
     "description": "The type of the entity to which the tag is assigned."
   },
   {
-    "name": "inherited",
-    "type": "boolean",
-    "description": "Boolean which indicates whether this tag is inherited."
-  },
-  {
     "name": "source_type",
     "type": "string",
     "description": "The source type of the tag assignment, e.g., user-assigned or system-assigned (TAG_ASSIGNMENT_SOURCE_TYPE_SYSTEM_DATA_CLASSIFICATION)"
@@ -97,11 +92,6 @@ The following fields are returned by `SELECT` queries:
     "name": "entity_type",
     "type": "string",
     "description": "The type of the entity to which the tag is assigned."
-  },
-  {
-    "name": "inherited",
-    "type": "boolean",
-    "description": "Boolean which indicates whether this tag is inherited."
   },
   {
     "name": "source_type",
@@ -150,35 +140,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-include_inherited"><code>include_inherited</code></a></td>
+    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td></td>
     <td>Gets a tag assignment for an Unity Catalog entity by tag key.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
-    <td><a href="#parameter-include_inherited"><code>include_inherited</code></a>, <a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
+    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
+    <td><a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>List tag assignments for an Unity Catalog entity</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-tag_assignment"><code>tag_assignment</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Creates a tag assignment for an Unity Catalog entity.</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-tag_assignment"><code>tag_assignment</code></a></td>
+    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-entity_type"><code>entity_type</code></a></td>
     <td></td>
     <td>Updates an existing tag assignment for an Unity Catalog entity.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-entity_type"><code>entity_type</code></a>, <a href="#parameter-entity_name"><code>entity_name</code></a>, <a href="#parameter-tag_key"><code>tag_key</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes a tag assignment for an Unity Catalog entity by its key.</td>
 </tr>
@@ -201,7 +191,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-entity_name">
     <td><CopyableCode code="entity_name" /></td>
@@ -223,10 +213,10 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>string</code></td>
     <td>The field mask must be a single string, with multiple fields separated by commas (no spaces). The field path is relative to the resource object, using a dot (``.``) to navigate sub-fields (e.g., ``author.given_name``). Specification of elements in sequence or map fields is not allowed, as only the entire collection field can be specified. Field names must exactly match the resource field names. A field mask of ``*`` indicates full replacement. It’s recommended to always explicitly list the fields being updated and avoid using ``*`` wildcards, as it can lead to unintended results if the API changes in the future.</td>
 </tr>
-<tr id="parameter-include_inherited">
-    <td><CopyableCode code="include_inherited" /></td>
-    <td><code>boolean</code></td>
-    <td>Boolean which indicates whether this tag is inherited.</td>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-max_results">
     <td><CopyableCode code="max_results" /></td>
@@ -258,7 +248,6 @@ Gets a tag assignment for an Unity Catalog entity by tag key.
 SELECT
 entity_name,
 entity_type,
-inherited,
 source_type,
 tag_key,
 tag_value,
@@ -269,7 +258,7 @@ WHERE entity_type = '{{ entity_type }}' -- required
 AND entity_name = '{{ entity_name }}' -- required
 AND tag_key = '{{ tag_key }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
-AND include_inherited = '{{ include_inherited }}'
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -281,7 +270,6 @@ List tag assignments for an Unity Catalog entity
 SELECT
 entity_name,
 entity_type,
-inherited,
 source_type,
 tag_key,
 tag_value,
@@ -291,7 +279,7 @@ FROM databricks_workspace.catalog.entity_tag_assignments
 WHERE entity_type = '{{ entity_type }}' -- required
 AND entity_name = '{{ entity_name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
-AND include_inherited = '{{ include_inherited }}'
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
 ;
@@ -315,16 +303,29 @@ Creates a tag assignment for an Unity Catalog entity.
 
 ```sql
 INSERT INTO databricks_workspace.catalog.entity_tag_assignments (
-tag_assignment,
-deployment_name
+entity_name,
+tag_key,
+entity_type,
+source_type,
+tag_value,
+update_time,
+updated_by,
+deployment_name,
+workspace_domain
 )
 SELECT 
-'{{ tag_assignment }}' /* required */,
-'{{ deployment_name }}'
+'{{ entity_name }}' /* required */,
+'{{ tag_key }}' /* required */,
+'{{ entity_type }}' /* required */,
+'{{ source_type }}',
+'{{ tag_value }}',
+'{{ update_time }}',
+'{{ updated_by }}',
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 entity_name,
 entity_type,
-inherited,
 source_type,
 tag_key,
 tag_value,
@@ -341,18 +342,37 @@ updated_by
     - name: deployment_name
       value: "{{ deployment_name }}"
       description: Required parameter for the entity_tag_assignments resource.
-    - name: tag_assignment
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
+      description: Required parameter for the entity_tag_assignments resource.
+    - name: entity_name
+      value: "{{ entity_name }}"
       description: |
-        Represents a tag assignment to an entity
-      value:
-        entity_name: "{{ entity_name }}"
-        tag_key: "{{ tag_key }}"
-        entity_type: "{{ entity_type }}"
-        inherited: {{ inherited }}
-        source_type: "{{ source_type }}"
-        tag_value: "{{ tag_value }}"
-        update_time: "{{ update_time }}"
-        updated_by: "{{ updated_by }}"
+        The fully qualified name of the entity to which the tag is assigned
+    - name: tag_key
+      value: "{{ tag_key }}"
+      description: |
+        The key of the tag
+    - name: entity_type
+      value: "{{ entity_type }}"
+      description: |
+        The type of the entity to which the tag is assigned.
+    - name: source_type
+      value: "{{ source_type }}"
+      description: |
+        The source type of the tag assignment, e.g., user-assigned or system-assigned
+    - name: tag_value
+      value: "{{ tag_value }}"
+      description: |
+        The value of the tag
+    - name: update_time
+      value: "{{ update_time }}"
+      description: |
+        The timestamp when the tag assignment was last updated
+    - name: updated_by
+      value: "{{ updated_by }}"
+      description: |
+        The user or principal who updated the tag assignment
 `}</CodeBlock>
 
 </TabItem>
@@ -374,18 +394,26 @@ Updates an existing tag assignment for an Unity Catalog entity.
 ```sql
 UPDATE databricks_workspace.catalog.entity_tag_assignments
 SET 
-tag_assignment = '{{ tag_assignment }}'
+entity_name = '{{ entity_name }}',
+tag_key = '{{ tag_key }}',
+entity_type = '{{ entity_type }}',
+source_type = '{{ source_type }}',
+tag_value = '{{ tag_value }}',
+update_time = '{{ update_time }}',
+updated_by = '{{ updated_by }}'
 WHERE 
 entity_type = '{{ entity_type }}' --required
 AND entity_name = '{{ entity_name }}' --required
 AND tag_key = '{{ tag_key }}' --required
 AND update_mask = '{{ update_mask }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
-AND tag_assignment = '{{ tag_assignment }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
+AND entity_name = '{{ entity_name }}' --required
+AND tag_key = '{{ tag_key }}' --required
+AND entity_type = '{{ entity_type }}' --required
 RETURNING
 entity_name,
 entity_type,
-inherited,
 source_type,
 tag_key,
 tag_value,
@@ -414,6 +442,7 @@ WHERE entity_type = '{{ entity_type }}' --required
 AND entity_name = '{{ entity_name }}' --required
 AND tag_key = '{{ tag_key }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

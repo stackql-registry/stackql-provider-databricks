@@ -1,0 +1,26 @@
+{
+  "auth": {
+    "type": "oauth2",
+    "client_id_env_var": "DATABRICKS_CLIENT_ID",
+    "client_secret_env_var": "DATABRICKS_CLIENT_SECRET",
+    "grant_type": "client_credentials",
+    "token_url": "https://{account_host}/oidc/accounts/{{ .__env__DATABRICKS_ACCOUNT_ID }}/v1/token",
+    "scopes": ["all-apis"],
+    "variables": {
+      "account_host": {
+        "description": "The Databricks account console host that issues OAuth M2M tokens. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme).",
+        "default": "accounts.cloud.databricks.com",
+        "x-stackQL-envVar": "DATABRICKS_ACCOUNT_HOST",
+        "x-stackQL-envVarSelector": {
+          "envVar": "DATABRICKS_CLOUD",
+          "default": "aws",
+          "values": {
+            "aws": "accounts.cloud.databricks.com",
+            "azure": "accounts.azuredatabricks.net",
+            "gcp": "accounts.gcp.databricks.com"
+          }
+        }
+      }
+    }
+  }
+}

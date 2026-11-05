@@ -274,7 +274,6 @@ SELECT
   JSON_EXTRACT(r.value, '$.uc_securable.permission') AS uc_securable_permission
 FROM databricks_workspace.apps.apps a,
      JSON_EACH(a.resources) r
-WHERE deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>
@@ -319,7 +318,6 @@ SELECT
   r.value->'uc_securable'->>'permission' AS uc_securable_permission
 FROM databricks_workspace.apps.apps a,
      jsonb_array_elements(a.resources::jsonb) AS r
-WHERE deployment_name = '{{ deployment_name }}'
 ```
 
 </TabItem>

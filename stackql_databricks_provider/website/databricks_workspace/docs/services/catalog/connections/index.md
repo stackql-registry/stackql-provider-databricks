@@ -71,7 +71,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "connection_type",
     "type": "string",
-    "description": "The type of connection. (ADOBE_COMMERCE, ADP_WORKFORCE_NOW, AHA, AIRTABLE, AMPLITUDE, APPFIGURES, APPLE_APP_STORE, APPLE_SEARCH_ADS, ATLASSIAN_ORGANIZATION, AWIN, AZURE_MONITOR_LOGS, BIGLAKE, BIGQUERY, CERIDIAN_DAYFORCE, CONFLUENCE, DATABRICKS, DELIGHTED, DYNAMICS365, EPIC_CLARITY, FRESHSERVICE, FRONT, GA4_RAW_DATA, GENESYS, GITHUB, GITLAB, GLUE, GMAIL, GONG, GOOGLE_ANALYTICS, GOOGLE_CALENDAR, GOOGLE_CLOUD_LAKEHOUSE, GOOGLE_WORKSPACE, GURU, HIBOB, HIVE_METASTORE, HTTP, HUBSPOT, ICEBERG_REST, IRONCLAD, JDBC, KINESIS, LINEAR, MARKETO, META_MARKETING, MICROSOFT_ENTRA_ID, MONDAY_COM, MYSQL, NETSKOPE_LOGS, NOTION, ORACLE, ORACLE_ELOQUA, ORACLE_FUSION_CLOUD, OUTLOOK, PAGERDUTY, PALANTIR, PARTNERSTACK, PENDO, POSTGRESQL, POWER_BI, PUBSUB, QUICKBOOKS, REDSHIFT, SALESFORCE, SALESFORCE_DATA_CLOUD, SALESLOFT, SAP_SUCCESSFACTORS, SAS, SENDGRID, SERVICENOW, SHOPIFY, SLACK_ACCESS_AND_INTEGRATION_LOGS, SMARTSHEET, SNAPCHAT_ADS, SNOWFLAKE, SPLUNK, SQLDW, SQLSERVER, SQUARE, TERADATA, UNKNOWN_CONNECTION_TYPE, VERKADA, WORKDAY_RAAS, YOUTUBE_ANALYTICS, ZENDESK, ZIP, ZOHO_BOOKS, ZOOM, ZOOM_LOGS)"
+    "description": "The type of connection. (AWS_SECRETS_MANAGER, AZURE_KEY_VAULT, BIGQUERY, CONFLUENCE, DATABRICKS, DYNAMICS365, GA4_RAW_DATA, GITHUB, GLUE, HIVE_METASTORE, HTTP, HUBSPOT, JDBC, META_MARKETING, MYSQL, NETSUITE, ORACLE, OUTLOOK, POSTGRESQL, POWER_BI, REDSHIFT, SALESFORCE, SALESFORCE_DATA_CLOUD, SERVICENOW, SMARTSHEET, SNOWFLAKE, SQLDW, SQLSERVER, TERADATA, TIKTOK_ADS, UNKNOWN_CONNECTION_TYPE, WORKDAY_RAAS, ZENDESK)"
   },
   {
     "name": "created_at",
@@ -86,7 +86,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "credential_type",
     "type": "string",
-    "description": "The type of credential. (ANY_STATIC_CREDENTIAL, BEARER_TOKEN, EDGEGRID_AKAMAI, GENERIC_TOKEN_EXCHANGE, INLINE_YAML, OAUTH_ACCESS_TOKEN, OAUTH_DCR, OAUTH_GOOGLE_SERVICE_ACCOUNT, OAUTH_M2M, OAUTH_MTLS, OAUTH_REFRESH_TOKEN, OAUTH_RESOURCE_OWNER_PASSWORD, OAUTH_U2M, OAUTH_U2M_MAPPING, OIDC_TOKEN, PEM_PRIVATE_KEY, SERVICE_CREDENTIAL, SSWS_TOKEN, UNKNOWN_CREDENTIAL_TYPE, USERNAME_PASSWORD)"
+    "description": "The type of credential. (ANY_STATIC_CREDENTIAL, BEARER_TOKEN, EDGEGRID_AKAMAI, OAUTH_ACCESS_TOKEN, OAUTH_M2M, OAUTH_MTLS, OAUTH_REFRESH_TOKEN, OAUTH_RESOURCE_OWNER_PASSWORD, OAUTH_U2M, OAUTH_U2M_MAPPING, OIDC_TOKEN, PEM_PRIVATE_KEY, SERVICE_CREDENTIAL, SSWS_TOKEN, UNKNOWN_CREDENTIAL_TYPE, USERNAME_PASSWORD)"
   },
   {
     "name": "environment_settings",
@@ -145,7 +145,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "updated_at",
@@ -195,7 +195,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "connection_type",
     "type": "string",
-    "description": "The type of connection. (ADOBE_COMMERCE, ADP_WORKFORCE_NOW, AHA, AIRTABLE, AMPLITUDE, APPFIGURES, APPLE_APP_STORE, APPLE_SEARCH_ADS, ATLASSIAN_ORGANIZATION, AWIN, AZURE_MONITOR_LOGS, BIGLAKE, BIGQUERY, CERIDIAN_DAYFORCE, CONFLUENCE, DATABRICKS, DELIGHTED, DYNAMICS365, EPIC_CLARITY, FRESHSERVICE, FRONT, GA4_RAW_DATA, GENESYS, GITHUB, GITLAB, GLUE, GMAIL, GONG, GOOGLE_ANALYTICS, GOOGLE_CALENDAR, GOOGLE_CLOUD_LAKEHOUSE, GOOGLE_WORKSPACE, GURU, HIBOB, HIVE_METASTORE, HTTP, HUBSPOT, ICEBERG_REST, IRONCLAD, JDBC, KINESIS, LINEAR, MARKETO, META_MARKETING, MICROSOFT_ENTRA_ID, MONDAY_COM, MYSQL, NETSKOPE_LOGS, NOTION, ORACLE, ORACLE_ELOQUA, ORACLE_FUSION_CLOUD, OUTLOOK, PAGERDUTY, PALANTIR, PARTNERSTACK, PENDO, POSTGRESQL, POWER_BI, PUBSUB, QUICKBOOKS, REDSHIFT, SALESFORCE, SALESFORCE_DATA_CLOUD, SALESLOFT, SAP_SUCCESSFACTORS, SAS, SENDGRID, SERVICENOW, SHOPIFY, SLACK_ACCESS_AND_INTEGRATION_LOGS, SMARTSHEET, SNAPCHAT_ADS, SNOWFLAKE, SPLUNK, SQLDW, SQLSERVER, SQUARE, TERADATA, UNKNOWN_CONNECTION_TYPE, VERKADA, WORKDAY_RAAS, YOUTUBE_ANALYTICS, ZENDESK, ZIP, ZOHO_BOOKS, ZOOM, ZOOM_LOGS)"
+    "description": "The type of connection. (AWS_SECRETS_MANAGER, AZURE_KEY_VAULT, BIGQUERY, CONFLUENCE, DATABRICKS, DYNAMICS365, GA4_RAW_DATA, GITHUB, GLUE, HIVE_METASTORE, HTTP, HUBSPOT, JDBC, META_MARKETING, MYSQL, NETSUITE, ORACLE, OUTLOOK, POSTGRESQL, POWER_BI, REDSHIFT, SALESFORCE, SALESFORCE_DATA_CLOUD, SERVICENOW, SMARTSHEET, SNOWFLAKE, SQLDW, SQLSERVER, TERADATA, TIKTOK_ADS, UNKNOWN_CONNECTION_TYPE, WORKDAY_RAAS, ZENDESK)"
   },
   {
     "name": "created_at",
@@ -210,7 +210,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "credential_type",
     "type": "string",
-    "description": "The type of credential. (ANY_STATIC_CREDENTIAL, BEARER_TOKEN, EDGEGRID_AKAMAI, GENERIC_TOKEN_EXCHANGE, INLINE_YAML, OAUTH_ACCESS_TOKEN, OAUTH_DCR, OAUTH_GOOGLE_SERVICE_ACCOUNT, OAUTH_M2M, OAUTH_MTLS, OAUTH_REFRESH_TOKEN, OAUTH_RESOURCE_OWNER_PASSWORD, OAUTH_U2M, OAUTH_U2M_MAPPING, OIDC_TOKEN, PEM_PRIVATE_KEY, SERVICE_CREDENTIAL, SSWS_TOKEN, UNKNOWN_CREDENTIAL_TYPE, USERNAME_PASSWORD)"
+    "description": "The type of credential. (ANY_STATIC_CREDENTIAL, BEARER_TOKEN, EDGEGRID_AKAMAI, OAUTH_ACCESS_TOKEN, OAUTH_M2M, OAUTH_MTLS, OAUTH_REFRESH_TOKEN, OAUTH_RESOURCE_OWNER_PASSWORD, OAUTH_U2M, OAUTH_U2M_MAPPING, OIDC_TOKEN, PEM_PRIVATE_KEY, SERVICE_CREDENTIAL, SSWS_TOKEN, UNKNOWN_CREDENTIAL_TYPE, USERNAME_PASSWORD)"
   },
   {
     "name": "environment_settings",
@@ -269,7 +269,7 @@ The following fields are returned by `SELECT` queries:
   {
     "name": "securable_type",
     "type": "string",
-    "description": "The type of Unity Catalog securable. (CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, METASTORE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
+    "description": "The type of Unity Catalog securable. (AGENT_SERVICE, CATALOG, CLEAN_ROOM, CONNECTION, CREDENTIAL, EXTERNAL_LOCATION, EXTERNAL_METADATA, FUNCTION, MCP_SERVICE, METASTORE, MODEL, MODEL_PROVIDER_SERVICE, MODEL_SERVICE, PIPELINE, PROVIDER, RECIPIENT, SCHEMA, SHARE, SKILL, STAGING_TABLE, STORAGE_CREDENTIAL, TABLE, VOLUME)"
   },
   {
     "name": "updated_at",
@@ -308,35 +308,35 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Gets a connection from it's name.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td><a href="#parameter-max_results"><code>max_results</code></a>, <a href="#parameter-page_token"><code>page_token</code></a>, <a href="#parameter-parent"><code>parent</code></a></td>
     <td>List all connections.</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-connection_type"><code>connection_type</code></a>, <a href="#parameter-options"><code>options</code></a></td>
+    <td><a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-name"><code>name</code></a>, <a href="#parameter-connection_type"><code>connection_type</code></a>, <a href="#parameter-options"><code>options</code></a></td>
     <td></td>
     <td>Creates a new connection</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-options"><code>options</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a>, <a href="#parameter-options"><code>options</code></a></td>
     <td></td>
     <td>Updates the connection that matches the supplied name.</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a></td>
+    <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-deployment_name"><code>deployment_name</code></a>, <a href="#parameter-workspace_domain"><code>workspace_domain</code></a></td>
     <td></td>
     <td>Deletes the connection that matches the supplied name.</td>
 </tr>
@@ -359,12 +359,17 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-deployment_name">
     <td><CopyableCode code="deployment_name" /></td>
     <td><code>string</code></td>
-    <td>The Databricks Workspace Deployment Name (default: dbc-abcd0123-a1bc)</td>
+    <td>The Databricks workspace deployment name: the host prefix of the workspace URL (dbc-abcd0123-a1bc on AWS, adb-1234567890123456.7 on Azure, 1234567890123456.7 on GCP). Set DATABRICKS_DEPLOYMENT_NAME to default it for the session. (default: dbc-abcd0123-a1bc, x-stackQL-envVar: DATABRICKS_DEPLOYMENT_NAME)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
     <td><code>string</code></td>
     <td>The name of the connection to be deleted.</td>
+</tr>
+<tr id="parameter-workspace_domain">
+    <td><CopyableCode code="workspace_domain" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks workspace domain suffix for the cloud. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws). (default: cloud.databricks.com, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"cloud.databricks.com","azure":"azuredatabricks.net","gcp":"gcp.databricks.com"&#125;&#125;)</td>
 </tr>
 <tr id="parameter-max_results">
     <td><CopyableCode code="max_results" /></td>
@@ -422,6 +427,7 @@ url
 FROM databricks_workspace.catalog.connections
 WHERE name = '{{ name }}' -- required
 AND deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 ;
 ```
 </TabItem>
@@ -453,6 +459,7 @@ updated_by,
 url
 FROM databricks_workspace.catalog.connections
 WHERE deployment_name = '{{ deployment_name }}' -- required
+AND workspace_domain = '{{ workspace_domain }}' -- required
 AND max_results = '{{ max_results }}'
 AND page_token = '{{ page_token }}'
 AND parent = '{{ parent }}'
@@ -486,7 +493,8 @@ parent,
 properties,
 read_only,
 secrets,
-deployment_name
+deployment_name,
+workspace_domain
 )
 SELECT 
 '{{ name }}' /* required */,
@@ -498,7 +506,8 @@ SELECT
 '{{ properties }}',
 {{ read_only }},
 '{{ secrets }}',
-'{{ deployment_name }}'
+'{{ deployment_name }}',
+'{{ workspace_domain }}'
 RETURNING
 name,
 connection_id,
@@ -530,6 +539,9 @@ url
   props:
     - name: deployment_name
       value: "{{ deployment_name }}"
+      description: Required parameter for the connections resource.
+    - name: workspace_domain
+      value: "{{ workspace_domain }}"
       description: Required parameter for the connections resource.
     - name: name
       value: "{{ name }}"
@@ -599,6 +611,7 @@ secrets = '{{ secrets }}'
 WHERE 
 name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 AND options = '{{ options }}' --required
 RETURNING
 name,
@@ -642,6 +655,7 @@ Deletes the connection that matches the supplied name.
 DELETE FROM databricks_workspace.catalog.connections
 WHERE name = '{{ name }}' --required
 AND deployment_name = '{{ deployment_name }}' --required
+AND workspace_domain = '{{ workspace_domain }}' --required
 ;
 ```
 </TabItem>

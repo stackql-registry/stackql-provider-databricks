@@ -54,7 +54,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the user in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "user_id",
     "type": "string",
     "description": "Internal userId of the user in Databricks."
   },
@@ -101,7 +101,7 @@ The following fields are returned by `SELECT` queries:
     "description": "ExternalId of the user in the customer's IdP."
   },
   {
-    "name": "internal_id",
+    "name": "user_id",
     "type": "string",
     "description": "Internal userId of the user in Databricks."
   },
@@ -154,42 +154,42 @@ The following methods are available for this resource:
 <tr>
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Fetches a user from the Databricks account by its internal ID.</td>
 </tr>
 <tr>
     <td><a href="#list"><CopyableCode code="list" /></a></td>
     <td><CopyableCode code="select" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td><a href="#parameter-filter"><code>filter</code></a>, <a href="#parameter-page_size"><code>page_size</code></a>, <a href="#parameter-page_token"><code>page_token</code></a></td>
     <td>Lists the users in the Databricks account, returning one page per call. Supports filtering by username</td>
 </tr>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
     <td><CopyableCode code="insert" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user"><code>user</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-username"><code>username</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-account_user_status"><code>account_user_status</code></a></td>
     <td></td>
-    <td>Creates a user in the Databricks account and returns the resulting User resource. Behavior depends on</td>
+    <td>Creates a local user in the Databricks account and returns the created user. A local user is one that</td>
 </tr>
 <tr>
     <td><a href="#update"><CopyableCode code="update" /></a></td>
     <td><CopyableCode code="update" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-user"><code>user</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-update_mask"><code>update_mask</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-username"><code>username</code></a>, <a href="#parameter-full_name"><code>full_name</code></a>, <a href="#parameter-account_user_status"><code>account_user_status</code></a></td>
     <td></td>
-    <td>Updates an existing user in the Databricks account, returning the updated User resource. The behavior</td>
+    <td>Updates an existing user in the Databricks account and returns the updated user. Only the fields named</td>
 </tr>
 <tr>
     <td><a href="#delete"><CopyableCode code="delete" /></a></td>
     <td><CopyableCode code="delete" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-internal_id"><code>internal_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-user_id"><code>user_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a></td>
     <td></td>
     <td>Deletes a user from the Databricks account by its internal ID.</td>
 </tr>
 <tr>
     <td><a href="#resolve"><CopyableCode code="resolve" /></a></td>
     <td><CopyableCode code="exec" /></td>
-    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
+    <td><a href="#parameter-account_id"><code>account_id</code></a>, <a href="#parameter-account_host"><code>account_host</code></a>, <a href="#parameter-external_id"><code>external_id</code></a></td>
     <td></td>
     <td>Resolves a user with the given external ID from the customer's IdP. If the user does not exist, it</td>
 </tr>
@@ -209,20 +209,25 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     </tr>
 </thead>
 <tbody>
+<tr id="parameter-account_host">
+    <td><CopyableCode code="account_host" /></td>
+    <td><code>string</code></td>
+    <td>The Databricks account console host. Selected by DATABRICKS_CLOUD (aws, azure or gcp; default aws), or set explicitly with DATABRICKS_ACCOUNT_HOST (bare host, no scheme). (default: accounts.cloud.databricks.com, x-stackQL-envVar: DATABRICKS_ACCOUNT_HOST, x-stackQL-envVarSelector: &#123;"envVar":"DATABRICKS_CLOUD","default":"aws","values":&#123;"aws":"accounts.cloud.databricks.com","azure":"accounts.azuredatabricks.net","gcp":"accounts.gcp.databricks.com"&#125;&#125;)</td>
+</tr>
 <tr id="parameter-account_id">
     <td><CopyableCode code="account_id" /></td>
     <td><code>string</code></td>
     <td></td>
 </tr>
-<tr id="parameter-internal_id">
-    <td><CopyableCode code="internal_id" /></td>
-    <td><code>string</code></td>
-    <td>Required. Internal ID of the user in Databricks.</td>
-</tr>
 <tr id="parameter-update_mask">
     <td><CopyableCode code="update_mask" /></td>
     <td><code>string</code></td>
-    <td>Optional. The list of fields to update.</td>
+    <td>Required. The list of fields to update.</td>
+</tr>
+<tr id="parameter-user_id">
+    <td><CopyableCode code="user_id" /></td>
+    <td><code>string</code></td>
+    <td>Required. Internal ID of the user in Databricks.</td>
 </tr>
 <tr id="parameter-filter">
     <td><CopyableCode code="filter" /></td>
@@ -232,7 +237,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-page_size">
     <td><CopyableCode code="page_size" /></td>
     <td><code>integer</code></td>
-    <td>The maximum number of users to return. The service may return fewer than this value.</td>
+    <td>The maximum number of users to return. The service may return fewer than this value. If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000.</td>
 </tr>
 <tr id="parameter-page_token">
     <td><CopyableCode code="page_token" /></td>
@@ -259,13 +264,14 @@ Fetches a user from the Databricks account by its internal ID.
 SELECT
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username
 FROM databricks_account.iamv2.users
 WHERE account_id = '{{ account_id }}' -- required
-AND internal_id = '{{ internal_id }}' -- required
+AND user_id = '{{ user_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 ;
 ```
 </TabItem>
@@ -277,12 +283,13 @@ Lists the users in the Databricks account, returning one page per call. Supports
 SELECT
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username
 FROM databricks_account.iamv2.users
 WHERE account_id = '{{ account_id }}' -- required
+AND account_host = '{{ account_host }}' -- required
 AND filter = '{{ filter }}'
 AND page_size = '{{ page_size }}'
 AND page_token = '{{ page_token }}'
@@ -303,20 +310,32 @@ AND page_token = '{{ page_token }}'
 >
 <TabItem value="create">
 
-Creates a user in the Databricks account and returns the resulting User resource. Behavior depends on
+Creates a local user in the Databricks account and returns the created user. A local user is one that
 
 ```sql
 INSERT INTO databricks_account.iamv2.users (
-user,
-account_id
+username,
+full_name,
+account_user_status,
+account_id,
+external_id,
+user_id,
+account_id,
+account_host
 )
 SELECT 
-'{{ user }}' /* required */,
-'{{ account_id }}'
+'{{ username }}' /* required */,
+'{{ full_name }}' /* required */,
+'{{ account_user_status }}' /* required */,
+'{{ account_id }}',
+'{{ external_id }}',
+'{{ user_id }}',
+'{{ account_id }}',
+'{{ account_host }}'
 RETURNING
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username
@@ -331,18 +350,33 @@ username
     - name: account_id
       value: "{{ account_id }}"
       description: Required parameter for the users resource.
-    - name: user
+    - name: account_host
+      value: "{{ account_host }}"
+      description: Required parameter for the users resource.
+    - name: username
+      value: "{{ username }}"
       description: |
-        Required. User to be created in <Databricks>
+        Username/email of the user.
+    - name: full_name
       value:
-        account_id: "{{ account_id }}"
-        account_user_status: "{{ account_user_status }}"
-        external_id: "{{ external_id }}"
-        full_name:
-          family_name: "{{ family_name }}"
-          given_name: "{{ given_name }}"
-        internal_id: "{{ internal_id }}"
-        username: "{{ username }}"
+        family_name: "{{ family_name }}"
+        given_name: "{{ given_name }}"
+    - name: account_user_status
+      value: "{{ account_user_status }}"
+      description: |
+        The activity status of a user in a Databricks account.
+    - name: account_id
+      value: "{{ account_id }}"
+      description: |
+        The accountId parent of the user in Databricks.
+    - name: external_id
+      value: "{{ external_id }}"
+      description: |
+        ExternalId of the user in the customer's IdP.
+    - name: user_id
+      value: "{{ user_id }}"
+      description: |
+        Internal userId of the user in Databricks.
 `}</CodeBlock>
 
 </TabItem>
@@ -359,21 +393,29 @@ username
 >
 <TabItem value="update">
 
-Updates an existing user in the Databricks account, returning the updated User resource. The behavior
+Updates an existing user in the Databricks account and returns the updated user. Only the fields named
 
 ```sql
 UPDATE databricks_account.iamv2.users
 SET 
-user = '{{ user }}'
+username = '{{ username }}',
+full_name = '{{ full_name }}',
+account_user_status = '{{ account_user_status }}',
+account_id = '{{ account_id }}',
+external_id = '{{ external_id }}',
+user_id = '{{ user_id }}'
 WHERE 
 account_id = '{{ account_id }}' --required
-AND internal_id = '{{ internal_id }}' --required
+AND user_id = '{{ user_id }}' --required
 AND update_mask = '{{ update_mask }}' --required
-AND user = '{{ user }}' --required
+AND account_host = '{{ account_host }}' --required
+AND username = '{{ username }}' --required
+AND full_name = '{{ full_name }}' --required
+AND account_user_status = '{{ account_user_status }}' --required
 RETURNING
 account_id,
 external_id,
-internal_id,
+user_id,
 full_name,
 account_user_status,
 username;
@@ -397,7 +439,8 @@ Deletes a user from the Databricks account by its internal ID.
 ```sql
 DELETE FROM databricks_account.iamv2.users
 WHERE account_id = '{{ account_id }}' --required
-AND internal_id = '{{ internal_id }}' --required
+AND user_id = '{{ user_id }}' --required
+AND account_host = '{{ account_host }}' --required
 ;
 ```
 </TabItem>
@@ -418,7 +461,8 @@ Resolves a user with the given external ID from the customer's IdP. If the user 
 
 ```sql
 EXEC databricks_account.iamv2.users.resolve 
-@account_id='{{ account_id }}' --required 
+@account_id='{{ account_id }}' --required, 
+@account_host='{{ account_host }}' --required 
 @@json=
 '{
 "external_id": "{{ external_id }}"
