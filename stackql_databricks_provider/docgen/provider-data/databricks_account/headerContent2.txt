@@ -34,7 +34,7 @@ The provider works against Databricks accounts on AWS, Azure and Google Cloud wi
 | Azure | `azure` | `accounts.azuredatabricks.net` | `https://accounts.azuredatabricks.net/oidc/accounts/<account_id>/v1/token` |
 | GCP | `gcp` | `accounts.gcp.databricks.com` | `https://accounts.gcp.databricks.com/oidc/accounts/<account_id>/v1/token` |
 
-Cloud selection needs stackql v1.0.883 or later. One cloud per process: the token endpoint follows the environment, so run a separate `stackql` process (or shell) for each account you work with.
+Cloud selection needs stackql v1.0.888 or later. One cloud per process: the token endpoint follows the environment, so run a separate `stackql` process (or shell) for each account you work with.
 
 ```bash
 # Azure Databricks account

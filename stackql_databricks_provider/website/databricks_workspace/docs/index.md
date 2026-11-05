@@ -79,7 +79,7 @@ FROM databricks_account.provisioning.workspaces
 WHERE account_id = '<account_id>';
 ```
 
-Cloud selection needs stackql v1.0.883 or later. One cloud per process: the token endpoint follows the environment, so run a separate `stackql` process (or shell) for each cloud you work with.
+Cloud selection needs stackql v1.0.888 or later. One cloud per process: the token endpoint follows the environment, so run a separate `stackql` process (or shell) for each cloud you work with.
 
 ```bash
 # Azure Databricks workspace
